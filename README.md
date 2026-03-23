@@ -1,6 +1,6 @@
 # HEVA — Heritage Value Extraction and Annotation Dataset
 
-> Collaborative repository for the **DfV (Design for Values) Institute** project on heritage value extraction and data organization — developed at **TU Delft, Faculty of Architecture and the Built Environment**.
+> Collaborative repository for heritage value extraction and data organization — developed at **TU Delft, Faculty of Architecture and the Built Environment** and with support from **TU Delft, Digital Competence Centre**.
 
 ---
 
@@ -19,7 +19,7 @@
 
 ## Overview
 
-**HEVA** (Heritage Value Extraction and Annotation) is a collaborative dataset developed as part of the **DCC (Digital Cultural Conservation) project** at TU Delft, Faculty of Architecture and the Built Environment. It compiles expert-annotated textual data from heritage-related research to support natural language processing (NLP) tasks, particularly **heritage value classification and extraction**.
+**HEVA** (Heritage Value Extraction and Annotation) is a collaborative dataset developed at TU Delft, Faculty of Architecture and the Built Environment and with support from TU Delft, Digital Competence Centre. It compiles expert-annotated textual data from heritage-related research to support natural language processing (NLP) tasks, particularly **heritage value classification and extraction**.
 
 The corpus brings together annotated texts from multiple heritage research projects conducted at TU Delft, spanning Mastermind course assignments and undergraduate, master's, and doctoral research. All annotations follow the **Heritage Values (HV) framework** proposed by Prof. Ana Pereira Roders.
 
@@ -178,16 +178,6 @@ This repository is maintained by the HEVA project team at TU Delft. Contribution
 ---
 
 ## License & Citation
-
-<!-- TODO: Choose an appropriate license.
-     Common choices for academic datasets:
-     - CC BY 4.0 (allows reuse with attribution)
-     - CC BY-NC 4.0 (non-commercial use only)
-     - Custom institutional license
-     
-     Also add citation information once a paper or report is published.
--->
-
 **License:** This dataset is currently **not publicly released**. Access is restricted to members of the HEVA project team and affiliated researchers at TU Delft. Redistribution, publication, or use outside the project is not permitted without explicit written consent from the principal investigators.
 
 A formal license and citation format will be added upon public release. If you are interested in accessing this dataset for research purposes, please contact the project team directly (see [Contact](#contact)).
@@ -198,11 +188,13 @@ A formal license and citation format will be added upon public release. If you a
 
 | Role | Name | Affiliation | Contact |
 |------|------|-------------|---------|
-| Principal Investigator | Dr. Nan Bai | TU Delft, Faculty of Architecture and the Built Environment | *(TODO: email)* |
-| PhD Researcher / Data Lead | Yan Zhou | TU Delft, Faculty of Architecture and the Built Environment | *(TODO: email)* |
-| HV Framework Consultant | Prof. Ana Pereira Roders | TU Delft, Faculty of Architecture and the Built Environment | *(TODO: email)* |
+| Principal Investigator | Dr. Nan Bai | TU Delft, Faculty of Architecture and the Built Environment | N.Bai@tudelft.nl |
+| Principal Investigator | Yan Zhou | TU Delft, Faculty of Architecture and the Built Environment | Yan.Zhou@tudelft.nl |
+| HV Framework Consultant | Prof. Ana Pereira Roders | TU Delft, Faculty of Architecture and the Built Environment | A.R.Pereira-Roders@tudelft.nl |
+| Student Assistant | Jingze Yin | TU Delft, Faculty of Architecture and the Built Environment | J.Yin-9@student.tudelft.nl |
+| DCC support staff| Jose Carlos Urra Llanusa| TU Delft, Digital Competence Centre | J.C.UrraLlanusa@tudelft.nl |
 
-For questions about the dataset or the DfV project, please open an issue on this repository or contact the project lead directly.
+For questions about the dataset, please open an issue on this repository or contact the Principal Investigators directly.
 
 ---
 
