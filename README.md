@@ -194,7 +194,7 @@ A formal license and citation format will be added upon public release. If you a
 | Student Assistant | Jingze Yin | TU Delft, Faculty of Architecture and the Built Environment | J.Yin-9@student.tudelft.nl |
 | DCC support staff| Jose Carlos Urra Llanusa| TU Delft, Digital Competence Centre | J.C.UrraLlanusa@tudelft.nl |
 
-For questions about the dataset, please open an issue on this repository or contact the Principal Investigators directly.
+For questions about the dataset, please open an issue on this repository or contact the **Principal Investigators** directly.
 
 ---
 
