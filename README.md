@@ -19,25 +19,17 @@
 
 ## Overview
 
-**HEVA** (Heritage Value Extraction and Annotation) serves as **Corpus 0** — the expert-annotated heritage dataset — within the **Hybrid Value Extraction (VE-Hybrid) Tool** project, funded by the **DfV (Design for Values) Institute** at TU Delft. It is the foundational labelled dataset for training and validating embedding-based NLP models for heritage value classification and extraction.
+**HEVA** (Heritage Value Extraction and Annotation) is a collaborative dataset developed as part of the **DCC (Digital Cultural Conservation) project** at TU Delft, Faculty of Architecture and the Built Environment. It compiles expert-annotated textual data from heritage-related research to support natural language processing (NLP) tasks, particularly **heritage value classification and extraction**.
 
-The corpus compiles manually annotated textual data from heritage-related research conducted at TU Delft, spanning course assignments (Mastermind), and undergraduate, master's, and doctoral research projects. All annotations follow the **Heritage Values (HV) framework** proposed by Prof. Ana Pereira Roders.
+The corpus brings together annotated texts from multiple heritage research projects conducted at TU Delft, spanning Mastermind course assignments and undergraduate, master's, and doctoral research. All annotations follow the **Heritage Values (HV) framework** proposed by Prof. Ana Pereira Roders.
 
-**Role in the broader project:**
-
-| Corpus | Type | Description |
-|--------|------|-------------|
-| **Corpus 0 (HEVA)** | Expert-annotated | This repository — foundation for model training & validation |
-| Corpus 1 | Pseudo-labelled | Heritage social media data (e.g., Chinatown, Notre Dame discussions) |
-| Corpus 2 | Pseudo-labelled | Cross-domain data (health/nutrition) for generalisability testing |
-
-This dataset is intended for NLP researchers, heritage studies scholars, and students working on value identification, multi-label text classification, or semi-supervised learning pipelines.
+This dataset is intended for NLP researchers, heritage studies scholars, and students working on value identification, multi-label text classification, or computational heritage analysis.
 
 ---
 
 ## Annotation Framework
 
-All annotations in this dataset are based on the **Cultural Value Framework** proposed by **Prof. Ana Pereira Roders** (TU Delft, Faculty of Architecture and the Built Environment). This framework provides a structured, two-level taxonomy for identifying and classifying heritage values expressed in textual sources. It is also aligned with the **DDfV Value Dictionary**, enabling mapping between implicit textual value expressions and explicit value concepts and norms.
+All annotations in this dataset are based on the **Cultural Value Framework** proposed by **Prof. Ana Pereira Roders** (TU Delft, Faculty of Architecture and the Built Environment). This framework provides a structured, two-level taxonomy for identifying and classifying heritage values expressed in textual sources.
 
 The taxonomy consists of **8 top-level value categories (L1)**, each subdivided into **sub-values (L2)**:
 
@@ -207,7 +199,6 @@ A formal license and citation format will be added upon public release. If you a
 | Role | Name | Affiliation | Contact |
 |------|------|-------------|---------|
 | Principal Investigator | Dr. Nan Bai | TU Delft, Faculty of Architecture and the Built Environment | *(TODO: email)* |
-| Principal Investigator | Dr. Ir. Lavinia Marin | TU Delft, Faculty of Technology, Policy and Management | *(TODO: email)* |
 | PhD Researcher / Data Lead | Yan Zhou | TU Delft, Faculty of Architecture and the Built Environment | *(TODO: email)* |
 | HV Framework Consultant | Prof. Ana Pereira Roders | TU Delft, Faculty of Architecture and the Built Environment | *(TODO: email)* |
 
