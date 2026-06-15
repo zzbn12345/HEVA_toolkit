@@ -1,0 +1,354 @@
+[
+    {
+        "sentence_id": 1,
+        "page": 1,
+        "sentence": "Colour coding cultural values: Social, Economic, Politic, Historic, Aesthetical, Scientific, Age, Ecological.",
+        "tokens": ["Colour", "coding", "cultural", "values", ":", "Social", ",", "Economic", ",", "Politic", ",", "Historic", ",", "Aesthetical", ",", "Scientific", ",", "Age", ",", "Ecological", "."],
+        "values": ["aesthetical", "age", "ecological", "economic", "historic", "political", "scientific", "social"],
+        "entities": [
+            {
+                "start": 31,
+                "end": 37,
+                "text": "Social",
+                "label": "social"
+            },
+            {
+                "start": 39,
+                "end": 47,
+                "text": "Economic",
+                "label": "economic"
+            },
+            {
+                "start": 49,
+                "end": 56,
+                "text": "Politic",
+                "label": "political"
+            },
+            {
+                "start": 58,
+                "end": 66,
+                "text": "Historic",
+                "label": "historic"
+            },
+            {
+                "start": 68,
+                "end": 79,
+                "text": "Aesthetical",
+                "label": "aesthetical"
+            },
+            {
+                "start": 81,
+                "end": 91,
+                "text": "Scientific",
+                "label": "scientific"
+            },
+            {
+                "start": 93,
+                "end": 96,
+                "text": "Age",
+                "label": "age"
+            },
+            {
+                "start": 98,
+                "end": 108,
+                "text": "Ecological",
+                "label": "ecological"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "B-social", "O", "B-economic", "O", "B-political", "O", "B-historic", "O", "B-aesthetical", "O", "B-scientific", "O", "B-age", "O", "B-ecological", "O"]
+    },
+    {
+        "sentence_id": 2,
+        "page": 1,
+        "sentence": "Urban structure DT Criterion (ii): “The Stone Town of Zanzibar is an outstanding material manifestation of cultural fusion and harmonization.” (urban structure in general)",
+        "tokens": ["Urban", "structure", "DT", "Criterion", "(", "ii", "):", "“", "The", "Stone", "Town", "of", "Zanzibar", "is", "an", "outstanding", "material", "manifestation", "of", "cultural", "fusion", "and", "harmonization", ".", "”", "(", "urban", "structure", "in", "general", ")", "\n"],
+        "values": ["aesthetical"],
+        "entities": [
+            {
+                "start": 69,
+                "end": 103,
+                "text": "outstanding material manifestation",
+                "label": "aesthetical"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-aesthetical", "I-aesthetical", "I-aesthetical", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 3,
+        "page": 1,
+        "sentence": "Criterion (iii): “For many centuries there was intense seaborne trading activity between Asia and Africa, and this is illustrated in an exceptional manner by the architecture and structure of the Stone Town.” (urban structure in general)",
+        "tokens": ["Criterion", "(", "iii", "):", "“", "For", "many", "centuries", "there", "was", "intense", "seaborne", "trading", "activity", "between", "Asia", "and", "Africa", ",", "and", "this", "is", "illustrated", "in", "an", "exceptional", "manner", "by", "the", "architecture", "and", "structure", "of", "the", "Stone", "Town", ".", "”", "(", "urban", "structure", "in", "general", ")", "\n"],
+        "values": ["aesthetical"],
+        "entities": [
+            {
+                "start": 158,
+                "end": 208,
+                "text": "the architecture and structure of the Stone Town.”",
+                "label": "aesthetical"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 4,
+        "page": 1,
+        "sentence": "ABE “There are few public open spaces, since many of the houses have their own enclosed spaces.” (urban structure, relationship open/closed space) p. 160",
+        "tokens": ["ABE", "“", "There", "are", "few", "public", "open", "spaces", ",", "since", "many", "of", "the", "houses", "have", "their", "own", "enclosed", "spaces", ".", "”", "(", "urban", "structure", ",", "relationship", "open", "/", "closed", "space", ")", "p.", "160", "\n"],
+        "values": ["social"],
+        "entities": [
+            {
+                "start": 79,
+                "end": 96,
+                "text": "enclosed spaces.”",
+                "label": "social"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-social", "I-social", "I-social", "I-social", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 5,
+        "page": 1,
+        "sentence": "“This is one of narrow winding streets resulting from unplanned building of houses and shops.",
+        "tokens": ["“", "This", "is", "one", "of", "narrow", "winding", "streets", "resulting", "from", "unplanned", "building", "of", "houses", "and", "shops", "."],
+        "values": ["social"],
+        "entities": [
+            {
+                "start": 54,
+                "end": 72,
+                "text": "unplanned building",
+                "label": "social"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-social", "I-social", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 6,
+        "page": 1,
+        "sentence": "“The historical evolution of the Stone Town is illustrated by the street pattern.“ (urban structure in general) p. 160",
+        "tokens": ["“", "The", "historical", "evolution", "of", "the", "Stone", "Town", "is", "illustrated", "by", "the", "street", "pattern", ".", "“", "(", "urban", "structure", "in", "general", ")", "p.", "160", "\n"],
+        "values": ["historic"],
+        "entities": [
+            {
+                "start": 5,
+                "end": 25,
+                "text": "historical evolution",
+                "label": "historic"
+            }
+        ],
+        "ner_tags": ["O", "O", "B-historic", "I-historic", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 7,
+        "page": 1,
+        "sentence": "Criterion (ii): “The Stone Town of Zanzibar is an outstanding material manifestation of cultural fusion and harmonization.” (urban structure in general) p. 162",
+        "tokens": ["Criterion", "(", "ii", "):", "“", "The", "Stone", "Town", "of", "Zanzibar", "is", "an", "outstanding", "material", "manifestation", "of", "cultural", "fusion", "and", "harmonization", ".", "”", "(", "urban", "structure", "in", "general", ")", "p.", "162", "\n"],
+        "values": ["aesthetical"],
+        "entities": [
+            {
+                "start": 50,
+                "end": 84,
+                "text": "outstanding material manifestation",
+                "label": "aesthetical"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-aesthetical", "I-aesthetical", "I-aesthetical", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 8,
+        "page": 1,
+        "sentence": "Criterion (iii): “For many centuries there was intense seaborne trading activity between Asia and Africa, and this is illustrated in an exceptional manner by the architecture and structure of the Stone Town.”",
+        "tokens": ["Criterion", "(", "iii", "):", "“", "For", "many", "centuries", "there", "was", "intense", "seaborne", "trading", "activity", "between", "Asia", "and", "Africa", ",", "and", "this", "is", "illustrated", "in", "an", "exceptional", "manner", "by", "the", "architecture", "and", "structure", "of", "the", "Stone", "Town", ".", "”"],
+        "values": ["aesthetical"],
+        "entities": [
+            {
+                "start": 158,
+                "end": 208,
+                "text": "the architecture and structure of the Stone Town.”",
+                "label": "aesthetical"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical"]
+    },
+    {
+        "sentence_id": 9,
+        "page": 1,
+        "sentence": "NF “Individually this is achieved by enclosing an open courtyard within a house.” (relationship open/closed space) p. 8",
+        "tokens": ["NF", "“", "Individually", "this", "is", "achieved", "by", "enclosing", "an", "open", "courtyard", "within", "a", "house", ".", "”", "(", "relationship", "open", "/", "closed", "space", ")", "p.", "8", "\n"],
+        "values": ["social"],
+        "entities": [
+            {
+                "start": 3,
+                "end": 16,
+                "text": "“Individually",
+                "label": "social"
+            }
+        ],
+        "ner_tags": ["O", "B-social", "I-social", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 10,
+        "page": 1,
+        "sentence": "“This is demonstrated in the layout of the stone town so that to an outsider the impression is one of massive confined construction, while to the dwellers, there is ample of private or communal open spaces which strangers can experience only upon entering courtyard houses, or viewing them from roof tops of their temporary abodes.” (relationship open/closed space) p. 8",
+        "tokens": ["“", "This", "is", "demonstrated", "in", "the", "layout", "of", "the", "stone", "town", "so", "that", "to", "an", "outsider", "the", "impression", "is", "one", "of", "massive", "confined", "construction", ",", "while", "to", "the", "dwellers", ",", "there", "is", "ample", "of", "private", "or", "communal", "open", "spaces", "which", "strangers", "can", "experience", "only", "upon", "entering", "courtyard", "houses", ",", "or", "viewing", "them", "from", "roof", "tops", "of", "their", "temporary", "abodes", ".", "”", "(", "relationship", "open", "/", "closed", "space", ")", "p.", "8", "\n"],
+        "values": ["social"],
+        "entities": [
+            {
+                "start": 0,
+                "end": 332,
+                "text": "“This is demonstrated in the layout of the stone town so that to an outsider the impression is one of massive confined construction, while to the dwellers, there is ample of private or communal open spaces which strangers can experience only upon entering courtyard houses, or viewing them from roof tops of their temporary abodes.”",
+                "label": "social"
+            }
+        ],
+        "ner_tags": ["B-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 11,
+        "page": 1,
+        "sentence": "“Communally, it is done by encompassing open spaces around buildings.” (relationship open/closed space) p. 8",
+        "tokens": ["“", "Communally", ",", "it", "is", "done", "by", "encompassing", "open", "spaces", "around", "buildings", ".", "”", "(", "relationship", "open", "/", "closed", "space", ")", "p.", "8", "\n"],
+        "values": ["social"],
+        "entities": [
+            {
+                "start": 0,
+                "end": 11,
+                "text": "“Communally",
+                "label": "social"
+            }
+        ],
+        "ner_tags": ["B-social", "I-social", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 12,
+        "page": 1,
+        "sentence": "“This is demonstrated in the layout of the stone town so that to an outsider the impression is one of massive confined construction, while to the dwellers, there is ample of private or communal open spaces which strangers can experience only upon entering courtyard houses, or viewing them from roof tops of their temporary abodes.” (relationship open/closed space) p. 8",
+        "tokens": ["“", "This", "is", "demonstrated", "in", "the", "layout", "of", "the", "stone", "town", "so", "that", "to", "an", "outsider", "the", "impression", "is", "one", "of", "massive", "confined", "construction", ",", "while", "to", "the", "dwellers", ",", "there", "is", "ample", "of", "private", "or", "communal", "open", "spaces", "which", "strangers", "can", "experience", "only", "upon", "entering", "courtyard", "houses", ",", "or", "viewing", "them", "from", "roof", "tops", "of", "their", "temporary", "abodes", ".", "”", "(", "relationship", "open", "/", "closed", "space", ")", "p.", "8", "\n"],
+        "values": ["social"],
+        "entities": [
+            {
+                "start": 185,
+                "end": 205,
+                "text": "communal open spaces",
+                "label": "social"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-social", "I-social", "I-social", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 13,
+        "page": 1,
+        "sentence": "“Behind them towards the former creek snake out shopping streets belonging to the Indians, the merchant class of the time as well as of today.” (narrow shopping street) p. 7",
+        "tokens": ["“", "Behind", "them", "towards", "the", "former", "creek", "snake", "out", "shopping", "streets", "belonging", "to", "the", "Indians", ",", "the", "merchant", "class", "of", "the", "time", "as", "well", "as", "of", "today", ".", "”", "(", "narrow", "shopping", "street", ")", "p.", "7", "\n"],
+        "values": ["economic"],
+        "entities": [
+            {
+                "start": 48,
+                "end": 64,
+                "text": "shopping streets",
+                "label": "economic"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "I-economic", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 14,
+        "page": 1,
+        "sentence": "“Thus was the eminent creation of the labyrinth of narrow shopping streets.“ (narrow shopping street) p. 7",
+        "tokens": ["“", "Thus", "was", "the", "eminent", "creation", "of", "the", "labyrinth", "of", "narrow", "shopping", "streets", ".", "“", "(", "narrow", "shopping", "street", ")", "p.", "7", "\n"],
+        "values": ["economic"],
+        "entities": [
+            {
+                "start": 34,
+                "end": 76,
+                "text": "the labyrinth of narrow shopping streets.“",
+                "label": "economic"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "B-economic", "I-economic", "I-economic", "I-economic", "I-economic", "I-economic", "I-economic", "I-economic", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 15,
+        "page": 1,
+        "sentence": "“Most of them initially came as traders of limited means, and settled in narrow shopͲfront houses along the bazaar streets.“ (narrow shopping street) p. 14",
+        "tokens": ["“", "Most", "of", "them", "initially", "came", "as", "traders", "of", "limited", "means", ",", "and", "settled", "in", "narrow", "shopͲfront", "houses", "along", "the", "bazaar", "streets", ".", "“", "(", "narrow", "shopping", "street", ")", "p.", "14", "\n"],
+        "values": ["economic"],
+        "entities": [
+            {
+                "start": 80,
+                "end": 124,
+                "text": "shopͲfront houses along the bazaar streets.“",
+                "label": "economic"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "I-economic", "I-economic", "I-economic", "I-economic", "I-economic", "I-economic", "I-economic", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 16,
+        "page": 1,
+        "sentence": "“Although it is the overall urban structure/fabric and townscape that gives the Stone Town of Zanzibar its unique character, there are many individual buildings of historical and architectural significance representing fine examples on the local architecture and building tradition.” (urban structure in general) p. 8",
+        "tokens": ["“", "Although", "it", "is", "the", "overall", "urban", "structure", "/", "fabric", "and", "townscape", "that", "gives", "the", "Stone", "Town", "of", "Zanzibar", "its", "unique", "character", ",", "there", "are", "many", "individual", "buildings", "of", "historical", "and", "architectural", "significance", "representing", "fine", "examples", "on", "the", "local", "architecture", "and", "building", "tradition", ".", "”", "(", "urban", "structure", "in", "general", ")", "p.", "8", "\n"],
+        "values": ["historic"],
+        "entities": [
+            {
+                "start": 16,
+                "end": 64,
+                "text": "the overall urban structure/fabric and townscape",
+                "label": "historic"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 17,
+        "page": 1,
+        "sentence": "“This confluence of many different cultures and religions has created a unique urban environment of Stone Town characterized by its exotic architecture.” (urban structure in general) p. 3",
+        "tokens": ["“", "This", "confluence", "of", "many", "different", "cultures", "and", "religions", "has", "created", "a", "unique", "urban", "environment", "of", "Stone", "Town", "characterized", "by", "its", "exotic", "architecture", ".", "”", "(", "urban", "structure", "in", "general", ")", "p.", "3", "\n"],
+        "values": ["historic"],
+        "entities": [
+            {
+                "start": 70,
+                "end": 96,
+                "text": "a unique urban environment",
+                "label": "historic"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 18,
+        "page": 1,
+        "sentence": "“This, however was more of an isolated slave station with no normal residential life, thus missing the important testimony of how the resident community was affected and influenced by the slave trade, how was cityͲplanning regulated to contain this trade and how it was deͲregulated to combat the trade.” (urban structure in general) p. 4",
+        "tokens": ["“", "This", ",", "however", "was", "more", "of", "an", "isolated", "slave", "station", "with", "no", "normal", "residential", "life", ",", "thus", "missing", "the", "important", "testimony", "of", "how", "the", "resident", "community", "was", "affected", "and", "influenced", "by", "the", "slave", "trade", ",", "how", "was", "cityͲplanning", "regulated", "to", "contain", "this", "trade", "and", "how", "it", "was", "deͲregulated", "to", "combat", "the", "trade", ".", "”", "(", "urban", "structure", "in", "general", ")", "p.", "4", "\n"],
+        "values": ["historic"],
+        "entities": [
+            {
+                "start": 201,
+                "end": 254,
+                "text": "how was cityͲplanning regulated to contain this trade",
+                "label": "historic"
+            },
+            {
+                "start": 259,
+                "end": 304,
+                "text": "how it was deͲregulated to combat the trade.”",
+                "label": "historic"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "O", "B-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+        "sentence_id": 19,
+        "page": 1,
+        "sentence": "“This confluence of many different cultures and religions has created a unique urban environment of Stone Town characterized by its exotic architecture.” (urban structure in general) p. 3",
+        "tokens": ["“", "This", "confluence", "of", "many", "different", "cultures", "and", "religions", "has", "created", "a", "unique", "urban", "environment", "of", "Stone", "Town", "characterized", "by", "its", "exotic", "architecture", ".", "”", "(", "urban", "structure", "in", "general", ")", "p.", "3"],
+        "values": ["aesthetical"],
+        "entities": [
+            {
+                "start": 70,
+                "end": 96,
+                "text": "a unique urban environment",
+                "label": "aesthetical"
+            }
+        ],
+        "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-aesthetical", "I-aesthetical", "I-aesthetical", "I-aesthetical", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    }
+]

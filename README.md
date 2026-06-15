@@ -8,12 +8,13 @@
 
 1. [Overview](#overview)
 2. [Annotation Framework](#annotation-framework)
-3. [Repository Structure](#repository-structure)
-4. [Data Sources](#data-sources)
-5. [Data Format](#data-format)
-6. [How to Contribute](#how-to-contribute)
-7. [License & Citation](#license--citation)
-8. [Contact](#contact)
+3. [Highlight Extractor Tool](#highlight-extractor-tool)
+4. [Repository Structure](#repository-structure)
+5. [Data Sources](#data-sources)
+6. [Data Format](#data-format)
+7. [How to Contribute](#how-to-contribute)
+8. [License & Citation](#license--citation)
+9. [Contact](#contact)
 
 ---
 
@@ -70,10 +71,34 @@ The taxonomy consists of **8 top-level value categories (L1)**, each subdivided 
 
 ---
 
+## Highlight Extractor Tool
+
+This repository includes a Python utility located in the [src/](src/) folder that processes PDF and Word (`.docx`) documents to extract colored text highlights. It aligns the highlighted phrases, normalizes punctuation and ligatures, segments sentences using NLP (`spaCy`), maps highlight colors to semantic labels (using manual configuration or zero-shot classification via a local LLM), and outputs training datasets in JSON format with token-level BIO tags.
+
+For detailed architecture, configuration, and execution instructions, please refer to the documentation:
+- **Guide**: [README_VE.md](docs/README_VE.md) (Highlight Extractor Guide)
+- **Pipeline Architecture**: [ARCHITECTURE.md](docs/ARCHITECTURE.md) (Diagrams and execution details)
+- **Automated LLM Classifier**: [AUTO_COLOR_MAPPER_ARCHITECTURE.md](docs/AUTO_COLOR_MAPPER_ARCHITECTURE.md) (Local LLM color classification)
+
+---
+
 ## Repository Structure
 
 ```
 HEVA/
+│
+├── docs/                           # Documentation folder (pipeline architecture, guides)
+│   ├── ARCHITECTURE.md
+│   ├── AUTO_COLOR_MAPPER_ARCHITECTURE.md
+│   └── README_VE.md
+│
+├── src/                            # Highlight Extractor utility source code
+│   ├── auto_color_mapper.py
+│   ├── config.py
+│   ├── docx_extractor.py
+│   ├── extract_highlights.py
+│   ├── pdf_extractor.py
+│   └── utils.py
 │
 ├── Example.xlsx                    # Target annotation format (reference file)
 │

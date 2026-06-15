@@ -1,0 +1,52 @@
+{
+    "#F7941D": {
+        "category": "social",
+        "reasoning": "The highlighted text 'Social' directly corresponds to the social category.",
+        "sentence": "Colour coding cultural values: Social, Economic, Politic, Historic, Aesthetical, Scientific, Age, Ecological."
+    },
+    "#8E67AC": {
+        "category": "economic",
+        "reasoning": "The highlighted texts mention shopping streets, shop-front houses, and labyrinth of narrow shopping streets, which relate to commercial activity and markets, thus falling under economic.",
+        "sentence": "\u201cBehind them towards the former creek snake out shopping streets belonging to the Indians, the merchant class of the time as well as of today.\u201d (narrow shopping street) p. 7"
+    },
+    "#F6EB13": {
+        "category": "political",
+        "reasoning": "There is no clear indication in the provided text that 'Politic' is a correct category. However, it seems like there might be some confusion with the term 'politics'. The actual highlighted texts do not clearly indicate any political actions or governance.",
+        "sentence": "Colour coding cultural values: Social, Economic, Politic, Historic, Aesthetical, Scientific, Age, Ecological."
+    },
+    "#B9529F": {
+        "category": "historic",
+        "reasoning": "The highlighted texts mention historical evolution, de-regulation to combat trade, and how city-planning was regulated, which relate to the historic category as they describe heritage objects and historical context.",
+        "sentence": "\u201cAlthough it is the overall urban structure/fabric and townscape that gives the Stone Town of Zanzibar its unique character, there are many individual buildings of historical and architectural significance representing fine examples on the local architecture and building tradition.\u201d (urban structure in general) p. 8"
+    },
+    "#6FCCDD": {
+        "category": "aesthetical",
+        "reasoning": "The highlighted texts mention a unique urban environment, outstanding material manifestation, and architecture, which relate to aesthetic harmony and visual design, thus falling under aesthetical.",
+        "sentence": "Criterion (ii): \u201cThe Stone Town of Zanzibar is an outstanding material manifestation of cultural fusion and harmonization.\u201d (urban structure in general) p. 162"
+    },
+    "#006B6B": {
+        "category": "scientific",
+        "reasoning": "The highlighted text 'Scientific' directly corresponds to the scientific category.",
+        "sentence": "Colour coding cultural values: Social, Economic, Politic, Historic, Aesthetical, Scientific, Age, Ecological."
+    },
+    "#EF4723": {
+        "category": "age",
+        "reasoning": "There is no clear indication in the provided text that 'Age' is a correct category. However, it seems like there might be some confusion with the term 'age'. The actual highlighted texts do not clearly indicate any age or longevity of structures.",
+        "sentence": "Colour coding cultural values: Social, Economic, Politic, Historic, Aesthetical, Scientific, Age, Ecological."
+    },
+    "#ACCE37": {
+        "category": "ecological",
+        "reasoning": "The highlighted text mentions ecological balance and green areas, which relate to environmental settings and terrain layout, thus falling under ecological.",
+        "sentence": "Colour coding cultural values: Social, Economic, Politic, Historic, Aesthetical, Scientific, Age, Ecological."
+    },
+    "#FFCD05": {
+        "category": "social",
+        "reasoning": "The highlighted texts mention enclosed spaces and unplanned building, but there is no clear indication that these relate to any specific category. However, considering the context of 'communal open spaces' mentioned later, it seems like this might be related to social or economic aspects.",
+        "sentence": "ABE \u201cThere are few public open spaces, since many of the houses have their own enclosed spaces.\u201d (urban structure, relationship open/closed space) p. 160"
+    },
+    "#FFD31E": {
+        "category": "social",
+        "reasoning": "The highlighted texts mention communal open spaces, which relates to community life and residents, thus falling under social.",
+        "sentence": "NF \u201cIndividually this is achieved by enclosing an open courtyard within a house.\u201d (relationship open/closed space) p. 8"
+    }
+}

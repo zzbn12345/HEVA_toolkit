@@ -1,0 +1,386 @@
+[
+  {
+    "sentence_id": 1,
+    "sentence": "De stedebouwkundige structuur van Punda, het binnen de stadsmuur gelegen deel van Willemstad, bestaat uit een patroon van smalle loodrecht op elkaar staande straten.",
+    "tokens": ["De", "stedebouwkundige", "structuur", "van", "Punda", ",", "het", "binnen", "de", "stadsmuur", "gelegen", "deel", "van", "Willemstad", ",", "bestaat", "uit", "een", "patroon", "van", "smalle", "loodrecht", "op", "elkaar", "staande", "straten", "."],
+    "values": ["historic"],
+    "entities": [
+      {
+        "start": 106,
+        "end": 164,
+        "text": "een patroon van smalle loodrecht op elkaar staande straten",
+        "label": "historic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "O"]
+  },
+  {
+    "sentence_id": 2,
+    "sentence": "Deze werden naar Hollandse traditie volgebouwd met aaneengeschakelde, smalle diepe panden.",
+    "tokens": ["Deze", "werden", "naar", "Hollandse", "traditie", "volgebouwd", "met", "aaneengeschakelde", ",", "smalle", "diepe", "panden", "."],
+    "values": ["social", "historic"],
+    "entities": [
+      {
+        "start": 17,
+        "end": 35,
+        "text": "Hollandse traditie",
+        "label": "social"
+      },
+      {
+        "start": 51,
+        "end": 89,
+        "text": "aaneengeschakelde, smalle diepe panden",
+        "label": "historic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "B-social", "I-social", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "I-historic", "O"]
+  },
+  {
+    "sentence_id": 3,
+    "sentence": "Het huidige Punda is groter dan dat van de 18de eeuw door het dempen van een strook langs de geslechte stadswal, ten koste van het Waaigat.",
+    "tokens": ["Het", "huidige", "Punda", "is", "groter", "dan", "dat", "van", "de", "18de", "eeuw", "door", "het", "dempen", "van", "een", "strook", "langs", "de", "geslechte", "stadswal", ",", "ten", "koste", "van", "het", "Waaigat", "."],
+    "values": ["ecological"],
+    "entities": [
+      {
+        "start": 58,
+        "end": 111,
+        "text": "het dempen van een strook langs de geslechte stadswal",
+        "label": "ecological"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 4,
+    "sentence": "Tussen de zee en de toenmalige noordelijke grens langs het Waaigat ontstond lintbebouwing, het stadsdeel dat nu Pietermaai-smal wordt genoemd.",
+    "tokens": ["Tussen", "de", "zee", "en", "de", "toenmalige", "noordelijke", "grens", "langs", "het", "Waaigat", "ontstond", "lintbebouwing", ",", "het", "stadsdeel", "dat", "nu", "Pietermaai", "-", "smal", "wordt", "genoemd", "."],
+    "values": ["historic"],
+    "entities": [
+      {
+        "start": 76,
+        "end": 89,
+        "text": "lintbebouwing",
+        "label": "historic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-historic", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 5,
+    "sentence": "Het gebied werd al snel populair als woonwijk, doordat welgestelde scheepskapiteins hier stukken land kochten en er villa's lieten bouwen.",
+    "tokens": ["Het", "gebied", "werd", "al", "snel", "populair", "als", "woonwijk", ",", "doordat", "welgestelde", "scheepskapiteins", "hier", "stukken", "land", "kochten", "en", "er", "villa", "'", "s", "lieten", "bouwen", "."],
+    "values": ["economic", "social"],
+    "entities": [
+      {
+        "start": 37,
+        "end": 45,
+        "text": "woonwijk",
+        "label": "economic"
+      },
+      {
+        "start": 55,
+        "end": 83,
+        "text": "welgestelde scheepskapiteins",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "B-economic", "O", "O", "B-social", "I-social", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 6,
+    "sentence": "Ze werden gevolgd door welvarende Joodse families die zich in dit gebied vestigden om de bedompte, onhygiënische Binnenstad te ontvluchten.",
+    "tokens": ["Ze", "werden", "gevolgd", "door", "welvarende", "Joodse", "families", "die", "zich", "in", "dit", "gebied", "vestigden", "om", "de", "bedompte", ",", "onhygiënische", "Binnenstad", "te", "ontvluchten", "."],
+    "values": ["social"],
+    "entities": [
+      {
+        "start": 23,
+        "end": 49,
+        "text": "welvarende Joodse families",
+        "label": "social"
+      },
+      {
+        "start": 89,
+        "end": 112,
+        "text": "bedompte, onhygiënische",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "B-social", "I-social", "I-social", "O", "O", "O", "O", "O", "O", "O", "O", "B-social", "I-social", "I-social", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 7,
+    "sentence": "Nog populairder werd Pietermaai to en er in het begin van de 19de eeuw hogere bestuursambtenaren kwamen wonen.",
+    "tokens": ["Nog", "populairder", "werd", "Pietermaai", "to", "en", "er", "in", "het", "begin", "van", "de", "19de", "eeuw", "hogere", "bestuursambtenaren", "kwamen", "wonen", "."],
+    "values": ["social"],
+    "entities": [
+      {
+        "start": 71,
+        "end": 97,
+        "text": "hogere bestuursambtenaren ",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-social", "I-social", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 8,
+    "sentence": "Punda werd hierdoor steeds meer handelswijk van de stad terwijl Fort Amsterdam zich tot bestuurlijk centrum ontwikkelde.",
+    "tokens": ["Punda", "werd", "hierdoor", "steeds", "meer", "handelswijk", "van", "de", "stad", "terwijl", "Fort", "Amsterdam", "zich", "tot", "bestuurlijk", "centrum", "ontwikkelde", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 32,
+        "end": 43,
+        "text": "handelswijk",
+        "label": "economic"
+      },
+      {
+        "start": 88,
+        "end": 107,
+        "text": "bestuurlijk centrum",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "B-economic", "O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "I-economic", "O", "O"]
+  },
+  {
+    "sentence_id": 9,
+    "sentence": "Na 1866 werd Pietermaai vergroot door het dempen van een deel van het Waaigat.",
+    "tokens": ["Na", "1866", "werd", "Pietermaai", "vergroot", "door", "het", "dempen", "van", "een", "deel", "van", "het", "Waaigat", "."],
+    "values": ["ecological"],
+    "entities": [
+      {
+        "start": 38,
+        "end": 77,
+        "text": "het dempen van een deel van het Waaigat",
+        "label": "ecological"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "B-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "O"]
+  },
+  {
+    "sentence_id": 10,
+    "sentence": "Oorspronkelijk werd met een ruime verkaveling gewerkt.",
+    "tokens": ["Oorspronkelijk", "werd", "met", "een", "ruime", "verkaveling", "gewerkt", "."],
+    "values": ["historic"],
+    "entities": [
+      {
+        "start": 24,
+        "end": 45,
+        "text": "een ruime verkaveling",
+        "label": "historic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "B-historic", "I-historic", "I-historic", "O", "O"]
+  },
+  {
+    "sentence_id": 11,
+    "sentence": "Pas later is het gebied verdicht tot de huidige situatie.",
+    "tokens": ["Pas", "later", "is", "het", "gebied", "verdicht", "tot", "de", "huidige", "situatie", "."],
+    "values": ["historic"],
+    "entities": [
+      {
+        "start": 24,
+        "end": 32,
+        "text": "verdicht",
+        "label": "historic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "B-historic", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 12,
+    "sentence": "Nadat in 1866 de stadsmuren waren afgebroken en er niet langer een militaire noodzaak bestond voor een schootsveld achter de stadsmuur, werd het gebied tussen Punda en Pietermaai eveneens volgebouwd.",
+    "tokens": ["Nadat", "in", "1866", "de", "stadsmuren", "waren", "afgebroken", "en", "er", "niet", "langer", "een", "militaire", "noodzaak", "bestond", "voor", "een", "schootsveld", "achter", "de", "stadsmuur", ",", "werd", "het", "gebied", "tussen", "Punda", "en", "Pietermaai", "eveneens", "volgebouwd", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 67,
+        "end": 114,
+        "text": "militaire noodzaak bestond voor een schootsveld",
+        "label": "economic"
+      },
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "I-economic", "I-economic", "I-economic", "I-economic", "I-economic", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 13,
+    "sentence": "In1707 werden door het stadsbestuur 14 erven uitgegeven met de bedoeling er pakhuizen en woningen van slechts één verdieping op te bouwen.",
+    "tokens": ["In1707", "werden", "door", "het", "stadsbestuur", "14", "erven", "uitgegeven", "met", "de", "bedoeling", "er", "pakhuizen", "en", "woningen", "van", "slechts", "één", "verdieping", "op", "te", "bouwen", "."],
+    "values": ["political", "economic"],
+    "entities": [
+      {
+        "start": 14,
+        "end": 55,
+        "text": "door het stadsbestuur 14 erven uitgegeven",
+        "label": "political"
+      },
+      {
+        "start": 76,
+        "end": 97,
+        "text": "pakhuizen en woningen",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "B-political", "I-political", "I-political", "I-political", "I-political", "I-political", "O", "O", "O", "O", "B-economic", "I-economic", "I-economic", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 14,
+    "sentence": "Dit om het schootsveld vanaf Fort Amsterdam vrij te houden.",
+    "tokens": ["Dit", "om", "het", "schootsveld", "vanaf", "Fort", "Amsterdam", "vrij", "te", "houden", "."],
+    "values": ["political"],
+    "entities": [
+      {
+        "start": 0,
+        "end": 58,
+        "text": "Dit om het schootsveld vanaf Fort Amsterdam vrij te houden",
+        "label": "political"
+      }
+    ],
+    "ner_tags": ["B-political", "I-political", "I-political", "I-political", "I-political", "I-political", "I-political", "I-political", "I-political", "I-political", "O"]
+  },
+  {
+    "sentence_id": 15,
+    "sentence": "Omdat Otrobanda nooit opgesloten heeft gezeten tussen knellende stadsmuren, was de wijk oorspronkelijk veeI ruimer van opzet dan Punda.",
+    "tokens": ["Omdat", "Otrobanda", "nooit", "opgesloten", "heeft", "gezeten", "tussen", "knellende", "stadsmuren", ",", "was", "de", "wijk", "oorspronkelijk", "veeI", "ruimer", "van", "opzet", "dan", "Punda", "."],
+    "values": ["political"],
+    "entities": [
+      {
+        "start": 64,
+        "end": 74,
+        "text": "stadsmuren",
+        "label": "political"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "B-political", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 16,
+    "sentence": "De eerste bebouwing van Otrobanda vertoonde dan ook overeenkomsten met de landhuizen nabij de stad.",
+    "tokens": ["De", "eerste", "bebouwing", "van", "Otrobanda", "vertoonde", "dan", "ook", "overeenkomsten", "met", "de", "landhuizen", "nabij", "de", "stad", "."],
+    "values": ["historic"],
+    "entities": [
+      {
+        "start": 52,
+        "end": 84,
+        "text": "overeenkomsten met de landhuizen",
+        "label": "historic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 17,
+    "sentence": "Een middengedeelte, de kern, met daaromheen een (gedeeltelijk) rondgaande galerij en boven de kern meestal nog een verdieping.",
+    "tokens": ["Een", "middengedeelte", ",", "de", "kern", ",", "met", "daaromheen", "een", "(", "gedeeltelijk", ")", "rondgaande", "galerij", "en", "boven", "de", "kern", "meestal", "nog", "een", "verdieping", "."],
+    "values": ["historic"],
+    "entities": [
+      {
+        "start": 0,
+        "end": 125,
+        "text": "Een middengedeelte, de kern, met daaromheen een (gedeeltelijk) rondgaande galerij en boven de kern meestal nog een verdieping",
+        "label": "historic"
+      }
+    ],
+    "ner_tags": ["B-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "O"]
+  },
+  {
+    "sentence_id": 18,
+    "sentence": "Dit alles gelegen op een perceel met vrije ruimte om de woning.",
+    "tokens": ["Dit", "alles", "gelegen", "op", "een", "perceel", "met", "vrije", "ruimte", "om", "de", "woning", "."],
+    "values": ["historic"],
+    "entities": [
+      {
+        "start": 21,
+        "end": 62,
+        "text": "een perceel met vrije ruimte om de woning",
+        "label": "historic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "O"]
+  },
+  {
+    "sentence_id": 19,
+    "sentence": "Aan de randen van de percelen werden bediendewoningen gebouwd.",
+    "tokens": ["Aan", "de", "randen", "van", "de", "percelen", "werden", "bediendewoningen", "gebouwd", "."],
+    "values": ["historic", "social"],
+    "entities": [
+      {
+        "start": 7,
+        "end": 29,
+        "text": "randen van de percelen",
+        "label": "historic"
+      },
+      {
+        "start": 37,
+        "end": 53,
+        "text": "bediendewoningen",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "O", "B-social", "O", "O"]
+  },
+  {
+    "sentence_id": 20,
+    "sentence": "Deze complexen vormden de Kura di Otrobanda, de koralenstructuur.",
+    "tokens": ["Deze", "complexen", "vormden", "de", "Kura", "di", "Otrobanda", ",", "de", "koralenstructuur", "."],
+    "values": ["historic"],
+    "entities": [
+      {
+        "start": 23,
+        "end": 64,
+        "text": "de Kura di Otrobanda, de koralenstructuur",
+        "label": "historic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "I-historic", "O"]
+  },
+  {
+    "sentence_id": 21,
+    "sentence": "Het stratenpatroon van Otrobanda verraadt door zijn structuur dat hier nauwelijks enige sprake is geweest van planning, zoals dat in Punda het geval was.",
+    "tokens": ["Het", "stratenpatroon", "van", "Otrobanda", "verraadt", "door", "zijn", "structuur", "dat", "hier", "nauwelijks", "enige", "sprake", "is", "geweest", "van", "planning", ",", "zoals", "dat", "in", "Punda", "het", "geval", "was", "."],
+    "values": ["political"],
+    "entities": [
+      {
+        "start": 71,
+        "end": 118,
+        "text": "nauwelijks enige sprake is geweest van planning",
+        "label": "political"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-political", "I-political", "I-political", "I-political", "I-political", "I-political", "I-political", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 22,
+    "sentence": "Op die manier ontstond er een echte volkswijk met een wirwar van steegjes en een sterke menging van ambachtelijke bedrijfjes en bescheiden",
+    "tokens": ["Op", "die", "manier", "ontstond", "er", "een", "echte", "volkswijk", "met", "een", "wirwar", "van", "steegjes", "en", "een", "sterke", "menging", "van", "ambachtelijke", "bedrijfjes", "en", "bescheiden"],
+    "values": ["social", "historic", "economic"],
+    "entities": [
+      {
+        "start": 36,
+        "end": 45,
+        "text": "volkswijk",
+        "label": "social"
+      },
+      {
+        "start": 54,
+        "end": 73,
+        "text": "wirwar van steegjes",
+        "label": "historic"
+      },
+      {
+        "start": 100,
+        "end": 124,
+        "text": "ambachtelijke bedrijfjes",
+        "label": "economic"
+      },
+      {
+        "start": 128,
+        "end": 138,
+        "text": "bescheiden",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "B-social", "O", "O", "B-historic", "I-historic", "I-historic", "O", "O", "O", "O", "O", "B-economic", "I-economic", "O", "B-social"]
+  }
+]

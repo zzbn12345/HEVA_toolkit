@@ -1,0 +1,353 @@
+[
+  {
+    "sentence_id": 1,
+    "sentence": "Ik houd me veel bezig met de sociale woningbouw.",
+    "tokens": ["Ik", "houd", "me", "veel", "bezig", "met", "de", "sociale", "woningbouw", "."],
+    "values": ["social"],
+    "entities": [
+      {
+        "start": 29,
+        "end": 36,
+        "text": "sociale woningbouw",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "B-social", "I-social", "O"]
+  },
+  {
+    "sentence_id": 2,
+    "sentence": "Door restauratie worden panden te duur waardoor de gemeenschap er geen baat meer bij heeft.",
+    "tokens": ["Door", "restauratie", "worden", "panden", "te", "duur", "waardoor", "de", "gemeenschap", "er", "geen", "baat", "met", "bij", "heeft", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 31,
+        "end": 38,
+        "text": "te duur",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "B-economic", "I-economic", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 3,
+    "sentence": "Om goed te functioneren moeten monumenten een gedeelte van de gemeenschap zijn .",
+    "tokens": ["Om", "goed", "te", "functioneren", "moeten", "monumenten", "een", "gedeelte", "van", "de", "gemeenschap", "zijn", "."],
+    "values": ["social"],
+    "entities": [
+      {
+        "start": 42,
+        "end": 78,
+        "text": "een gedeelte van de gemeenschap zijn",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "B-social", "I-social", "I-social", "I-social", "I-social", "I-social", "O"]
+  },
+  {
+    "sentence_id": 4,
+    "sentence": "Geef die mensen ook een kans om in de monumenten te wonen .",
+    "tokens": ["Geef", "die", "mensen", "ook", "een", "kans", "om", "in", "de", "monumenten", "te", "wonen", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 52,
+        "end": 57,
+        "text": "wonen",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "O"]
+  },
+  {
+    "sentence_id": 5,
+    "sentence": "Dat zou direct het begrip voor de monumenten groter maken.",
+    "tokens": ["Dat", "zou", "direct", "het", "begrip", "voor", "de", "monumenten", "groter", "maken", "."],
+    "values": ["political"],
+    "entities": [
+      {
+        "start": 19,
+        "end": 25,
+        "text": "begrip",
+        "label": "political"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "B-political", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 6,
+    "sentence": "De binnenstad heeft een heel goede infrastructuur .",
+    "tokens": ["De", "binnenstad", "heeft", "een", "heel", "goede", "infrastructuur", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 35,
+        "end": 49,
+        "text": "infrastructuur",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "B-economic", "O"]
+  },
+  {
+    "sentence_id": 7,
+    "sentence": "Het grenst ook aan het water , aan de haven , wat het een zeer aantrekkelijke plek maakt om even rustig te gaan zitten.",
+    "tokens": ["Het", "grenst", "ook", "aan", "het", "water", ",", "aan", "de", "haven", ",", "wat", "het", "een", "zeer", "aantrekkelijke", "plek", "maakt", "om", "even", "rustig", "te", "gaan", "zitten", "."],
+    "values": ["ecological, economic, social"],
+    "entities": [
+      {
+        "start": 15,
+        "end": 28,
+        "text": "aan het water",
+        "label": "ecological"
+      },
+      {
+        "start": 31,
+        "end": 43,
+        "text": "aan de haven",
+        "label": "economic"
+      },
+      {
+        "start": 58,
+        "end": 76,
+        "text": "zeer aantrekkelijke",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "B-ecological", "I-ecological", "I-ecological", "O", "B-economic", "I-economic", "I-economic", "O", "O", "O", "O", "B-social", "I-social", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 8,
+    "sentence": "Ten slotte is ons kleurgebruik heel bijzonder, omdat we in het Caribische gebied een van de weinige eilanden zijn met zo’n mooi kleurgebruik.",
+    "tokens": ["Ten", "slotte", "is", "ons", "kleurgebruik", "heel", "bijzonder", ",", "omdat", "we", "in", "het", "Caribische", "gebied", "een", "van", "de", "weinige", "eilanden", "zijn", "met", "zo’n", "mooi", "kleurgebruik", "."],
+    "values": ["aesthetical"],
+    "entities": [
+      {
+        "start": 18,
+        "end": 30,
+        "text": "kleurgebruik",
+        "label": "aesthetical"
+      },
+      {
+        "start": 123,
+        "end": 127,
+        "text": "mooi",
+        "label": "aesthetical"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "B-aesthetical", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-aesthetical", "O", "O"]
+  },
+  {
+    "sentence_id": 9,
+    "sentence": "De binnenstad is heel economisch gericht.",
+    "tokens": ["De", "binnenstad", "is", "heel", "economisch", "gericht", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 22,
+        "end": 32,
+        "text": "economisch",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "B-economic", "O", "O"]
+  },
+  {
+    "sentence_id": 10,
+    "sentence": "Dat houdt ze wel in fysiek goede staat, maar het heeft geen sociale waarde .",
+    "tokens": ["Dat", "houdt", "ze", "wel", "in", "fysiek", "goede", "staat", ",", "maar", "het", "heeft", "geen", "sociale", "waarde", "."],
+    "values": ["social"],
+    "entities": [
+      {
+        "start": 56,
+        "end": 74,
+        "text": "geen sociale waarde",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-social", "I-social", "I-social", "O"]
+  },
+  {
+    "sentence_id": 11,
+    "sentence": "Het wonen ontbreekt waardoor na zes uur Punda een ghost town is.",
+    "tokens": ["Het", "wonen", "ontbreekt", "waardoor", "na", "zes", "uur", "Punda", "een", "ghost", "town", "is", "."],
+    "values": ["economic", "social"],
+    "entities": [
+      {
+        "start": 4,
+        "end": 9,
+        "text": "wonen",
+        "label": "economic"
+      },
+      {
+        "start": 50,
+        "end": 60,
+        "text": "ghost town",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "B-economic", "O", "O", "O", "O", "O", "O", "O", "B-social", "I-social", "O", "O"]
+  },
+  {
+    "sentence_id": 12,
+    "sentence": "Dat kan in de monumenten, maar er zijn ook veel open plekken waar woningen gebouwd kunnen worden.",
+    "tokens": ["Dat", "kan", "in", "de", "monumenten", ",", "maar", "er", "zijn", "ook", "veel", "open", "plekken", "waar", "woningen", "gebouwd", "kunnen", "worden", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 66,
+        "end": 74,
+        "text": "woningen",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 13,
+    "sentence": "Op dit moment richten we ons vooral op de winkeliers , terwijl de kleine entrepreneurs moeten ook welkom zijn in de stad.",
+    "tokens": ["Op", "dit", "moment", "richten", "we", "ons", "vooral", "op", "de", "winkeliers", ",", "terwijl", "de", "kleine", "entrepreneurs", "moeten", "ook", "welkom", "zijn", "in", "de", "stad", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 42,
+        "end": 52,
+        "text": "winkeliers",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 14,
+    "sentence": "De verschillende wetten zijn hindernissen die zulke mensen belemmeren om naar de binnenstad te komen.",
+    "tokens": ["De", "verschillende", "wetten", "zijn", "hindernissen", "die", "zulke", "mensen", "belemmeren", "om", "naar", "de", "binnenstad", "te", "komen", "."],
+    "values": ["political"],
+    "entities": [
+      {
+        "start": 17,
+        "end": 23,
+        "text": "wetten",
+        "label": "political"
+      }
+    ],
+    "ner_tags": ["O", "O", "B-political", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 15,
+    "sentence": "Niet dat het helemaal niet kan, maar omdat het een historisch gebied is heeft het altijd een aantrekkingskracht.",
+    "tokens": ["Niet", "dat", "het", "helemaal", "niet", "kan", ",", "maar", "omdat", "het", "een", "historisch", "gebied", "is", "heeft", "het", "altijd", "een", "aantrekkingskracht", "."],
+    "values": ["age"],
+    "entities": [
+      {
+        "start": 51,
+        "end": 61,
+        "text": "historisch",
+        "label": "age"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-age", "O", "O", "O", "O", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 16,
+    "sentence": "We hebben heel veel activiteiten in het havengebied , de Sint Annabaai, die dwars door de binnenstad gaat .",
+    "tokens": ["We", "hebben", "heel", "veel", "activiteiten", "in", "het", "havengebied", ",", "de", "Sint", "Annabaai", ",", "die", "dwars", "door", "de", "binnenstad", "gaat", "."],
+    "values": ["economic", "ecological"],
+    "entities": [
+      {
+        "start": 40,
+        "end": 51,
+        "text": "havengebied",
+        "label": "economic"
+      },
+      {
+        "start": 57,
+        "end": 105,
+        "text": "Sint Annabaai, die dwars door de binnenstad gaat",
+        "label": "ecological"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "B-economic", "O", "O", "B-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "I-ecological", "O"]
+  },
+  {
+    "sentence_id": 17,
+    "sentence": "Punda is toeristischer , heeft meer kwaliteitsproducten en is duurder .",
+    "tokens": ["Punda", "is", "toeristischer", ",", "heeft", "meer", "kwaliteitsproducten", "en", "is", "duurder", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 9,
+        "end": 22,
+        "text": "toeristischer",
+        "label": "economic"
+      },
+      {
+        "start": 62,
+        "end": 69,
+        "text": "duurder",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "B-economic", "O", "O", "O", "O", "O", "O", "B-economic", "O"]
+  },
+  {
+    "sentence_id": 18,
+    "sentence": "Otrobanda is localer, trekt ook meer mensen uit Banda’bou .",
+    "tokens": ["Otrobanda", "is", "localer", ",", "trekt", "ook", "meer", "mensen", "uit", "Banda’bou", "."],
+    "values": ["social"],
+    "entities": [
+      {
+        "start": 13,
+        "end": 57,
+        "text": "localer, trekt ook meer mensen uit Banda’bou",
+        "label": "social"
+      }
+    ],
+    "ner_tags": ["O", "O", "B-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "I-social", "O"]
+  },
+  {
+    "sentence_id": 19,
+    "sentence": "Sinds de komst van renaissance hebben ze daar ook meer kwaliteitproducten, maar wel volledig op de toerist gericht.",
+    "tokens": ["Sinds", "de", "komst", "van", "renaissance", "hebben", "ze", "daar", "ook", "meer", "kwaliteitproducten", ",", "maar", "wel", "volledig", "op", "de", "toerist", "gericht", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 100,
+        "end": 107,
+        "text": "toerist",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "O", "O"]
+  },
+  {
+    "sentence_id": 20,
+    "sentence": "Voor de mensen die naar Punda willen is parkeren een groot probleem.",
+    "tokens": ["Voor", "de", "mensen", "die", "naar", "Punda", "willen", "is", "parkeren", "een", "groot", "probleem", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 40,
+        "end": 48,
+        "text": "parkeren",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "O", "O", "O", "O"]
+  },
+  {
+    "sentence_id": 21,
+    "sentence": "Punda heeft een achterstand want Punda heeft geen woonruimte .",
+    "tokens": ["Punda", "heeft", "een", "achterstand", "want", "Punda", "heeft", "geen", "woonruimte", "."],
+    "values": ["economic"],
+    "entities": [
+      {
+        "start": 50,
+        "end": 60,
+        "text": "woonruimte",
+        "label": "economic"
+      }
+    ],
+    "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "O", "B-economic", "O"]
+  }
+]

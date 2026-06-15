@@ -1,0 +1,32 @@
+{
+    "#FDB932": {
+        "category": "social",
+        "reasoning": "The highlights relate to community life, residents, and public interaction, which are all aspects of social value. The presence of 'sociale' explicitly indicates this category.",
+        "sentence": "Dat houdt ze wel in fysiek goede staat, maar het heeft geen sociale waarde."
+    },
+    "#9E76B4": {
+        "category": "economic",
+        "reasoning": "The highlights relate to commercial activity, markets, financial values, and infrastructure, which are all economic in nature. The presence of 'economisch', 'havengebied', 'infrastructuur', and 'toeristischer' explicitly indicate this category.",
+        "sentence": "Dat kan in de monumenten, maar er zijn ook veel open plekken waar woningen gebouwd kunnen worden."
+    },
+    "#D4C126": {
+        "category": "political",
+        "reasoning": "The highlights relate to governance, administrative regulations, and laws, which are all political actions. The presence of 'begrip' and 'wetten' explicitly indicate this category.",
+        "sentence": "Dat zou direct het begrip voor de monumenten groter maken."
+    },
+    "#9ECC75": {
+        "category": "ecological",
+        "reasoning": "The highlights relate to physical geography, natural landforms, environmental settings, and terrain layout, which are all ecological characteristics. The presence of 'Sint Annabaai' and 'aan het water' explicitly indicate this category.",
+        "sentence": "Het grenst ook aan het water, aan de haven, wat het een zeer aantrekkelijke plek maakt om even rustig te gaan zitten."
+    },
+    "#3DC7F4": {
+        "category": "aesthetical",
+        "reasoning": "The highlights relate to visual design, layout, and aesthetic harmony, which are all aesthetical aspects. The presence of 'kleurgebruik' and 'mooi' explicitly indicate this category.",
+        "sentence": "Ten slotte is ons kleurgebruik heel bijzonder, omdat we in het Caribische gebied een van de weinige eilanden zijn met zo\u2019n mooi kleurgebruik."
+    },
+    "#00B26A": {
+        "category": "age",
+        "reasoning": "The highlight relates to the age or longevity of structures, as indicated by the word 'historisch'. This is an important distinction from the HISTORIC category, which refers to heritage significance rather than physical age.",
+        "sentence": "Niet dat het helemaal niet kan, maar omdat het een historisch gebied is heeft het altijd een aantrekkingskracht."
+    }
+}
