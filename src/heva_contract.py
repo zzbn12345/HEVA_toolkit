@@ -13,6 +13,8 @@ from pathlib import Path
 import re
 from typing import Any, Mapping, Sequence
 
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, ValidationError
+
 
 HEVA_LABELS = frozenset(
     {
@@ -29,6 +31,44 @@ HEVA_LABELS = frozenset(
 CURRENT_SCHEMA_VERSION = "1.0"
 LEGACY_SCHEMA_VERSION = "0.1"
 HEX_COLOR = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+
+class MappingProvenanceInput(BaseModel):
+    """Strict input shape for mapping provenance before semantic checks."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    method: StrictStr
+    status: StrictStr
+    config_id: StrictStr | None = None
+
+
+class EntityInput(BaseModel):
+    """Strict input shape for one entity span before semantic checks."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    start: StrictInt
+    end: StrictInt
+    text: StrictStr
+    label: StrictStr
+    color: StrictStr | None = None
+
+
+class RecordInput(BaseModel):
+    """Strict input shape for a HEVA record before semantic checks."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    sentence_id: StrictInt
+    page: StrictInt
+    sentence: StrictStr
+    tokens: list[StrictStr]
+    values: list[StrictStr]
+    entities: list[EntityInput]
+    ner_tags: list[StrictStr]
+    schema_version: StrictStr = LEGACY_SCHEMA_VERSION
+    mapping_provenance: MappingProvenanceInput | None = None
 
 
 @dataclass(frozen=True)
@@ -122,34 +162,47 @@ def _issue(code: str, path: str, message: str) -> ContractIssue:
     return ContractIssue(code=code, path=path, message=message)
 
 
-def _list_of_strings(value: Any, path: str, issues: list[ContractIssue]) -> tuple[str, ...]:
-    if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
-        issues.append(_issue("invalid_type", path, "Expected an array of strings."))
-        return ()
-    return tuple(value)
+def _path_from_loc(loc: tuple[Any, ...]) -> str:
+    """Convert pydantic error locations to JSON-style paths."""
+
+    path = "$"
+    for part in loc:
+        if isinstance(part, int):
+            path += f"[{part}]"
+        else:
+            path += f".{part}"
+    return path
 
 
-def _positive_integer(value: Any, path: str, issues: list[ContractIssue]) -> int:
-    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
-        issues.append(_issue("invalid_type", path, "Expected an integer greater than zero."))
-        return 0
-    return value
+def _parse_structural_record(value: Any) -> tuple[RecordInput | None, list[ContractIssue]]:
+    """Parse strict structure with pydantic and map errors to stable contract issues."""
+
+    if not isinstance(value, Mapping):
+        return None, [_issue("invalid_type", "$", "Expected a HEVA record object.")]
+
+    try:
+        return RecordInput.model_validate(value), []
+    except ValidationError as error:
+        issues: list[ContractIssue] = []
+        for item in error.errors():
+            issues.append(
+                _issue(
+                    "invalid_type",
+                    _path_from_loc(item.get("loc", ())),
+                    item.get("msg", "Invalid type."),
+                )
+            )
+        return None, issues
 
 
-def _parse_mapping(value: Any, issues: list[ContractIssue]) -> MappingProvenance | None:
+def _parse_mapping(
+    value: MappingProvenanceInput | None, issues: list[ContractIssue]
+) -> MappingProvenance | None:
     if value is None:
         return None
-    if not isinstance(value, Mapping):
-        issues.append(
-            _issue("invalid_type", "$.mapping_provenance", "Expected a mapping object.")
-        )
-        return None
-    method = value.get("method")
-    status = value.get("status")
-    config_id = value.get("config_id")
-    if not isinstance(method, str) or not method:
+    if not value.method:
         issues.append(_issue("invalid_type", "$.mapping_provenance.method", "Expected text."))
-    if status not in {"pending_review", "approved"}:
+    if value.status not in {"pending_review", "approved"}:
         issues.append(
             _issue(
                 "invalid_mapping_status",
@@ -157,56 +210,30 @@ def _parse_mapping(value: Any, issues: list[ContractIssue]) -> MappingProvenance
                 "Expected pending_review or approved.",
             )
         )
-    if config_id is not None and not isinstance(config_id, str):
-        issues.append(_issue("invalid_type", "$.mapping_provenance.config_id", "Expected text."))
-    if not isinstance(method, str) or not method or not isinstance(status, str):
-        return None
-    return MappingProvenance(method=method, status=status, config_id=config_id)
+    return MappingProvenance(
+        method=value.method,
+        status=value.status,
+        config_id=value.config_id,
+    )
 
 
 def _parse_entities(
-    value: Any, sentence: str, issues: list[ContractIssue]
+    value: Sequence[EntityInput], sentence: str, issues: list[ContractIssue]
 ) -> tuple[Entity, ...]:
-    if not isinstance(value, list):
-        issues.append(_issue("invalid_type", "$.entities", "Expected an array of entities."))
-        return ()
     entities: list[Entity] = []
     for index, candidate in enumerate(value):
         path = f"$.entities[{index}]"
-        if not isinstance(candidate, Mapping):
-            issues.append(_issue("invalid_type", path, "Expected an entity object."))
-            continue
-        start = candidate.get("start")
-        end = candidate.get("end")
-        text = candidate.get("text")
-        label = candidate.get("label")
-        color = candidate.get("color")
-        if isinstance(start, bool) or not isinstance(start, int):
-            issues.append(_issue("invalid_type", f"{path}.start", "Expected an integer."))
-        if isinstance(end, bool) or not isinstance(end, int):
-            issues.append(_issue("invalid_type", f"{path}.end", "Expected an integer."))
-        if not isinstance(text, str):
-            issues.append(_issue("invalid_type", f"{path}.text", "Expected text."))
-        if not isinstance(label, str):
-            issues.append(_issue("invalid_type", f"{path}.label", "Expected text."))
-        elif label not in HEVA_LABELS:
-            issues.append(_issue("unknown_label", f"{path}.label", f"Unknown HEVA label: {label}"))
-        if color is not None and (not isinstance(color, str) or not HEX_COLOR.fullmatch(color)):
+        if candidate.label not in HEVA_LABELS:
+            issues.append(
+                _issue("unknown_label", f"{path}.label", f"Unknown HEVA label: {candidate.label}")
+            )
+        if candidate.color is not None and not HEX_COLOR.fullmatch(candidate.color):
             issues.append(
                 _issue("invalid_color", f"{path}.color", "Expected a six-digit #RRGGBB color.")
             )
-        if not all(
-            [
-                isinstance(start, int) and not isinstance(start, bool),
-                isinstance(end, int) and not isinstance(end, bool),
-                isinstance(text, str),
-                isinstance(label, str),
-            ]
-        ):
-            continue
-        if start < 0 or end <= start or end > len(sentence):
+        if candidate.start < 0 or candidate.end <= candidate.start or candidate.end > len(sentence):
             issues.append(_issue("invalid_entity_offset", path, "Entity offsets are out of range."))
-        elif sentence[start:end] != text:
+        elif sentence[candidate.start : candidate.end] != candidate.text:
             issues.append(
                 _issue(
                     "entity_text_mismatch",
@@ -214,13 +241,24 @@ def _parse_entities(
                     "Entity text does not equal the sentence slice at start:end.",
                 )
             )
-        entities.append(Entity(start=start, end=end, text=text, label=label, color=color))
+        entities.append(
+            Entity(
+                start=candidate.start,
+                end=candidate.end,
+                text=candidate.text,
+                label=candidate.label,
+                color=candidate.color,
+            )
+        )
     return tuple(entities)
 
 
-def _validate_bio(tags: Sequence[str], issues: list[ContractIssue]) -> None:
+def _validate_bio(tags: Sequence[str], issues: list[ContractIssue]) -> set[str]:
+    """Validate BIO syntax and return the controlled labels represented by the tags."""
+
     previous_prefix = "O"
     previous_label: str | None = None
+    represented_labels: set[str] = set()
     for index, tag in enumerate(tags):
         path = f"$.ner_tags[{index}]"
         if tag == "O":
@@ -233,39 +271,42 @@ def _validate_bio(tags: Sequence[str], issues: list[ContractIssue]) -> None:
         prefix, label = tag.split("-", 1)
         if prefix not in {"B", "I"} or label not in HEVA_LABELS:
             issues.append(_issue("invalid_bio_tag", path, f"Invalid BIO tag: {tag}"))
-        elif prefix == "I" and (previous_prefix not in {"B", "I"} or previous_label != label):
-            issues.append(
-                _issue(
-                    "invalid_bio_transition",
-                    path,
-                    f"{tag} must follow B-{label} or I-{label}.",
+        else:
+            represented_labels.add(label)
+            if prefix == "I" and (
+                previous_prefix not in {"B", "I"} or previous_label != label
+            ):
+                issues.append(
+                    _issue(
+                        "invalid_bio_transition",
+                        path,
+                        f"{tag} must follow B-{label} or I-{label}.",
+                    )
                 )
-            )
         previous_prefix, previous_label = prefix, label
+    return represented_labels
 
 
 def validate_record(value: Any) -> ValidationResult:
     """Validate one decoded JSON value and return typed data plus stable issues."""
 
-    if not isinstance(value, Mapping):
-        return ValidationResult(
-            record=None,
-            issues=(_issue("invalid_type", "$", "Expected a HEVA record object."),),
-        )
+    parsed, structural_issues = _parse_structural_record(value)
+    if parsed is None:
+        return ValidationResult(record=None, issues=tuple(structural_issues))
+
     issues: list[ContractIssue] = []
-    sentence_id = _positive_integer(value.get("sentence_id"), "$.sentence_id", issues)
-    page = _positive_integer(value.get("page"), "$.page", issues)
-    sentence_value = value.get("sentence")
-    if not isinstance(sentence_value, str):
-        issues.append(_issue("invalid_type", "$.sentence", "Expected text."))
-        sentence = ""
-    else:
-        sentence = sentence_value
-    tokens = _list_of_strings(value.get("tokens"), "$.tokens", issues)
-    values = _list_of_strings(value.get("values"), "$.values", issues)
-    ner_tags = _list_of_strings(value.get("ner_tags"), "$.ner_tags", issues)
-    entities = _parse_entities(value.get("entities"), sentence, issues)
-    schema_version = value.get("schema_version", LEGACY_SCHEMA_VERSION)
+    sentence_id = parsed.sentence_id
+    page = parsed.page
+    sentence = parsed.sentence
+    tokens = tuple(parsed.tokens)
+    values = tuple(parsed.values)
+    ner_tags = tuple(parsed.ner_tags)
+    entities = _parse_entities(parsed.entities, sentence, issues)
+    schema_version = parsed.schema_version
+    if sentence_id < 1:
+        issues.append(_issue("invalid_type", "$.sentence_id", "Expected an integer greater than zero."))
+    if page < 1:
+        issues.append(_issue("invalid_type", "$.page", "Expected an integer greater than zero."))
     if not isinstance(schema_version, str) or schema_version not in {
         LEGACY_SCHEMA_VERSION,
         CURRENT_SCHEMA_VERSION,
@@ -274,7 +315,7 @@ def validate_record(value: Any) -> ValidationResult:
             _issue("unsupported_schema_version", "$.schema_version", "Unsupported schema version.")
         )
         schema_version = LEGACY_SCHEMA_VERSION
-    mapping = _parse_mapping(value.get("mapping_provenance"), issues)
+    mapping = _parse_mapping(parsed.mapping_provenance, issues)
 
     for index, label in enumerate(values):
         if label not in HEVA_LABELS:
@@ -287,7 +328,7 @@ def validate_record(value: Any) -> ValidationResult:
                 f"Found {len(tokens)} tokens and {len(ner_tags)} BIO tags.",
             )
         )
-    _validate_bio(ner_tags, issues)
+    bio_labels = _validate_bio(ner_tags, issues)
     entity_labels = {entity.label for entity in entities}
     if set(values) != entity_labels:
         issues.append(
@@ -295,6 +336,14 @@ def validate_record(value: Any) -> ValidationResult:
                 "value_entity_mismatch",
                 "$.values",
                 "Values must equal the unique labels represented by entities.",
+            )
+        )
+    if set(values) != bio_labels:
+        issues.append(
+            _issue(
+                "bio_value_mismatch",
+                "$.ner_tags",
+                "BIO tags and categorical values must represent the same HEVA labels.",
             )
         )
 

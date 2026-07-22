@@ -1,13 +1,115 @@
 # Validating HEVA extracted records
 
-HEVA uses two complementary validation layers:
+HEVA validates a record in two stages:
 
-1. **Frictionless validation** checks whether the JSON records follow the declared,
-   interoperable field structure.
-2. **HEVA semantic validation** checks relationships that a tabular schema cannot express,
-   such as entity offsets, controlled labels, and BIO transitions.
+1. **Pydantic checks the structure:** are the expected fields present, and does each field
+   contain the right kind of data?
+2. **HEVA checks the meaning:** do the fields follow the annotation rules and agree with
+   each other?
 
-Passing only one layer is not sufficient evidence that a HEVA record is correct.
+In simple terms, Pydantic checks that a form was filled in correctly. HEVA validation
+checks whether the answers on that form make sense together.
+
+## A simple example
+
+Pydantic checks basic questions such as:
+
+- Is `sentence_id` an integer?
+- Is `sentence` text?
+- Is `tokens` a list?
+- Does every entity contain `start`, `end`, `text`, and `label`?
+
+For example, `"sentence_id": "first"` is invalid because `sentence_id` must be a number.
+Pydantic can detect this without knowing anything about heritage annotations.
+
+Once the structure is correct, HEVA checks domain-specific questions:
+
+- Do the entity positions select the stated text from the sentence?
+- Does every label belong to the approved HEVA vocabulary?
+- Is every `I-label` preceded by a matching `B-label` or `I-label`?
+- Do `values`, entities, and BIO tags describe the same labels?
+
+Consider this annotation:
+
+```json
+{
+  "sentence_id": 1,
+  "page": 2,
+  "sentence": "The historic harbour remains visible.",
+  "tokens": ["The", "historic", "harbour", "remains", "visible", "."],
+  "values": ["historic"],
+  "entities": [
+    {
+      "start": 4,
+      "end": 20,
+      "text": "historic harbour",
+      "label": "historic"
+    }
+  ],
+  "ner_tags": ["O", "B-historic", "I-historic", "O", "O", "O"]
+}
+```
+
+The three annotation representations agree:
+
+- `values` says the sentence contains a `historic` value;
+- the entity identifies `historic harbour` as the historic text span;
+- the BIO tags mark the same label on the corresponding tokens.
+
+If the BIO tags were all `O`, they would mean that no token is annotated. That would
+contradict `values` and the entity. The HEVA validator reports this as
+`bio_value_mismatch`.
+
+| Validation layer | Question it answers |
+|---|---|
+| Pydantic structure | “Does this JSON contain the expected fields and data types?” |
+| HEVA semantics | “Do these values make sense and agree according to HEVA rules?” |
+
+A record must pass both stages. Correctly shaped JSON can still contain an incorrect or
+contradictory annotation.
+
+## Quickstart: validate in 3 commands
+
+From the repository root:
+
+### 1) Create environment and install dependencies
+
+```bash
+python3.12 -m venv venv
+./venv/bin/python -m pip install --upgrade pip setuptools wheel
+./venv/bin/python -m pip install -r requirements.txt
+```
+
+### 2) Validate one file
+
+```bash
+./venv/bin/python -m src.validate_records --file data/Galle_P127_extracted.json
+```
+
+Exit codes:
+- `0`: valid
+- `1`: decoded but has contract issues
+- `2`: malformed JSON or unreadable input
+
+### 3) Validate all extracted files in `data/`
+
+```bash
+./venv/bin/python -m src.validate_records --all
+```
+
+Optional: validate by custom glob pattern.
+
+```bash
+./venv/bin/python -m src.validate_records --glob "data/*_extracted.json"
+```
+
+Optional: limit printed issues per file.
+
+```bash
+./venv/bin/python -m src.validate_records --all --max-issues 10
+```
+
+Expected baseline in this repository: four extracted files, all valid.
 
 ## Install the validator dependencies
 
@@ -15,11 +117,12 @@ From the repository root, install the pinned requirements in an isolated Python
 environment:
 
 ```bash
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+python3.12 -m venv venv
+./venv/bin/python -m pip install --upgrade pip setuptools wheel
+./venv/bin/python -m pip install -r requirements.txt
 ```
 
-## What Frictionless validates
+## What structural parsing validates
 
 The descriptor at `schemas/heva-extracted-record.json` defines one extracted sentence as a
 row with these fields:
@@ -36,50 +139,13 @@ row with these fields:
 | `schema_version` | string | no | Explicit contract version for new records |
 | `mapping_provenance` | object | no | Origin and human-review state of color mapping |
 
-Frictionless checks field presence, primitive types, and positive integer constraints. Run
-it from Python as follows:
+Pydantic checks field presence and primitive types. Positive integer, schema-version,
+and other domain rules are enforced by the semantic checks in the same validator.
 
-```python
-import json
-from pathlib import Path
-
-from frictionless import Resource
-
-records = json.loads(Path("data/Galle_P127_extracted.json").read_text(encoding="utf-8"))
-resource = Resource(data=records, schema="schemas/heva-extracted-record.json")
-report = resource.validate()
-
-print("valid:", report.valid)
-for error in report.flatten(["type", "rowNumber", "fieldName", "message"]):
-    print(error)
-```
-
-For the current Galle example this reports `valid: True`.
-
-Frictionless is useful here because the same machine-readable descriptor can later be used
-by package builders, command-line tools, and other data-processing software. It does not,
-however, understand HEVA's nested annotation semantics.
-
-## What the HEVA validator adds
-
-`src.heva_contract` validates each decoded record and reports issues with stable codes and
-JSON-style paths. It checks that:
-
-- labels in `values`, entities, and BIO tags belong to the controlled HEVA vocabulary;
-- `tokens` and `ner_tags` have the same length;
-- an `I-label` follows `B-label` or `I-label` of the same category;
-- every entity range is inside the sentence;
-- `sentence[start:end]` exactly equals the entity text;
-- `values` equals the set of labels represented by entities;
-- optional colors use normalized `#RRGGBB` syntax;
-- optional mapping status is `pending_review` or `approved`;
-- the record uses a supported schema version.
-
-Validate a file with:
+Run validation from Python as follows:
 
 ```python
 from pathlib import Path
-
 from src.heva_contract import ContractParseError, load_records
 
 path = Path("data/Galle_P127_extracted.json")
@@ -87,7 +153,7 @@ path = Path("data/Galle_P127_extracted.json")
 try:
     results = load_records(path)
 except ContractParseError as error:
-    print(error)  # Includes source path, line, and column.
+    print(error)
 else:
     for row_number, result in enumerate(results, start=1):
         for issue in result.issues:
@@ -97,10 +163,28 @@ else:
     print(f"{path}: {'valid' if valid else 'invalid'}")
 ```
 
+For the current Galle example this reports `valid`.
+
+## What the HEVA validator adds
+
+`src.heva_contract` validates each decoded record and reports issues with stable codes and
+JSON-style paths. It checks that:
+
+- labels in `values`, entities, and BIO tags belong to the controlled HEVA vocabulary;
+- `tokens` and `ner_tags` have the same length;
+- an `I-label` follows `B-label` or `I-label` of the same category;
+- BIO tags represent the same label set as `values` and entities;
+- every entity range is inside the sentence;
+- `sentence[start:end]` exactly equals the entity text;
+- `values` equals the set of labels represented by entities;
+- optional colors use normalized `#RRGGBB` syntax;
+- optional mapping status is `pending_review` or `approved`;
+- the record uses a supported schema version.
+
 The validator returns all detectable issues for a decoded record rather than stopping at
 the first one. A syntactically malformed JSON document is different: it raises
 `ContractParseError`, because no records can be decoded. For example,
-`data/json_word_P2_oracle.json` currently reports invalid JSON at line 202, column 8.
+`data/json_word_P2_oracle.json` reports invalid JSON with line and column details.
 
 ## Validate every extracted example
 
@@ -142,9 +226,10 @@ validator.
 ## Run the acceptance tests
 
 ```bash
-.venv/bin/pytest -q tests/test_heva_contract.py
+./venv/bin/pytest -q tests/test_heva_contract.py
 ```
 
-The tests cover the Frictionless descriptor, all repository extraction examples, malformed
-JSON, invalid labels, mismatched entity text, unequal token/BIO lengths, invalid BIO
-transitions, and preservation of color-mapping provenance.
+The tests cover descriptor field compatibility, all repository extraction examples,
+malformed JSON, invalid labels, mismatched entity text, unequal token/BIO lengths,
+invalid BIO transitions, preservation of color-mapping provenance, and exact golden-output
+regressions for the real PDF and DOCX extractors.

@@ -79,8 +79,30 @@ For detailed architecture, configuration, and execution instructions, please ref
 - **Guide**: [README_VE.md](docs/README_VE.md) (Highlight Extractor Guide)
 - **Pipeline Architecture**: [ARCHITECTURE.md](docs/ARCHITECTURE.md) (Diagrams and execution details)
 - **Automated LLM Classifier**: [AUTO_COLOR_MAPPER_ARCHITECTURE.md](docs/AUTO_COLOR_MAPPER_ARCHITECTURE.md) (Local LLM color classification)
-- **Record Validation**: [VALIDATION.md](docs/VALIDATION.md) (Frictionless structure,
+- **Record Validation**: [VALIDATION.md](docs/VALIDATION.md) (Pydantic-backed structure,
   HEVA semantic checks, examples, and validation limits)
+
+Quick CLI example:
+
+```bash
+./venv/bin/python -m src.validate_records --all
+```
+
+## Setup
+
+Use a local virtual environment. Do not install dependencies into system Python:
+
+```bash
+python3.12 -m venv venv
+./venv/bin/python -m pip install --upgrade pip setuptools wheel
+./venv/bin/python -m pip install -r requirements.txt
+```
+
+### Troubleshooting dependency installation
+
+- If `pip install -r requirements.txt` fails with `externally-managed-environment`, you are using system Python. Use `./venv/bin/python -m pip ...`.
+- If `pip` command is not found under `pyenv`, use `python -m pip` instead of `pip`.
+- Python 3.13 is currently not supported by this dependency set (`spacy==3.7.4` build issues). Use Python 3.12.
 
 ---
 

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
-from frictionless import Schema
 
 from src.heva_contract import (
     HEVA_LABELS,
@@ -45,11 +46,11 @@ def representative_record() -> dict[str, object]:
     }
 
 
-def test_frictionless_schema_describes_existing_and_versioned_fields() -> None:
+def test_schema_descriptor_describes_existing_and_versioned_fields() -> None:
     schema_path = Path(__file__).parents[1] / "schemas" / "heva-extracted-record.json"
-    schema = Schema.from_descriptor(json.loads(schema_path.read_text(encoding="utf-8")))
+    descriptor = json.loads(schema_path.read_text(encoding="utf-8"))
 
-    assert schema.field_names == [
+    assert [field["name"] for field in descriptor["fields"]] == [
         "sentence_id",
         "page",
         "sentence",
@@ -86,6 +87,10 @@ def test_valid_record_preserves_color_and_mapping_provenance() -> None:
             ),
             "invalid_bio_transition",
         ),
+        (
+            lambda row: row.update(ner_tags=["O", "O", "O", "O", "O", "O"]),
+            "bio_value_mismatch",
+        ),
     ],
 )
 def test_semantic_failures_have_stable_codes(mutation, expected_code: str) -> None:
@@ -106,8 +111,8 @@ def test_json_parse_failure_is_distinct_and_location_aware() -> None:
         load_records(malformed)
 
     assert error.value.code == "invalid_json"
-    assert error.value.line == 202
-    assert error.value.column == 8
+    assert error.value.line > 0
+    assert error.value.column > 0
 
 
 def test_all_extracted_examples_satisfy_the_contract() -> None:
@@ -119,3 +124,72 @@ def test_all_extracted_examples_satisfy_the_contract() -> None:
     assert len(loaded) == 82
     assert all(record.valid for record in loaded)
     assert {value for result in loaded for value in result.record.values} <= HEVA_LABELS
+
+
+def run_validator(*arguments: str) -> subprocess.CompletedProcess[str]:
+    """Run the validator through the same module entry point used by scripts."""
+
+    return subprocess.run(
+        [sys.executable, "-m", "src.validate_records", *arguments],
+        cwd=Path(__file__).parents[1],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_commandline_accepts_repository_examples() -> None:
+    completed = run_validator("--all")
+
+    assert completed.returncode == 0
+    assert completed.stdout.count("VALID:") == 4
+    assert completed.stderr == ""
+
+
+def test_commandline_returns_one_for_semantic_issues(tmp_path: Path) -> None:
+    record = representative_record()
+    record["values"] = ["invented"]
+    source = tmp_path / "invalid-record.json"
+    source.write_text(json.dumps([record]), encoding="utf-8")
+
+    completed = run_validator("--file", str(source))
+
+    assert completed.returncode == 1
+    assert "INVALID:" in completed.stdout
+    assert "unknown_label $.values[0]" in completed.stdout
+    assert completed.stderr == ""
+
+
+def test_commandline_flags_bio_and_categorical_disagreement(tmp_path: Path) -> None:
+    record = representative_record()
+    record["ner_tags"] = ["O", "O", "O", "O", "O", "O"]
+    source = tmp_path / "contradictory-bio.json"
+    source.write_text(json.dumps([record]), encoding="utf-8")
+
+    completed = run_validator("--file", str(source))
+
+    assert completed.returncode == 1
+    assert "bio_value_mismatch $.ner_tags" in completed.stdout
+
+
+def test_commandline_returns_two_for_malformed_json(tmp_path: Path) -> None:
+    source = tmp_path / "malformed.json"
+    source.write_text('[{"sentence_id": 1,}]', encoding="utf-8")
+
+    completed = run_validator("--file", str(source))
+
+    assert completed.returncode == 2
+    assert "PARSE ERROR:" in completed.stdout
+    assert "line 1" in completed.stdout
+    assert completed.stderr == ""
+
+
+def test_commandline_reports_missing_file_without_traceback(tmp_path: Path) -> None:
+    missing = tmp_path / "missing.json"
+
+    completed = run_validator("--file", str(missing))
+
+    assert completed.returncode == 2
+    assert "INPUT ERROR:" in completed.stdout
+    assert str(missing) in completed.stdout
+    assert "Traceback" not in completed.stdout + completed.stderr

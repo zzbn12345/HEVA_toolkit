@@ -1,7 +1,7 @@
 {
   "name": "heva-extracted-record",
   "title": "HEVA canonical extracted sentence record",
-  "description": "Frictionless structural schema for one versioned HEVA extracted sentence. Nested entity and BIO semantics are enforced by the HEVA contract validator.",
+  "description": "Structural descriptor for one versioned HEVA extracted sentence. Nested entity and BIO semantics are enforced by the HEVA contract validator.",
   "fields": [
     {
       "name": "sentence_id",

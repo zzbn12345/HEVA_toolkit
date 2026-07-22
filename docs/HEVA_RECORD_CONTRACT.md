@@ -9,12 +9,13 @@ backward compatible with the four `data/*_extracted.json` examples: a missing
 Each record contains a positive `sentence_id` and `page`, the source `sentence`, parallel
 `tokens` and `ner_tags`, the distinct HEVA `values`, and labeled character-span `entities`.
 The entity offsets must select exactly the entity text from the sentence. Labels and BIO
-tags use the controlled eight-value HEVA vocabulary.
+tags use the controlled eight-value HEVA vocabulary. The labels represented by BIO tags,
+categorical `values`, and entities must agree; disagreement is reported as
+`bio_value_mismatch`.
 
-The Frictionless structural descriptor is
-`schemas/heva-extracted-record.json`. Nested entity, offset, vocabulary, and BIO semantics
-are checked by `src.heva_contract`; Frictionless provides the interoperable field contract
-but is not treated as sufficient semantic validation by itself.
+The structural descriptor is `schemas/heva-extracted-record.json`. Nested entity, offset,
+vocabulary, and BIO semantics are checked by `src.heva_contract`, which uses strict
+Pydantic input parsing plus semantic contract checks.
 
 ## Versioned evidence extension
 
@@ -33,6 +34,5 @@ JSON parsing failures raise `ContractParseError` with line and column. Decoded r
 return all detected `ContractIssue` values with a stable code and JSON-style path, allowing
 later CLI and GUI layers to present the same evidence without parsing exception text.
 
-For executable Frictionless and semantic-validation examples, expected output, and the
-limits of what a successful result proves, see [Validating HEVA extracted
-records](VALIDATION.md).
+For executable validation examples, expected output, and the limits of what a successful
+result proves, see [Validating HEVA extracted records](VALIDATION.md).
