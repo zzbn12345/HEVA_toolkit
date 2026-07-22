@@ -1,3 +1,4 @@
 pymupdf==1.27.2.3
 spacy==3.7.4
 python-docx==1.1.2
+frictionless==5.18.1

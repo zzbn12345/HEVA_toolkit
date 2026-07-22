@@ -1,0 +1,50 @@
+{
+  "name": "heva-extracted-record",
+  "title": "HEVA canonical extracted sentence record",
+  "description": "Frictionless structural schema for one versioned HEVA extracted sentence. Nested entity and BIO semantics are enforced by the HEVA contract validator.",
+  "fields": [
+    {
+      "name": "sentence_id",
+      "type": "integer",
+      "constraints": {"required": true, "minimum": 1}
+    },
+    {
+      "name": "page",
+      "type": "integer",
+      "constraints": {"required": true, "minimum": 1}
+    },
+    {
+      "name": "sentence",
+      "type": "string",
+      "constraints": {"required": true}
+    },
+    {
+      "name": "tokens",
+      "type": "array",
+      "constraints": {"required": true}
+    },
+    {
+      "name": "values",
+      "type": "array",
+      "constraints": {"required": true}
+    },
+    {
+      "name": "entities",
+      "type": "array",
+      "constraints": {"required": true}
+    },
+    {
+      "name": "ner_tags",
+      "type": "array",
+      "constraints": {"required": true}
+    },
+    {
+      "name": "schema_version",
+      "type": "string"
+    },
+    {
+      "name": "mapping_provenance",
+      "type": "object"
+    }
+  ]
+}

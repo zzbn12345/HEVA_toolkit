@@ -79,6 +79,8 @@ For detailed architecture, configuration, and execution instructions, please ref
 - **Guide**: [README_VE.md](docs/README_VE.md) (Highlight Extractor Guide)
 - **Pipeline Architecture**: [ARCHITECTURE.md](docs/ARCHITECTURE.md) (Diagrams and execution details)
 - **Automated LLM Classifier**: [AUTO_COLOR_MAPPER_ARCHITECTURE.md](docs/AUTO_COLOR_MAPPER_ARCHITECTURE.md) (Local LLM color classification)
+- **Record Validation**: [VALIDATION.md](docs/VALIDATION.md) (Frictionless structure,
+  HEVA semantic checks, examples, and validation limits)
 
 ---
 
@@ -90,6 +92,8 @@ HEVA/
 ├── docs/                           # Documentation folder (pipeline architecture, guides)
 │   ├── ARCHITECTURE.md
 │   ├── AUTO_COLOR_MAPPER_ARCHITECTURE.md
+│   ├── HEVA_RECORD_CONTRACT.md
+│   ├── VALIDATION.md
 │   └── README_VE.md
 │
 ├── src/                            # Highlight Extractor utility source code
