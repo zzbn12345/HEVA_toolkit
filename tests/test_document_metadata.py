@@ -69,8 +69,14 @@ def complete_metadata(document_id: str = "HEVA-EXAMPLE") -> PackageMetadata:
             colors=[
                 ColorMappingMetadata(
                     hex="#ffff00",
+                    color_name="Yellow",
+                    text_color="#000000",
+                    suggested_label="historic",
                     label="historic",
                     display_name="Historical value",
+                    method="document_legend",
+                    confidence=1.0,
+                    status="approved",
                 )
             ],
         ),
@@ -228,11 +234,11 @@ def test_metadata_is_saved_in_registered_package_and_linked_from_registry(
     assert metadata_path.is_file()
     saved = json.loads(metadata_path.read_text())
     assert saved["annotation_process"]["extractor"] == "HEVA PDF extractor"
-    assert saved["color_configuration"]["colors"][0] == {
-        "hex": "#FFFF00",
-        "label": "historic",
-        "display_name": "Historical value",
-    }
+    saved_color = saved["color_configuration"]["colors"][0]
+    assert saved_color["hex"] == "#FFFF00"
+    assert saved_color["label"] == "historic"
+    assert saved_color["status"] == "approved"
+    assert saved_color["text_color"] == "#000000"
     assert saved["resources"] == [
         {
             "name": "annotations",

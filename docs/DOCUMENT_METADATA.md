@@ -105,8 +105,14 @@ metadata = PackageMetadata(
         colors=[
             ColorMappingMetadata(
                 hex="#FFFF00",
+                color_name="Yellow",
+                text_color="#000000",
+                suggested_label="historic",
                 label="historic",
                 display_name="Historical value",
+                method="document_legend",
+                confidence=1.0,
+                status="approved",
             )
         ],
     ),

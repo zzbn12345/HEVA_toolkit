@@ -101,8 +101,23 @@ class ColorMappingMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     hex: str
-    label: str
+    color_name: str | None = None
+    text_color: Literal["#000000", "#FFFFFF"] | None = None
+    suggested_label: str | None = None
+    label: str | None = None
     display_name: str | None = None
+    method: Literal["document_legend", "manual", "ollama", "generic_convention"] = "manual"
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    status: Literal["pending_review", "approved", "ignored"] = "pending_review"
+    reasoning: str | None = None
+    ignore_reason: str | None = None
+    source_mechanism: Literal[
+        "pdf_highlight",
+        "pdf_text_color",
+        "word_highlight",
+        "word_font_color",
+        "unknown",
+    ] = "unknown"
 
     @field_validator("hex")
     @classmethod
@@ -111,9 +126,11 @@ class ColorMappingMetadata(BaseModel):
             raise ValueError("Expected a six-digit #RRGGBB color.")
         return value.upper()
 
-    @field_validator("label")
+    @field_validator("label", "suggested_label")
     @classmethod
-    def validate_label(cls, value: str) -> str:
+    def validate_label(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
         if value not in HEVA_LABELS:
             raise ValueError(f"Expected a controlled HEVA label; received {value!r}.")
         return value
@@ -354,6 +371,31 @@ def validate_review_readiness(metadata: PackageMetadata) -> ReadinessReport:
                 "At least one document color must be mapped to a HEVA label.",
             )
         )
+    for index, color in enumerate(colors.colors):
+        if color.status == "pending_review":
+            issues.append(
+                _issue(
+                    "color_pending_review",
+                    f"$.color_configuration.colors[{index}].status",
+                    f"Color {color.hex} still requires a human decision.",
+                )
+            )
+        elif color.status == "approved" and color.label is None:
+            issues.append(
+                _issue(
+                    "approved_color_missing_label",
+                    f"$.color_configuration.colors[{index}].label",
+                    f"Approved color {color.hex} requires a HEVA label.",
+                )
+            )
+        elif color.status == "ignored" and not color.ignore_reason:
+            issues.append(
+                _issue(
+                    "ignored_color_missing_reason",
+                    f"$.color_configuration.colors[{index}].ignore_reason",
+                    f"Ignored color {color.hex} requires an explanation.",
+                )
+            )
     if not colors.human_confirmed:
         issues.append(
             _issue(

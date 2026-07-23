@@ -85,6 +85,8 @@ For detailed architecture, configuration, and execution instructions, please ref
   IDs, source synchronization, and project summaries)
 - **Document Metadata**: [DOCUMENT_METADATA.md](docs/DOCUMENT_METADATA.md) (citation,
   annotator identity, rights, and curator review readiness)
+- **Supervised Color Mapping**: [COLOR_MAPPING.md](docs/COLOR_MAPPING.md) (document-local
+  proposals, human confirmation, and batch palette safety)
 
 Quick CLI example:
 
@@ -118,6 +120,7 @@ HEVA/
 ├── docs/                           # Documentation folder (pipeline architecture, guides)
 │   ├── ARCHITECTURE.md
 │   ├── AUTO_COLOR_MAPPER_ARCHITECTURE.md
+│   ├── COLOR_MAPPING.md
 │   ├── HEVA_RECORD_CONTRACT.md
 │   ├── DOCUMENT_METADATA.md
 │   ├── VALIDATION.md
@@ -125,7 +128,7 @@ HEVA/
 │
 ├── src/                            # Highlight Extractor utility source code
 │   ├── auto_color_mapper.py
-│   ├── config.py
+│   ├── word_colors.py                # Stable Word highlight-name normalization
 │   ├── docx_extractor.py
 │   ├── extract_highlights.py
 │   ├── pdf_extractor.py

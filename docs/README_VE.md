@@ -45,10 +45,11 @@ Below is an overview of the modular codebase architecture:
 │   └── README_VE.md                  # This highlight extractor guide
 ├── src/                              # Source code folder
 │   ├── auto_color_mapper.py          # Automated color mapping classification script using local Ollama
-│   ├── config.py                     # Centralized color mapping tables (COLOR_MAP and WD_COLOR_HEX)
+│   ├── color_mapping.py              # Supervised document-local mapping gate
 │   ├── docx_extractor.py             # Word document inline runs and font color highlight extraction
 │   ├── extract_highlights.py         # Main CLI entry point script for orchestrating batch file processing
 │   ├── pdf_extractor.py              # PDF-specific layout sorting and drawing overlap highlight extraction
+│   ├── word_colors.py                # Stable Word highlight-name to hex conversion
 │   └── utils.py                      # NLP pipelines, language detection, ligature normalization helpers
 ├── requirements.txt                  # Package dependency requirements
 └── README.md                         # Main HEVA repository README
@@ -56,41 +57,33 @@ Below is an overview of the modular codebase architecture:
 
 ---
 
-## Configuring the Color Map
+## Configuring document colors
 
-To map highlighted hex colors (or Word highlights) to semantic categories (e.g. `historic`, `social`, `ecological`), modify [src/config.py](../src/config.py).
+Semantic color mappings are not configured in Python. Every registered document stores
+its own proposals and confirmed decisions in:
 
-### 1. Mapping Hex Codes (PDFs and Word Custom Colors)
-Update the `COLOR_MAP` dictionary in `src/config.py` with uppercase hex codes and their mapped labels:
-
-```python
-COLOR_MAP = {
-    "#FF40FF": "historic",     # Map bright pink to 'historic'
-    "#FFFC00": "political",    # Map bright yellow to 'political'
-    "#00D5FF": "aesthetical",  # Map cyan to 'aesthetical'
-    # Add new colors as needed...
-}
+```text
+data/packages/<document-id>/package-metadata.json
 ```
 
-### 2. Mapping Word Highlight Enums (Word Highlights)
-Word documents use preset named highlight categories (e.g., `YELLOW`, `PINK`, `TURQUOISE`). These standard Word highlights are first converted to hex codes using the `WD_COLOR_HEX` mapping:
+Run an extractor without a mapping to inspect raw normalized hex colors. An Ollama or
+generic suggestion remains pending until an annotator approves or explicitly ignores
+every color. A confirmed mapping can then be loaded from the document package and passed
+to the extractor.
 
-```python
-WD_COLOR_HEX = {
-    "YELLOW": "#FFFF00",
-    "BRIGHT_GREEN": "#00FF00",
-    "PINK": "#FF00FF",
-    # Add or modify presets if required...
-}
-```
+Word's preset names such as `YELLOW`, `PINK`, and `TURQUOISE` are normalized to hex using
+`WORD_HIGHLIGHT_TO_HEX` in `src/word_colors.py`. This is stable DOCX format conversion,
+not a HEVA semantic mapping. Custom Word font colors are already read as their RGB hex.
 
-If the resolved hex code is in `COLOR_MAP`, it will automatically be labeled with its category. If a highlight color is not mapped in `COLOR_MAP`, the pipeline will print a runtime warning and default to the raw hex code as the label in the output JSON.
+See [COLOR_MAPPING.md](COLOR_MAPPING.md) for the complete supervised workflow.
 
 ---
 
 ## Automated Color Mapping (Zero-Shot Classification)
 
-Instead of manually configuring color-to-category mappings in `src/config.py`, you can use the automated color mapping script (`src/auto_color_mapper.py`). This uses a local Ollama LLM instance to semantically classify highlighted text groups into heritage/planning categories.
+The automated color mapping prototype (`src/auto_color_mapper.py`) uses a local Ollama
+model to suggest categories for highlighted text groups. Its suggestions require human
+review through the document-local mapping gate before they can be considered HEVA data.
 
 ### 1. Requirements
 

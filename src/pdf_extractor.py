@@ -2,7 +2,6 @@ import fitz  # PyMuPDF
 import re
 import spacy
 
-from config import COLOR_MAP
 from utils import (
     detect_language,
     get_nlp_for_lang,
@@ -141,8 +140,6 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
     It uses an automated drawing-overlap alignment algorithm to find and map
     colored highlighted text within parsed sentences, generating BIO-tagged NER output.
     """
-    if color_label_map is None:
-        color_label_map = COLOR_MAP
     doc = fitz.open(pdf_path)
 
     final_output = []

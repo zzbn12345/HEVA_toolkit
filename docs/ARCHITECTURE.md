@@ -141,7 +141,9 @@ To handle complex layout formats (like multi-column tables, headers, and side-by
 
 ### 4. Word (DOCX) Processing
 * **XML Paragraph/Run Parsers**: Paragraphs are traversed and decomposed into styling runs.
-* **Word Preset Highlighting**: The parser checks standard Word highlight names (e.g., `YELLOW`, `TURQUOISE`, `PINK`) via `run.font.highlight_color` and maps them to standard Hex codes using `WD_COLOR_HEX`.
+* **Word Preset Highlighting**: The parser checks standard Word highlight names (e.g.,
+  `YELLOW`, `TURQUOISE`, `PINK`) via `run.font.highlight_color` and normalizes them to
+  standard hex codes using `WORD_HIGHLIGHT_TO_HEX` from `src/word_colors.py`.
 * **Custom Font Coloring**: If no highlight is present, custom text colors are checked via `run.font.color.rgb` and mapped as a fallback.
 * **Character-Level Mapping**: To prevent boundary issues, a character-level color index array is constructed mapping every single character in the paragraph to its dominant highlight color.
 
@@ -154,7 +156,9 @@ To handle complex layout formats (like multi-column tables, headers, and side-by
 * **Prefix Stripping**: Common annotator prefixes (such as `Justification:`, `Justiﬁcation:`, or `Standpunt:`) are stripped using a generalized regular expression, and the sentence character offsets are adjusted dynamically.
 
 ### 6. Entity Alignment & Dataset Formatting
-* **Color Mapping**: Hex color codes are resolved to semantic category labels (e.g. `historic`, `social`, `ecological`) using a unified `COLOR_MAP`.
+* **Color Mapping**: With no mapping, extractors preserve normalized raw hex evidence.
+  Semantic labels are applied only when an explicit mapping is passed. Confirmed mappings
+  are loaded from the registered document's `package-metadata.json`.
 * **Space-Insensitive Token Grouping**: Highlighted characters are matched back to spaCy tokens. Consecutive tokens highlighting the same category are grouped into a single entity (stripping leading/trailing spaces and punctuation). This prevents entity fragmentation.
 * **BIO Matrix Generation**: BIO tags are generated: the first token of an entity gets a `B-<label>` tag, subsequent tokens get `I-<label>`, and unhighlighted tokens get `O`.
 * **Output Serialization**: The sentences, values lists, tokens, entities, page index, and BIO tags are saved as structured JSON datasets in the target output path.

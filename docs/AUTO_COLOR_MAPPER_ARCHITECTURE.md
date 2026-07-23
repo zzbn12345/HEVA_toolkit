@@ -1,6 +1,14 @@
 # Automated Color Mapper Architecture
 
-The `src/auto_color_mapper.py` utility provides a zero-shot, LLM-powered classification pipeline that automatically aligns document highlight colors to planning and heritage value categories. It replaces the need to manually configure color maps in `src/config.py`.
+The `src/auto_color_mapper.py` utility is a prototype zero-shot, LLM-powered
+classification pipeline that proposes planning and heritage categories for document
+highlight colors. Semantic color configuration is now document-local package data rather
+than Python configuration.
+
+> **Prototype limitation:** this script currently re-runs extraction immediately after an
+> Ollama proposal. It does not enforce human confirmation and its output is not by itself
+> curator-ready HEVA data. Use the supervised contract in
+> [COLOR_MAPPING.md](COLOR_MAPPING.md) for document-local decisions.
 
 ---
 

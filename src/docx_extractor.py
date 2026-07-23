@@ -2,7 +2,7 @@ import docx
 import re
 import spacy
 
-from config import COLOR_MAP, WD_COLOR_HEX
+from word_colors import WORD_HIGHLIGHT_TO_HEX
 from utils import (
     detect_language,
     get_nlp_for_lang,
@@ -16,9 +16,6 @@ def extract_docx_highlights(docx_path, color_label_map=None):
     Segments paragraphs into sentences, aligns highlighted run offsets,
     and returns BIO-tagged NER output matching the format of PDF extraction.
     """
-    if color_label_map is None:
-        color_label_map = COLOR_MAP
-
     doc = docx.Document(docx_path)
     final_output = []
     sentence_id = 1
@@ -52,7 +49,7 @@ def extract_docx_highlights(docx_path, color_label_map=None):
                 try:
                     name = run.font.highlight_color.name
                     if name and name != "AUTO":
-                        highlight = WD_COLOR_HEX.get(name, name)
+                        highlight = WORD_HIGHLIGHT_TO_HEX.get(name, name)
                 except AttributeError:
                     pass
             
@@ -168,7 +165,7 @@ def extract_docx_highlights(docx_path, color_label_map=None):
                 # Also try mapping highlight color names (e.g. 'YELLOW') directly
                 elif color_label_map:
                     name_found = False
-                    for name, hex_val in WD_COLOR_HEX.items():
+                    for name, hex_val in WORD_HIGHLIGHT_TO_HEX.items():
                         if hex_val == label and name in color_label_map:
                             label = color_label_map[name]
                             name_found = True
@@ -218,7 +215,7 @@ def extract_docx_highlights(docx_path, color_label_map=None):
         unmapped_colors = detected_colors - set(color_label_map.keys())
         matched_keys = set()
         for c in unmapped_colors:
-            for name, hex_val in WD_COLOR_HEX.items():
+            for name, hex_val in WORD_HIGHLIGHT_TO_HEX.items():
                 if hex_val == c and name in color_label_map:
                     matched_keys.add(c)
         unmapped_colors = unmapped_colors - matched_keys
