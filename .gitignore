@@ -69,3 +69,7 @@ Thumbs.db
 ~$*.doc
 ~$*.xlsx
 ~$*.xls
+
+# Generated HEVA project state
+/data/project-registry.json
+/data/packages/

@@ -81,6 +81,8 @@ For detailed architecture, configuration, and execution instructions, please ref
 - **Automated LLM Classifier**: [AUTO_COLOR_MAPPER_ARCHITECTURE.md](docs/AUTO_COLOR_MAPPER_ARCHITECTURE.md) (Local LLM color classification)
 - **Record Validation**: [VALIDATION.md](docs/VALIDATION.md) (Pydantic-backed structure,
   HEVA semantic checks, examples, and validation limits)
+- **Project Registry**: [PROJECT_REGISTRY.md](docs/PROJECT_REGISTRY.md) (stable document
+  IDs, source synchronization, and project summaries)
 
 Quick CLI example:
 
