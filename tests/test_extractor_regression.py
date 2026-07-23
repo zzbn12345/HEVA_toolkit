@@ -48,6 +48,16 @@ def mapping_from_aligned_records(
     return mapping
 
 
+def without_color_evidence(records: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Compare new records with legacy goldens without discarding runtime evidence."""
+
+    comparable = json.loads(json.dumps(records))
+    for record in comparable:
+        for entity in record["entities"]:
+            entity.pop("color", None)
+    return comparable
+
+
 def test_pdf_extractor_matches_committed_galle_records() -> None:
     source = ROOT / "data" / "Galle_P127.pdf"
     expected = expected_records("Galle_P127_extracted.json")
@@ -57,7 +67,12 @@ def test_pdf_extractor_matches_committed_galle_records() -> None:
         color_label_map=mapping_from_aligned_records(raw, expected),
     )
 
-    assert actual == expected
+    assert without_color_evidence(actual) == expected
+    assert all(
+        entity["color"].startswith("#")
+        for record in actual
+        for entity in record["entities"]
+    )
 
 
 def test_docx_extractor_matches_committed_eop_records() -> None:
@@ -69,7 +84,12 @@ def test_docx_extractor_matches_committed_eop_records() -> None:
         color_label_map=mapping_from_aligned_records(raw, expected),
     )
 
-    assert actual == expected
+    assert without_color_evidence(actual) == expected
+    assert all(
+        entity["color"].startswith("#")
+        for record in actual
+        for entity in record["entities"]
+    )
 
 
 def test_docx_without_mapping_preserves_its_custom_font_colors() -> None:

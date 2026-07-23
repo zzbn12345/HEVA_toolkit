@@ -403,7 +403,8 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
                 "start": clean_start,
                 "end": clean_end,
                 "text": clean_text,
-                "label": label
+                "label": label,
+                "color": ent["color"],
             })
 
         # Get tokens

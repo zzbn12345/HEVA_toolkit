@@ -175,7 +175,8 @@ def extract_docx_highlights(docx_path, color_label_map=None):
                     "start": clean_start,
                     "end": clean_end,
                     "text": clean_text,
-                    "label": label
+                    "label": label,
+                    "color": ent["color"],
                 })
 
             if not final_entities:
