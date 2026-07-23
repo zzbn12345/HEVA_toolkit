@@ -286,6 +286,68 @@ def save_color_configuration(
     return metadata_file
 
 
+def write_automatic_color_proposals(
+    project_root: str | Path,
+    document_id: str,
+    observed_colors: list[str] | tuple[str, ...] | set[str],
+    suggestions: Mapping[str, str],
+    *,
+    reasoning: Mapping[str, str] | None = None,
+    confidence: Mapping[str, float] | None = None,
+    source_mechanisms: Mapping[str, str] | None = None,
+    registry_path: str | Path = DEFAULT_REGISTRY_PATH,
+) -> Path:
+    """Write pending automatic proposals without replacing an existing configuration."""
+
+    root = Path(project_root).resolve()
+    registry_file = root / Path(registry_path)
+    try:
+        registry = ProjectRegistry.model_validate_json(registry_file.read_text(encoding="utf-8"))
+    except (OSError, ValidationError) as error:
+        raise ColorMappingError(f"Cannot load project registry {registry_file}: {error}") from error
+    matches = [entry for entry in registry.documents if entry.document_id == document_id]
+    if not matches:
+        raise ColorMappingError(f"Document {document_id} is not registered in this project.")
+    metadata_path = matches[0].metadata_path
+    if metadata_path is None:
+        raise ColorMappingError(f"Document {document_id} has no package metadata path.")
+    metadata_file = root / metadata_path
+    try:
+        metadata = PackageMetadata.model_validate_json(metadata_file.read_text(encoding="utf-8"))
+    except (OSError, ValidationError) as error:
+        raise ColorMappingError(f"Cannot load package metadata {metadata_file}: {error}") from error
+    if metadata.color_configuration.colors:
+        raise ColorMappingError(
+            f"Document {document_id} already contains a color configuration; "
+            "automatic proposals will not overwrite it."
+        )
+
+    configuration = propose_color_configuration(
+        observed_colors,
+        ollama_suggestions=suggestions,
+        ollama_confidence=confidence,
+    )
+    normalized_reasoning = {
+        _normalize_hex(color): explanation for color, explanation in (reasoning or {}).items()
+    }
+    normalized_mechanisms = {
+        _normalize_hex(color): mechanism
+        for color, mechanism in (source_mechanisms or {}).items()
+    }
+    for color in configuration.colors:
+        color.reasoning = normalized_reasoning.get(color.hex)
+        mechanism = normalized_mechanisms.get(color.hex)
+        if mechanism is not None:
+            validated = ColorMappingMetadata(hex=color.hex, source_mechanism=mechanism)
+            color.source_mechanism = validated.source_mechanism
+    return save_color_configuration(
+        root,
+        document_id,
+        configuration,
+        registry_path=registry_path,
+    )
+
+
 def load_confirmed_color_mapping(
     project_root: str | Path,
     document_id: str,

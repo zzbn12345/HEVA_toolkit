@@ -73,3 +73,4 @@ Thumbs.db
 # Generated HEVA project state
 /data/project-registry.json
 /data/packages/
+/legacy_data/

@@ -123,6 +123,46 @@ records = extract_colored_highlights(
 
 Loading fails if a person has not confirmed the document-local configuration.
 
+## Write automatic proposals from another workflow
+
+Automatic classification and package persistence are separate operations. After an
+Ollama-facing function has produced suggestions, an initializer, web route, or other
+orchestrator can store them with:
+
+```python
+from src.color_mapping import write_automatic_color_proposals
+
+write_automatic_color_proposals(
+    ".",
+    "HEVA-ABC123",
+    observed_colors=["#FFFF00", "#FF00FF"],
+    suggestions={
+        "#FFFF00": "historic",
+        "#FF00FF": "economic",
+    },
+    reasoning={
+        "#FFFF00": "Suggested from highlighted sentence context.",
+        "#FF00FF": "Suggested from highlighted sentence context.",
+    },
+    confidence={
+        "#FFFF00": 0.72,
+        "#FF00FF": 0.64,
+    },
+    source_mechanisms={
+        "#FFFF00": "word_font_color",
+        "#FF00FF": "word_font_color",
+    },
+)
+```
+
+This function does not call Ollama and does not extract annotations. It only adapts a
+classifier result into the package contract. Every suggestion is written as
+`pending_review`, with no approved `label`.
+
+The function refuses to replace any existing color configuration, including an earlier
+pending proposal. Replacement must be an explicit future workflow rather than an
+initializer side effect.
+
 ## Batch safety
 
 ```python
@@ -142,6 +182,7 @@ human confirmation. A palette mismatch means the documents must use independent 
 ## Current limit
 
 The older `src/auto_color_mapper.py` prototype still writes a sidecar map and immediately
-extracts using its Ollama result. It does not use this supervision gate yet and should not
-be treated as a curator-ready HEVA workflow. Integration with extraction is a later
-feature.
+extracts using its Ollama result. It does not call the package writer yet and should not
+be treated as a curator-ready HEVA workflow. A later initializer or web workflow can
+compose automatic classification with `write_automatic_color_proposals` without changing
+the classifier itself.

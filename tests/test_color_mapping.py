@@ -17,6 +17,7 @@ from src.color_mapping import (
     resolve_color,
     save_color_configuration,
     validate_shared_batch_mapping,
+    write_automatic_color_proposals,
 )
 from src.project_registry import sync_registry
 
@@ -168,3 +169,45 @@ def test_unconfirmed_package_mapping_cannot_drive_semantic_extraction(
 
     with pytest.raises(ColorMappingError, match="not been confirmed"):
         load_confirmed_color_mapping(tmp_path, document_id)
+
+
+def test_automatic_proposals_are_written_pending_without_overwriting(
+    tmp_path: Path,
+) -> None:
+    documents = tmp_path / "documents"
+    documents.mkdir()
+    (documents / "source.docx").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data" / "project-registry.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+
+    metadata_path = write_automatic_color_proposals(
+        tmp_path,
+        document_id,
+        ["#FFFF00"],
+        {"#FFFF00": "historic"},
+        reasoning={"#FFFF00": "Suggested from highlighted sentence context."},
+        confidence={"#FFFF00": 0.72},
+        source_mechanisms={"#FFFF00": "word_font_color"},
+    )
+    saved = json.loads(metadata_path.read_text())
+    color = saved["color_configuration"]["colors"][0]
+
+    assert not saved["color_configuration"]["human_confirmed"]
+    assert color["suggested_label"] == "historic"
+    assert color["label"] is None
+    assert color["status"] == "pending_review"
+    assert color["method"] == "ollama"
+    assert color["confidence"] == 0.72
+    assert color["source_mechanism"] == "word_font_color"
+
+    with pytest.raises(ColorMappingError, match="will not overwrite"):
+        write_automatic_color_proposals(
+            tmp_path,
+            document_id,
+            ["#FF00FF"],
+            {"#FF00FF": "economic"},
+        )
+
+    unchanged = json.loads(metadata_path.read_text())
+    assert unchanged["color_configuration"] == saved["color_configuration"]
