@@ -25,6 +25,7 @@ class DocumentEntry(BaseModel):
     document_id: str
     source_path: str
     package_path: str
+    metadata_path: str | None = None
     checksum_sha256: str
     observed_checksum_sha256: str | None = None
     status: Literal["backlog", "in_progress", "in_review", "done"] = "backlog"
@@ -152,11 +153,26 @@ def _write_registry(path: Path, registry: ProjectRegistry) -> None:
 
 
 def _create_package_directories(root: Path, documents: list[DocumentEntry]) -> None:
-    """Create empty per-document workspaces without generating package contents."""
+    """Create package workspaces and non-destructive metadata templates."""
+
+    # Imported here to avoid coupling registry model import-time initialization to the
+    # richer package contract. Synchronization is the point at which both are needed.
+    from src.document_metadata import PackageMetadata
 
     for entry in documents:
         package_directory = root / entry.package_path
         package_directory.mkdir(parents=True, exist_ok=True)
+        metadata_relative = f"{entry.package_path}/package-metadata.json"
+        metadata_file = root / metadata_relative
+        entry.metadata_path = metadata_relative
+        if metadata_file.exists():
+            continue
+        metadata = PackageMetadata(document_id=entry.document_id)
+        metadata_file.write_text(
+            json.dumps(metadata.model_dump(mode="json"), indent=2, ensure_ascii=False)
+            + "\n",
+            encoding="utf-8",
+        )
 
 
 def _discover_sources(source_root: Path) -> list[Path]:

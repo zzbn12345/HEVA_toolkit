@@ -83,6 +83,8 @@ For detailed architecture, configuration, and execution instructions, please ref
   HEVA semantic checks, examples, and validation limits)
 - **Project Registry**: [PROJECT_REGISTRY.md](docs/PROJECT_REGISTRY.md) (stable document
   IDs, source synchronization, and project summaries)
+- **Document Metadata**: [DOCUMENT_METADATA.md](docs/DOCUMENT_METADATA.md) (citation,
+  annotator identity, rights, and curator review readiness)
 
 Quick CLI example:
 
@@ -117,6 +119,7 @@ HEVA/
 │   ├── ARCHITECTURE.md
 │   ├── AUTO_COLOR_MAPPER_ARCHITECTURE.md
 │   ├── HEVA_RECORD_CONTRACT.md
+│   ├── DOCUMENT_METADATA.md
 │   ├── VALIDATION.md
 │   └── README_VE.md
 │

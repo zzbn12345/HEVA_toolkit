@@ -29,8 +29,13 @@ people. Scripts can request JSON output:
 
 - New PDF and DOCX files receive a stable `HEVA-...` identifier.
 - The corresponding package path is `data/packages/<document-id>`.
-- An empty package workspace is created at that path. Annotation data and package metadata
-  are added by later HEVA steps.
+- A package workspace and incomplete `package-metadata.json` template are created at that
+  path. Missing authorship, rights, process, color, and resource details remain visibly
+  empty for later HEVA steps; synchronization never invents them.
+- When package metadata is saved, the registry records its `metadata_path`; detailed
+  provenance, rights, color configuration, and extraction resources stay in the package.
+- Re-running synchronization does not overwrite package metadata already edited by a
+  researcher.
 - Re-running synchronization preserves existing IDs and workflow states.
 - New documents are added once.
 - A changed file is marked `changed`; its original checksum and newly observed checksum

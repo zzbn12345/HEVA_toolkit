@@ -43,6 +43,16 @@ def test_initialization_creates_registry_without_renaming_sources(tmp_path: Path
     assert all(
         (tmp_path / item["package_path"]).is_dir() for item in registry["documents"]
     )
+    assert all(
+        item["metadata_path"] == f"{item['package_path']}/package-metadata.json"
+        for item in registry["documents"]
+    )
+    for item in registry["documents"]:
+        metadata = json.loads((tmp_path / item["metadata_path"]).read_text())
+        assert metadata["document_id"] == item["document_id"]
+        assert metadata["source"]["creators"] == []
+        assert metadata["color_configuration"]["colors"] == []
+        assert metadata["resources"] == []
     assert registry["summary"] == {
         "total": 2,
         "backlog": 2,
@@ -71,6 +81,22 @@ def test_resync_preserves_ids_and_existing_state(tmp_path: Path) -> None:
     assert updated["documents"][0]["document_id"] == original_id
     assert updated["documents"][0]["status"] == "in_progress"
     assert updated["summary"]["in_progress"] == 1
+
+
+def test_resync_does_not_overwrite_existing_package_metadata(tmp_path: Path) -> None:
+    source_dir = tmp_path / "documents"
+    add_source(source_dir, "source.pdf", b"first version")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data" / "project-registry.json").read_text())
+    metadata_path = tmp_path / registry["documents"][0]["metadata_path"]
+    metadata = json.loads(metadata_path.read_text())
+    metadata["source"]["title"] = "Researcher-provided title"
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    sync_registry(tmp_path, source_dir="documents")
+
+    preserved = json.loads(metadata_path.read_text())
+    assert preserved["source"]["title"] == "Researcher-provided title"
 
 
 def test_resync_adds_new_document_once(tmp_path: Path) -> None:
