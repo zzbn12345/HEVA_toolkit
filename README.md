@@ -93,6 +93,8 @@ For detailed architecture, configuration, and execution instructions, please ref
   review warnings and configurable thresholds)
 - **Sentence Review**: [SENTENCE_REVIEW.md](docs/SENTENCE_REVIEW.md) (explicit decisions,
   edit history, and submission readiness)
+- **Approved Export**: [APPROVED_EXPORT.md](docs/APPROVED_EXPORT.md) (layered package
+  validation, curator approval, and deterministic JSON/CSV release files)
 
 Quick CLI example:
 
@@ -130,6 +132,7 @@ HEVA/
 │   ├── EXTRACTION_SESSIONS.md
 │   ├── QUALITY_FLAGS.md
 │   ├── SENTENCE_REVIEW.md
+│   ├── APPROVED_EXPORT.md
 │   ├── HEVA_RECORD_CONTRACT.md
 │   ├── DOCUMENT_METADATA.md
 │   ├── VALIDATION.md
