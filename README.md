@@ -89,6 +89,8 @@ For detailed architecture, configuration, and execution instructions, please ref
   proposals, human confirmation, and batch palette safety)
 - **Extraction Sessions**: [EXTRACTION_SESSIONS.md](docs/EXTRACTION_SESSIONS.md)
   (validated package persistence, batch execution, and reviewed collections)
+- **Sentence Quality Flags**: [QUALITY_FLAGS.md](docs/QUALITY_FLAGS.md) (deterministic
+  review warnings and configurable thresholds)
 
 Quick CLI example:
 
@@ -124,6 +126,7 @@ HEVA/
 │   ├── AUTO_COLOR_MAPPER_ARCHITECTURE.md
 │   ├── COLOR_MAPPING.md
 │   ├── EXTRACTION_SESSIONS.md
+│   ├── QUALITY_FLAGS.md
 │   ├── HEVA_RECORD_CONTRACT.md
 │   ├── DOCUMENT_METADATA.md
 │   ├── VALIDATION.md
