@@ -163,6 +163,9 @@ def persist_extraction_results(
     now = datetime.now(timezone.utc)
 
     _write_json(annotations_file, canonical)
+    from src.review_state import initialize_sentence_reviews
+
+    initialize_sentence_reviews(root, document_id)
     metadata.annotation_process.method = extraction_method
     metadata.annotation_process.extractor = extractor
     metadata.annotation_process.extractor_version = extractor_version

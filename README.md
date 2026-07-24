@@ -91,6 +91,8 @@ For detailed architecture, configuration, and execution instructions, please ref
   (validated package persistence, batch execution, and reviewed collections)
 - **Sentence Quality Flags**: [QUALITY_FLAGS.md](docs/QUALITY_FLAGS.md) (deterministic
   review warnings and configurable thresholds)
+- **Sentence Review**: [SENTENCE_REVIEW.md](docs/SENTENCE_REVIEW.md) (explicit decisions,
+  edit history, and submission readiness)
 
 Quick CLI example:
 
@@ -127,6 +129,7 @@ HEVA/
 │   ├── COLOR_MAPPING.md
 │   ├── EXTRACTION_SESSIONS.md
 │   ├── QUALITY_FLAGS.md
+│   ├── SENTENCE_REVIEW.md
 │   ├── HEVA_RECORD_CONTRACT.md
 │   ├── DOCUMENT_METADATA.md
 │   ├── VALIDATION.md
