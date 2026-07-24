@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create package · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/create.css">
+  <script src="/static/create.js" defer></script>
+</head>
+<body class="create-body">
+  <div id="create-app" class="create-app">
+    <aside class="create-sidebar">
+      <a class="home-link" href="/">← HEVA home</a>
+      <div class="create-brand">HEVA package project</div>
+      <nav class="step-navigation" aria-label="Package creation steps">
+        <button class="step-button active" type="button" data-step-target="1"><b>1</b><span>Annotator</span></button>
+        <button class="step-button" type="button" data-step-target="2"><b>2</b><span>Submission</span></button>
+        <button class="step-button" type="button" data-step-target="3"><b>3</b><span>Documents</span></button>
+        <button class="step-button" type="button" data-step-target="4"><b>4</b><span>Color review</span></button>
+      </nav>
+    </aside>
+
+    <main id="create-content" class="create-content">
+      <div class="content-tools">
+        <button id="toggle-pdf" class="button secondary" type="button" aria-expanded="true">Hide PDF</button>
+      </div>
+
+      <section class="create-step active" data-step="1">
+        <p class="eyebrow">Step 1 of 4</p>
+        <h1>Annotator identity</h1>
+        <p class="lead">This profile belongs to the project and can be reused for multiple document packages.</p>
+        <div id="annotator-status" class="notice neutral" aria-live="polite">Loading the saved annotator…</div>
+        <label for="annotator-name">Annotator name</label>
+        <input id="annotator-name" autocomplete="name" required>
+        <label for="annotator-orcid">ORCID <small>(optional)</small></label>
+        <input id="annotator-orcid" placeholder="0000-0002-1825-0097">
+        <div class="form-actions">
+          <button id="save-annotator" class="button" type="button">Save annotator</button>
+          <button class="button secondary" type="button" data-next="2">Continue</button>
+        </div>
+      </section>
+
+      <section class="create-step" data-step="2">
+        <p class="eyebrow">Step 2 of 4</p>
+        <h1>Submission information</h1>
+        <p class="lead">This information describes the selected document only. It is deliberately separate from the annotator profile.</p>
+        <label for="source-title">Document title</label>
+        <input id="source-title" required>
+        <label for="source-creators">Source creator or author</label>
+        <input id="source-creators" required>
+        <label for="source-reference">DOI or public URL <small>(optional)</small></label>
+        <input id="source-reference" type="url">
+        <div class="form-actions">
+          <button class="button secondary" type="button" data-back="1">Back</button>
+          <button class="button" type="button" data-next="3">Continue</button>
+        </div>
+      </section>
+
+      <section class="create-step" data-step="3">
+        <p class="eyebrow">Step 3 of 4</p>
+        <h1>Documents and extraction</h1>
+        <fieldset>
+          <legend>Processing mode</legend>
+          <div class="mode-toggle">
+            <label><input type="radio" name="processing-mode" value="individual" checked><span>Individual</span></label>
+            <label><input type="radio" name="processing-mode" value="batch"><span>Batch</span></label>
+          </div>
+        </fieldset>
+        <label for="pdf-files">Annotated PDFs</label>
+        <input id="pdf-files" type="file" accept="application/pdf,.pdf">
+        <small id="source-help">Choose one PDF. It will open in the side viewer.</small>
+        <div id="selected-files" class="selected-files"></div>
+        <div class="notice warning">
+          Automatic extraction must discover a color map or use an existing approved document map. Every suggestion still requires human confirmation.
+        </div>
+        <div class="form-actions">
+          <button class="button secondary" type="button" data-back="2">Back</button>
+          <button class="button" type="button" data-next="4">Continue to color review</button>
+        </div>
+      </section>
+
+      <section class="create-step" data-step="4">
+        <p class="eyebrow">Step 4 of 4</p>
+        <h1>Review color configuration</h1>
+        <p class="lead">The color configuration will be stored per document package. A batch may share one only after its palettes are shown to be compatible.</p>
+        <div class="color-example" aria-label="Example readable color swatch">
+          <span class="color-swatch" style="--swatch:#FFFF00;--swatch-text:#000000">#FFFF00</span>
+          <span><strong>Label not decided</strong><small>Color meaning must be confirmed from the document protocol.</small></span>
+        </div>
+        <label class="confirmation">
+          <input id="mapping-confirmed" type="checkbox">
+          <span>I inspected the selected PDFs and understand that automatic labels are suggestions, not validated meaning.</span>
+        </label>
+        <div class="notice neutral">
+          Color discovery and extraction will be connected to the existing document-local mapping service in the next interface slice.
+        </div>
+        <div class="form-actions">
+          <button class="button secondary" type="button" data-back="3">Back</button>
+          <button class="button" type="button" disabled>Extract annotations</button>
+        </div>
+      </section>
+    </main>
+
+    <aside id="pdf-viewer" class="pdf-viewer">
+      <header>
+        <strong>PDF inspection</strong>
+        <small id="preview-name">Select a PDF to inspect it beside the form.</small>
+      </header>
+      <div id="preview-empty" class="preview-empty">The selected PDF will appear here.</div>
+      <iframe id="pdf-preview" title="Selected annotated PDF preview"></iframe>
+    </aside>
+  </div>
+</body>
+</html>

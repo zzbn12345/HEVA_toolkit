@@ -1,0 +1,165 @@
+.create-body { height: 100vh; overflow: hidden; }
+
+.create-app {
+  display: grid;
+  grid-template-columns: 240px minmax(460px, 1fr) minmax(340px, 42%);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.create-app.pdf-hidden { grid-template-columns: 240px minmax(460px, 1fr); }
+.create-app.pdf-hidden .pdf-viewer { display: none; }
+
+.create-sidebar {
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: var(--panel);
+}
+
+.create-brand { margin-top: 2rem; font-size: 1.15rem; font-weight: 850; }
+.step-navigation { display: grid; gap: .6rem; margin-top: 1.5rem; }
+
+.step-button {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  align-items: center;
+  gap: .7rem;
+  padding: .65rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.step-button b {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.step-button.active { background: var(--field); color: var(--ink); }
+.step-button.active b { border-color: var(--accent); background: var(--accent); color: var(--background); }
+
+.create-content {
+  min-height: 0;
+  padding: 2.5rem;
+  overflow-y: auto;
+}
+
+.content-tools {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.content-tools button { pointer-events: auto; }
+.create-step { display: none; max-width: 680px; }
+.create-step.active { display: block; }
+.create-step h1 { font-size: clamp(2rem, 4vw, 3rem); }
+
+.create-step label, .create-step legend {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 700;
+}
+
+.create-step input:not([type="radio"]):not([type="checkbox"]) {
+  width: 100%;
+  margin-top: .4rem;
+  padding: .78rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+}
+
+.create-step small { display: block; margin-top: .35rem; color: var(--muted); font-weight: 400; }
+.form-actions { display: flex; gap: .7rem; margin-top: 1.5rem; }
+
+fieldset { margin: 1rem 0; padding: 0; border: 0; }
+.mode-toggle { display: flex; gap: .4rem; padding: .3rem; border-radius: 10px; background: #0d1829; }
+.mode-toggle label { flex: 1; margin: 0; }
+.mode-toggle input { position: absolute; opacity: 0; }
+.mode-toggle span { display: block; padding: .7rem; border-radius: 7px; text-align: center; cursor: pointer; }
+.mode-toggle input:checked + span { background: var(--field); }
+
+.selected-files { display: grid; gap: .5rem; margin-top: .8rem; }
+.selected-file {
+  display: flex;
+  justify-content: space-between;
+  padding: .7rem .8rem;
+  border-radius: 8px;
+  background: var(--field);
+  text-decoration: none;
+}
+
+.selected-file:hover, .selected-file:focus-visible { outline: 1px solid var(--accent); }
+
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
+  border-left: 1px solid var(--border);
+  background: #0b1525;
+}
+
+.pdf-viewer header { flex: none; padding: 1rem; border-bottom: 1px solid var(--border); }
+.pdf-viewer header small { display: block; margin-top: .25rem; color: var(--muted); }
+.pdf-viewer iframe { display: none; flex: 1; width: 100%; min-height: 0; border: 0; background: #34383f; }
+.preview-empty { margin: auto; padding: 2rem; color: var(--muted); text-align: center; }
+
+.color-example {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.color-swatch {
+  display: grid;
+  place-items: center;
+  min-height: 54px;
+  border: 1px solid #8794a5;
+  border-radius: 8px;
+  background: var(--swatch);
+  color: var(--swatch-text);
+  font-family: ui-monospace, monospace;
+  font-weight: 900;
+}
+
+.confirmation {
+  display: flex !important;
+  align-items: flex-start;
+  gap: .7rem;
+  padding: 1rem;
+  border-radius: 9px;
+  background: var(--panel);
+}
+
+.confirmation input { margin-top: .2rem; }
+
+@media (max-width: 1050px) {
+  .create-app { grid-template-columns: 210px minmax(0, 1fr); }
+  .pdf-viewer { grid-column: 1 / -1; min-height: 65vh; }
+}
+
+@media (max-width: 700px) {
+  .create-body { height: auto; overflow: auto; }
+  .create-app { display: block; height: auto; overflow: visible; }
+  .create-content { padding: 1.3rem; }
+  .step-navigation { grid-template-columns: repeat(2, 1fr); }
+  .pdf-viewer { height: 65vh; }
+}

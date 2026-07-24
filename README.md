@@ -95,6 +95,8 @@ For detailed architecture, configuration, and execution instructions, please ref
   edit history, and submission readiness)
 - **Approved Export**: [APPROVED_EXPORT.md](docs/APPROVED_EXPORT.md) (layered package
   validation, curator approval, and deterministic JSON/CSV release files)
+- **Project Boundaries**: [PROJECT_BOUNDARIES.md](docs/PROJECT_BOUNDARIES.md) (separate
+  management, extraction/NLP, and optional application dependencies)
 
 Quick CLI example:
 
@@ -102,14 +104,37 @@ Quick CLI example:
 ./venv/bin/python -m src.validate_records --all
 ```
 
+The optional web interface has its own environment so FastAPI is not imposed on extraction
+or data-management users. From the repository root:
+
+```bash
+python3.12 -m venv app/venv
+./app/venv/bin/python -m pip install -r app/requirements.txt
+./app/venv/bin/python -m app.heva_app --project-root .
+```
+
+Then open `http://127.0.0.1:8000`. See [app/README.md](app/README.md).
+
 ## Setup
 
-Use a local virtual environment. Do not install dependencies into system Python:
+Use a local virtual environment. For HEVA data management and validation only:
 
 ```bash
 python3.12 -m venv venv
 ./venv/bin/python -m pip install --upgrade pip setuptools wheel
 ./venv/bin/python -m pip install -r requirements.txt
+```
+
+Install the original document extraction and NLP adapters only when needed:
+
+```bash
+./venv/bin/python -m pip install -r requirements-extraction.txt
+```
+
+Contributors running the complete root test suite can use:
+
+```bash
+./venv/bin/python -m pip install -r requirements-dev.txt
 ```
 
 ### Troubleshooting dependency installation

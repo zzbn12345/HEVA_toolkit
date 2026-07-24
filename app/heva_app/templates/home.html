@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/home.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="HEVA home">
+        <span class="brand-mark" aria-hidden="true">H</span>
+        <span><strong>HEVA Toolkit</strong><small>Heritage annotation</small></span>
+      </a>
+      <nav class="workflow" aria-label="HEVA workflow">
+        <span class="workflow-step active"><b>1</b>Choose a task</span>
+        <span class="workflow-step"><b>2</b>Prepare documents</span>
+        <span class="workflow-step"><b>3</b>Review annotations</span>
+        <span class="workflow-step"><b>4</b>Submit for curation</span>
+      </nav>
+      <div id="project-state" class="project-state" aria-live="polite">Loading project…</div>
+    </aside>
+    <main class="main-content">
+      <section class="hero">
+        <p class="eyebrow">Welcome to HEVA</p>
+        <h1>Create trustworthy heritage-value annotations.</h1>
+        <p class="lead">Prepare, inspect, and validate annotated documents without needing Git or command-line knowledge.</p>
+      </section>
+      <section class="choice-grid" aria-label="Choose a HEVA task">
+        <a class="choice primary" href="/create">
+          <span class="choice-icon" aria-hidden="true">＋</span>
+          <h2>Create a data package</h2>
+          <p>Register source documents, identify the annotator, and prepare extraction.</p>
+        </a>
+        <a class="choice" href="/validate">
+          <span class="choice-icon" aria-hidden="true">✓</span>
+          <h2>Validate this project</h2>
+          <p>Check annotations, color decisions, reviews, provenance, and rights.</p>
+        </a>
+      </section>
+      <section id="summary" class="summary-card" hidden>
+        <h2>Current project</h2>
+        <div id="summary-counts" class="summary-counts"></div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
