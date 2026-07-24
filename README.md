@@ -87,6 +87,8 @@ For detailed architecture, configuration, and execution instructions, please ref
   annotator identity, rights, and curator review readiness)
 - **Supervised Color Mapping**: [COLOR_MAPPING.md](docs/COLOR_MAPPING.md) (document-local
   proposals, human confirmation, and batch palette safety)
+- **Extraction Sessions**: [EXTRACTION_SESSIONS.md](docs/EXTRACTION_SESSIONS.md)
+  (validated package persistence and provenance)
 
 Quick CLI example:
 
@@ -121,6 +123,7 @@ HEVA/
 │   ├── ARCHITECTURE.md
 │   ├── AUTO_COLOR_MAPPER_ARCHITECTURE.md
 │   ├── COLOR_MAPPING.md
+│   ├── EXTRACTION_SESSIONS.md
 │   ├── HEVA_RECORD_CONTRACT.md
 │   ├── DOCUMENT_METADATA.md
 │   ├── VALIDATION.md
