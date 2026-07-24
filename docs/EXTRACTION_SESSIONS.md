@@ -113,3 +113,26 @@ record the decision to use them:
 
 This does not mark the mappings as reviewed. It records the named user's decision to use
 the proposals for extraction, and generated sessions remain `mapping_review_pending`.
+
+## Build a reviewed collection
+
+Collection building is deliberately separate from batch extraction. Only registry
+documents with status `done` are eligible:
+
+```bash
+./venv/bin/python -m src.collection_builder .
+```
+
+The generated, ignored artifact is:
+
+```text
+data/heva-collection.json
+```
+
+The collection preserves document boundaries, source paths, source checksums, record
+counts, and canonical annotation records. Documents are ordered by source path and records
+by page and sentence ID, so unchanged completed packages produce byte-identical output.
+
+Every eligible `annotations.json` is validated before the collection is written. If one
+completed package is missing or invalid, the command reports an error and does not replace
+an existing collection.

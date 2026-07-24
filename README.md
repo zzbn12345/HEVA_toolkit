@@ -88,7 +88,7 @@ For detailed architecture, configuration, and execution instructions, please ref
 - **Supervised Color Mapping**: [COLOR_MAPPING.md](docs/COLOR_MAPPING.md) (document-local
   proposals, human confirmation, and batch palette safety)
 - **Extraction Sessions**: [EXTRACTION_SESSIONS.md](docs/EXTRACTION_SESSIONS.md)
-  (validated package persistence and provenance)
+  (validated package persistence, batch execution, and reviewed collections)
 
 Quick CLI example:
 
