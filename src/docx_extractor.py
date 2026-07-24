@@ -2,13 +2,12 @@ import docx
 import re
 import spacy
 
-from word_colors import WORD_HIGHLIGHT_TO_HEX
-from utils import (
-    detect_language,
-    get_nlp_for_lang,
-    normalize_ligatures,
-    is_colorful,
-)
+try:
+    from .word_colors import WORD_HIGHLIGHT_TO_HEX
+    from .utils import detect_language, get_nlp_for_lang, is_colorful, normalize_ligatures
+except ImportError:  # Support direct execution with PYTHONPATH=src.
+    from word_colors import WORD_HIGHLIGHT_TO_HEX
+    from utils import detect_language, get_nlp_for_lang, is_colorful, normalize_ligatures
 
 def extract_docx_highlights(docx_path, color_label_map=None):
     """

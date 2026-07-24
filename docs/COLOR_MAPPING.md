@@ -123,6 +123,23 @@ records = extract_colored_highlights(
 
 Loading fails if a person has not confirmed the document-local configuration.
 
+Alternatively, a pending automatic proposal can be deliberately authorized for extraction
+without claiming that it is scientifically approved:
+
+```python
+from src.color_mapping import authorize_pending_mapping_for_extraction
+
+configuration = authorize_pending_mapping_for_extraction(
+    configuration,
+    authorized_by="Research Annotator",
+)
+save_color_configuration(".", "HEVA-ABC123", configuration)
+```
+
+This records who made the decision and when. The resulting extraction is persisted with
+`mapping_status: pending_review` and remains unsuitable for curator review until the map
+is confirmed.
+
 ## Write automatic proposals from another workflow
 
 Automatic classification and package persistence are separate operations. After an

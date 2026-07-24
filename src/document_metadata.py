@@ -146,6 +146,9 @@ class ColorConfigurationMetadata(BaseModel):
     human_confirmed: StrictBool = False
     confirmed_by: str | None = None
     confirmed_at: datetime | None = None
+    use_for_extraction: StrictBool = False
+    extraction_authorized_by: str | None = None
+    extraction_authorized_at: datetime | None = None
     colors: list[ColorMappingMetadata] = Field(default_factory=list)
 
 

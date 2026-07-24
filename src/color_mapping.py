@@ -42,6 +42,14 @@ class BatchMappingReport:
         return not self.issues
 
 
+@dataclass(frozen=True)
+class ExtractionColorMapping:
+    """A mapping deliberately selected for extraction and its review state."""
+
+    values: dict[str, str]
+    status: str
+
+
 _COLOR_NAMES = {
     "#000000": "Black",
     "#000080": "Navy",
@@ -217,6 +225,38 @@ def confirm_color_configuration(
     updated.human_confirmed = True
     updated.confirmed_by = confirmed_by.strip()
     updated.confirmed_at = confirmed_at or datetime.now(timezone.utc)
+    updated.use_for_extraction = True
+    updated.extraction_authorized_by = updated.confirmed_by
+    updated.extraction_authorized_at = updated.confirmed_at
+    return updated
+
+
+def authorize_pending_mapping_for_extraction(
+    configuration: ColorConfigurationMetadata,
+    *,
+    authorized_by: str,
+    authorized_at: datetime | None = None,
+) -> ColorConfigurationMetadata:
+    """Explicitly allow pending suggestions to drive a non-curator-ready extraction."""
+
+    if not authorized_by.strip():
+        raise ColorMappingError("The person authorizing extraction is required.")
+    if not configuration.colors:
+        raise ColorMappingError("No color mapping is available to authorize.")
+    missing = [
+        color.hex
+        for color in configuration.colors
+        if color.status == "pending_review" and color.suggested_label is None
+    ]
+    if missing:
+        raise ColorMappingError(
+            "Pending colors without suggestions cannot drive extraction: "
+            + ", ".join(missing)
+        )
+    updated = configuration.model_copy(deep=True)
+    updated.use_for_extraction = True
+    updated.extraction_authorized_by = authorized_by.strip()
+    updated.extraction_authorized_at = authorized_at or datetime.now(timezone.utc)
     return updated
 
 
@@ -386,3 +426,42 @@ def load_confirmed_color_mapping(
     if not mapping:
         raise ColorMappingError(f"Document {document_id} has no approved color mappings.")
     return mapping
+
+
+def load_extraction_color_mapping(
+    project_root: str | Path,
+    document_id: str,
+    *,
+    registry_path: str | Path = DEFAULT_REGISTRY_PATH,
+) -> ExtractionColorMapping:
+    """Load a confirmed map or an explicitly authorized pending proposal."""
+
+    root = Path(project_root).resolve()
+    registry_file = root / Path(registry_path)
+    registry = ProjectRegistry.model_validate_json(registry_file.read_text(encoding="utf-8"))
+    matches = [entry for entry in registry.documents if entry.document_id == document_id]
+    if not matches or matches[0].metadata_path is None:
+        raise ColorMappingError(f"Document {document_id} has no package color configuration.")
+    metadata = PackageMetadata.model_validate_json(
+        (root / matches[0].metadata_path).read_text(encoding="utf-8")
+    )
+    configuration = metadata.color_configuration
+    if configuration.human_confirmed:
+        values = {
+            color.hex: color.label
+            for color in configuration.colors
+            if color.status == "approved" and color.label is not None
+        }
+        return ExtractionColorMapping(values=values, status="approved")
+    if not configuration.use_for_extraction:
+        raise ColorMappingError(
+            "A color map exists but has not been explicitly authorized for extraction."
+        )
+    values = {
+        color.hex: color.suggested_label
+        for color in configuration.colors
+        if color.status == "pending_review" and color.suggested_label is not None
+    }
+    if not values:
+        raise ColorMappingError("The authorized color map contains no usable suggestions.")
+    return ExtractionColorMapping(values=values, status="pending_review")

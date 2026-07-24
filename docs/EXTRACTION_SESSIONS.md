@@ -4,7 +4,8 @@
 package. It accepts records already produced by a PDF or DOCX extractor, validates every
 record, and only then writes package resources.
 
-The document must be registered, present, and have a human-confirmed color configuration.
+The document must be registered and present. Its color configuration must either be
+human-confirmed or explicitly authorized for extraction while pending review.
 
 ```python
 from src.extraction_session import persist_extraction_results
@@ -42,5 +43,32 @@ It also:
 If any record violates the HEVA contract, `ExtractionValidationError` contains all issues.
 No existing `annotations.json` is replaced in that case.
 
-This function does not yet invoke the PDF or DOCX extractor itself. Source execution,
-scanned-PDF reporting, and resumable page-level extraction are later F05 slices.
+`persist_extraction_results` itself does not invoke an extractor; it remains available as
+the validation-and-persistence boundary for other workflows.
+
+## Run extraction from a registered document
+
+Once the document has a confirmed color configuration:
+
+```python
+from src.extraction_session import run_registered_extraction
+
+result = run_registered_extraction(".", "HEVA-ABC123")
+print(result.annotations_path)
+print(result.reused_checkpoint)
+```
+
+The runner selects the PDF or DOCX extractor from the registered source path, loads the
+deliberately selected document-local mapping, and uses toolkit version `0.1.0` in
+provenance. An authorized pending map produces `mapping_review_pending`; a confirmed map
+produces `awaiting_review`.
+
+If matching `annotations.json` and `extraction-session.json` already exist for the source
+checksum, they are reused. Pass `force=True` only when an intentional re-extraction is
+required.
+
+PDFs with no extractable text are rejected with an explicit explanation that image-only
+or scanned input is unsupported because the toolkit does not currently provide OCR.
+
+Current resume support reuses a completed extraction checkpoint. Page-level continuation
+after an interrupted extraction remains future work.

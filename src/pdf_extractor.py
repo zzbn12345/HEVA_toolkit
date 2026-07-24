@@ -2,13 +2,22 @@ import fitz  # PyMuPDF
 import re
 import spacy
 
-from utils import (
-    detect_language,
-    get_nlp_for_lang,
-    normalize_ligatures,
-    is_margin_block,
-    is_colorful,
-)
+try:
+    from .utils import (
+        detect_language,
+        get_nlp_for_lang,
+        is_colorful,
+        is_margin_block,
+        normalize_ligatures,
+    )
+except ImportError:  # Support direct execution with PYTHONPATH=src.
+    from utils import (
+        detect_language,
+        get_nlp_for_lang,
+        is_colorful,
+        is_margin_block,
+        normalize_ligatures,
+    )
 
 def int_to_hex(color_int):
     """Converts a PyMuPDF integer color code to a standard Hex string."""

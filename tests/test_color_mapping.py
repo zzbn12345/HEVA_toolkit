@@ -10,8 +10,10 @@ import pytest
 
 from src.color_mapping import (
     ColorMappingError,
+    authorize_pending_mapping_for_extraction,
     confirm_color_configuration,
     load_confirmed_color_mapping,
+    load_extraction_color_mapping,
     observed_colors_from_records,
     propose_color_configuration,
     resolve_color,
@@ -211,3 +213,29 @@ def test_automatic_proposals_are_written_pending_without_overwriting(
 
     unchanged = json.loads(metadata_path.read_text())
     assert unchanged["color_configuration"] == saved["color_configuration"]
+
+
+def test_pending_map_requires_explicit_decision_before_extraction(tmp_path: Path) -> None:
+    documents = tmp_path / "documents"
+    documents.mkdir()
+    (documents / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    proposal = propose_color_configuration(
+        ["#FFFF00"], ollama_suggestions={"#FFFF00": "historic"}
+    )
+    save_color_configuration(tmp_path, document_id, proposal)
+
+    with pytest.raises(ColorMappingError, match="explicitly authorized"):
+        load_extraction_color_mapping(tmp_path, document_id)
+
+    authorized = authorize_pending_mapping_for_extraction(
+        proposal,
+        authorized_by="Research Annotator",
+    )
+    save_color_configuration(tmp_path, document_id, authorized)
+    selected = load_extraction_color_mapping(tmp_path, document_id)
+
+    assert selected.values == {"#FFFF00": "historic"}
+    assert selected.status == "pending_review"

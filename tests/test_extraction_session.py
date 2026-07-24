@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import fitz
 import pytest
 
 from src.color_mapping import (
@@ -13,7 +14,12 @@ from src.color_mapping import (
     resolve_color,
     save_color_configuration,
 )
-from src.extraction_session import ExtractionValidationError, persist_extraction_results
+from src.extraction_session import (
+    ExtractionSessionError,
+    ExtractionValidationError,
+    persist_extraction_results,
+    run_registered_extraction,
+)
 from src.project_registry import sync_registry
 
 
@@ -84,3 +90,40 @@ def test_invalid_results_do_not_replace_existing_annotations(tmp_path: Path) -> 
         )
 
     assert json.loads(annotations.read_text()) == [{"preserved": True}]
+
+
+def test_registered_runner_reuses_matching_completed_checkpoint(tmp_path: Path) -> None:
+    document_id = project(tmp_path)
+    persisted = persist_extraction_results(
+        tmp_path, document_id, [record()],
+        extraction_method="automatic", extractor="test", extractor_version="1",
+    )
+
+    resumed = run_registered_extraction(tmp_path, document_id)
+
+    assert resumed.reused_checkpoint
+    assert resumed.annotations_path == persisted.annotations_path
+    assert resumed.record_count == 1
+
+
+def test_registered_runner_reports_scanned_pdf_without_claiming_ocr(
+    tmp_path: Path,
+) -> None:
+    documents = tmp_path / "documents"
+    documents.mkdir()
+    source = documents / "scan.pdf"
+    pdf = fitz.open()
+    pdf.new_page()
+    pdf.save(source)
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    config = propose_color_configuration(
+        ["#FF40FF"], legend_mapping={"#FF40FF": "historic"}
+    )
+    config = resolve_color(config, "#FF40FF", label="historic")
+    config = confirm_color_configuration(config, confirmed_by="Annotator")
+    save_color_configuration(tmp_path, document_id, config)
+
+    with pytest.raises(ExtractionSessionError, match="does not currently provide OCR"):
+        run_registered_extraction(tmp_path, document_id)
