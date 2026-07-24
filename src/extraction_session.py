@@ -2,21 +2,24 @@
 
 from __future__ import annotations
 
+import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 from pathlib import Path
-from typing import Any, Literal, Sequence
+from typing import Any, Callable, Iterable, Literal, Sequence
 
 import fitz
 from pydantic import ValidationError
 
 from src.color_mapping import (
+    authorize_pending_mapping_for_extraction,
     ColorMappingError,
     load_confirmed_color_mapping,
     load_extraction_color_mapping,
+    save_color_configuration,
 )
-from src.document_metadata import PackageMetadata, ResourceMetadata
+from src.document_metadata import ColorConfigurationMetadata, PackageMetadata, ResourceMetadata
 from src.heva_contract import ContractIssue, validate_record
 from src.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry, RegistrySummary
 
@@ -45,6 +48,42 @@ class SessionResult:
     session_path: Path
     record_count: int
     reused_checkpoint: bool = False
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class BatchDocumentResult:
+    document_id: str
+    status: Literal["completed", "reused", "failed"]
+    record_count: int = 0
+    error: str | None = None
+    error_code: str | None = None
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class BatchExtractionReport:
+    documents: tuple[BatchDocumentResult, ...]
+
+    @property
+    def successful(self) -> bool:
+        return all(document.status != "failed" for document in self.documents)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "successful": self.successful,
+            "documents": [
+                {
+                    "document_id": document.document_id,
+                    "status": document.status,
+                    "record_count": document.record_count,
+                    "error": document.error,
+                    "error_code": document.error_code,
+                    "warnings": list(document.warnings),
+                }
+                for document in self.documents
+            ],
+        }
 
 
 def _write_json(path: Path, value: Any) -> None:
@@ -162,7 +201,18 @@ def persist_extraction_results(
     entry.status = "in_progress"
     registry.summary = _summary(registry)
     _write_json(registry_file, registry.model_dump(mode="json"))
-    return SessionResult(document_id, annotations_file, session_file, len(canonical))
+    warnings = (
+        ("Extraction used a pending color map and is not curator-ready.",)
+        if mapping_status == "pending_review"
+        else ()
+    )
+    return SessionResult(
+        document_id,
+        annotations_file,
+        session_file,
+        len(canonical),
+        warnings=warnings,
+    )
 
 
 def run_registered_extraction(
@@ -190,12 +240,18 @@ def run_registered_extraction(
     if not force and session_file.is_file() and annotations_file.is_file():
         session = json.loads(session_file.read_text(encoding="utf-8"))
         if session.get("source_checksum_sha256") == entry.checksum_sha256:
+            mapping_status = session.get("mapping_status")
             return SessionResult(
                 document_id,
                 annotations_file,
                 session_file,
                 int(session.get("record_count", 0)),
                 reused_checkpoint=True,
+                warnings=(
+                    ("Checkpoint uses a pending color map and is not curator-ready.",)
+                    if mapping_status == "pending_review"
+                    else ()
+                ),
             )
 
     extraction_mapping = load_extraction_color_mapping(root, document_id)
@@ -230,3 +286,131 @@ def run_registered_extraction(
         mapping_status=extraction_mapping.status,
     )
     return result
+
+
+def run_registered_batch(
+    project_root: str | Path,
+    document_ids: Sequence[str] | None = None,
+    *,
+    force: bool = False,
+    runner: Callable[..., SessionResult] = run_registered_extraction,
+) -> BatchExtractionReport:
+    """Run independent document sessions in stable registry order."""
+
+    root = Path(project_root).resolve()
+    registry = ProjectRegistry.model_validate_json(
+        (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
+    )
+    requested = set(document_ids) if document_ids is not None else None
+    known = {entry.document_id for entry in registry.documents}
+    results: list[BatchDocumentResult] = []
+    if requested is not None:
+        for missing in sorted(requested - known):
+            results.append(
+                BatchDocumentResult(
+                    document_id=missing,
+                    status="failed",
+                    error="Document is not registered.",
+                    error_code="document_not_registered",
+                )
+            )
+    selected = [
+        entry
+        for entry in sorted(registry.documents, key=lambda item: item.source_path)
+        if requested is None or entry.document_id in requested
+    ]
+    for entry in selected:
+        try:
+            session = runner(root, entry.document_id, force=force)
+            results.append(
+                BatchDocumentResult(
+                    document_id=entry.document_id,
+                    status="reused" if session.reused_checkpoint else "completed",
+                    record_count=session.record_count,
+                    warnings=getattr(session, "warnings", ()),
+                )
+            )
+        except Exception as error:
+            results.append(
+                BatchDocumentResult(
+                    document_id=entry.document_id,
+                    status="failed",
+                    error=str(error),
+                    error_code=getattr(error, "code", "extraction_failed"),
+                )
+            )
+    return BatchExtractionReport(documents=tuple(results))
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Run registered HEVA document extraction sessions."
+    )
+    parser.add_argument("project_root", nargs="?", default=".")
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument("--document-id", action="append", dest="document_ids")
+    target.add_argument("--all", action="store_true")
+    parser.add_argument("--force", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--authorize-pending-map-by",
+        metavar="NAME",
+        help=(
+            "Explicitly authorize existing pending color proposals for extraction "
+            "before running the selected documents."
+        ),
+    )
+    return parser
+
+
+def main(argv: Iterable[str] | None = None) -> int:
+    args = _build_parser().parse_args(list(argv) if argv is not None else None)
+    if args.authorize_pending_map_by:
+        root = Path(args.project_root).resolve()
+        registry = ProjectRegistry.model_validate_json(
+            (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
+        )
+        selected_ids = (
+            [entry.document_id for entry in registry.documents]
+            if args.all
+            else args.document_ids
+        )
+        by_id = {entry.document_id: entry for entry in registry.documents}
+        for document_id in selected_ids:
+            entry = by_id.get(document_id)
+            if entry is None or entry.metadata_path is None:
+                continue
+            metadata = PackageMetadata.model_validate_json(
+                (root / entry.metadata_path).read_text(encoding="utf-8")
+            )
+            configuration: ColorConfigurationMetadata = metadata.color_configuration
+            if configuration.human_confirmed or configuration.use_for_extraction:
+                continue
+            authorized = authorize_pending_mapping_for_extraction(
+                configuration,
+                authorized_by=args.authorize_pending_map_by,
+            )
+            save_color_configuration(root, document_id, authorized)
+    report = run_registered_batch(
+        args.project_root,
+        None if args.all else args.document_ids,
+        force=args.force,
+    )
+    if args.json:
+        print(json.dumps(report.to_dict(), indent=2))
+    else:
+        for document in report.documents:
+            if document.error:
+                print(
+                    f"{document.document_id}: ERROR [{document.error_code}] "
+                    f"{document.error}"
+                )
+            else:
+                print(f"{document.document_id}: {document.status}")
+            for warning in document.warnings:
+                print(f"  WARNING: {warning}")
+    return 0 if report.successful else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

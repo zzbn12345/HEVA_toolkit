@@ -22,6 +22,12 @@ class ColorMappingError(ValueError):
     """Raised when a color decision cannot safely pass the supervision gate."""
 
 
+class ColorMappingAuthorizationRequired(ColorMappingError):
+    """Raised when a pending map exists but no person selected it for extraction."""
+
+    code = "color_mapping_authorization_required"
+
+
 @dataclass(frozen=True)
 class BatchMappingIssue:
     """One reason a color map cannot be silently shared across a batch."""
@@ -454,8 +460,9 @@ def load_extraction_color_mapping(
         }
         return ExtractionColorMapping(values=values, status="approved")
     if not configuration.use_for_extraction:
-        raise ColorMappingError(
-            "A color map exists but has not been explicitly authorized for extraction."
+        raise ColorMappingAuthorizationRequired(
+            "A color map exists but has not been explicitly authorized for extraction. "
+            "Inspect it, then use --authorize-pending-map-by NAME if you choose to use it."
         )
     values = {
         color.hex: color.suggested_label

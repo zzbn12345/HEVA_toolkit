@@ -18,6 +18,7 @@ from src.extraction_session import (
     ExtractionSessionError,
     ExtractionValidationError,
     persist_extraction_results,
+    run_registered_batch,
     run_registered_extraction,
 )
 from src.project_registry import sync_registry
@@ -127,3 +128,39 @@ def test_registered_runner_reports_scanned_pdf_without_claiming_ocr(
 
     with pytest.raises(ExtractionSessionError, match="does not currently provide OCR"):
         run_registered_extraction(tmp_path, document_id)
+
+
+def test_batch_runs_independent_packages_in_stable_order_and_isolates_failures(
+    tmp_path: Path,
+) -> None:
+    documents = tmp_path / "documents"
+    documents.mkdir()
+    (documents / "b.pdf").write_bytes(b"b")
+    (documents / "a.pdf").write_bytes(b"a")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    ordered_ids = [item["document_id"] for item in registry["documents"]]
+    calls: list[str] = []
+
+    def fake_runner(root: Path, document_id: str, *, force: bool):
+        calls.append(document_id)
+        if document_id == ordered_ids[1]:
+            raise ExtractionSessionError("Document-specific failure.")
+        package = root / "data/packages" / document_id
+        return type(
+            "Result",
+            (),
+            {
+                "reused_checkpoint": True,
+                "record_count": 3,
+                "annotations_path": package / "annotations.json",
+                "session_path": package / "extraction-session.json",
+            },
+        )()
+
+    report = run_registered_batch(tmp_path, runner=fake_runner)
+
+    assert calls == ordered_ids
+    assert [item.status for item in report.documents] == ["reused", "failed"]
+    assert report.documents[1].error == "Document-specific failure."
+    assert not report.successful

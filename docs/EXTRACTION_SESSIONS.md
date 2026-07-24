@@ -72,3 +72,44 @@ or scanned input is unsupported because the toolkit does not currently provide O
 
 Current resume support reuses a completed extraction checkpoint. Page-level continuation
 after an interrupted extraction remains future work.
+
+## Run selected documents or a batch
+
+Run one registered document:
+
+```bash
+./venv/bin/python -m src.extraction_session . \
+  --document-id HEVA-ABC123
+```
+
+Run selected documents independently:
+
+```bash
+./venv/bin/python -m src.extraction_session . \
+  --document-id HEVA-ABC123 \
+  --document-id HEVA-DEF456
+```
+
+Run every registered document:
+
+```bash
+./venv/bin/python -m src.extraction_session . --all
+```
+
+Use `--json` for a machine-readable per-document report and `--force` for intentional
+re-extraction. Batch order is deterministic from registry source paths. Each document
+writes only to its own package; the batch does not merge annotations. A document failure
+is reported without discarding successful or reused results from other documents.
+
+If existing automatic proposals are still pending, the command reports that they are not
+authorized and creates no annotations. After inspecting those proposals, explicitly
+record the decision to use them:
+
+```bash
+./venv/bin/python -m src.extraction_session . \
+  --all \
+  --authorize-pending-map-by "Research Annotator"
+```
+
+This does not mark the mappings as reviewed. It records the named user's decision to use
+the proposals for extraction, and generated sessions remain `mapping_review_pending`.
