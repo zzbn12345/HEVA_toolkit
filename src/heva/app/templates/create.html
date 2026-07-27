@@ -14,7 +14,7 @@
       <a class="home-link" href="/">← HEVA home</a>
       <div class="create-brand">HEVA package project</div>
       <nav class="step-navigation" aria-label="Package creation steps">
-        <button class="step-button active" type="button" data-step-target="1"><b>1</b><span>Annotator</span></button>
+        <button class="step-button active" type="button" data-step-target="1"><b>1</b><span>Annotator check</span></button>
         <button class="step-button" type="button" data-step-target="2"><b>2</b><span>Submission</span></button>
         <button class="step-button" type="button" data-step-target="3"><b>3</b><span>Documents</span></button>
         <button class="step-button" type="button" data-step-target="4"><b>4</b><span>Color review</span></button>
@@ -28,17 +28,13 @@
 
       <section class="create-step active" data-step="1">
         <p class="eyebrow">Step 1 of 4</p>
-        <h1>Annotator identity</h1>
-        <p class="lead">This profile belongs to the project and can be reused for multiple document packages.</p>
+        <h1>Project annotator</h1>
+        <p class="lead">The project profile is reused for every document and remains separate from source authorship.</p>
         <div id="annotator-status" class="notice neutral" aria-live="polite">Loading the saved annotator…</div>
         <div id="selected-document-status" class="notice neutral" hidden aria-live="polite"></div>
         <input id="selected-document-id" type="hidden">
-        <label for="annotator-name">Annotator name</label>
-        <input id="annotator-name" autocomplete="name" required>
-        <label for="annotator-orcid">ORCID <small>(optional)</small></label>
-        <input id="annotator-orcid" placeholder="0000-0002-1825-0097">
         <div class="form-actions">
-          <button id="save-annotator" class="button" type="button">Save annotator</button>
+          <a class="button secondary" href="/annotator">Manage annotator profile</a>
           <button class="button secondary" type="button" data-next="2">Continue</button>
         </div>
       </section>

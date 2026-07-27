@@ -39,41 +39,17 @@ async function restoreAnnotator() {
       return;
     }
     if (result.configured) {
-      document.getElementById("annotator-name").value = result.annotator.name || "";
-      document.getElementById("annotator-orcid").value = result.annotator.orcid || "";
       status.className = "notice success";
       status.textContent = `Active project annotator: ${result.annotator.name}`;
     } else {
-      status.textContent = "No annotator has been saved for this project.";
+      status.className = "notice warning";
+      status.textContent = `${result.message} You can register a document now, but the profile is required before submission.`;
     }
   } catch (error) {
     status.className = "notice error";
     status.textContent = "The annotator profile could not be loaded.";
   }
 }
-
-document.getElementById("save-annotator").addEventListener("click", async () => {
-  const name = document.getElementById("annotator-name");
-  if (!name.reportValidity()) return;
-  const status = document.getElementById("annotator-status");
-  const response = await fetch("/api/annotator", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: name.value.trim(),
-      orcid: document.getElementById("annotator-orcid").value.trim() || null,
-    }),
-  });
-  const result = await response.json();
-  if (!response.ok) {
-    const detail = result.detail || result;
-    status.className = "notice error";
-    status.textContent = `${detail.message} ${detail.action}`;
-    return;
-  }
-  status.className = "notice success";
-  status.textContent = `Active project annotator: ${result.annotator.name}`;
-});
 
 function openPreview(url, name) {
   const frame = document.getElementById("pdf-preview");

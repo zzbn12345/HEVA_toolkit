@@ -4,6 +4,8 @@
 
 ### Added
 
+- A dedicated project-level annotator profile with reusable name, affiliation, email, and
+  ORCID details, kept separate from document authorship and submission metadata.
 - A document review queue that summarizes batch-prepared documents while opening only one
   document, PDF, color evidence, sentence set, and audit state at a time.
 - A row-based annotation project list with explicit completion bars and an

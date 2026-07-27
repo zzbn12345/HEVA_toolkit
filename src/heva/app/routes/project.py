@@ -40,6 +40,10 @@ def create_project_router(
     def creation_page() -> str:
         return template("create.html")
 
+    @router.get("/annotator", response_class=HTMLResponse)
+    def annotator_page() -> str:
+        return template("annotator.html")
+
     @router.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
@@ -134,7 +138,17 @@ def create_project_router(
     def annotator_status():
         path = root / "data" / "annotator.json"
         if not path.exists():
-            return {"configured": False, "annotator": {"name": None, "orcid": None}}
+            return {
+                "configured": False,
+                "message": "No annotator profile has been saved for this project.",
+                "action": "Add the person responsible for reviewing the annotations.",
+                "annotator": {
+                    "name": None,
+                    "orcid": None,
+                    "affiliation": None,
+                    "email": None,
+                },
+            }
         try:
             annotator = AnnotatorMetadata.model_validate_json(
                 path.read_text(encoding="utf-8")
@@ -165,17 +179,22 @@ def create_project_router(
                     "action": "Provide the person responsible for reviewing these annotations.",
                 },
             )
-        normalized = annotator.model_copy(update={"name": annotator.name.strip()})
+        normalized = annotator.model_copy(
+            update={
+                field: value.strip() if isinstance(value, str) and value.strip() else None
+                for field, value in annotator.model_dump().items()
+            }
+        )
+        payload = normalized.model_dump(mode="json", exclude_none=True)
         path = root / "data" / "annotator.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix(".json.tmp")
         temporary.write_text(
-            json.dumps(normalized.model_dump(mode="json"), indent=2, ensure_ascii=False)
-            + "\n",
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
         temporary.replace(path)
-        return {"configured": True, "annotator": normalized.model_dump(mode="json")}
+        return {"configured": True, "annotator": payload}
 
     @router.post("/api/validate")
     def validate_current_project():

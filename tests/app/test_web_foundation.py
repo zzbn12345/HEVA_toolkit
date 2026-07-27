@@ -46,7 +46,9 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     response = client.get("/create")
 
     assert response.status_code == 200
-    assert "Annotator identity" in response.text
+    assert "Project annotator" in response.text
+    assert 'href="/annotator">Manage annotator profile</a>' in response.text
+    assert 'id="annotator-name"' not in response.text
     assert "Submission information" in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -71,6 +73,62 @@ def test_annotator_is_persisted_in_project_json(tmp_path: Path) -> None:
         "name": "Research Annotator",
         "orcid": "0000-0002-1825-0097",
     }
+
+
+def test_annotator_profile_has_a_separate_project_view(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get("/annotator")
+
+    assert response.status_code == 200
+    assert "Annotator profile" in response.text
+    assert 'id="annotator-form"' in response.text
+    assert 'id="annotator-affiliation"' in response.text
+    assert 'id="annotator-email"' in response.text
+    assert "Document titles, source authors" in response.text
+    assert 'href="/">← HEVA home</a>' in response.text
+
+
+def test_extended_annotator_profile_is_restored_across_documents(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    saved = client.put(
+        "/api/annotator",
+        json={
+            "name": "  Research Annotator  ",
+            "affiliation": "  Heritage Lab  ",
+            "email": "  annotator@example.org  ",
+            "orcid": "  0000-0002-1825-0097  ",
+        },
+    )
+    restored = client.get("/api/annotator")
+
+    assert saved.status_code == 200
+    assert restored.json() == {
+        "configured": True,
+        "annotator": {
+            "name": "Research Annotator",
+            "affiliation": "Heritage Lab",
+            "email": "annotator@example.org",
+            "orcid": "0000-0002-1825-0097",
+        },
+    }
+    assert json.loads((tmp_path / "data/annotator.json").read_text()) == restored.json()[
+        "annotator"
+    ]
+
+
+def test_missing_annotator_explains_registration_and_submission_boundary(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get("/api/annotator")
+
+    assert response.status_code == 200
+    assert response.json()["configured"] is False
+    assert response.json()["message"]
+    assert response.json()["action"]
 
 
 def test_missing_project_has_plain_language_corrective_action(tmp_path: Path) -> None:

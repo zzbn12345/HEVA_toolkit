@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Annotator profile · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/annotator.css">
+  <script src="/static/annotator.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="home-link" href="/">← HEVA home</a>
+    <a class="button secondary" href="/create">Prepare a document</a>
+  </header>
+  <main class="profile-page">
+    <section class="profile-introduction">
+      <p class="eyebrow">Project configuration</p>
+      <h1>Annotator profile</h1>
+      <p class="lead">
+        Enter this once for the project. HEVA will reuse it for every document you prepare
+        or review. This person is not necessarily the author of the source documents.
+      </p>
+    </section>
+
+    <form id="annotator-form" class="profile-card">
+      <div id="annotator-status" class="notice neutral" aria-live="polite">
+        Loading the saved annotator profile…
+      </div>
+
+      <label for="annotator-name">Annotator name <span aria-hidden="true">*</span></label>
+      <input id="annotator-name" name="name" autocomplete="name" required>
+
+      <label for="annotator-affiliation">Affiliation <small>(optional)</small></label>
+      <input id="annotator-affiliation" name="affiliation" autocomplete="organization">
+
+      <label for="annotator-email">Email <small>(optional)</small></label>
+      <input id="annotator-email" name="email" type="email" autocomplete="email">
+
+      <label for="annotator-orcid">ORCID <small>(optional)</small></label>
+      <input id="annotator-orcid" name="orcid" placeholder="0000-0002-1825-0097">
+
+      <p class="profile-help">
+        Document titles, source authors, citation details, and curator decisions are stored
+        separately for each document.
+      </p>
+      <button class="button" type="submit">Save annotator profile</button>
+    </form>
+  </main>
+</body>
+</html>

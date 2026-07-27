@@ -54,6 +54,8 @@ class AnnotatorMetadata(BaseModel):
 
     name: str | None = None
     orcid: str | None = None
+    affiliation: str | None = None
+    email: str | None = None
 
 
 class RightsMetadata(BaseModel):
