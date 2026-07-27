@@ -4,8 +4,11 @@
 
 ### Added
 
-- A dedicated project-level annotator profile with reusable name, affiliation, email, and
-  ORCID details, kept separate from document authorship and submission metadata.
+- A schema-driven project annotator editor with filterable reusable profiles, validated
+  form fields, read-only schema/generated-JSON views, stable identifiers, active-profile
+  selection, and migration from the former single-profile JSON.
+- Domain-safe removal of annotators from current project configuration without rewriting
+  historical sentence-review evidence.
 - A document review queue that summarizes batch-prepared documents while opening only one
   document, PDF, color evidence, sentence set, and audit state at a time.
 - A row-based annotation project list with explicit completion bars and an

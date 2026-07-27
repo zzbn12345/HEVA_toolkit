@@ -14,10 +14,28 @@ created or reviewed.
 The annotator is not necessarily the author of a source document. Source authorship is
 stored and reviewed separately within each document record.
 
-Use **Annotator profile** from the home page to save the annotator's name and optional
-affiliation, email, and ORCID. The profile is stored in `data/annotator.json`. Preparing a
-document displays the active profile and links back to this editor; it does not duplicate
-the identity fields inside document metadata.
+Use **Annotator profile** from the home page to load, filter, add, or edit project
+annotators. Each record has a stable ID plus a name and optional affiliation, email, and
+ORCID. The collection and active selection are stored in `data/annotators.json`. A former
+`data/annotator.json` profile is migrated automatically when first loaded.
+
+The editor offers Form, Schema, and Generated JSON views. Users edit only safe form fields;
+the application generates the JSON and displays it read-only for transparency. Field
+constraints come from the JSON Schema and the backend validates the same schema again
+before saving. Preparing a document displays the selected active annotator and links back
+to this editor; it does not duplicate identity fields inside document metadata.
+
+### Shared safe record editor
+
+The same interaction pattern applies to annotators, documents, and sentences: a filterable
+record list opens a schema-generated form. Users create and update records through fields,
+while JSON Schema defines constraints and the backend validates them again. Schema and
+generated JSON may be inspected read-only; raw JSON editing is not required or supported.
+
+Deletion follows the meaning of each record. An annotator may be removed from current
+project configuration without altering decisions already attributed to that person.
+Documents with processing history are archived. Reviewed sentences are excluded or
+superseded rather than erased, preserving FAIR provenance and the review audit trail.
 
 ## 2. Document list, completion, and workflow state
 

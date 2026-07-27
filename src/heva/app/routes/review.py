@@ -9,7 +9,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import ValidationError
 
-from heva.workflow.document_metadata import AnnotatorMetadata
+from heva.workflow.annotator_registry import (
+    AnnotatorRegistryError,
+    load_annotator_registry,
+)
 from heva.workflow.review_queue import (
     ReviewQueueError,
     list_review_queue,
@@ -99,11 +102,9 @@ def create_review_router(
                 detail="Select sentences and choose an approved review decision.",
             )
         try:
-            annotator = AnnotatorMetadata.model_validate_json(
-                (root / "data" / "annotator.json").read_text(encoding="utf-8")
-            )
-            if not annotator.name:
-                raise ValueError("Annotator name is empty.")
+            annotator = load_annotator_registry(root).active()
+            if annotator is None or not annotator.name:
+                raise ValueError("Select an active project annotator before reviewing.")
             record_decisions(
                 root,
                 document_id,
@@ -113,7 +114,14 @@ def create_review_router(
                 comment=comment if isinstance(comment, str) else None,
             )
             return load_review_document(root, document_id)
-        except (OSError, ValueError, ValidationError, ReviewError, ReviewQueueError) as error:
+        except (
+            OSError,
+            ValueError,
+            ValidationError,
+            AnnotatorRegistryError,
+            ReviewError,
+            ReviewQueueError,
+        ) as error:
             return JSONResponse(
                 {
                     "code": "review_decision_not_saved",

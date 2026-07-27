@@ -52,10 +52,40 @@ class AnnotatorMetadata(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: str | None = None
-    orcid: str | None = None
-    affiliation: str | None = None
-    email: str | None = None
+    name: str | None = Field(
+        default=None,
+        min_length=1,
+        title="Annotator name",
+        description="Person responsible for reviewing these annotations.",
+    )
+    affiliation: str | None = Field(
+        default=None,
+        title="Affiliation",
+        description="Organization or research group associated with the annotator.",
+    )
+    email: str | None = Field(
+        default=None,
+        title="Email",
+        description="Optional contact address.",
+        pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        json_schema_extra={"format": "email"},
+    )
+    orcid: str | None = Field(
+        default=None,
+        title="ORCID",
+        description="Optional persistent researcher identifier.",
+        examples=["0000-0002-1825-0097"],
+        pattern=r"^\d{4}-\d{4}-\d{4}-[\dX]{4}$",
+    )
+
+    @field_validator("name", "affiliation", "email", "orcid", mode="before")
+    @classmethod
+    def normalize_optional_text(cls, value):
+        """Trim form input and treat blank fields as absent."""
+
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
 
 
 class RightsMetadata(BaseModel):

@@ -39,7 +39,9 @@ Annotator profiles use JSON:
 }
 ```
 
-For example, save this as `data/annotator.json`. The source creator and annotator are
+For a standalone script, this may be saved as `data/annotator.json`. The web application
+stores multiple reusable records and their active selection in `data/annotators.json`,
+migrating the former single file when necessary. The source creator and annotator are
 separate concepts: the source creator belongs under `source.creators`; the person doing
 the HEVA annotation belongs under `annotator`.
 

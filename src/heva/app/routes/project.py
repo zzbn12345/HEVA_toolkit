@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Callable
 
@@ -10,6 +9,14 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import ValidationError
 
+from heva.workflow.annotator_registry import (
+    AnnotatorRegistryError,
+    activate_annotator,
+    add_annotator,
+    load_annotator_registry,
+    remove_annotator,
+    update_annotator,
+)
 from heva.workflow.document_metadata import AnnotatorMetadata
 from heva.workflow.package_validator import (
     PackageValidationError,
@@ -136,12 +143,24 @@ def create_project_router(
 
     @router.get("/api/annotator")
     def annotator_status():
-        path = root / "data" / "annotator.json"
-        if not path.exists():
+        try:
+            registry = load_annotator_registry(root)
+        except AnnotatorRegistryError as error:
+            return JSONResponse(
+                {
+                    "code": "invalid_annotator_profile",
+                    "message": str(error),
+                    "action": "Correct or replace data/annotators.json.",
+                    "detail": str(error),
+                },
+                status_code=422,
+            )
+        annotator = registry.active()
+        if annotator is None:
             return {
                 "configured": False,
-                "message": "No annotator profile has been saved for this project.",
-                "action": "Add the person responsible for reviewing the annotations.",
+                "message": "No active annotator has been selected for this project.",
+                "action": "Add or select the person responsible for reviewing the annotations.",
                 "annotator": {
                     "name": None,
                     "orcid": None,
@@ -149,20 +168,6 @@ def create_project_router(
                     "email": None,
                 },
             }
-        try:
-            annotator = AnnotatorMetadata.model_validate_json(
-                path.read_text(encoding="utf-8")
-            )
-        except (OSError, ValidationError) as error:
-            return JSONResponse(
-                {
-                    "code": "invalid_annotator_profile",
-                    "message": "The saved annotator profile cannot be read.",
-                    "action": "Correct or replace data/annotator.json.",
-                    "detail": str(error),
-                },
-                status_code=422,
-            )
         return {
             "configured": bool(annotator.name),
             "annotator": annotator.model_dump(mode="json"),
@@ -170,31 +175,82 @@ def create_project_router(
 
     @router.put("/api/annotator")
     def save_annotator(annotator: AnnotatorMetadata):
-        if not annotator.name or not annotator.name.strip():
+        try:
+            registry = load_annotator_registry(root)
+            active = registry.active()
+            saved = (
+                update_annotator(root, active.annotator_id, annotator)
+                if active
+                else add_annotator(root, annotator)
+            )
+            activate_annotator(root, saved.annotator_id)
+        except AnnotatorRegistryError as error:
             raise HTTPException(
                 status_code=422,
                 detail={
                     "code": "missing_annotator_name",
-                    "message": "Enter the annotator’s name.",
+                    "message": str(error),
                     "action": "Provide the person responsible for reviewing these annotations.",
                 },
-            )
-        normalized = annotator.model_copy(
-            update={
-                field: value.strip() if isinstance(value, str) and value.strip() else None
-                for field, value in annotator.model_dump().items()
-            }
-        )
-        payload = normalized.model_dump(mode="json", exclude_none=True)
-        path = root / "data" / "annotator.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_suffix(".json.tmp")
-        temporary.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
-        temporary.replace(path)
-        return {"configured": True, "annotator": payload}
+            ) from error
+        return {"configured": True, "annotator": saved.model_dump(mode="json")}
+
+    @router.get("/api/annotators/schema")
+    def annotator_schema():
+        schema = AnnotatorMetadata.model_json_schema()
+        schema["required"] = ["name"]
+        return {
+            "schema": schema,
+            "ui_schema": {
+                "type": "VerticalLayout",
+                "elements": [
+                    {"type": "Control", "scope": "#/properties/name"},
+                    {"type": "Control", "scope": "#/properties/affiliation"},
+                    {"type": "Control", "scope": "#/properties/email"},
+                    {"type": "Control", "scope": "#/properties/orcid"},
+                ],
+            },
+        }
+
+    @router.get("/api/annotators")
+    def list_annotators():
+        try:
+            registry = load_annotator_registry(root)
+        except AnnotatorRegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return registry.model_dump(mode="json")
+
+    @router.post("/api/annotators", status_code=201)
+    def create_annotator(annotator: AnnotatorMetadata):
+        try:
+            record = add_annotator(root, annotator)
+        except AnnotatorRegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return record.model_dump(mode="json")
+
+    @router.put("/api/annotators/{annotator_id}")
+    def replace_annotator(annotator_id: str, annotator: AnnotatorMetadata):
+        try:
+            record = update_annotator(root, annotator_id, annotator)
+        except AnnotatorRegistryError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return record.model_dump(mode="json")
+
+    @router.post("/api/annotators/{annotator_id}/activate")
+    def select_annotator(annotator_id: str):
+        try:
+            record = activate_annotator(root, annotator_id)
+        except AnnotatorRegistryError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return {"active_annotator_id": record.annotator_id}
+
+    @router.delete("/api/annotators/{annotator_id}")
+    def delete_annotator(annotator_id: str):
+        try:
+            registry = remove_annotator(root, annotator_id)
+        except AnnotatorRegistryError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return registry.model_dump(mode="json")
 
     @router.post("/api/validate")
     def validate_current_project():

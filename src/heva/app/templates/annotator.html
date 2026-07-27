@@ -3,49 +3,84 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Annotator profile · HEVA Toolkit</title>
+  <title>Project annotators · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/annotator.css">
-  <script src="/static/annotator.js" defer></script>
+  <script src="/static/annotator.js?v=2" defer></script>
 </head>
 <body>
   <header class="topbar">
     <a class="home-link" href="/">← HEVA home</a>
     <a class="button secondary" href="/create">Prepare a document</a>
   </header>
-  <main class="profile-page">
-    <section class="profile-introduction">
-      <p class="eyebrow">Project configuration</p>
-      <h1>Annotator profile</h1>
-      <p class="lead">
-        Enter this once for the project. HEVA will reuse it for every document you prepare
-        or review. This person is not necessarily the author of the source documents.
-      </p>
-    </section>
-
-    <form id="annotator-form" class="profile-card">
-      <div id="annotator-status" class="notice neutral" aria-live="polite">
-        Loading the saved annotator profile…
+  <main class="annotator-page">
+    <header class="annotator-heading">
+      <div>
+        <p class="eyebrow">Project configuration</p>
+        <h1>Project annotators</h1>
+        <p class="lead">
+          Load, add, and edit reusable annotator JSON records. The form is generated from
+          the same schema that validates the saved data.
+        </p>
       </div>
+      <button id="new-annotator" class="button" type="button">＋ Add annotator</button>
+    </header>
 
-      <label for="annotator-name">Annotator name <span aria-hidden="true">*</span></label>
-      <input id="annotator-name" name="name" autocomplete="name" required>
+    <div id="annotator-status" class="notice neutral" aria-live="polite">
+      Loading annotator records…
+    </div>
 
-      <label for="annotator-affiliation">Affiliation <small>(optional)</small></label>
-      <input id="annotator-affiliation" name="affiliation" autocomplete="organization">
+    <div class="annotator-workspace">
+      <aside class="annotator-list-panel" aria-label="Project annotators">
+        <label for="annotator-filter">Filter annotators</label>
+        <input id="annotator-filter" type="search" placeholder="Name, affiliation, email…">
+        <div id="annotator-list" class="annotator-list"></div>
+      </aside>
 
-      <label for="annotator-email">Email <small>(optional)</small></label>
-      <input id="annotator-email" name="email" type="email" autocomplete="email">
+      <section class="json-editor">
+        <header class="editor-header">
+          <div>
+            <p class="eyebrow">JSON record</p>
+            <h2 id="editor-title">Add annotator</h2>
+          </div>
+          <span id="active-badge" class="active-badge" hidden>Used for new packages</span>
+        </header>
 
-      <label for="annotator-orcid">ORCID <small>(optional)</small></label>
-      <input id="annotator-orcid" name="orcid" placeholder="0000-0002-1825-0097">
+        <div class="editor-tabs" role="tablist" aria-label="Annotator JSON views">
+          <button class="editor-tab active" type="button" role="tab" aria-selected="true" data-panel="form-panel">Form</button>
+          <button class="editor-tab" type="button" role="tab" aria-selected="false" data-panel="schema-panel">Schema</button>
+          <button class="editor-tab" type="button" role="tab" aria-selected="false" data-panel="data-panel">Generated JSON</button>
+        </div>
 
-      <p class="profile-help">
-        Document titles, source authors, citation details, and curator decisions are stored
-        separately for each document.
-      </p>
-      <button class="button" type="submit">Save annotator profile</button>
-    </form>
+        <section id="form-panel" class="editor-panel active" role="tabpanel">
+          <form id="schema-form">
+            <div id="generated-fields" class="generated-fields"></div>
+            <p class="profile-help">
+              Source authors, citation details, and curator decisions belong to document
+              records and are not copied into this profile.
+            </p>
+            <div class="form-actions">
+              <button class="button" type="submit">Save annotator</button>
+              <button id="activate-annotator" class="button secondary" type="button" hidden>Use for new packages</button>
+              <button id="remove-annotator" class="button danger" type="button" hidden>Remove from project</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="schema-panel" class="editor-panel" role="tabpanel">
+          <p class="panel-help">This JSON Schema defines fields and validation.</p>
+          <pre id="schema-json" class="json-code"></pre>
+        </section>
+
+        <section id="data-panel" class="editor-panel" role="tabpanel">
+          <p class="panel-help">
+            HEVA generates this JSON from the validated form. It is shown for transparency
+            and cannot be edited here.
+          </p>
+          <pre id="data-json" class="json-code generated-json" aria-label="Generated annotator JSON"></pre>
+        </section>
+      </section>
+    </div>
   </main>
 </body>
 </html>

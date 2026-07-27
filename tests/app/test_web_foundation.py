@@ -58,7 +58,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert "<script>" not in response.text
 
 
-def test_annotator_is_persisted_in_project_json(tmp_path: Path) -> None:
+def test_annotator_is_persisted_in_project_collection(tmp_path: Path) -> None:
     client = TestClient(create_app(tmp_path))
 
     saved = client.put(
@@ -69,10 +69,10 @@ def test_annotator_is_persisted_in_project_json(tmp_path: Path) -> None:
 
     assert saved.status_code == 200
     assert restored.json()["annotator"]["name"] == "Research Annotator"
-    assert json.loads((tmp_path / "data/annotator.json").read_text()) == {
-        "name": "Research Annotator",
-        "orcid": "0000-0002-1825-0097",
-    }
+    collection = json.loads((tmp_path / "data/annotators.json").read_text())
+    assert collection["active_annotator_id"]
+    assert collection["annotators"][0]["name"] == "Research Annotator"
+    assert collection["annotators"][0]["orcid"] == "0000-0002-1825-0097"
 
 
 def test_annotator_profile_has_a_separate_project_view(tmp_path: Path) -> None:
@@ -81,11 +81,17 @@ def test_annotator_profile_has_a_separate_project_view(tmp_path: Path) -> None:
     response = client.get("/annotator")
 
     assert response.status_code == 200
-    assert "Annotator profile" in response.text
-    assert 'id="annotator-form"' in response.text
-    assert 'id="annotator-affiliation"' in response.text
-    assert 'id="annotator-email"' in response.text
-    assert "Document titles, source authors" in response.text
+    assert "Project annotators" in response.text
+    assert 'id="schema-form"' in response.text
+    assert 'id="generated-fields"' in response.text
+    assert 'id="annotator-list"' in response.text
+    assert 'id="schema-json"' in response.text
+    assert 'id="data-json"' in response.text
+    assert 'textarea id="data-json"' not in response.text
+    assert "Apply JSON to form" not in response.text
+    assert "cannot be edited here" in response.text
+    assert "Add annotator" in response.text
+    assert "Source authors, citation details" in response.text
     assert 'href="/">← HEVA home</a>' in response.text
 
 
@@ -104,18 +110,14 @@ def test_extended_annotator_profile_is_restored_across_documents(tmp_path: Path)
     restored = client.get("/api/annotator")
 
     assert saved.status_code == 200
-    assert restored.json() == {
-        "configured": True,
-        "annotator": {
-            "name": "Research Annotator",
-            "affiliation": "Heritage Lab",
-            "email": "annotator@example.org",
-            "orcid": "0000-0002-1825-0097",
-        },
-    }
-    assert json.loads((tmp_path / "data/annotator.json").read_text()) == restored.json()[
-        "annotator"
-    ]
+    assert restored.json()["configured"] is True
+    assert restored.json()["annotator"]["annotator_id"].startswith("ANN-")
+    assert restored.json()["annotator"]["name"] == "Research Annotator"
+    assert restored.json()["annotator"]["affiliation"] == "Heritage Lab"
+    assert restored.json()["annotator"]["email"] == "annotator@example.org"
+    assert restored.json()["annotator"]["orcid"] == "0000-0002-1825-0097"
+    collection = json.loads((tmp_path / "data/annotators.json").read_text())
+    assert collection["annotators"][0]["name"] == restored.json()["annotator"]["name"]
 
 
 def test_missing_annotator_explains_registration_and_submission_boundary(
@@ -129,6 +131,108 @@ def test_missing_annotator_explains_registration_and_submission_boundary(
     assert response.json()["configured"] is False
     assert response.json()["message"]
     assert response.json()["action"]
+
+
+def test_annotator_schema_drives_form_and_requires_name(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get("/api/annotators/schema")
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["schema"]["required"] == ["name"]
+    assert set(result["schema"]["properties"]) == {
+        "name",
+        "affiliation",
+        "email",
+        "orcid",
+    }
+    assert result["ui_schema"]["elements"][0]["scope"] == "#/properties/name"
+
+
+def test_invalid_annotator_fields_are_rejected_by_backend_schema(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post(
+        "/api/annotators",
+        json={
+            "name": "Researcher",
+            "email": "not-an-email",
+            "orcid": "1234",
+        },
+    )
+
+    assert response.status_code == 422
+    issue_fields = {issue["loc"][-1] for issue in response.json()["detail"]}
+    assert issue_fields == {"email", "orcid"}
+
+
+def test_schema_form_uses_safe_fields_and_read_only_json_preview() -> None:
+    script = (
+        Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "annotator.js"
+    ).read_text(encoding="utf-8")
+
+    assert "input.pattern = concrete.pattern" in script
+    assert "input.validationMessage" in script
+    assert "dataEditor.textContent = JSON.stringify" in script
+    assert "JSON.parse(dataEditor" not in script
+
+
+def test_multiple_annotators_can_be_added_filtered_and_selected(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    first = client.post(
+        "/api/annotators",
+        json={"name": "First Annotator", "affiliation": "Heritage Lab"},
+    )
+    second = client.post(
+        "/api/annotators",
+        json={"name": "Second Annotator", "email": "second@example.org"},
+    )
+    collection = client.get("/api/annotators")
+    activated = client.post(
+        f"/api/annotators/{first.json()['annotator_id']}/activate"
+    )
+    active = client.get("/api/annotator")
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    assert len(collection.json()["annotators"]) == 2
+    assert collection.json()["active_annotator_id"] == second.json()["annotator_id"]
+    assert activated.status_code == 200
+    assert active.json()["annotator"]["name"] == "First Annotator"
+
+
+def test_annotator_can_be_removed_without_rewriting_other_profiles(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path))
+    first = client.post("/api/annotators", json={"name": "First"}).json()
+    second = client.post("/api/annotators", json={"name": "Second"}).json()
+
+    removed = client.delete(f"/api/annotators/{second['annotator_id']}")
+
+    assert removed.status_code == 200
+    assert [item["annotator_id"] for item in removed.json()["annotators"]] == [
+        first["annotator_id"]
+    ]
+    assert removed.json()["active_annotator_id"] == first["annotator_id"]
+
+
+def test_legacy_single_annotator_is_migrated_to_collection(tmp_path: Path) -> None:
+    legacy = tmp_path / "data" / "annotator.json"
+    legacy.parent.mkdir()
+    legacy.write_text(
+        json.dumps({"name": "Legacy Annotator", "orcid": None}),
+        encoding="utf-8",
+    )
+    client = TestClient(create_app(tmp_path))
+
+    collection = client.get("/api/annotators")
+
+    assert collection.status_code == 200
+    assert collection.json()["annotators"][0]["name"] == "Legacy Annotator"
+    assert (tmp_path / "data/annotators.json").is_file()
 
 
 def test_missing_project_has_plain_language_corrective_action(tmp_path: Path) -> None:

@@ -1,33 +1,43 @@
-.profile-page {
-  display: grid;
-  grid-template-columns: minmax(280px, .8fr) minmax(360px, 1fr);
-  gap: 3rem;
-  width: min(1040px, 100%);
+.annotator-page {
+  width: min(1240px, 100%);
   margin: auto;
-  padding: 4rem 3rem;
+  padding: 2.5rem 3rem 4rem;
 }
 
-.profile-card {
-  padding: 1.6rem;
+.annotator-heading, .editor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.annotator-heading h1 { font-size: clamp(2.2rem, 5vw, 4rem); }
+
+.annotator-workspace {
+  display: grid;
+  grid-template-columns: minmax(250px, .38fr) minmax(460px, 1fr);
+  min-height: 560px;
+  margin-top: 1.5rem;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--panel);
 }
 
-.profile-card label {
+.annotator-list-panel {
+  padding: 1.2rem;
+  border-right: 1px solid var(--border);
+  background: #111d2f;
+}
+
+.annotator-list-panel label, #data-panel label {
   display: block;
-  margin-top: 1rem;
+  margin-bottom: .45rem;
   font-weight: 750;
 }
 
-.profile-card label small {
-  color: var(--muted);
-  font-weight: 400;
-}
-
-.profile-card input {
+.annotator-list-panel input, .generated-control input {
   width: 100%;
-  margin-top: .4rem;
   padding: .78rem;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -36,22 +46,120 @@
   font: inherit;
 }
 
-.profile-card input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+.annotator-list { display: grid; gap: .55rem; margin-top: 1rem; }
+
+.annotator-list-item {
+  width: 100%;
+  padding: .85rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-.profile-help {
-  margin-top: 1.3rem;
+.annotator-list-item:hover, .annotator-list-item:focus-visible,
+.annotator-list-item.selected {
+  border-color: var(--accent);
+  background: var(--field);
+}
+
+.annotator-list-item strong, .annotator-list-item small { display: block; }
+.annotator-list-item small { margin-top: .2rem; color: var(--muted); }
+
+.active-dot { color: var(--accent); }
+
+.json-editor { min-width: 0; }
+.editor-header { padding: 1.4rem 1.5rem 1rem; }
+.editor-header h2 { margin: 0; }
+
+.active-badge {
+  padding: .4rem .65rem;
+  border-radius: 999px;
+  background: var(--accent-dark);
+  color: var(--accent);
+  font-size: .8rem;
+  font-weight: 800;
+}
+
+.editor-tabs {
+  display: flex;
+  gap: .4rem;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-tab {
+  padding: .8rem 1rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
   color: var(--muted);
-  line-height: 1.5;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
 
-@media (max-width: 760px) {
-  .profile-page {
-    display: block;
-    padding: 2rem 1.2rem;
-  }
+.editor-tab.active {
+  border-color: var(--accent);
+  color: var(--ink);
+}
 
-  .profile-card { margin-top: 2rem; }
+.editor-panel { display: none; padding: 1.5rem; }
+.editor-panel.active { display: block; }
+
+.generated-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.generated-control label {
+  display: block;
+  margin-bottom: .4rem;
+  font-weight: 750;
+}
+
+.generated-control label small { color: var(--muted); font-weight: 400; }
+.generated-control p, .panel-help, .profile-help {
+  margin: .4rem 0 0;
+  color: var(--muted);
+  font-size: .88rem;
+  line-height: 1.45;
+}
+
+.field-error {
+  min-height: 1.25rem;
+  color: var(--danger) !important;
+}
+
+.generated-control input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.json-code {
+  max-height: 430px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #dbe9f7;
+  font: .88rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.generated-json {
+  min-height: 260px;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 9px;
+  background: #0c1626;
+}
+
+@media (max-width: 820px) {
+  .annotator-page { padding: 2rem 1.2rem; }
+  .annotator-heading, .editor-header { display: block; }
+  .annotator-workspace { display: block; }
+  .annotator-list-panel { border-right: 0; border-bottom: 1px solid var(--border); }
+  .generated-fields { grid-template-columns: 1fr; }
 }
