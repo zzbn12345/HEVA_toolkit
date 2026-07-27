@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-from src.heva_contract import (
+from management.heva_management.contract import (
     HEVA_LABELS,
     ContractParseError,
     load_records,
@@ -17,7 +17,8 @@ from src.heva_contract import (
 )
 
 
-DATA = Path(__file__).parents[1] / "data"
+ROOT = Path(__file__).parents[2]
+DATA = ROOT / "data"
 
 
 def representative_record() -> dict[str, object]:
@@ -47,7 +48,7 @@ def representative_record() -> dict[str, object]:
 
 
 def test_schema_descriptor_describes_existing_and_versioned_fields() -> None:
-    schema_path = Path(__file__).parents[1] / "schemas" / "heva-extracted-record.json"
+    schema_path = ROOT / "schemas" / "heva-extracted-record.json"
     descriptor = json.loads(schema_path.read_text(encoding="utf-8"))
 
     assert [field["name"] for field in descriptor["fields"]] == [
@@ -130,8 +131,13 @@ def run_validator(*arguments: str) -> subprocess.CompletedProcess[str]:
     """Run the validator through the same module entry point used by scripts."""
 
     return subprocess.run(
-        [sys.executable, "-m", "src.validate_records", *arguments],
-        cwd=Path(__file__).parents[1],
+        [
+            sys.executable,
+            "-m",
+            "management.heva_management.validate_records",
+            *arguments,
+        ],
+        cwd=ROOT,
         capture_output=True,
         text=True,
         check=False,

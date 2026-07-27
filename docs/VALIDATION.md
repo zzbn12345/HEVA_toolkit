@@ -83,7 +83,7 @@ python3.12 -m venv venv
 ### 2) Validate one file
 
 ```bash
-./venv/bin/python -m src.validate_records --file data/Galle_P127_extracted.json
+./venv/bin/python -m management.heva_management.validate_records --file data/Galle_P127_extracted.json
 ```
 
 Exit codes:
@@ -94,19 +94,19 @@ Exit codes:
 ### 3) Validate all extracted files in `data/`
 
 ```bash
-./venv/bin/python -m src.validate_records --all
+./venv/bin/python -m management.heva_management.validate_records --all
 ```
 
 Optional: validate by custom glob pattern.
 
 ```bash
-./venv/bin/python -m src.validate_records --glob "data/*_extracted.json"
+./venv/bin/python -m management.heva_management.validate_records --glob "data/*_extracted.json"
 ```
 
 Optional: limit printed issues per file.
 
 ```bash
-./venv/bin/python -m src.validate_records --all --max-issues 10
+./venv/bin/python -m management.heva_management.validate_records --all --max-issues 10
 ```
 
 Expected baseline in this repository: four extracted files, all valid.
@@ -146,7 +146,7 @@ Run validation from Python as follows:
 
 ```python
 from pathlib import Path
-from src.heva_contract import ContractParseError, load_records
+from management.heva_management.contract import ContractParseError, load_records
 
 path = Path("data/Galle_P127_extracted.json")
 
@@ -167,7 +167,7 @@ For the current Galle example this reports `valid`.
 
 ## What the HEVA validator adds
 
-`src.heva_contract` validates each decoded record and reports issues with stable codes and
+`management.heva_management.contract` validates each decoded record and reports issues with stable codes and
 JSON-style paths. It checks that:
 
 - labels in `values`, entities, and BIO tags belong to the controlled HEVA vocabulary;
@@ -191,7 +191,7 @@ the first one. A syntactically malformed JSON document is different: it raises
 ```python
 from pathlib import Path
 
-from src.heva_contract import load_records
+from management.heva_management.contract import load_records
 
 failed = False
 for path in sorted(Path("data").glob("*_extracted.json")):
@@ -226,7 +226,7 @@ validator.
 ## Run the acceptance tests
 
 ```bash
-./venv/bin/pytest -q tests/test_heva_contract.py
+./venv/bin/pytest -q tests/management/test_contract.py
 ```
 
 The tests cover descriptor field compatibility, all repository extraction examples,

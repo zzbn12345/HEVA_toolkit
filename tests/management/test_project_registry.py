@@ -7,10 +7,10 @@ from pathlib import Path
 import subprocess
 import sys
 
-from src.project_registry import REGISTRY_VERSION, sync_registry
+from management.heva_management.project_registry import REGISTRY_VERSION, sync_registry
 
 
-ROOT = Path(__file__).parents[1]
+ROOT = Path(__file__).parents[2]
 
 
 def add_source(source_dir: Path, name: str, content: bytes) -> Path:
@@ -147,7 +147,12 @@ def test_resync_reports_changed_and_missing_sources_without_replacing_ids(
 
 def run_registry(*arguments: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, "-m", "src.project_registry", *arguments],
+        [
+            sys.executable,
+            "-m",
+            "management.heva_management.project_registry",
+            *arguments,
+        ],
         cwd=ROOT,
         capture_output=True,
         text=True,

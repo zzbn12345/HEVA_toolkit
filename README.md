@@ -101,7 +101,7 @@ For detailed architecture, configuration, and execution instructions, please ref
 Quick CLI example:
 
 ```bash
-./venv/bin/python -m src.validate_records --all
+./venv/bin/python -m management.heva_management.validate_records --all
 ```
 
 The optional web interface has its own environment so FastAPI is not imposed on extraction
@@ -148,42 +148,26 @@ Contributors running the complete root test suite can use:
 ## Repository Structure
 
 ```
-HEVA/
-│
-├── docs/                           # Documentation folder (pipeline architecture, guides)
-│   ├── ARCHITECTURE.md
-│   ├── AUTO_COLOR_MAPPER_ARCHITECTURE.md
-│   ├── COLOR_MAPPING.md
-│   ├── EXTRACTION_SESSIONS.md
-│   ├── QUALITY_FLAGS.md
-│   ├── SENTENCE_REVIEW.md
-│   ├── APPROVED_EXPORT.md
-│   ├── HEVA_RECORD_CONTRACT.md
-│   ├── DOCUMENT_METADATA.md
-│   ├── VALIDATION.md
-│   └── README_VE.md
-│
-├── src/                            # Highlight Extractor utility source code
-│   ├── auto_color_mapper.py
-│   ├── word_colors.py                # Stable Word highlight-name normalization
-│   ├── docx_extractor.py
-│   ├── extract_highlights.py
-│   ├── pdf_extractor.py
-│   └── utils.py
-│
-├── Example.xlsx                    # Target annotation format (reference file)
-│
-├── 1_[Project Name or Author]/
-│   ├── 1-1_raw/                    # Original, unprocessed source files
-│   │   └── (Atlas.ti, Word, PDF, Excel, ...)
-│   └── 1-2_processed/              # Cleaned and structured annotation files
-│       └── (CSV/Excel with 'sentence' and 'label' columns)
-│
-├── 2_[Project Name or Author]/
-│   ├── 2-1_raw/
-│   └── 2-2_processed/
-│
-└── ...                             # Additional numbered project folders
+HEVA_DCC_collab/
+├── extraction/
+│   ├── heva_extraction/            # PDF, Word, tokenization, and color evidence
+│   └── requirements.txt            # Optional PyMuPDF, spaCy, and python-docx stack
+├── management/
+│   ├── heva_management/            # Contract, registry, review, validation, release
+│   └── requirements.txt            # Lightweight Pydantic environment
+├── app/
+│   ├── heva_app/
+│   │   ├── main.py                 # FastAPI composition only
+│   │   ├── routes/                 # Thin management-service HTTP adapters
+│   │   ├── templates/
+│   │   └── static/
+│   ├── tests/
+│   └── requirements.txt            # Optional FastAPI environment
+├── tests/
+│   ├── extraction/
+│   └── management/
+├── docs/
+└── src/                            # Temporary compatibility imports for older scripts
 ```
 
 ### Folder Naming Convention

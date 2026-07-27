@@ -7,8 +7,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from app.heva_app.app import create_app
-from src.project_registry import sync_registry
+from app.heva_app.main import create_app
+from management.heva_management.project_registry import sync_registry
+from management.heva_management.review_state import initialize_sentence_reviews
 
 
 def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -> None:
@@ -98,3 +99,42 @@ def test_validation_endpoint_uses_package_validator(tmp_path: Path) -> None:
     assert report["documents"][0]["document_id"] == document_id
     assert report["documents"][0]["valid"] is False
     assert all(issue["action"] for issue in report["documents"][0]["issues"])
+
+
+def test_review_queue_opens_only_one_document_at_a_time(tmp_path: Path) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "one.pdf").write_bytes(b"one")
+    (sources / "two.pdf").write_bytes(b"two")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    canonical = {
+        "sentence_id": 1,
+        "page": 1,
+        "sentence": "Historic harbour.",
+        "tokens": ["Historic", "harbour", "."],
+        "values": ["historic"],
+        "entities": [
+            {
+                "start": 0,
+                "end": 17,
+                "text": "Historic harbour",
+                "label": "historic",
+                "color": "#FF40FF",
+            }
+        ],
+        "ner_tags": ["B-historic", "I-historic", "O"],
+        "schema_version": "1.0",
+    }
+    for entry in registry["documents"]:
+        package = tmp_path / entry["package_path"]
+        (package / "annotations.json").write_text(json.dumps([canonical]), encoding="utf-8")
+        initialize_sentence_reviews(tmp_path, entry["document_id"])
+    client = TestClient(create_app(tmp_path))
+
+    queue = client.get("/api/review-queue")
+    selected = client.get(f"/api/review/{registry['documents'][0]['document_id']}")
+
+    assert len(queue.json()["documents"]) == 2
+    assert selected.json()["document_id"] == registry["documents"][0]["document_id"]
+    assert len(selected.json()["sentences"]) == 1

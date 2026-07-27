@@ -6,14 +6,14 @@ flags. Flags guide attention; they do not count as human decisions.
 Initialize or refresh package review state:
 
 ```bash
-./venv/bin/python -m src.review_state . initialize \
+./venv/bin/python -m management.heva_management.review_state . initialize \
   --document-id HEVA-ABC123
 ```
 
 Record decisions for an explicitly selected batch:
 
 ```bash
-./venv/bin/python -m src.review_state . decide \
+./venv/bin/python -m management.heva_management.review_state . decide \
   --document-id HEVA-ABC123 \
   --sentence-id 1 \
   --sentence-id 2 \
@@ -28,7 +28,7 @@ There is no invisible document-level approve-all shortcut.
 Submit a completely decided document:
 
 ```bash
-./venv/bin/python -m src.review_state . submit \
+./venv/bin/python -m management.heva_management.review_state . submit \
   --document-id HEVA-ABC123
 ```
 

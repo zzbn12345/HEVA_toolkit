@@ -10,7 +10,7 @@ import sys
 
 import pytest
 
-from src.document_metadata import (
+from management.heva_management.document_metadata import (
     AnnotationProcessMetadata,
     AnnotatorMetadata,
     ColorConfigurationMetadata,
@@ -21,14 +21,17 @@ from src.document_metadata import (
     RightsMetadata,
     SourceMetadata,
 )
-from src.package_validator import (
+from management.heva_management.package_validator import (
     PackageValidationError,
     approve_document,
     build_release,
     validate_document_package,
 )
-from src.project_registry import sync_registry
-from src.review_state import initialize_sentence_reviews, record_decisions
+from management.heva_management.project_registry import sync_registry
+from management.heva_management.review_state import (
+    initialize_sentence_reviews,
+    record_decisions,
+)
 
 
 def record() -> dict[str, object]:
@@ -183,7 +186,7 @@ def test_invalid_package_returns_failing_cli_status(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "src.package_validator",
+            "management.heva_management.package_validator",
             str(tmp_path),
             "validate",
             "--document-id",

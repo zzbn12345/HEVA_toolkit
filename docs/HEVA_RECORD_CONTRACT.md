@@ -14,7 +14,7 @@ categorical `values`, and entities must agree; disagreement is reported as
 `bio_value_mismatch`.
 
 The structural descriptor is `schemas/heva-extracted-record.json`. Nested entity, offset,
-vocabulary, and BIO semantics are checked by `src.heva_contract`, which uses strict
+vocabulary, and BIO semantics are checked by `management.heva_management.contract`, which uses strict
 Pydantic input parsing plus semantic contract checks.
 
 ## Versioned evidence extension

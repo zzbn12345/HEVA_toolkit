@@ -1,5 +1,5 @@
 # The application depends on the lightweight management contract, not the NLP stack.
--r ../requirements.txt
+-r ../management/requirements.txt
 
 fastapi>=0.116,<1.0
 httpx>=0.28,<1.0

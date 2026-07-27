@@ -8,20 +8,20 @@ from pathlib import Path
 import fitz
 import pytest
 
-from src.color_mapping import (
+from management.heva_management.color_mapping import (
     confirm_color_configuration,
     propose_color_configuration,
     resolve_color,
     save_color_configuration,
 )
-from src.extraction_session import (
+from management.heva_management.extraction_session import (
     ExtractionSessionError,
     ExtractionValidationError,
     persist_extraction_results,
     run_registered_batch,
     run_registered_extraction,
 )
-from src.project_registry import sync_registry
+from management.heva_management.project_registry import sync_registry
 
 
 def record() -> dict[str, object]:

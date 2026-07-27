@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from src.collection_builder import CollectionBuildError, build_collection
-from src.project_registry import sync_registry
+from management.heva_management.release_builder import CollectionBuildError, build_collection
+from management.heva_management.project_registry import sync_registry
 
 
 def record(sentence_id: int) -> dict[str, object]:

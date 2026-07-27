@@ -1,2 +1,2 @@
 # Lightweight HEVA data-management and validation environment.
-pydantic>=2.7,<3.0
+-r management/requirements.txt

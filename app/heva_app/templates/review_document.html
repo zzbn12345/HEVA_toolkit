@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review document · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/review.css">
+  <script src="/static/review_document.js" defer></script>
+</head>
+<body data-document-id="DOCUMENT_ID_PLACEHOLDER" class="review-body">
+  <div id="review-app" class="review-app">
+    <header class="review-toolbar">
+      <a class="home-link" href="/">← HEVA home</a>
+      <a class="home-link" href="/review">Review queue</a>
+      <strong id="document-name">Loading document…</strong>
+      <button id="toggle-review-pdf" class="button secondary" type="button" aria-expanded="true">Hide PDF</button>
+    </header>
+    <main class="sentence-pane">
+      <div class="review-controls">
+        <label>Show
+          <select id="review-filter">
+            <option value="all">All sentences</option>
+            <option value="pending">Pending</option>
+            <option value="problematic">Problematic</option>
+          </select>
+        </label>
+        <label>Page size
+          <select id="page-size">
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </label>
+      </div>
+      <div id="review-status" class="notice neutral" aria-live="polite">Loading persisted review state…</div>
+      <section id="sentence-list" class="sentence-list"></section>
+      <nav id="document-navigation" class="document-navigation" aria-label="Document navigation"></nav>
+    </main>
+    <aside id="review-pdf" class="review-pdf">
+      <iframe id="review-pdf-frame" title="Annotated source PDF"></iframe>
+    </aside>
+  </div>
+</body>
+</html>

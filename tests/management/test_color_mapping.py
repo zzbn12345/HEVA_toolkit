@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from src.color_mapping import (
+from management.heva_management.color_mapping import (
     ColorMappingError,
     authorize_pending_mapping_for_extraction,
     confirm_color_configuration,
@@ -21,7 +21,7 @@ from src.color_mapping import (
     validate_shared_batch_mapping,
     write_automatic_color_proposals,
 )
-from src.project_registry import sync_registry
+from management.heva_management.project_registry import sync_registry
 
 
 def test_raw_extractor_records_supply_document_colors() -> None:

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from src.project_registry import sync_registry
-from src.review_state import (
+from management.heva_management.project_registry import sync_registry
+from management.heva_management.review_state import (
     ReviewError,
     initialize_sentence_reviews,
     record_decisions,

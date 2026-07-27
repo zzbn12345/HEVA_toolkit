@@ -1,0 +1,57 @@
+.review-body { height: 100vh; overflow: hidden; }
+.review-app {
+  display: grid;
+  grid-template: auto minmax(0, 1fr) / minmax(520px, 1fr) minmax(360px, 44%);
+  height: 100vh;
+  overflow: hidden;
+}
+.review-app.pdf-hidden { grid-template-columns: 1fr; }
+.review-app.pdf-hidden .review-pdf { display: none; }
+.review-toolbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .7rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.review-toolbar strong { margin-right: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sentence-pane { min-height: 0; padding: 1rem 1.4rem 2rem; overflow-y: auto; }
+.review-controls { display: flex; gap: 1rem; }
+.review-controls label { color: var(--muted); }
+.review-controls select {
+  margin-left: .35rem;
+  padding: .45rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--field);
+  color: var(--ink);
+}
+.sentence-list { display: grid; gap: 1rem; }
+.sentence-card { padding: 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
+.sentence-card.problematic { border-left: 4px solid var(--warning); }
+.sentence-meta { display: flex; flex-wrap: wrap; gap: .5rem 1rem; color: var(--muted); font-size: .86rem; }
+.sentence-text { font-size: 1.05rem; line-height: 1.55; }
+.entity-list, .flag-list { display: flex; flex-wrap: wrap; gap: .45rem; margin: .7rem 0; }
+.entity {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .35rem .55rem;
+  border-radius: 7px;
+  background: var(--field);
+}
+.entity-color { padding: .2rem .35rem; border-radius: 4px; font-family: ui-monospace, monospace; font-weight: 800; }
+.flag { padding: .3rem .5rem; border-radius: 6px; background: #3c301a; color: var(--warning); font-size: .84rem; }
+.decision-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+.decision-actions button { margin: 0; }
+.review-pdf { min-height: 0; border-left: 1px solid var(--border); background: #34383f; }
+.review-pdf iframe { width: 100%; height: 100%; border: 0; }
+.document-navigation { display: flex; justify-content: space-between; margin-top: 1.5rem; }
+@media (max-width: 900px) {
+  .review-body { height: auto; overflow: auto; }
+  .review-app { display: block; height: auto; overflow: visible; }
+  .sentence-pane { overflow: visible; }
+  .review-pdf { height: 70vh; border-left: 0; border-top: 1px solid var(--border); }
+}

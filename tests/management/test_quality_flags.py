@@ -6,8 +6,12 @@ from copy import deepcopy
 import json
 from pathlib import Path
 
-from src.project_registry import sync_registry
-from src.quality_flags import QualityThresholds, assess_record, build_quality_report
+from management.heva_management.project_registry import sync_registry
+from management.heva_management.quality_flags import (
+    QualityThresholds,
+    assess_record,
+    build_quality_report,
+)
 
 
 def record(sentence: str = "The historic harbour remains visible.") -> dict[str, object]:

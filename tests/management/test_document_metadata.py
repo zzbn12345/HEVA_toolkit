@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from src.document_metadata import (
+from management.heva_management.document_metadata import (
     AnnotationProcessMetadata,
     AnnotatorMetadata,
     ColorConfigurationMetadata,
@@ -22,7 +22,7 @@ from src.document_metadata import (
     save_package_metadata,
     validate_review_readiness,
 )
-from src.project_registry import sync_registry
+from management.heva_management.project_registry import sync_registry
 
 
 def complete_metadata(document_id: str = "HEVA-EXAMPLE") -> PackageMetadata:
