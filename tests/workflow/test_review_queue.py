@@ -5,6 +5,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from heva.workflow.document_metadata import (
+    ColorConfigurationMetadata,
+    ColorMappingMetadata,
+    PackageMetadata,
+    ResourceMetadata,
+    SourceMetadata,
+)
 from heva.workflow.project_registry import sync_registry
 from heva.workflow.review_queue import list_review_queue, load_review_document
 from heva.workflow.review_state import initialize_sentence_reviews, record_decisions
@@ -51,6 +58,50 @@ def prepared_project(tmp_path: Path) -> list[dict[str, object]]:
         )
         initialize_sentence_reviews(tmp_path, entry["document_id"])
     return registry["documents"]
+
+
+def write_ready_metadata(
+    tmp_path: Path,
+    entry: dict[str, object],
+    *,
+    citation_confirmed: bool = True,
+) -> None:
+    metadata = PackageMetadata(
+        document_id=str(entry["document_id"]),
+        source=SourceMetadata(
+            title="Historic harbour",
+            creators=["Research Author"],
+            citation="Research Author. Historic harbour.",
+            reference="https://example.org/source",
+            human_confirmed=citation_confirmed,
+            confirmed_by="Annotator" if citation_confirmed else None,
+        ),
+        color_configuration=ColorConfigurationMetadata(
+            detection_method="manual",
+            human_confirmed=True,
+            confirmed_by="Annotator",
+            colors=[
+                ColorMappingMetadata(
+                    hex="#FF40FF",
+                    label="historic",
+                    status="approved",
+                )
+            ],
+        ),
+        resources=[
+            ResourceMetadata(
+                name="annotations",
+                path="annotations.json",
+                format="json",
+                record_count=2,
+            )
+        ],
+    )
+    package = tmp_path / str(entry["package_path"])
+    (package / "package-metadata.json").write_text(
+        metadata.model_dump_json(indent=2),
+        encoding="utf-8",
+    )
 
 
 def test_queue_summarizes_batches_but_keeps_documents_separate(tmp_path: Path) -> None:
@@ -113,3 +164,58 @@ def test_document_review_contains_only_selected_document_and_navigation(tmp_path
     assert selected["next_document_id"] == documents[1]["document_id"]
     assert [item["record"]["sentence_id"] for item in selected["sentences"]] == [1, 2]
     assert selected["sentences"][1]["flags"]
+
+
+def test_document_is_complete_only_when_all_four_gates_pass(tmp_path: Path) -> None:
+    documents = prepared_project(tmp_path)
+    entry = documents[0]
+    document_id = str(entry["document_id"])
+    write_ready_metadata(tmp_path, entry)
+    record_decisions(
+        tmp_path,
+        document_id,
+        [1],
+        status="approved",
+        reviewer="Annotator",
+    )
+    record_decisions(
+        tmp_path,
+        document_id,
+        [2],
+        status="excluded",
+        reviewer="Annotator",
+    )
+
+    item = next(row for row in list_review_queue(tmp_path) if row.document_id == document_id)
+
+    assert item.annotation_complete is True
+    assert item.completion_percent == 100
+    assert all(item.readiness_gates.values())
+    assert item.blocking_reasons == []
+
+
+def test_incomplete_document_explains_failed_gate(tmp_path: Path) -> None:
+    documents = prepared_project(tmp_path)
+    entry = documents[0]
+    document_id = str(entry["document_id"])
+    write_ready_metadata(tmp_path, entry, citation_confirmed=False)
+    record_decisions(
+        tmp_path,
+        document_id,
+        [1, 2],
+        status="approved",
+        reviewer="Annotator",
+    )
+
+    item = next(row for row in list_review_queue(tmp_path) if row.document_id == document_id)
+
+    assert item.annotation_complete is False
+    assert item.readiness_gates == {
+        "citation": False,
+        "color_configuration": True,
+        "extraction": True,
+        "sentence_review": True,
+    }
+    assert item.blocking_reasons == [
+        "Review and confirm the document citation details."
+    ]

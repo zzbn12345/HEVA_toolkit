@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Document review · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/review_queue.js?v=2" defer></script>
+  <script src="/static/review_queue.js?v=3" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -18,11 +18,17 @@
     <p class="lead">Automatic extraction may prepare a batch, but every document keeps its own color mapping, decisions, and audit history.</p>
     <a class="button" href="/create">＋ Add document</a>
     <div id="queue-status" class="notice neutral" aria-live="polite">Loading documents…</div>
+    <div class="queue-filters" role="group" aria-label="Filter documents by completion">
+      <button class="filter-button active" type="button" data-readiness="all">All</button>
+      <button class="filter-button" type="button" data-readiness="incomplete">Incomplete</button>
+      <button class="filter-button" type="button" data-readiness="complete">Complete</button>
+    </div>
     <section class="project-list" aria-label="Annotation projects">
       <div class="project-list-header" aria-hidden="true">
         <span>Document</span>
-        <span>Status</span>
-        <span>Completion</span>
+        <span>Workflow</span>
+        <span>Readiness</span>
+        <span>Sentence review</span>
         <span>Action</span>
       </div>
       <div id="review-queue" class="project-list-body"></div>

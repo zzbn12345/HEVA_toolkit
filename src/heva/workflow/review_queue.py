@@ -8,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from heva.workflow.document_metadata import PackageMetadata
 from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
 from heva.workflow.quality_flags import assess_record
 from heva.workflow.review_state import DocumentReview
@@ -37,6 +38,9 @@ class ReviewQueueItem(BaseModel):
     source_state: str
     review_available: bool
     completion_percent: int
+    annotation_complete: bool
+    readiness_gates: dict[str, bool]
+    blocking_reasons: list[str]
     counts: ReviewCounts
 
 
@@ -59,6 +63,84 @@ def _load_records(package: Path) -> list[dict[str, Any]]:
     return decoded
 
 
+def _readiness(
+    package: Path,
+    records: list[dict[str, Any]],
+    review: DocumentReview | None,
+) -> tuple[dict[str, bool], list[str]]:
+    """Project four researcher-facing gates from persisted package evidence."""
+
+    reasons: list[str] = []
+    try:
+        metadata = PackageMetadata.model_validate_json(
+            (package / "package-metadata.json").read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError):
+        metadata = None
+
+    source = metadata.source if metadata else None
+    citation_ready = bool(
+        source
+        and source.human_confirmed
+        and source.title
+        and source.creators
+        and source.citation
+        and (source.reference or source.not_findable_reason)
+    )
+    if not citation_ready:
+        reasons.append("Review and confirm the document citation details.")
+
+    colors = metadata.color_configuration if metadata else None
+    color_ready = bool(
+        colors
+        and colors.human_confirmed
+        and colors.colors
+        and all(item.status in {"approved", "ignored"} for item in colors.colors)
+    )
+    if not color_ready:
+        reasons.append("Review and confirm the document color configuration.")
+
+    annotations_resource = (
+        next(
+            (
+                resource
+                for resource in metadata.resources
+                if resource.name == "annotations"
+            ),
+            None,
+        )
+        if metadata
+        else None
+    )
+    extraction_ready = bool(
+        records
+        and annotations_resource
+        and annotations_resource.record_count == len(records)
+    )
+    if not extraction_ready:
+        reasons.append("Run extraction and persist a non-empty sentence inventory.")
+
+    states = [item.status for item in review.sentences] if review else []
+    sentence_review_ready = bool(
+        records
+        and review
+        and len(states) == len(records)
+        and all(state in {"approved", "excluded"} for state in states)
+    )
+    if not sentence_review_ready:
+        reasons.append("Approve or exclude every extracted sentence.")
+
+    return (
+        {
+            "citation": citation_ready,
+            "color_configuration": color_ready,
+            "extraction": extraction_ready,
+            "sentence_review": sentence_review_ready,
+        },
+        reasons,
+    )
+
+
 def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
     """Return stable document summaries without combining their review decisions."""
 
@@ -69,6 +151,8 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
         annotations_path = package / "annotations.json"
         review_path = package / "review-state.json"
         if not annotations_path.exists() or not review_path.exists():
+            records = _load_records(package) if annotations_path.exists() else []
+            gates, reasons = _readiness(package, records, None)
             items.append(
                 ReviewQueueItem(
                     document_id=entry.document_id,
@@ -77,6 +161,9 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
                     source_state=entry.source_state,
                     review_available=False,
                     completion_percent=0,
+                    annotation_complete=False,
+                    readiness_gates=gates,
+                    blocking_reasons=reasons,
                     counts=ReviewCounts(
                         total=0,
                         pending=0,
@@ -90,6 +177,7 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
             continue
         records = _load_records(package)
         review = DocumentReview.model_validate_json(review_path.read_text(encoding="utf-8"))
+        gates, reasons = _readiness(package, records, review)
         states = {item.sentence_id: item.status for item in review.sentences}
         flagged = sum(bool(assess_record(record)) for record in records)
         completed = sum(
@@ -106,6 +194,9 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
                 source_state=entry.source_state,
                 review_available=True,
                 completion_percent=completion_percent,
+                annotation_complete=all(gates.values()),
+                readiness_gates=gates,
+                blocking_reasons=reasons,
                 counts=ReviewCounts(
                     total=len(records),
                     pending=sum(state == "pending" for state in states.values()),

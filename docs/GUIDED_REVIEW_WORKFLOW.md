@@ -63,6 +63,11 @@ Every row also shows an annotation-readiness result:
 This completion result describes annotator preparation. It does not mean that a curator
 has accepted the document; curator acceptance is a later workflow decision.
 
+The dashboard displays the four gates separately—Citation, Colors, Extraction, and
+Sentences—and lists corrective actions for every failed gate. Users may filter the list to
+all, incomplete, or complete documents. A 100% sentence-review bar does not make a
+document complete when another gate still requires attention.
+
 Every row provides an **Edit this annotation** action. If the document is already
 registered, editing reuses its source and persisted package state. **Add document** is a
 separate action that asks the user to choose a new PDF or DOCX.

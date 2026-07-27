@@ -298,6 +298,14 @@ def test_review_queue_opens_only_one_document_at_a_time(tmp_path: Path) -> None:
     selected = client.get(f"/api/review/{registry['documents'][0]['document_id']}")
 
     assert len(queue.json()["documents"]) == 2
+    assert queue.json()["documents"][0]["annotation_complete"] is False
+    assert set(queue.json()["documents"][0]["readiness_gates"]) == {
+        "citation",
+        "color_configuration",
+        "extraction",
+        "sentence_review",
+    }
+    assert queue.json()["documents"][0]["blocking_reasons"]
     assert selected.json()["document_id"] == registry["documents"][0]["document_id"]
     assert len(selected.json()["sentences"]) == 1
 
@@ -309,8 +317,10 @@ def test_review_queue_page_exposes_list_columns(tmp_path: Path) -> None:
 
     assert response.status_code == 200
     assert "Document" in response.text
-    assert "Status" in response.text
-    assert "Completion" in response.text
+    assert "Workflow" in response.text
+    assert "Sentence review" in response.text
+    assert "Readiness" in response.text
+    assert 'data-readiness="incomplete"' in response.text
     assert "Action" in response.text
     assert 'href="/create">＋ Add document</a>' in response.text
 
@@ -328,6 +338,8 @@ def test_review_queue_asset_always_offers_edit_annotation_action() -> None:
     assert 'link.textContent = "Edit this annotation"' in script
     assert "/create?document_id=" in script
     assert "/review/" in script
+    assert 'badge.textContent = item.annotation_complete ? "Complete" : "Incomplete"' in script
+    assert "readiness_gates" in script
 
 
 def test_registered_pdf_can_be_loaded_for_immediate_edit_preview(tmp_path: Path) -> None:

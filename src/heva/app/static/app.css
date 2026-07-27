@@ -235,7 +235,7 @@ h1 {
 
 .project-list-header, .project-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.5fr) minmax(105px, .55fr) minmax(210px, 1fr) minmax(170px, .7fr);
+  grid-template-columns: minmax(190px, 1.25fr) minmax(100px, .5fr) minmax(230px, 1.2fr) minmax(170px, .8fr) minmax(150px, .65fr);
   align-items: center;
   gap: 1rem;
 }
@@ -259,6 +259,29 @@ h1 {
 .project-row:hover { background: #1c2b41; }
 .project-document { min-width: 0; }
 .project-document strong, .project-document small { display: block; }
+
+.queue-filters { display: flex; gap: .45rem; margin: 1rem 0; }
+.filter-button {
+  padding: .55rem .8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.filter-button.active { border-color: var(--accent); background: var(--accent-dark); color: var(--ink); }
+.readiness-cell { display: grid; gap: .55rem; }
+.readiness-badge { width: fit-content; padding: .28rem .5rem; border-radius: 6px; font-size: .8rem; }
+.readiness-badge.complete { background: var(--accent-dark); color: var(--accent); }
+.readiness-badge.incomplete { background: #402c20; color: var(--warning); }
+.readiness-gates { display: flex; flex-wrap: wrap; gap: .3rem; }
+.gate { padding: .2rem .4rem; border-radius: 5px; font-size: .72rem; }
+.gate.passed { background: var(--accent-dark); color: var(--accent); }
+.gate.blocked { background: #2d3442; color: var(--muted); }
+.readiness-cell details { color: var(--muted); font-size: .78rem; }
+.readiness-cell details ul { margin: .45rem 0 0; padding-left: 1.1rem; }
 .project-document strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .project-document small { margin-top: .25rem; color: var(--muted); }
 

@@ -45,6 +45,9 @@ class SourceMetadata(BaseModel):
     citation: str | None = None
     reference: str | None = None
     not_findable_reason: str | None = None
+    human_confirmed: StrictBool = False
+    confirmed_by: str | None = None
+    confirmed_at: datetime | None = None
 
 
 class AnnotatorMetadata(BaseModel):
