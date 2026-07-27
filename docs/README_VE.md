@@ -26,9 +26,9 @@ A Python utility that processes PDF/DOCX documents in a directory, extracts colo
    ```
 
 2. **Install Python Packages**
-   Install PyMuPDF, spaCy, and python-docx from `requirements.txt` (from the repository root):
+   Install PyMuPDF, spaCy, and python-docx with the extraction dependency group:
    ```bash
-   pip install -r requirements.txt
+   pip install -e ".[extraction]"
    ```
 
 ---
@@ -51,7 +51,7 @@ Below is an overview of the modular codebase architecture:
 │   ├── pdf_extractor.py              # PDF-specific layout sorting and drawing overlap highlight extraction
 │   ├── word_colors.py                # Stable Word highlight-name to hex conversion
 │   └── utils.py                      # NLP pipelines, language detection, ligature normalization helpers
-├── requirements.txt                  # Package dependency requirements
+├── pyproject.toml                    # Base and optional dependencies
 └── README.md                         # Main HEVA repository README
 ```
 
@@ -72,7 +72,7 @@ every color. A confirmed mapping can then be loaded from the document package an
 to the extractor.
 
 Word's preset names such as `YELLOW`, `PINK`, and `TURQUOISE` are normalized to hex using
-`WORD_HIGHLIGHT_TO_HEX` in `extraction/heva_extraction/word_colors.py`. This is stable DOCX format conversion,
+`WORD_HIGHLIGHT_TO_HEX` in `src/heva/extraction/word_colors.py`. This is stable DOCX format conversion,
 not a HEVA semantic mapping. Custom Word font colors are already read as their RGB hex.
 
 See [COLOR_MAPPING.md](COLOR_MAPPING.md) for the complete supervised workflow.
@@ -81,7 +81,7 @@ See [COLOR_MAPPING.md](COLOR_MAPPING.md) for the complete supervised workflow.
 
 ## Automated Color Mapping (Zero-Shot Classification)
 
-The automated color mapping prototype (`extraction/heva_extraction/auto_color_mapper.py`) uses a local Ollama
+The automated color mapping prototype (`src/heva/extraction/auto_color_mapper.py`) uses a local Ollama
 model to suggest categories for highlighted text groups. Its suggestions require human
 review through the document-local mapping gate before they can be considered HEVA data.
 

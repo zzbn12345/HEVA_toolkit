@@ -1,6 +1,6 @@
 # Automated Color Mapper Architecture
 
-The `extraction/heva_extraction/auto_color_mapper.py` utility is a prototype zero-shot, LLM-powered
+The `src/heva/extraction/auto_color_mapper.py` utility is a prototype zero-shot, LLM-powered
 classification pipeline that proposes planning and heritage categories for document
 highlight colors. Semantic color configuration is now document-local package data rather
 than Python configuration.

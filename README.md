@@ -97,23 +97,23 @@ For detailed architecture, configuration, and execution instructions, please ref
   validation, curator approval, and deterministic JSON/CSV release files)
 - **Project Boundaries**: [PROJECT_BOUNDARIES.md](docs/PROJECT_BOUNDARIES.md) (separate
   management, extraction/NLP, and optional application dependencies)
+- **Guided Review Workflow**: [GUIDED_REVIEW_WORKFLOW.md](docs/GUIDED_REVIEW_WORKFLOW.md)
+  (document states, completion, settings, sentence decisions, batching, and PDF review)
 
 Quick CLI example:
 
 ```bash
-./venv/bin/python -m management.heva_management.validate_records --all
+./venv/bin/python -m heva.workflow.validate_records --all
 ```
 
-The optional web interface has its own environment so FastAPI is not imposed on extraction
-or data-management users. From the repository root:
+The optional web dependencies are installed only when the interface is needed:
 
 ```bash
-python3.12 -m venv app/venv
-./app/venv/bin/python -m pip install -r app/requirements.txt
-./app/venv/bin/python -m app.heva_app --project-root .
+./venv/bin/python -m pip install -e ".[app]"
+./venv/bin/python -m heva.app --project-root .
 ```
 
-Then open `http://127.0.0.1:8000`. See [app/README.md](app/README.md).
+Then open `http://127.0.0.1:8000`.
 
 ## Setup
 
@@ -122,24 +122,24 @@ Use a local virtual environment. For HEVA data management and validation only:
 ```bash
 python3.12 -m venv venv
 ./venv/bin/python -m pip install --upgrade pip setuptools wheel
-./venv/bin/python -m pip install -r requirements.txt
+./venv/bin/python -m pip install -e .
 ```
 
 Install the original document extraction and NLP adapters only when needed:
 
 ```bash
-./venv/bin/python -m pip install -r requirements-extraction.txt
+./venv/bin/python -m pip install -e ".[extraction]"
 ```
 
 Contributors running the complete root test suite can use:
 
 ```bash
-./venv/bin/python -m pip install -r requirements-dev.txt
+./venv/bin/python -m pip install -e ".[dev]"
 ```
 
 ### Troubleshooting dependency installation
 
-- If `pip install -r requirements.txt` fails with `externally-managed-environment`, you are using system Python. Use `./venv/bin/python -m pip ...`.
+- If installation fails with `externally-managed-environment`, you are using system Python. Use `./venv/bin/python -m pip ...`.
 - If `pip` command is not found under `pyenv`, use `python -m pip` instead of `pip`.
 - Python 3.13 is currently not supported by this dependency set (`spacy==3.7.4` build issues). Use Python 3.12.
 
@@ -149,25 +149,17 @@ Contributors running the complete root test suite can use:
 
 ```
 HEVA_DCC_collab/
-├── extraction/
-│   ├── heva_extraction/            # PDF, Word, tokenization, and color evidence
-│   └── requirements.txt            # Optional PyMuPDF, spaCy, and python-docx stack
-├── management/
-│   ├── heva_management/            # Contract, registry, review, validation, release
-│   └── requirements.txt            # Lightweight Pydantic environment
-├── app/
-│   ├── heva_app/
-│   │   ├── main.py                 # FastAPI composition only
-│   │   ├── routes/                 # Thin management-service HTTP adapters
-│   │   ├── templates/
-│   │   └── static/
-│   ├── tests/
-│   └── requirements.txt            # Optional FastAPI environment
+├── src/
+│   └── heva/
+│       ├── app/                     # Optional FastAPI interface
+│       ├── extraction/              # PDF, Word, tokenization, and color evidence
+│       └── workflow/                # Registry, review, validation, and release
 ├── tests/
+│   ├── app/
 │   ├── extraction/
-│   └── management/
+│   └── workflow/
 ├── docs/
-└── src/                            # Temporary compatibility imports for older scripts
+└── pyproject.toml                  # Base and optional dependency groups
 ```
 
 ### Folder Naming Convention

@@ -7,7 +7,7 @@ research evidence.
 Generate a report for one registered package:
 
 ```bash
-./venv/bin/python -m management.heva_management.quality_flags . \
+./venv/bin/python -m heva.workflow.quality_flags . \
   --document-id HEVA-ABC123
 ```
 
@@ -41,7 +41,7 @@ Each flag has a stable code, severity, message, and evidence object.
 Rules receive `QualityThresholds`:
 
 ```python
-from management.heva_management.quality_flags import QualityThresholds, assess_record
+from heva.workflow.quality_flags import QualityThresholds, assess_record
 
 thresholds = QualityThresholds(
     minimum_characters=20,

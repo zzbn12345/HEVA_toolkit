@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Document review · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/review_queue.js?v=2" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="home-link" href="/">← HEVA home</a>
+    <span>Document review</span>
+  </header>
+  <main class="page-content">
+    <p class="eyebrow">Review queue</p>
+    <h1>Review one document at a time.</h1>
+    <p class="lead">Automatic extraction may prepare a batch, but every document keeps its own color mapping, decisions, and audit history.</p>
+    <a class="button" href="/create">＋ Add document</a>
+    <div id="queue-status" class="notice neutral" aria-live="polite">Loading documents…</div>
+    <section class="project-list" aria-label="Annotation projects">
+      <div class="project-list-header" aria-hidden="true">
+        <span>Document</span>
+        <span>Status</span>
+        <span>Completion</span>
+        <span>Action</span>
+      </div>
+      <div id="review-queue" class="project-list-body"></div>
+    </section>
+  </main>
+</body>
+</html>

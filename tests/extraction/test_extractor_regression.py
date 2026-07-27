@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from extraction.heva_extraction.docx_extractor import extract_docx_highlights
-from extraction.heva_extraction.pdf_extractor import extract_colored_highlights
+from heva.extraction.docx_extractor import extract_docx_highlights
+from heva.extraction.pdf_extractor import extract_colored_highlights
 
 
 ROOT = Path(__file__).parents[2]

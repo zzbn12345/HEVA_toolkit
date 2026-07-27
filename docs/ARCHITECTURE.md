@@ -119,9 +119,9 @@ flowchart TD
 ## Detailed Pipeline Execution
 
 ### 1. Ingestion & Extension Routing
-The entry point (`extraction/heva_extraction/extract_highlights.py`) scans the `data/` directory and dynamically routes files depending on their extension:
-* **PDF Documents**: Routed to `PyMuPDF` (`fitz`) processing in `extraction/heva_extraction/pdf_extractor.py`.
-* **Word Documents**: Routed to `python-docx` processing in `extraction/heva_extraction/docx_extractor.py`.
+The entry point (`src/heva/extraction/extract_highlights.py`) scans the `data/` directory and dynamically routes files depending on their extension:
+* **PDF Documents**: Routed to `PyMuPDF` (`fitz`) processing in `src/heva/extraction/pdf_extractor.py`.
+* **Word Documents**: Routed to `python-docx` processing in `src/heva/extraction/docx_extractor.py`.
 
 ### 2. PDF Processing & Layout Analysis
 * **Drawings Extraction**: Highlights are represented as vector fill drawings. PyMuPDF fetches all non-white drawing coordinates (`page.get_drawings()`).
@@ -143,7 +143,7 @@ To handle complex layout formats (like multi-column tables, headers, and side-by
 * **XML Paragraph/Run Parsers**: Paragraphs are traversed and decomposed into styling runs.
 * **Word Preset Highlighting**: The parser checks standard Word highlight names (e.g.,
   `YELLOW`, `TURQUOISE`, `PINK`) via `run.font.highlight_color` and normalizes them to
-  standard hex codes using `WORD_HIGHLIGHT_TO_HEX` from `extraction/heva_extraction/word_colors.py`.
+  standard hex codes using `WORD_HIGHLIGHT_TO_HEX` from `src/heva/extraction/word_colors.py`.
 * **Custom Font Coloring**: If no highlight is present, custom text colors are checked via `run.font.color.rgb` and mapped as a fallback.
 * **Character-Level Mapping**: To prevent boundary issues, a character-level color index array is constructed mapping every single character in the paragraph to its dominant highlight color.
 

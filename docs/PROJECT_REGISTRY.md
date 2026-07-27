@@ -9,20 +9,20 @@ belongs. Source files are scanned but never renamed or modified.
 From the project root, scan the default `data/` directory:
 
 ```bash
-./venv/bin/python -m management.heva_management.project_registry .
+./venv/bin/python -m heva.workflow.project_registry .
 ```
 
 To scan another folder inside the project:
 
 ```bash
-./venv/bin/python -m management.heva_management.project_registry . --source-dir documents
+./venv/bin/python -m heva.workflow.project_registry . --source-dir documents
 ```
 
 The registry is written to `data/project-registry.json`. A concise summary is printed for
 people. Scripts can request JSON output:
 
 ```bash
-./venv/bin/python -m management.heva_management.project_registry . --source-dir documents --json
+./venv/bin/python -m heva.workflow.project_registry . --source-dir documents --json
 ```
 
 ## What synchronization does

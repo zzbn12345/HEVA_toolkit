@@ -8,7 +8,7 @@ The document must be registered and present. Its color configuration must either
 human-confirmed or explicitly authorized for extraction while pending review.
 
 ```python
-from management.heva_management.extraction_session import persist_extraction_results
+from heva.workflow.extraction_session import persist_extraction_results
 
 result = persist_extraction_results(
     ".",
@@ -51,7 +51,7 @@ the validation-and-persistence boundary for other workflows.
 Once the document has a confirmed color configuration:
 
 ```python
-from management.heva_management.extraction_session import run_registered_extraction
+from heva.workflow.extraction_session import run_registered_extraction
 
 result = run_registered_extraction(".", "HEVA-ABC123")
 print(result.annotations_path)
@@ -78,14 +78,14 @@ after an interrupted extraction remains future work.
 Run one registered document:
 
 ```bash
-./venv/bin/python -m management.heva_management.extraction_session . \
+./venv/bin/python -m heva.workflow.extraction_session . \
   --document-id HEVA-ABC123
 ```
 
 Run selected documents independently:
 
 ```bash
-./venv/bin/python -m management.heva_management.extraction_session . \
+./venv/bin/python -m heva.workflow.extraction_session . \
   --document-id HEVA-ABC123 \
   --document-id HEVA-DEF456
 ```
@@ -93,7 +93,7 @@ Run selected documents independently:
 Run every registered document:
 
 ```bash
-./venv/bin/python -m management.heva_management.extraction_session . --all
+./venv/bin/python -m heva.workflow.extraction_session . --all
 ```
 
 Use `--json` for a machine-readable per-document report and `--force` for intentional
@@ -106,7 +106,7 @@ authorized and creates no annotations. After inspecting those proposals, explici
 record the decision to use them:
 
 ```bash
-./venv/bin/python -m management.heva_management.extraction_session . \
+./venv/bin/python -m heva.workflow.extraction_session . \
   --all \
   --authorize-pending-map-by "Research Annotator"
 ```
@@ -120,7 +120,7 @@ Collection building is deliberately separate from batch extraction. Only registr
 documents with status `done` are eligible:
 
 ```bash
-./venv/bin/python -m management.heva_management.release_builder .
+./venv/bin/python -m heva.workflow.release_builder .
 ```
 
 The generated, ignored artifact is:

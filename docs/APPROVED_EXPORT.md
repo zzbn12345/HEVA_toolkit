@@ -8,14 +8,14 @@ decisions, and state its provenance and distribution rights.
 Validate one document:
 
 ```bash
-./venv/bin/python -m management.heva_management.package_validator . validate \
+./venv/bin/python -m heva.workflow.package_validator . validate \
   --document-id HEVA-EXAMPLE
 ```
 
 Validate the whole project:
 
 ```bash
-./venv/bin/python -m management.heva_management.package_validator . validate \
+./venv/bin/python -m heva.workflow.package_validator . validate \
   --report data/validation-report.json
 ```
 
@@ -29,14 +29,14 @@ After an annotator submits a fully decided document, its registry status is `in_
 A curator can approve it only if every validation layer passes:
 
 ```bash
-./venv/bin/python -m management.heva_management.package_validator . approve \
+./venv/bin/python -m heva.workflow.package_validator . approve \
   --document-id HEVA-EXAMPLE
 ```
 
 Approval changes the status to `done`. Build the release representations with:
 
 ```bash
-./venv/bin/python -m management.heva_management.package_validator . release
+./venv/bin/python -m heva.workflow.package_validator . release
 ```
 
 This creates:

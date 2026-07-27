@@ -1,2 +1,0 @@
-# Lightweight HEVA data-management and validation environment.
--r management/requirements.txt

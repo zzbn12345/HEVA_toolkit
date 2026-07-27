@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "heva-toolkit"
+version = "0.1.0"
+description = "Extract, manage, review, and validate HEVA annotations."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2.7,<3.0"]
+
+[project.optional-dependencies]
+extraction = [
+    "pymupdf==1.27.2.3",
+    "python-docx==1.1.2",
+    "spacy==3.7.4",
+]
+app = [
+    "fastapi>=0.116,<1.0",
+    "httpx>=0.28,<1.0",
+    "python-multipart>=0.0.20,<1.0",
+    "uvicorn>=0.35,<1.0",
+]
+dev = [
+    "fastapi>=0.116,<1.0",
+    "httpx>=0.28,<1.0",
+    "pymupdf==1.27.2.3",
+    "pytest>=8.0,<10.0",
+    "python-docx==1.1.2",
+    "python-multipart>=0.0.20,<1.0",
+    "spacy==3.7.4",
+    "uvicorn>=0.35,<1.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["heva*"]
+
+[tool.setuptools.package-data]
+"heva.app" = ["templates/*.html", "static/*.css", "static/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -20,7 +20,7 @@ The document must already exist in `data/project-registry.json`. Initialize or s
 the registry from the project root:
 
 ```bash
-./venv/bin/python -m management.heva_management.project_registry . --source-dir documents
+./venv/bin/python -m heva.workflow.project_registry . --source-dir documents
 ```
 
 Copy the relevant `document_id` from the registry. The ID connects the metadata to the
@@ -46,7 +46,7 @@ the HEVA annotation belongs under `annotator`.
 Load the profile in Python:
 
 ```python
-from management.heva_management.document_metadata import load_annotator
+from heva.workflow.document_metadata import load_annotator
 
 annotator = load_annotator("data/annotator.json")
 ```
@@ -54,7 +54,7 @@ annotator = load_annotator("data/annotator.json")
 ## Build the package metadata
 
 ```python
-from management.heva_management.document_metadata import (
+from heva.workflow.document_metadata import (
     AnnotationProcessMetadata,
     ColorConfigurationMetadata,
     ColorMappingMetadata,
@@ -160,7 +160,7 @@ An explained non-findable source produces a warning but does not block review.
 ## Check whether it is ready for review
 
 ```python
-from management.heva_management.document_metadata import validate_review_readiness
+from heva.workflow.document_metadata import validate_review_readiness
 
 report = validate_review_readiness(metadata)
 
@@ -184,7 +184,7 @@ message for use by scripts or a future web interface.
 ## Save it in the document package
 
 ```python
-from management.heva_management.document_metadata import save_package_metadata
+from heva.workflow.document_metadata import save_package_metadata
 
 saved_path = save_package_metadata(".", metadata)
 print(saved_path)

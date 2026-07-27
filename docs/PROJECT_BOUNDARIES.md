@@ -3,29 +3,29 @@
 HEVA contains three related capabilities with different responsibilities and dependency
 costs. They must remain independently usable.
 
-## Data management
+## Workflow
 
-The implementation lives in `management/heva_management`. The default environment installs
-only Pydantic. It covers the canonical record contract,
+The implementation lives in `src/heva/workflow`. The base installation includes only
+Pydantic. It covers the canonical record contract,
 project registry, document metadata, document-local color decisions, quality flags,
 sentence review, validation, and approved release construction.
 
 ```bash
-./venv/bin/python -m pip install -r requirements.txt
+./venv/bin/python -m pip install -e .
 ```
 
-Management modules consume canonical JSON records. They do not need to know how PDF or
+Workflow modules consume canonical JSON records. They do not need to know how PDF or
 Word evidence was extracted.
 
 ## Document extraction and NLP
 
-The implementation lives in `extraction/heva_extraction`. Its profile adds PyMuPDF, spaCy,
+The implementation lives in `src/heva/extraction`. Its optional group adds PyMuPDF, spaCy,
 and python-docx. These modules turn PDF or Word evidence into candidate records. They must
 not decide rights, approve mappings,
 complete reviews, or release data.
 
 ```bash
-./venv/bin/python -m pip install -r requirements-extraction.txt
+./venv/bin/python -m pip install -e ".[extraction]"
 ```
 
 Batch extraction is permitted because each result is persisted independently. Color
@@ -33,23 +33,21 @@ proposals and review decisions remain document-local.
 
 ## Researcher-facing application
 
-The optional application lives under `app/heva_app`, with `main.py`, thin route modules,
-templates, and static assets. It has its own environment. FastAPI, Uvicorn,
-multipart upload support, and browser-test dependencies are therefore not imposed on
-management scripts or the original NLP tools.
+The optional application lives under `src/heva/app`, with `main.py`, thin route modules,
+templates, and static assets. FastAPI, Uvicorn, and multipart upload support are not
+installed for workflow-only users.
 
 ```bash
-python3.12 -m venv app/venv
-./app/venv/bin/python -m pip install -r app/requirements.txt
+./venv/bin/python -m pip install -e ".[app]"
 ```
 
 The application is an interface over the management services. It must not contain a second
 implementation of the HEVA contract or review rules. Automatic extraction can later be
 enabled by adding the extraction profile to the app environment.
 
-The modules remaining under `src/` are temporary forwarding imports and command entry
-points. They preserve existing integrations while callers migrate to the new package
-names; they contain no canonical implementation.
+All public imports share one namespace: `heva.app`, `heva.extraction`, and
+`heva.workflow`. The subpackages describe responsibility without repeating the project
+name.
 
 ## Batch preparation, individual review
 

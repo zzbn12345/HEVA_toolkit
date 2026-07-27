@@ -20,11 +20,11 @@ There is no global semantic `COLOR_MAP`. Calling either extractor without
 ## Create proposals from raw extraction
 
 ```python
-from management.heva_management.color_mapping import (
+from heva.workflow.color_mapping import (
     observed_colors_from_records,
     propose_color_configuration,
 )
-from pdf_extractor import extract_colored_highlights
+from heva.extraction.pdf_extractor import extract_colored_highlights
 
 records = extract_colored_highlights("documents/source.pdf", color_label_map={})
 observed = observed_colors_from_records(records)
@@ -72,7 +72,7 @@ until a person reviews it.
 ## Resolve and confirm colors
 
 ```python
-from management.heva_management.color_mapping import confirm_color_configuration, resolve_color
+from heva.workflow.color_mapping import confirm_color_configuration, resolve_color
 
 configuration = resolve_color(configuration, "#FFFF00", label="historic")
 configuration = resolve_color(
@@ -92,7 +92,7 @@ label, or an ignored color lacks an explanation.
 ## Save the document-local decision
 
 ```python
-from management.heva_management.color_mapping import save_color_configuration
+from heva.workflow.color_mapping import save_color_configuration
 
 save_color_configuration(
     ".",
@@ -112,7 +112,7 @@ It does not create extracted annotations or change the source document.
 Load the confirmed map before semantic extraction:
 
 ```python
-from management.heva_management.color_mapping import load_confirmed_color_mapping
+from heva.workflow.color_mapping import load_confirmed_color_mapping
 
 mapping = load_confirmed_color_mapping(".", "HEVA-ABC123")
 records = extract_colored_highlights(
@@ -127,7 +127,7 @@ Alternatively, a pending automatic proposal can be deliberately authorized for e
 without claiming that it is scientifically approved:
 
 ```python
-from management.heva_management.color_mapping import authorize_pending_mapping_for_extraction
+from heva.workflow.color_mapping import authorize_pending_mapping_for_extraction
 
 configuration = authorize_pending_mapping_for_extraction(
     configuration,
@@ -147,7 +147,7 @@ Ollama-facing function has produced suggestions, an initializer, web route, or o
 orchestrator can store them with:
 
 ```python
-from management.heva_management.color_mapping import write_automatic_color_proposals
+from heva.workflow.color_mapping import write_automatic_color_proposals
 
 write_automatic_color_proposals(
     ".",
@@ -183,7 +183,7 @@ initializer side effect.
 ## Batch safety
 
 ```python
-from management.heva_management.color_mapping import validate_shared_batch_mapping
+from heva.workflow.color_mapping import validate_shared_batch_mapping
 
 report = validate_shared_batch_mapping(
     {
@@ -198,7 +198,7 @@ human confirmation. A palette mismatch means the documents must use independent 
 
 ## Current limit
 
-The older `extraction/heva_extraction/auto_color_mapper.py` prototype still writes a sidecar map and immediately
+The older `src/heva/extraction/auto_color_mapper.py` prototype still writes a sidecar map and immediately
 extracts using its Ollama result. It does not call the package writer yet and should not
 be treated as a curator-ready HEVA workflow. A later initializer or web workflow can
 compose automatic classification with `write_automatic_color_proposals` without changing
