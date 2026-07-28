@@ -7,7 +7,7 @@ from typing import Callable
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from heva.workflow.annotator_registry import (
     AnnotatorRegistryError,
@@ -18,6 +18,12 @@ from heva.workflow.annotator_registry import (
     update_annotator,
 )
 from heva.workflow.document_metadata import AnnotatorMetadata
+from heva.workflow.color_mapping import (
+    ColorMappingError,
+    load_color_configuration,
+    review_and_confirm_color_configuration,
+)
+from heva.workflow.contract import HEVA_LABELS
 from heva.workflow.document_citation import (
     CitationDraft,
     CitationError,
@@ -29,11 +35,29 @@ from heva.workflow.package_validator import (
     PackageValidationError,
     validate_project,
 )
+from heva.workflow.extraction_session import (
+    ExtractionSessionError,
+    run_registered_extraction,
+)
 from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
 from heva.workflow.review_queue import (
     ReviewQueueError,
     registered_source_path,
 )
+
+
+class ColorDecisionInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    hex: str
+    label: str | None = None
+    ignore_reason: str | None = None
+
+
+class ColorReviewInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    decisions: list[ColorDecisionInput]
 
 
 def create_project_router(
@@ -185,6 +209,52 @@ def create_project_router(
             ).model_dump(mode="json")
         except (AnnotatorRegistryError, CitationError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.get("/api/documents/{document_id}/colors")
+    def color_status(document_id: str):
+        try:
+            configuration = load_color_configuration(root, document_id)
+        except ColorMappingError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return {
+            "document_id": document_id,
+            "labels": sorted(HEVA_LABELS),
+            "configuration": configuration.model_dump(mode="json"),
+        }
+
+    @router.post("/api/documents/{document_id}/colors/confirm")
+    def confirm_colors(document_id: str, payload: ColorReviewInput):
+        try:
+            active = load_annotator_registry(root).active()
+            configuration = review_and_confirm_color_configuration(
+                root,
+                document_id,
+                [decision.model_dump() for decision in payload.decisions],
+                confirmed_by=active.name if active and active.name else "",
+            )
+        except (AnnotatorRegistryError, ColorMappingError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return configuration.model_dump(mode="json")
+
+    @router.post("/api/documents/{document_id}/extract")
+    def extract_document(document_id: str):
+        try:
+            result = run_registered_extraction(root, document_id)
+        except (ColorMappingError, ExtractionSessionError, OSError, ValidationError) as error:
+            return JSONResponse(
+                {
+                    "code": getattr(error, "code", "extraction_failed"),
+                    "message": "Annotations were not extracted.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+        return {
+            "document_id": result.document_id,
+            "record_count": result.record_count,
+            "reused_checkpoint": result.reused_checkpoint,
+            "warnings": list(result.warnings),
+        }
 
     @router.get("/api/annotator")
     def annotator_status():

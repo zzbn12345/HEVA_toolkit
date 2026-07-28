@@ -119,6 +119,16 @@ confirmation so it must be reviewed again.
 
 Color meaning is local to a document or an explicitly validated group of documents. A
 historical or automatic convention may propose a label, but it cannot approve the mapping.
+The color-review step therefore loads the observed palette from that document's package;
+it does not display a generic placeholder color. Each swatch shows its hex value and an
+automatic suggestion, when one exists, as evidence. The annotator must select a controlled
+HEVA label or explicitly ignore the color with a reason. Only a confirmed configuration
+enables extraction.
+
+While extraction runs, the workspace displays progress and prevents a second request.
+Completion reports the number of persisted sentence records and whether an existing
+checkpoint was reused. Failures and a two-minute browser timeout produce a visible
+corrective message instead of leaving the action apparently unfinished.
 
 ## 5. Opening a document
 

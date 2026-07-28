@@ -140,6 +140,176 @@ async function persistCitation(confirm) {
   displayCitation(result);
 }
 
+function colorDecisions() {
+  return [...document.querySelectorAll(".color-record")].map((record) => {
+    const value = record.querySelector("select").value;
+    return {
+      hex: record.dataset.hex,
+      label: value && value !== "__ignore__" ? value : null,
+      ignore_reason: value === "__ignore__"
+        ? record.querySelector(".ignore-reason").value.trim() || null
+        : null,
+    };
+  });
+}
+
+function renderColorConfiguration(result) {
+  const configuration = result.configuration;
+  const list = document.getElementById("color-list");
+  list.replaceChildren(...configuration.colors.map((color) => {
+    const record = document.createElement("article");
+    record.className = "color-record";
+    record.dataset.hex = color.hex;
+
+    const swatch = document.createElement("span");
+    swatch.className = "color-swatch";
+    swatch.style.setProperty("--swatch", color.hex);
+    swatch.style.setProperty("--swatch-text", color.text_color || "#000000");
+    swatch.textContent = color.hex;
+
+    const fields = document.createElement("div");
+    fields.className = "color-fields";
+    const label = document.createElement("label");
+    label.textContent = "HEVA label or ignore decision";
+    const select = document.createElement("select");
+    const undecided = document.createElement("option");
+    undecided.value = "";
+    undecided.textContent = "Choose a decision…";
+    select.append(undecided, ...result.labels.map((value) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = value;
+      return option;
+    }));
+    const ignore = document.createElement("option");
+    ignore.value = "__ignore__";
+    ignore.textContent = "Ignore this color";
+    select.append(ignore);
+    if (color.status === "approved") select.value = color.label;
+    if (color.status === "ignored") select.value = "__ignore__";
+
+    const reason = document.createElement("textarea");
+    reason.className = "ignore-reason";
+    reason.rows = 2;
+    reason.placeholder = "Reason this observed color should be ignored";
+    reason.value = color.ignore_reason || "";
+    reason.hidden = select.value !== "__ignore__";
+    select.addEventListener("change", () => {
+      reason.hidden = select.value !== "__ignore__";
+      document.getElementById("mapping-confirmed").checked = false;
+    });
+
+    const evidence = document.createElement("p");
+    evidence.className = "color-evidence";
+    evidence.textContent = color.suggested_label
+      ? `Automatic suggestion: ${color.suggested_label}. ${color.reasoning || "No explanation was recorded."}`
+      : "No automatic label suggestion is available.";
+    label.append(select);
+    fields.append(label, reason, evidence);
+    record.append(swatch, fields);
+    return record;
+  }));
+
+  const status = document.getElementById("color-status");
+  const confirmed = configuration.human_confirmed;
+  status.className = `notice ${confirmed ? "success" : "warning"}`;
+  status.textContent = confirmed
+    ? `Color configuration confirmed by ${configuration.confirmed_by}.`
+    : `${configuration.colors.length} observed color${configuration.colors.length === 1 ? "" : "s"} require explicit human decisions. Suggestions are not approvals.`;
+  document.getElementById("mapping-confirmed").disabled = !configuration.colors.length;
+  document.getElementById("mapping-confirmed").checked = confirmed;
+  document.getElementById("confirm-colors").disabled = !configuration.colors.length;
+  document.getElementById("extract-annotations").disabled = !confirmed;
+}
+
+async function loadColors(documentId) {
+  const status = document.getElementById("color-status");
+  try {
+    const response = await fetch(`/api/documents/${encodeURIComponent(documentId)}/colors`);
+    const result = await response.json();
+    if (!response.ok) {
+      status.className = "notice error";
+      status.textContent = result.detail || "The color configuration could not be loaded.";
+      return;
+    }
+    renderColorConfiguration(result);
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = "The color configuration could not be loaded.";
+  }
+}
+
+async function confirmColors() {
+  const documentId = document.getElementById("selected-document-id").value;
+  const status = document.getElementById("color-status");
+  if (!document.getElementById("mapping-confirmed").checked) {
+    status.className = "notice error";
+    status.textContent = "Confirm that you reviewed every observed color.";
+    return;
+  }
+  const decisions = colorDecisions();
+  if (decisions.some((item) => !item.label && !item.ignore_reason)) {
+    status.className = "notice error";
+    status.textContent = "Choose a label or provide an ignore reason for every color.";
+    return;
+  }
+  const response = await fetch(
+    `/api/documents/${encodeURIComponent(documentId)}/colors/confirm`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decisions }),
+    },
+  );
+  const result = await response.json();
+  if (!response.ok) {
+    status.className = "notice error";
+    status.textContent = result.detail || "The color configuration could not be confirmed.";
+    return;
+  }
+  await loadColors(documentId);
+  document.getElementById("extraction-status").textContent =
+    "Color configuration confirmed. Extraction is ready.";
+}
+
+async function extractAnnotations() {
+  const documentId = document.getElementById("selected-document-id").value;
+  const button = document.getElementById("extract-annotations");
+  const progress = document.getElementById("extraction-progress");
+  const status = document.getElementById("extraction-status");
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 120000);
+  button.disabled = true;
+  button.textContent = "Extracting…";
+  progress.hidden = false;
+  status.className = "notice neutral";
+  status.textContent = "Extraction is running. Keep this page open.";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/extract`,
+      { method: "POST", signal: controller.signal },
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      status.className = "notice error";
+      status.textContent = `${result.message || "Extraction failed."} ${result.action || ""}`;
+      return;
+    }
+    status.className = result.warnings.length ? "notice warning" : "notice success";
+    status.textContent = `${result.reused_checkpoint ? "Reused" : "Created"} ${result.record_count} extracted sentence records.${result.warnings.length ? ` ${result.warnings.join(" ")}` : ""}`;
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = error.name === "AbortError"
+      ? "Extraction did not finish within two minutes. Check the source and try again."
+      : "Extraction could not be completed. Check the local service and try again.";
+  } finally {
+    window.clearTimeout(timeout);
+    progress.hidden = true;
+    button.textContent = "Extract annotations";
+    button.disabled = false;
+  }
+}
+
 async function loadSelectedDocument() {
   const documentId = new URLSearchParams(window.location.search).get("document_id");
   if (!documentId) return;
@@ -162,6 +332,7 @@ async function loadSelectedDocument() {
     status.className = "notice success";
     status.textContent = `Editing ${result.filename}. Its existing project state will be reused.`;
     await loadCitation(documentId);
+    await loadColors(documentId);
     if (result.preview_available) {
       openPreview(
         `/api/documents/${encodeURIComponent(documentId)}/source`,
@@ -185,6 +356,11 @@ document.getElementById("save-citation").addEventListener(
 document.getElementById("confirm-citation").addEventListener(
   "click",
   () => persistCitation(true),
+);
+document.getElementById("confirm-colors").addEventListener("click", confirmColors);
+document.getElementById("extract-annotations").addEventListener(
+  "click",
+  extractAnnotations,
 );
 
 pdfInput.addEventListener("change", () => {

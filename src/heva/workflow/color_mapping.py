@@ -56,6 +56,71 @@ class ExtractionColorMapping:
     status: str
 
 
+def load_color_configuration(
+    project_root: str | Path,
+    document_id: str,
+    *,
+    registry_path: str | Path = DEFAULT_REGISTRY_PATH,
+) -> ColorConfigurationMetadata:
+    """Load the editable document-local configuration, including pending proposals."""
+
+    root = Path(project_root).resolve()
+    registry_file = root / Path(registry_path)
+    try:
+        registry = ProjectRegistry.model_validate_json(
+            registry_file.read_text(encoding="utf-8")
+        )
+    except (OSError, ValidationError) as error:
+        raise ColorMappingError("The project registry cannot be read.") from error
+    entry = next(
+        (item for item in registry.documents if item.document_id == document_id),
+        None,
+    )
+    if entry is None or entry.metadata_path is None:
+        raise ColorMappingError(
+            f"Document {document_id} has no package color configuration."
+        )
+    try:
+        metadata = PackageMetadata.model_validate_json(
+            (root / entry.metadata_path).read_text(encoding="utf-8")
+        )
+    except (OSError, ValidationError) as error:
+        raise ColorMappingError("The document package metadata cannot be read.") from error
+    return metadata.color_configuration
+
+
+def review_and_confirm_color_configuration(
+    project_root: str | Path,
+    document_id: str,
+    decisions: Sequence[Mapping[str, str | None]],
+    *,
+    confirmed_by: str,
+) -> ColorConfigurationMetadata:
+    """Apply explicit label/ignore decisions and atomically persist confirmation."""
+
+    configuration = load_color_configuration(project_root, document_id)
+    expected = {item.hex for item in configuration.colors}
+    received = {str(item.get("hex", "")).upper() for item in decisions}
+    if expected != received or len(decisions) != len(expected):
+        raise ColorMappingError(
+            "Provide one explicit decision for every observed document color."
+        )
+    updated = configuration
+    for decision in decisions:
+        color = str(decision.get("hex", ""))
+        label = decision.get("label")
+        ignore_reason = decision.get("ignore_reason")
+        updated = resolve_color(
+            updated,
+            color,
+            label=str(label) if label else None,
+            ignore_reason=str(ignore_reason) if ignore_reason else None,
+        )
+    updated = confirm_color_configuration(updated, confirmed_by=confirmed_by)
+    save_color_configuration(project_root, document_id, updated)
+    return updated
+
+
 _COLOR_NAMES = {
     "#000000": "Black",
     "#000080": "Navy",

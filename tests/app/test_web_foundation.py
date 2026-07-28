@@ -8,6 +8,10 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from heva.app.main import create_app
+from heva.workflow.color_mapping import (
+    propose_color_configuration,
+    save_color_configuration,
+)
 from heva.workflow.project_registry import sync_registry
 from heva.workflow.review_state import initialize_sentence_reviews
 
@@ -51,8 +55,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=3"' in response.text
-    assert 'href="/static/create.css?v=2"' in response.text
+    assert 'src="/static/create.js?v=4"' in response.text
+    assert 'href="/static/create.css?v=3"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text
@@ -60,6 +64,47 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'href="/">← HEVA home</a>' in response.text
     assert "<script>" not in response.text
     assert 'id="confirm-citation"' in response.text
+    assert 'id="extraction-progress"' in response.text
+    assert "#FFFF00" not in response.text
+    assert "Label not decided" not in response.text
+
+
+def test_color_review_api_loads_the_document_palette(tmp_path: Path) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    save_color_configuration(
+        tmp_path,
+        document_id,
+        propose_color_configuration(
+            ["#CCCC00"],
+            generic_suggestions={"#CCCC00": "political"},
+        ),
+    )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get(f"/api/documents/{document_id}/colors")
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["configuration"]["colors"][0]["hex"] == "#CCCC00"
+    assert result["configuration"]["colors"][0]["suggested_label"] == "political"
+    assert "political" in result["labels"]
+
+
+def test_extraction_interface_has_progress_timeout_and_visible_errors() -> None:
+    script = (
+        Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "create.js"
+    ).read_text(encoding="utf-8")
+
+    assert "new AbortController()" in script
+    assert "progress.hidden = false" in script
+    assert "progress.hidden = true" in script
+    assert "Extraction did not finish within two minutes" in script
+    assert "result.message" in script
 
 
 def test_annotator_is_persisted_in_project_collection(tmp_path: Path) -> None:

@@ -12,11 +12,13 @@ from heva.workflow.color_mapping import (
     ColorMappingError,
     authorize_pending_mapping_for_extraction,
     confirm_color_configuration,
+    load_color_configuration,
     load_confirmed_color_mapping,
     load_extraction_color_mapping,
     observed_colors_from_records,
     propose_color_configuration,
     resolve_color,
+    review_and_confirm_color_configuration,
     save_color_configuration,
     validate_shared_batch_mapping,
     write_automatic_color_proposals,
@@ -239,3 +241,67 @@ def test_pending_map_requires_explicit_decision_before_extraction(tmp_path: Path
 
     assert selected.values == {"#FFFF00": "historic"}
     assert selected.status == "pending_review"
+
+
+def test_document_color_review_persists_explicit_label_and_ignore_decisions(
+    tmp_path: Path,
+) -> None:
+    documents = tmp_path / "documents"
+    documents.mkdir()
+    (documents / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    save_color_configuration(
+        tmp_path,
+        document_id,
+        propose_color_configuration(
+            ["#CCCC00", "#FF66CC"],
+            generic_suggestions={"#CCCC00": "historic"},
+        ),
+    )
+
+    confirmed = review_and_confirm_color_configuration(
+        tmp_path,
+        document_id,
+        [
+            {"hex": "#CCCC00", "label": "political"},
+            {
+                "hex": "#FF66CC",
+                "ignore_reason": "Formatting color, not an annotation.",
+            },
+        ],
+        confirmed_by="Research Annotator",
+    )
+
+    restored = load_color_configuration(tmp_path, document_id)
+    assert confirmed.human_confirmed
+    assert restored.confirmed_by == "Research Annotator"
+    assert {item.hex: item.status for item in restored.colors} == {
+        "#CCCC00": "approved",
+        "#FF66CC": "ignored",
+    }
+
+
+def test_document_color_review_requires_a_decision_for_every_observed_color(
+    tmp_path: Path,
+) -> None:
+    documents = tmp_path / "documents"
+    documents.mkdir()
+    (documents / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    save_color_configuration(
+        tmp_path,
+        document_id,
+        propose_color_configuration(["#CCCC00", "#FF66CC"]),
+    )
+
+    with pytest.raises(ColorMappingError, match="every observed"):
+        review_and_confirm_color_configuration(
+            tmp_path,
+            document_id,
+            [{"hex": "#CCCC00", "label": "political"}],
+            confirmed_by="Research Annotator",
+        )

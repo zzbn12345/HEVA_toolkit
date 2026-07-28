@@ -13,6 +13,11 @@
   readiness and explains failed citation, color, extraction, and sentence gates.
 - Deterministic citation proposals from PDF/DOCX properties or source filenames, with
   editable drafts and explicit annotator confirmation recorded in each document package.
+- A document-local color review form that displays the colors actually stored in the
+  package, distinguishes automatic suggestions from decisions, and requires an explicit
+  controlled label or documented ignore reason for every color.
+- A responsive extraction action with visible progress, a two-minute browser timeout,
+  persisted-checkpoint feedback, and actionable extraction errors.
 - A document review queue that summarizes batch-prepared documents while opening only one
   document, PDF, color evidence, sentence set, and audit state at a time.
 - A row-based annotation project list with explicit completion bars and an

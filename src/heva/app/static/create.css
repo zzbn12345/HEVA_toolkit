@@ -138,6 +138,33 @@ fieldset { margin: 1rem 0; padding: 0; border: 0; }
   margin: 1rem 0;
 }
 
+.color-list { display: grid; gap: .9rem; margin: 1rem 0; }
+
+.color-record {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.color-fields label { margin-top: 0; }
+.color-fields select {
+  width: 100%;
+  margin-top: .4rem;
+  padding: .72rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+}
+
+.color-evidence { margin: .55rem 0 0; color: var(--muted); line-height: 1.45; }
+.ignore-reason[hidden] { display: none; }
+
 .color-swatch {
   display: grid;
   place-items: center;
@@ -160,6 +187,18 @@ fieldset { margin: 1rem 0; padding: 0; border: 0; }
 }
 
 .confirmation input { margin-top: .2rem; }
+
+.extraction-progress {
+  display: grid;
+  grid-template-columns: minmax(120px, 220px) 1fr;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  color: var(--muted);
+}
+
+.extraction-progress[hidden] { display: none; }
+.extraction-progress progress { width: 100%; }
 
 @media (max-width: 1050px) {
   .create-app { grid-template-columns: 210px minmax(0, 1fr); }
