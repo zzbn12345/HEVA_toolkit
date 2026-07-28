@@ -72,7 +72,8 @@
   font-weight: 700;
 }
 
-.create-step input:not([type="radio"]):not([type="checkbox"]) {
+.create-step input:not([type="radio"]):not([type="checkbox"]),
+.create-step textarea {
   width: 100%;
   margin-top: .4rem;
   padding: .78rem;
@@ -83,8 +84,17 @@
   font: inherit;
 }
 
+.create-step textarea { resize: vertical; }
+
+.create-step input:focus,
+.create-step textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+
 .create-step small { display: block; margin-top: .35rem; color: var(--muted); font-weight: 400; }
-.form-actions { display: flex; gap: .7rem; margin-top: 1.5rem; }
+.form-actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.5rem; }
 
 fieldset { margin: 1rem 0; padding: 0; border: 0; }
 .mode-toggle { display: flex; gap: .4rem; padding: .3rem; border-radius: 10px; background: #0d1829; }

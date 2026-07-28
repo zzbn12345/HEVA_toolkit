@@ -49,13 +49,17 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert "Project annotator" in response.text
     assert 'href="/annotator">Manage annotator profile</a>' in response.text
     assert 'id="annotator-name"' not in response.text
-    assert "Submission information" in response.text
+    assert "Document citation" in response.text
+    assert "<span>Citation</span>" in response.text
+    assert 'src="/static/create.js?v=3"' in response.text
+    assert 'href="/static/create.css?v=2"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text
     assert 'id="toggle-pdf"' in response.text
     assert 'href="/">← HEVA home</a>' in response.text
     assert "<script>" not in response.text
+    assert 'id="confirm-citation"' in response.text
 
 
 def test_annotator_is_persisted_in_project_collection(tmp_path: Path) -> None:
@@ -361,6 +365,60 @@ def test_registered_pdf_can_be_loaded_for_immediate_edit_preview(tmp_path: Path)
     assert source.status_code == 200
     assert source.headers["content-type"] == "application/pdf"
     assert source.headers["content-disposition"].startswith("inline;")
+
+
+def test_registered_document_citation_can_be_confirmed_by_active_annotator(
+    tmp_path: Path,
+) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"not-a-real-pdf")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    client = TestClient(create_app(tmp_path))
+    client.post("/api/annotators", json={"name": "Citation Reviewer"})
+
+    proposal = client.get(f"/api/documents/{document_id}/citation")
+    confirmed = client.post(
+        f"/api/documents/{document_id}/citation/confirm",
+        json={
+            "title": "Source",
+            "creators": ["Research Author"],
+            "citation": "Research Author. Source.",
+            "reference": "https://example.org/source",
+            "not_findable_reason": None,
+        },
+    )
+
+    assert proposal.status_code == 200
+    assert "title" in proposal.json()["proposed_fields"]
+    assert confirmed.status_code == 200
+    assert confirmed.json()["human_confirmed"] is True
+    assert confirmed.json()["confirmed_by"] == "Citation Reviewer"
+
+
+def test_citation_confirmation_explains_missing_findability(tmp_path: Path) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"not-a-real-pdf")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    client = TestClient(create_app(tmp_path))
+    client.post("/api/annotators", json={"name": "Citation Reviewer"})
+
+    response = client.post(
+        f"/api/documents/{document_id}/citation/confirm",
+        json={
+            "title": "Source",
+            "creators": ["Research Author"],
+            "citation": "Research Author. Source.",
+        },
+    )
+
+    assert response.status_code == 422
+    assert "DOI/public URL" in response.json()["detail"]
 
 
 def test_create_asset_loads_document_from_edit_query() -> None:

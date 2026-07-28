@@ -18,6 +18,13 @@ from heva.workflow.annotator_registry import (
     update_annotator,
 )
 from heva.workflow.document_metadata import AnnotatorMetadata
+from heva.workflow.document_citation import (
+    CitationDraft,
+    CitationError,
+    confirm_document_citation,
+    load_document_citation,
+    save_document_citation,
+)
 from heva.workflow.package_validator import (
     PackageValidationError,
     validate_project,
@@ -140,6 +147,44 @@ def create_project_router(
             filename=source.name,
             content_disposition_type="inline",
         )
+
+    @router.get("/api/documents/{document_id}/citation/schema")
+    def citation_schema(document_id: str):
+        # Resolve the record first so schemas are not exposed for unknown documents.
+        try:
+            load_document_citation(root, document_id)
+        except CitationError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return CitationDraft.model_json_schema()
+
+    @router.get("/api/documents/{document_id}/citation")
+    def citation_status(document_id: str):
+        try:
+            return load_document_citation(root, document_id).model_dump(mode="json")
+        except CitationError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+
+    @router.put("/api/documents/{document_id}/citation")
+    def save_citation(document_id: str, citation: CitationDraft):
+        try:
+            return save_document_citation(root, document_id, citation).model_dump(
+                mode="json"
+            )
+        except CitationError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.post("/api/documents/{document_id}/citation/confirm")
+    def confirm_citation(document_id: str, citation: CitationDraft):
+        try:
+            active = load_annotator_registry(root).active()
+            return confirm_document_citation(
+                root,
+                document_id,
+                citation,
+                confirmed_by=active.name if active and active.name else "",
+            ).model_dump(mode="json")
+        except (AnnotatorRegistryError, CitationError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
 
     @router.get("/api/annotator")
     def annotator_status():

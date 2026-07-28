@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Create package · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/create.css">
-  <script src="/static/create.js?v=2" defer></script>
+  <link rel="stylesheet" href="/static/create.css?v=2">
+  <script src="/static/create.js?v=3" defer></script>
 </head>
 <body class="create-body">
   <div id="create-app" class="create-app">
@@ -15,7 +15,7 @@
       <div class="create-brand">HEVA package project</div>
       <nav class="step-navigation" aria-label="Package creation steps">
         <button class="step-button active" type="button" data-step-target="1"><b>1</b><span>Annotator check</span></button>
-        <button class="step-button" type="button" data-step-target="2"><b>2</b><span>Submission</span></button>
+        <button class="step-button" type="button" data-step-target="2"><b>2</b><span>Citation</span></button>
         <button class="step-button" type="button" data-step-target="3"><b>3</b><span>Documents</span></button>
         <button class="step-button" type="button" data-step-target="4"><b>4</b><span>Color review</span></button>
       </nav>
@@ -41,16 +41,25 @@
 
       <section class="create-step" data-step="2">
         <p class="eyebrow">Step 2 of 4</p>
-        <h1>Submission information</h1>
-        <p class="lead">This information describes the selected document only. It is deliberately separate from the annotator profile.</p>
+        <h1>Document citation</h1>
+        <p class="lead">HEVA proposes available source metadata. Review and confirm it for this document; it remains separate from the annotator profile.</p>
+        <div id="citation-status" class="notice neutral" aria-live="polite">
+          Select a registered document to load its citation details.
+        </div>
         <label for="source-title">Document title</label>
         <input id="source-title" required>
         <label for="source-creators">Source creator or author</label>
-        <input id="source-creators" required>
+        <textarea id="source-creators" rows="3" required placeholder="One author or creator per line"></textarea>
+        <label for="source-citation">Human-readable citation</label>
+        <textarea id="source-citation" rows="3" required></textarea>
         <label for="source-reference">DOI or public URL <small>(optional)</small></label>
-        <input id="source-reference" type="url">
+        <input id="source-reference">
+        <label for="source-not-findable">If unavailable, explain why this source is not publicly findable <small>(optional)</small></label>
+        <textarea id="source-not-findable" rows="3"></textarea>
         <div class="form-actions">
           <button class="button secondary" type="button" data-back="1">Back</button>
+          <button id="save-citation" class="button secondary" type="button" disabled>Save citation draft</button>
+          <button id="confirm-citation" class="button" type="button" disabled>Confirm citation details</button>
           <button class="button" type="button" data-next="3">Continue</button>
         </div>
       </section>

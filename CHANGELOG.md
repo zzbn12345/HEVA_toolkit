@@ -11,6 +11,8 @@
   historical sentence-review evidence.
 - A document dashboard that separates sentence-review percentage from overall annotation
   readiness and explains failed citation, color, extraction, and sentence gates.
+- Deterministic citation proposals from PDF/DOCX properties or source filenames, with
+  editable drafts and explicit annotator confirmation recorded in each document package.
 - A document review queue that summarizes batch-prepared documents while opening only one
   document, PDF, color evidence, sentence set, and audit state at a time.
 - A row-based annotation project list with explicit completion bars and an

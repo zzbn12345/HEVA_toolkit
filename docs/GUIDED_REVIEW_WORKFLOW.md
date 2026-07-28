@@ -109,6 +109,14 @@ citation values automatically. Proposed values remain unconfirmed until the anno
 reviews them. Missing or unconfirmed required citation details keep the document
 **Incomplete**.
 
+The citation step loads existing package values and proposes only blank title, author, or
+citation fields from embedded PDF/DOCX properties when available, falling back to a
+readable filename title. **Save citation draft** persists work without passing the gate.
+**Confirm citation details** requires title, at least one source creator, a human-readable
+citation, and either a DOI/public URL or an explanation of why the source is not findable.
+Confirmation records the active annotator and time. Any later draft edit resets the
+confirmation so it must be reviewed again.
+
 Color meaning is local to a document or an explicitly validated group of documents. A
 historical or automatic convention may propose a label, but it cannot approve the mapping.
 
