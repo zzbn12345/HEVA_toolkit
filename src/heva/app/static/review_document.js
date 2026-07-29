@@ -22,6 +22,53 @@ function textElement(tag, className, text) {
   return element;
 }
 
+function contrastColor(hex) {
+  if (!/^#[0-9A-Fa-f]{6}$/.test(hex || "")) return "#FFFFFF";
+  const rgb = hex.slice(1).match(/../g).map((value) => parseInt(value, 16));
+  const luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+  return luminance > 145 ? "#000000" : "#FFFFFF";
+}
+
+function highlightedSentence(record) {
+  const paragraph = document.createElement("p");
+  paragraph.className = "sentence-text annotated-sentence";
+  const boundaries = new Set([0, record.sentence.length]);
+  record.entities.forEach((entity) => {
+    boundaries.add(entity.start);
+    boundaries.add(entity.end);
+  });
+  const positions = [...boundaries].sort((left, right) => left - right);
+  for (let index = 0; index < positions.length - 1; index += 1) {
+    const start = positions[index];
+    const end = positions[index + 1];
+    const text = record.sentence.slice(start, end);
+    const active = record.entities.filter(
+      (entity) => entity.start <= start && entity.end >= end,
+    );
+    if (!active.length) {
+      paragraph.appendChild(document.createTextNode(text));
+      continue;
+    }
+    const primary = active[0];
+    const highlight = textElement("mark", "annotation-highlight", text);
+    const descriptions = active.map((entity) =>
+      `${entity.label}${entity.color ? ` ${entity.color}` : ""}`
+    );
+    highlight.title = descriptions.join("; ");
+    highlight.setAttribute(
+      "aria-label",
+      `${text}, annotated as ${descriptions.join(" and ")}`,
+    );
+    highlight.tabIndex = 0;
+    if (primary.color) {
+      highlight.style.backgroundColor = primary.color;
+      highlight.style.color = contrastColor(primary.color);
+    }
+    paragraph.appendChild(highlight);
+  }
+  return paragraph;
+}
+
 async function decide(sentenceIds, status, comment = null) {
   const response = await fetch(`/api/review/${encodeURIComponent(documentId)}/decisions`, {
     method: "PUT",
@@ -203,22 +250,7 @@ function sentenceCard(item) {
   selection.append(checkbox, `Select sentence ${record.sentence_id}`);
   card.appendChild(selection);
   card.appendChild(textElement("div", "sentence-meta", `Sentence ${record.sentence_id} · Page ${record.page} · ${item.review.status}`));
-  card.appendChild(textElement("p", "sentence-text", record.sentence));
-  const entities = document.createElement("div");
-  entities.className = "entity-list";
-  for (const entity of record.entities) {
-    const wrapper = textElement("span", "entity", `${entity.text} · ${entity.label}`);
-    if (entity.color) {
-      const color = textElement("span", "entity-color", entity.color);
-      color.style.background = entity.color;
-      const rgb = entity.color.slice(1).match(/../g).map((value) => parseInt(value, 16));
-      const luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
-      color.style.color = luminance > 145 ? "#000000" : "#FFFFFF";
-      wrapper.prepend(color);
-    }
-    entities.appendChild(wrapper);
-  }
-  card.appendChild(entities);
+  card.appendChild(highlightedSentence(record));
   if (item.flags.length) {
     const flags = document.createElement("div");
     flags.className = "flag-list";

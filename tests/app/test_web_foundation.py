@@ -605,8 +605,8 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=3"' in response.text
-    assert 'href="/static/review.css?v=3"' in response.text
+    assert 'src="/static/review_document.js?v=4"' in response.text
+    assert 'href="/static/review.css?v=4"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text
@@ -640,6 +640,10 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert '"Edit sentence"' in script
     assert "correctedRecord" in script
     assert "values: [...new Set" in script
+    assert "highlightedSentence(record)" in script
+    assert 'textElement("mark", "annotation-highlight", text)' in script
+    assert '"aria-label"' in script
+    assert "entity-list" not in script
 
 
 def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path) -> None:

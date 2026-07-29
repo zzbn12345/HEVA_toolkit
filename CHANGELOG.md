@@ -48,6 +48,8 @@
   readable color hex codes, quality flags, and explicit review decisions.
 - A validated sentence-correction form for text, page, tokens, BIO tags, and controlled
   entities, with field-specific errors and before/after audit evidence.
+- Inline sentence highlights that place every extracted annotation back into its textual
+  context while retaining accessible label and hex-color details.
 
 ### Changed
 

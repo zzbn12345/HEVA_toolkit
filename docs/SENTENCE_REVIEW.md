@@ -33,6 +33,12 @@ from the selection. **To be checked** contains `pending` and `needs_correction`,
 contains `approved` and `excluded`. Quality flags never select a sentence or create a
 decision automatically.
 
+Annotations appear directly in sentence context as colored highlights derived from their
+stored character offsets. Hover over a highlight—or focus it with the keyboard—to inspect
+its controlled HEVA label and hex color. This avoids separating the extracted phrase from
+the sentence an annotator must compare with the source PDF. Overlapping spans preserve all
+sentence text and expose every applicable label in the accessible description.
+
 Submit a completely decided document:
 
 ```bash
