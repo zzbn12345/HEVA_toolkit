@@ -23,17 +23,30 @@ The command exits with status `1` if it finds a blocking error. Each issue has a
 code, severity, document ID, JSON path, plain-language explanation, and suggested action.
 Warnings remain visible but do not block approval.
 
-## Approval and release
+## Curator acceptance and release
 
 After an annotator submits a fully decided document, its registry status is `in_review`.
-A curator can approve it only if every validation layer passes:
+A curator accepts the exact checksummed candidate in the local `/curation` view. Acceptance
+is the only action that changes the status to `done`.
 
-```bash
-./venv/bin/python -m heva.workflow.package_validator . approve \
-  --document-id HEVA-EXAMPLE
+Before the first build, create `data/dataset-metadata.json`:
+
+```json
+{
+  "name": "heva-example-annotations",
+  "title": "HEVA example annotations",
+  "description": "Curator-approved heritage-value annotations.",
+  "creators": ["Research team"],
+  "contributors": ["Annotator name"],
+  "license": "CC-BY-4.0",
+  "rights": "Annotations may be shared; source documents remain restricted.",
+  "known_limitations": [
+    "This release does not claim OCR support or complete heritage coverage."
+  ]
+}
 ```
 
-Approval changes the status to `done`. Build the release representations with:
+Build the release candidate with:
 
 ```bash
 ./venv/bin/python -m heva.workflow.package_validator . release
@@ -43,6 +56,7 @@ This creates:
 
 ```text
 data/release/
+├── build-log.json
 ├── datapackage.json
 ├── heva-annotations.json
 └── heva-annotations.csv
@@ -51,7 +65,13 @@ data/release/
 Only sentences explicitly marked `approved` are exported. Excluded sentences remain in
 the canonical working package and its audit history but do not enter the release. Source
 PDFs, credentials, `review-state.json`, quality reports, and other working files are never
-copied into the release directory.
+copied into the release directory. Every included document carries its source citation,
+creator/reference or non-findability statement, document rights, annotator, curator
+acceptance, source checksum, and immutable candidate checksum. The Data Package descriptor
+records checksums and byte sizes for all release resources.
 
 The build has no timestamps or random identifiers. Documents, records, JSON keys, and CSV
 line endings have stable ordering, so unchanged approved inputs produce identical bytes.
+The output is a **FAIR candidate**, not a publication: repository deposit remains an
+explicit human decision. HEVA does not generate an example model prompt until the dataset
+and controlled vocabulary have separately been approved for release.

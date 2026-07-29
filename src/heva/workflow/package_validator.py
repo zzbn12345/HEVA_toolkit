@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Any, Iterable, Literal
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from heva.workflow.document_metadata import (
     PackageMetadata,
@@ -28,6 +28,23 @@ from heva.workflow.review_state import DocumentReview
 REPORT_VERSION = "1.0"
 RELEASE_VERSION = "1.0"
 DEFAULT_RELEASE_DIRECTORY = Path("data/release")
+DEFAULT_DATASET_METADATA_PATH = Path("data/dataset-metadata.json")
+TOOLKIT_VERSION = "0.1.0"
+
+
+class DatasetReleaseMetadata(BaseModel):
+    """Required citable identity and human release guidance for one dataset."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    title: str
+    description: str
+    creators: list[str] = Field(min_length=1)
+    contributors: list[str] = Field(default_factory=list)
+    license: str
+    rights: str
+    known_limitations: list[str] = Field(min_length=1)
 
 
 class ValidationIssue(BaseModel):
@@ -476,9 +493,18 @@ def build_release(
     *,
     output_directory: str | Path = DEFAULT_RELEASE_DIRECTORY,
 ) -> Path:
-    """Build byte-stable JSON and CSV representations from done documents only."""
+    """Build a deterministic FAIR candidate from curator-accepted packages only."""
 
     root = Path(project_root).resolve()
+    try:
+        dataset_metadata = DatasetReleaseMetadata.model_validate_json(
+            (root / DEFAULT_DATASET_METADATA_PATH).read_text(encoding="utf-8")
+        )
+    except (OSError, ValidationError) as error:
+        raise PackageValidationError(
+            "Cannot build a citable release without valid data/dataset-metadata.json: "
+            f"{error}"
+        ) from error
     registry = ProjectRegistry.model_validate_json(
         (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
     )
@@ -491,6 +517,28 @@ def build_release(
     rows: list[dict[str, Any]] = []
     documents: list[dict[str, Any]] = []
     for entry in done:
+        from heva.workflow.curation_state import (
+            CurationError,
+            load_curation_state,
+            verify_current_candidate,
+        )
+
+        try:
+            curation = load_curation_state(root, entry.document_id)
+            candidate = verify_current_candidate(root, entry.document_id)
+        except CurationError as error:
+            raise PackageValidationError(
+                f"Approved document {entry.document_id} lacks intact curator evidence: {error}"
+            ) from error
+        decision = curation.current_decision()
+        if (
+            decision is None
+            or decision.candidate_id != candidate.candidate_id
+            or decision.decision != "accepted"
+        ):
+            raise PackageValidationError(
+                f"Approved document {entry.document_id} has no curator acceptance."
+            )
         report = validate_document_package(root, entry.document_id)
         if not report.release_ready:
             codes = ", ".join(item.code for item in report.issues if item.severity == "error")
@@ -502,6 +550,11 @@ def build_release(
         )
         reviews = DocumentReview.model_validate_json(
             (root / entry.package_path / "review-state.json").read_text(encoding="utf-8")
+        )
+        package_metadata = PackageMetadata.model_validate_json(
+            (root / entry.package_path / "package-metadata.json").read_text(
+                encoding="utf-8"
+            )
         )
         included = {
             item.sentence_id for item in reviews.sentences if item.status == "approved"
@@ -516,6 +569,21 @@ def build_release(
             {
                 "document_id": entry.document_id,
                 "source_checksum_sha256": entry.checksum_sha256,
+                "candidate_checksum_sha256": candidate.candidate_id,
+                "citation": package_metadata.source.citation,
+                "source_creators": package_metadata.source.creators,
+                "source_reference": package_metadata.source.reference,
+                "source_not_findable_reason": (
+                    package_metadata.source.not_findable_reason
+                ),
+                "rights": package_metadata.rights.model_dump(mode="json"),
+                "annotator": package_metadata.annotator.model_dump(mode="json"),
+                "curator": {
+                    "actor": decision.actor,
+                    "decision": decision.decision,
+                    "evidence": decision.evidence,
+                    "decided_at": decision.decided_at.isoformat(),
+                },
                 "record_count": len(canonical),
                 "records": canonical,
             }
@@ -526,8 +594,12 @@ def build_release(
     target.mkdir(parents=True, exist_ok=True)
     payload = {
         "release_version": RELEASE_VERSION,
+        "schema_version": "1.0",
+        "toolkit_version": TOOLKIT_VERSION,
+        "dataset": dataset_metadata.model_dump(mode="json"),
         "document_count": len(documents),
         "record_count": len(rows),
+        "membership": [document["document_id"] for document in documents],
         "documents": documents,
     }
     _write_json(target / "heva-annotations.json", payload)
@@ -535,15 +607,60 @@ def build_release(
     temporary = csv_target.with_suffix(".csv.tmp")
     temporary.write_text(_csv_text(rows), encoding="utf-8", newline="")
     temporary.replace(csv_target)
+    build_log = {
+        "build_version": RELEASE_VERSION,
+        "toolkit_version": TOOLKIT_VERSION,
+        "membership": [
+            {
+                "document_id": document["document_id"],
+                "source_checksum_sha256": document["source_checksum_sha256"],
+                "candidate_checksum_sha256": document["candidate_checksum_sha256"],
+            }
+            for document in documents
+        ],
+        "excluded_working_evidence": [
+            "source documents",
+            "review-state.json",
+            "curation-state.json",
+            "credentials",
+        ],
+    }
+    _write_json(target / "build-log.json", build_log)
+    resources = []
+    for name, filename, media_type in (
+        ("heva-annotations-json", "heva-annotations.json", "application/json"),
+        ("heva-annotations-csv", "heva-annotations.csv", "text/csv"),
+        ("build-log", "build-log.json", "application/json"),
+    ):
+        resource_path = target / filename
+        resources.append(
+            {
+                "name": name,
+                "path": filename,
+                "mediatype": media_type,
+                "bytes": resource_path.stat().st_size,
+                "hash": f"sha256:{hashlib.sha256(resource_path.read_bytes()).hexdigest()}",
+            }
+        )
     _write_json(
         target / "datapackage.json",
         {
-            "name": "heva-approved-annotations",
+            "name": dataset_metadata.name,
+            "title": dataset_metadata.title,
+            "description": dataset_metadata.description,
             "profile": "data-package",
-            "resources": [
-                {"name": "heva-annotations-json", "path": "heva-annotations.json"},
-                {"name": "heva-annotations-csv", "path": "heva-annotations.csv"},
+            "licenses": [{"name": dataset_metadata.license}],
+            "contributors": [
+                *(
+                    {"title": creator, "role": "creator"}
+                    for creator in dataset_metadata.creators
+                ),
+                *(
+                    {"title": contributor, "role": "contributor"}
+                    for contributor in dataset_metadata.contributors
+                ),
             ],
+            "resources": resources,
         },
     )
     return target

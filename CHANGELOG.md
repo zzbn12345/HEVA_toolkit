@@ -61,6 +61,9 @@
 - Immutable candidate snapshots with validator evidence and checksums, plus audited local
   accept, request-changes, reject, and quarantine decisions. Only acceptance marks a
   document done.
+- Deterministic FAIR candidate releases restricted to intact curator-accepted packages,
+  with citable dataset/document metadata, rights, membership, checksums, build evidence,
+  and explicit known limitations.
 
 ### Changed
 

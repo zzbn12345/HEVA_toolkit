@@ -27,6 +27,10 @@ from heva.workflow.package_validator import (
     build_release,
     validate_document_package,
 )
+from heva.workflow.curation_state import (
+    create_candidate_snapshot,
+    record_curator_decision,
+)
 from heva.workflow.project_registry import sync_registry
 from heva.workflow.review_state import (
     initialize_sentence_reviews,
@@ -137,6 +141,23 @@ def project(tmp_path: Path) -> tuple[str, Path, Path]:
     registry["summary"]["backlog"] = 0
     registry["summary"]["in_review"] = 1
     registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    (tmp_path / "data/dataset-metadata.json").write_text(
+        json.dumps(
+            {
+                "name": "heva-harbour-annotations",
+                "title": "HEVA harbour annotations",
+                "description": "Curator-approved heritage-value annotations.",
+                "creators": ["Research team"],
+                "contributors": ["Annotator"],
+                "license": "CC-BY-4.0",
+                "rights": "Annotations may be shared; source documents remain restricted.",
+                "known_limitations": [
+                    "The candidate does not claim OCR support or complete heritage coverage."
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
     return document_id, package, registry_path
 
 
@@ -203,7 +224,14 @@ def test_invalid_package_returns_failing_cli_status(tmp_path: Path) -> None:
 
 def test_approved_release_is_deterministic_and_excludes_working_files(tmp_path: Path) -> None:
     document_id, _, registry_path = project(tmp_path)
-    approve_document(tmp_path, document_id)
+    create_candidate_snapshot(tmp_path, document_id, submitted_by="Annotator")
+    record_curator_decision(
+        tmp_path,
+        document_id,
+        decision="accepted",
+        actor="Curator",
+        evidence="Validated candidate and source comparison reviewed.",
+    )
 
     first = build_release(tmp_path)
     first_files = {path.name: path.read_bytes() for path in first.iterdir()}
@@ -212,6 +240,7 @@ def test_approved_release_is_deterministic_and_excludes_working_files(tmp_path: 
 
     assert first_files == second_files
     assert set(first_files) == {
+        "build-log.json",
         "datapackage.json",
         "heva-annotations.csv",
         "heva-annotations.json",
@@ -224,6 +253,26 @@ def test_approved_release_is_deterministic_and_excludes_working_files(tmp_path: 
     assert rows[0]["sentence_id"] == "1"
     registry = json.loads(registry_path.read_text())
     assert registry["documents"][0]["status"] == "done"
+    payload = json.loads(first_files["heva-annotations.json"])
+    assert payload["membership"] == [document_id]
+    assert payload["documents"][0]["citation"]
+    assert payload["documents"][0]["rights"]["source_distribution_allowed"] is False
+    descriptor = json.loads(first_files["datapackage.json"])
+    assert all(resource["hash"].startswith("sha256:") for resource in descriptor["resources"])
+
+
+def test_done_registry_flag_without_curator_acceptance_cannot_be_released(
+    tmp_path: Path,
+) -> None:
+    document_id, _, registry_path = project(tmp_path)
+    registry = json.loads(registry_path.read_text())
+    registry["documents"][0]["status"] = "done"
+    registry["summary"]["in_review"] = 0
+    registry["summary"]["done"] = 1
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    with pytest.raises(PackageValidationError, match="curator evidence"):
+        build_release(tmp_path)
 
 
 def test_release_rejects_documents_not_approved(tmp_path: Path) -> None:
