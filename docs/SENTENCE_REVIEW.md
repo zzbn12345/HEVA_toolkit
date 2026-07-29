@@ -55,10 +55,10 @@ sentence evidence read-only.
 ## Editing annotations
 
 Choose **Edit sentence** on a sentence card to correct the page and every extracted
-annotation through structured fields. Each extraction appears as its own text box with a
-controlled HEVA label and color, including sentences with more than two extractions. This
-is intentionally not a raw JSON editor and does not expose offsets, tokens, BIO tags, or
-other implementation details.
+annotation through structured fields. Each extraction appears as its own editable text
+box with its read-only controlled HEVA label and color, including sentences with more than
+two extractions. Extracted text is the only editable value: page, label, color, offsets,
+tokens, BIO tags, and other implementation details cannot be changed in this dialog.
 
 The edited extraction text must occur exactly in the displayed sentence. HEVA derives
 character offsets, categorical `values`, and BIO tags from the visible fields before

@@ -6,10 +6,6 @@ const editor = document.getElementById("sentence-editor");
 const editorForm = document.getElementById("sentence-editor-form");
 const editorError = document.getElementById("sentence-editor-error");
 const entityRows = document.getElementById("edit-entities");
-const hevaLabels = [
-  "social", "economic", "political", "historic", "aesthetical",
-  "scientific", "age", "ecological",
-];
 const gateLabels = {
   citation: "Citation",
   color_configuration: "Colors",
@@ -151,6 +147,8 @@ function entityRow(entity = {}) {
   const row = document.createElement("div");
   row.className = "entity-row";
   row.dataset.originalStart = entity.start ?? "-1";
+  row.dataset.label = entity.label ?? "";
+  row.dataset.color = entity.color ?? "";
   const textWrapper = textElement("label", "", "Extracted text");
   const extractedText = document.createElement("textarea");
   extractedText.rows = 2;
@@ -160,28 +158,24 @@ function entityRow(entity = {}) {
   textWrapper.appendChild(extractedText);
   row.appendChild(textWrapper);
   const labelWrapper = textElement("label", "", "HEVA label");
-  const labelSelect = document.createElement("select");
-  labelSelect.dataset.entityField = "label";
-  labelSelect.required = true;
-  hevaLabels.forEach((value) => {
-    const option = new Option(value, value, false, value === entity.label);
-    labelSelect.appendChild(option);
-  });
-  labelWrapper.appendChild(labelSelect);
+  const labelValue = textElement(
+    "span",
+    "extraction-evidence",
+    entity.label || "No label",
+  );
+  labelWrapper.appendChild(labelValue);
   row.appendChild(labelWrapper);
   const colorWrapper = textElement("label", "", "Color");
-  const color = document.createElement("input");
-  color.type = "text";
-  color.pattern = "#[0-9A-Fa-f]{6}";
-  color.placeholder = "#RRGGBB";
-  color.dataset.entityField = "color";
-  color.value = entity.color ?? "";
-  colorWrapper.appendChild(color);
+  const colorValue = textElement(
+    "span",
+    "extraction-evidence extraction-color",
+    entity.color || "No color",
+  );
+  if (entity.color) {
+    colorValue.style.setProperty("--evidence-color", entity.color);
+  }
+  colorWrapper.appendChild(colorValue);
   row.appendChild(colorWrapper);
-  const remove = textElement("button", "button secondary", "Remove");
-  remove.type = "button";
-  remove.addEventListener("click", () => row.remove());
-  row.appendChild(remove);
   return row;
 }
 
@@ -259,9 +253,9 @@ function correctedRecord() {
       text,
       start,
       end: start + text.length,
-      label: value("label"),
+      label: row.dataset.label,
     };
-    const color = value("color").trim();
+    const color = row.dataset.color.trim();
     if (color) entity.color = color.toUpperCase();
     return entity;
   });
@@ -462,9 +456,6 @@ document.getElementById("submit-document-review").addEventListener(
   "click",
   submitDocumentReview,
 );
-document.getElementById("add-entity").addEventListener("click", () => {
-  entityRows.appendChild(entityRow());
-});
 document.getElementById("close-sentence-editor").addEventListener("click", closeEditor);
 document.getElementById("cancel-sentence-editor").addEventListener("click", closeEditor);
 editorForm.addEventListener("submit", (event) => {

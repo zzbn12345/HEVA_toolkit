@@ -206,10 +206,10 @@ Each sentence card shows sentence text, page, controlled labels, raw colors and 
 quality flags, decision state, and available actions. Decisions and edits record the actor,
 time, and change history.
 
-The correction form exposes only page and one editable row per extraction: extracted
-text, controlled label, and color. It displays every row when a sentence contains several
-annotations. Technical offsets and BIO tags remain hidden and are derived and validated
-before persistence.
+The correction form displays page and one row per extraction. Extracted text is the only
+editable field; page, controlled label, and color remain visible as read-only evidence.
+It displays every row when a sentence contains several annotations. Technical offsets and
+BIO tags remain hidden and are derived and validated before persistence.
 
 ## 7. Batch checking and quality flags
 

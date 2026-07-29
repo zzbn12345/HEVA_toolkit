@@ -54,6 +54,8 @@
   annotation review, moves the record to `in_review`, and locks submitted evidence.
 - Direct Citation, Color configuration, and Annotator profile access from document review,
   plus a simplified repeatable extraction editor that derives hidden offsets and BIO tags.
+- Restricted sentence correction to extracted text while retaining page, label, and color
+  as visible read-only evidence from the document configuration.
 
 ### Changed
 

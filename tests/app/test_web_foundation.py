@@ -605,8 +605,8 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=6"' in response.text
-    assert 'href="/static/review.css?v=6"' in response.text
+    assert 'src="/static/review_document.js?v=7"' in response.text
+    assert 'href="/static/review.css?v=7"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text
@@ -618,6 +618,8 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     assert 'id="edit-entities"' in response.text
     assert 'id="edit-tokens"' not in response.text
     assert 'id="edit-ner-tags"' not in response.text
+    assert 'id="add-entity"' not in response.text
+    assert 'id="edit-page" type="number" readonly' in response.text
     assert 'id="review-citation-link"' in response.text
     assert 'id="review-colors-link"' in response.text
     assert 'href="/annotator"' in response.text
@@ -649,6 +651,11 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert "locateExtraction" in script
     assert "deriveBioTags" in script
     assert "row.dataset.originalStart" in script
+    assert "row.dataset.label" in script
+    assert "row.dataset.color" in script
+    assert 'label: row.dataset.label' in script
+    assert '"Remove"' not in script
+    assert "new Option" not in script
     assert "&section=citation" in script
     assert "&section=colors" in script
     assert "highlightedSentence(record)" in script

@@ -140,10 +140,24 @@
 .entity-editor { padding: 1rem; border: 1px solid var(--border); border-radius: 10px; }
 .entity-row {
   display: grid;
-  grid-template-columns: minmax(220px, 3fr) minmax(130px, 1fr) 130px auto;
+  grid-template-columns: minmax(240px, 3fr) minmax(130px, 1fr) 130px;
   align-items: end;
   gap: .55rem;
   margin-bottom: .75rem;
+}
+.extraction-evidence {
+  min-height: 2.8rem;
+  display: flex;
+  align-items: center;
+  padding: .65rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--field);
+  font-weight: 750;
+}
+.extraction-color {
+  font-family: ui-monospace, monospace;
+  border-left: .65rem solid var(--evidence-color, transparent);
 }
 .field-help, .muted { color: var(--muted); font-size: .85rem; }
 .editor-actions { justify-content: flex-end; }

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Review document · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/review.css?v=6">
-  <script src="/static/review_document.js?v=6" defer></script>
+  <link rel="stylesheet" href="/static/review.css?v=7">
+  <script src="/static/review_document.js?v=7" defer></script>
 </head>
 <body data-document-id="DOCUMENT_ID_PLACEHOLDER" class="review-body">
   <div id="review-app" class="review-app">
@@ -79,21 +79,20 @@
         </div>
         <button id="close-sentence-editor" class="button secondary" type="button">Close</button>
       </div>
-      <p class="muted">Edit every extracted phrase below. Each phrase must occur exactly in the sentence; HEVA derives the technical offsets and tags before saving.</p>
+      <p class="muted">Correct extracted text only. Page, label, and color are displayed as read-only evidence. Each corrected phrase must occur exactly in the sentence.</p>
       <div id="sentence-editor-error" class="notice error" aria-live="assertive" hidden></div>
       <div class="editor-grid">
         <label>Sentence ID
           <input id="edit-sentence-id" type="number" readonly>
         </label>
         <label>Page <span aria-hidden="true">*</span>
-          <input id="edit-page" type="number" min="1" required>
+          <input id="edit-page" type="number" readonly>
         </label>
       </div>
       <fieldset class="entity-editor">
         <legend>Extracted annotations</legend>
-        <p class="field-help">Every extraction is shown, including sentences containing more than two. Correct the phrase, label, or color as needed.</p>
+        <p class="field-help">Every extraction is shown, including sentences containing more than two. Labels and colors come from the confirmed document configuration.</p>
         <div id="edit-entities"></div>
-        <button id="add-entity" class="button secondary" type="button">Add extraction</button>
       </fieldset>
       <div class="editor-actions">
         <button class="button secondary" id="cancel-sentence-editor" type="button">Cancel</button>
