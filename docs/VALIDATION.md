@@ -62,6 +62,38 @@ Project-check exit codes follow test-runner conventions:
 Warnings remain visible but do not fail a document. A document may pass the specification
 while still being **Not completed** because only curator acceptance completes the workflow.
 
+## Edit CSV, compile packages, then validate
+
+The release-shaped CSV columns are also a command-line interoperability format:
+
+```text
+document_id,sentence_id,page,sentence,values,tokens,entities,ner_tags,schema_version
+```
+
+The four list/object fields (`values`, `tokens`, `entities`, and `ner_tags`) contain JSON
+inside their CSV cells. After editing, compile the rows back into their registered
+document-local packages:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m heva.workflow.package_compiler . \
+  --csv /path/to/edited-annotations.csv
+```
+
+Compilation is deliberately separate from validation because it changes working data. It:
+
+- parses and validates every row before writing;
+- groups rows by stable `document_id`;
+- refuses unknown, submitted, approved, changed-source, or unconfigured documents;
+- writes canonical `annotations.json` per document;
+- preserves decisions only for byte-equivalent sentence records;
+- returns changed sentences to pending human review;
+- records `HEVA CSV compiler` as manual process provenance; and
+- moves compiled documents to `in_progress`.
+
+If any row is structurally or semantically invalid, compilation reports its CSV row and
+HEVA issue and preserves existing annotations. After a successful compile, run the
+read-only project validation command above.
+
 ## A simple example
 
 Pydantic checks basic questions such as:

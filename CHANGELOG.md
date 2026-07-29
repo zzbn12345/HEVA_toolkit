@@ -70,6 +70,9 @@
 - A test-runner-style project validation report in both the app and command line, showing
   per-document pass/fail, independent completion state, issue locations, corrective
   actions, filters, summaries, stable JSON, and meaningful exit codes.
+- A safe CSV-to-package compiler for non-GUI editing workflows that validates all rows,
+  groups by stable document ID, refuses locked packages, refreshes changed sentence review,
+  and preserves existing annotations when compilation fails.
 
 ### Changed
 
