@@ -153,6 +153,11 @@ function colorDecisions() {
   });
 }
 
+/**
+ * Render persisted color decisions and preselect supervised automatic suggestions.
+ * Model reasoning remains provenance data and is not presented as a fixed specification.
+ * @param {object} result
+ */
 function renderColorConfiguration(result) {
   const configuration = result.configuration;
   const list = document.getElementById("color-list");
@@ -187,6 +192,13 @@ function renderColorConfiguration(result) {
     select.append(ignore);
     if (color.status === "approved") select.value = color.label;
     if (color.status === "ignored") select.value = "__ignore__";
+    if (
+      color.status === "pending_review"
+      && color.suggested_label
+      && result.labels.includes(color.suggested_label)
+    ) {
+      select.value = color.suggested_label;
+    }
 
     const reason = document.createElement("textarea");
     reason.className = "ignore-reason";
@@ -199,13 +211,15 @@ function renderColorConfiguration(result) {
       document.getElementById("mapping-confirmed").checked = false;
     });
 
-    const evidence = document.createElement("p");
-    evidence.className = "color-evidence";
-    evidence.textContent = color.suggested_label
-      ? `Automatic suggestion: ${color.suggested_label}. ${color.reasoning || "No explanation was recorded."}`
-      : "No automatic label suggestion is available.";
     label.append(select);
-    fields.append(label, reason, evidence);
+    fields.append(label, reason);
+    if (color.method === "document_legend" && color.suggested_label) {
+      const specification = document.createElement("p");
+      specification.className = "color-evidence";
+      specification.textContent =
+        `Document legend mapping: ${color.hex} → ${color.suggested_label}.`;
+      fields.append(specification);
+    }
     record.append(swatch, fields);
     return record;
   }));

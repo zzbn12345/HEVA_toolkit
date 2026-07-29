@@ -170,7 +170,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=8"' in response.text
+    assert 'src="/static/create.js?v=9"' in response.text
     assert 'href="/static/create.css?v=4"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -293,6 +293,18 @@ def test_extraction_interface_has_progress_timeout_and_visible_errors() -> None:
     assert "/extraction" in script
     assert "?force=true" in script
     assert "must be rebuilt" in script
+
+
+def test_color_form_prefills_suggestions_without_presenting_model_reasoning() -> None:
+    script = (
+        Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "create.js"
+    ).read_text(encoding="utf-8")
+
+    assert "select.value = color.suggested_label" in script
+    assert 'color.method === "document_legend"' in script
+    assert "Document legend mapping:" in script
+    assert "color.reasoning" not in script
+    assert "No explanation was recorded" not in script
 
 
 def test_extraction_endpoint_passes_deliberate_force_rebuild(

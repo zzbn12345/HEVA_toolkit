@@ -76,6 +76,9 @@
 
 ### Changed
 
+- Automatic color suggestions now preselect their controlled-label fields while
+  model-generated reasoning remains package provenance instead of appearing as a fixed
+  color specification; only explicit document-legend mappings show source text.
 - Consolidated the toolkit under one `heva` namespace, with `app`, `extraction`, and
   `workflow` subpackages in a standard `src` layout.
 - Replaced separate requirements files with base, app, extraction, and development

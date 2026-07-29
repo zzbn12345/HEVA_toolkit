@@ -49,7 +49,7 @@ Each proposal contains:
 
 - normalized `#RRGGBB` hex;
 - a readable color name;
-- black or white contrasting text color for a future interface;
+- black or white contrasting text color for readable interface swatches;
 - suggested and approved HEVA labels;
 - proposal method and optional confidence;
 - `pending_review`, `approved`, or `ignored` status;
@@ -213,6 +213,16 @@ The application:
 3. rejects missing colors, malformed JSON, and labels outside the controlled HEVA set;
 4. saves valid results as `pending_review` evidence in `package-metadata.json`;
 5. still requires the annotator to approve a label or document an ignore decision.
+
+The Color Review form preselects each valid `suggested_label`, so the annotator can inspect
+and confirm the proposed mapping without selecting every label again. This preselection is
+not approval: the mapping remains pending until the person confirms it.
+
+Ollama `reasoning` is retained in package metadata as provenance, but the form does not
+display it as a color definition because it is inferred from document context rather than
+an authoritative HEVA convention. Explanatory mapping text is shown only when the proposal
+method is `document_legend`, meaning that the mapping came from an explicit legend supplied
+for that document.
 
 Ollama defaults to `http://127.0.0.1:11434` using `llama3.1:8b`. The interface reports a
 clear error if the service is unavailable or the model is not installed. Automatic
