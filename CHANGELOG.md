@@ -64,6 +64,9 @@
 - Deterministic FAIR candidate releases restricted to intact curator-accepted packages,
   with citable dataset/document metadata, rights, membership, checksums, build evidence,
   and explicit known limitations.
+- A curator-approved evaluation manifest and reproducible scorer that separates
+  record/span precision and recall, label accuracy, human correction/abstention measures,
+  elapsed time, and peak memory while failing incomplete corpus coverage.
 
 ### Changed
 
