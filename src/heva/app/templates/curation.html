@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Curator review · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/curation.css?v=1">
+  <script src="/static/curation.js?v=1" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="home-link" href="/">← HEVA home</a>
+    <span>Curator review</span>
+  </header>
+  <main class="page-content curator-page">
+    <p class="eyebrow">Local curator queue</p>
+    <h1>Inspect submitted evidence.</h1>
+    <p class="lead">
+      This view is read-only. It combines project workflow state with the complete HEVA
+      package validator and remains available without GitHub configuration.
+    </p>
+    <div id="curation-status" class="notice neutral" aria-live="polite">
+      Loading project and validation evidence…
+    </div>
+    <div class="curation-filters" role="group" aria-label="Filter curator documents">
+      <button class="button secondary active" type="button" data-curation-filter="in_review">Awaiting review</button>
+      <button class="button secondary" type="button" data-curation-filter="attention">Needs attention</button>
+      <button class="button secondary" type="button" data-curation-filter="valid">Valid</button>
+      <button class="button secondary" type="button" data-curation-filter="all">All documents</button>
+    </div>
+    <section id="curation-queue" class="curation-queue" aria-label="Curator document queue"></section>
+  </main>
+</body>
+</html>

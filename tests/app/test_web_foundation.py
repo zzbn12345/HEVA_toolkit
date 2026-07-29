@@ -31,10 +31,47 @@ def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -
     assert "Create from source folder" in response.text
     assert "Add or prepare documents" in response.text
     assert "Validate this project" in response.text
+    assert "Curator review queue" in response.text
     assert 'href="/static/app.css"' in response.text
     assert 'src="/static/home.js?v=3"' in response.text
     assert "<style>" not in response.text
     assert 'href="/"' in response.text
+
+
+def test_curator_page_is_read_only_and_exposes_validation_filters(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get("/curation")
+
+    assert response.status_code == 200
+    assert "Local curator queue" in response.text
+    assert 'src="/static/curation.js?v=1"' in response.text
+    assert 'href="/static/curation.css?v=1"' in response.text
+    assert 'data-curation-filter="in_review"' in response.text
+    assert 'data-curation-filter="attention"' in response.text
+    assert 'data-curation-filter="valid"' in response.text
+    assert "Accept" not in response.text
+    assert "Reject" not in response.text
+
+
+def test_curator_asset_combines_registry_and_validator_without_deciding() -> None:
+    script = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "curation.js"
+    ).read_text(encoding="utf-8")
+
+    assert 'fetch("/api/project")' in script
+    assert 'fetch("/api/validate", {method: "POST"})' in script
+    assert 'item.status === "in_review"' in script
+    assert '"Open annotation evidence"' in script
+    assert "issue.action" in script
+    assert "approve" not in script.lower()
 
 
 def test_app_starts_without_exposing_repository_documents() -> None:

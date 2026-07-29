@@ -56,6 +56,8 @@
   plus a simplified repeatable extraction editor that derives hidden offsets and BIO tags.
 - Restricted sentence correction to extracted text while retaining page, label, and color
   as visible read-only evidence from the document configuration.
+- A read-only local curator queue combining registry workflow state with complete package
+  validation findings and direct access to submitted annotation evidence.
 
 ### Changed
 

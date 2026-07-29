@@ -100,6 +100,10 @@ def create_project_router(
     def validation_page() -> str:
         return template("validate.html")
 
+    @router.get("/curation", response_class=HTMLResponse)
+    def curation_page() -> str:
+        return template("curation.html")
+
     @router.get("/create", response_class=HTMLResponse)
     def creation_page() -> str:
         return template("create.html")
