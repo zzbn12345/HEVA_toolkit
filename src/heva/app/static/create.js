@@ -218,6 +218,8 @@ function renderColorConfiguration(result) {
     : `${configuration.colors.length} observed color${configuration.colors.length === 1 ? "" : "s"} require explicit human decisions. Suggestions are not approvals.`;
   document.getElementById("mapping-confirmed").disabled = !configuration.colors.length;
   document.getElementById("mapping-confirmed").checked = confirmed;
+  document.getElementById("propose-colors").disabled =
+    !result.automatic_proposal_available;
   document.getElementById("confirm-colors").disabled = !configuration.colors.length;
   document.getElementById("extract-annotations").disabled = !confirmed;
 }
@@ -236,6 +238,47 @@ async function loadColors(documentId) {
   } catch (error) {
     status.className = "notice error";
     status.textContent = "The color configuration could not be loaded.";
+  }
+}
+
+async function proposeColors() {
+  const documentId = document.getElementById("selected-document-id").value;
+  const button = document.getElementById("propose-colors");
+  const progress = document.getElementById("proposal-progress");
+  const status = document.getElementById("color-status");
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 75000);
+  let proposalsCreated = false;
+  button.disabled = true;
+  button.textContent = "Requesting…";
+  progress.hidden = false;
+  status.className = "notice neutral";
+  status.textContent = "Automatic suggestions are being generated locally. They will still require your review.";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/colors/propose`,
+      {method: "POST", signal: controller.signal},
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      status.className = "notice error";
+      status.textContent = `${result.message || "Suggestions were not created."} ${result.action || ""}`;
+      return;
+    }
+    await loadColors(documentId);
+    proposalsCreated = true;
+    status.className = "notice warning";
+    status.textContent = `${result.proposed_color_count} automatic proposal${result.proposed_color_count === 1 ? "" : "s"} generated. Review every suggestion before confirming.`;
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = error.name === "AbortError"
+      ? "Automatic proposals did not finish in time. Check that local Ollama is running and try again."
+      : "Automatic proposals could not be requested from the local service.";
+  } finally {
+    window.clearTimeout(timeout);
+    progress.hidden = true;
+    button.textContent = "Request automatic proposals";
+    if (!proposalsCreated) button.disabled = false;
   }
 }
 
@@ -357,6 +400,7 @@ document.getElementById("confirm-citation").addEventListener(
   "click",
   () => persistCitation(true),
 );
+document.getElementById("propose-colors").addEventListener("click", proposeColors);
 document.getElementById("confirm-colors").addEventListener("click", confirmColors);
 document.getElementById("extract-annotations").addEventListener(
   "click",

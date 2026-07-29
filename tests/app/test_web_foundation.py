@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+import pytest
 
 from heva.app.main import create_app
 from heva.workflow.color_mapping import (
@@ -127,7 +128,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=4"' in response.text
+    assert 'src="/static/create.js?v=5"' in response.text
     assert 'href="/static/create.css?v=3"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -137,6 +138,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert "<script>" not in response.text
     assert 'id="confirm-citation"' in response.text
     assert 'id="extraction-progress"' in response.text
+    assert 'id="proposal-progress"' in response.text
+    assert 'id="propose-colors"' in response.text
     assert "#FFFF00" not in response.text
     assert "Label not decided" not in response.text
 
@@ -165,6 +168,36 @@ def test_color_review_api_loads_the_document_palette(tmp_path: Path) -> None:
     assert result["configuration"]["colors"][0]["hex"] == "#CCCC00"
     assert result["configuration"]["colors"][0]["suggested_label"] == "political"
     assert "political" in result["labels"]
+    assert result["automatic_proposal_available"] is False
+
+
+def test_automatic_color_proposal_route_reports_generated_evidence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    save_color_configuration(
+        tmp_path,
+        document_id,
+        propose_color_configuration(["#CCCC00"]),
+    )
+    monkeypatch.setattr(
+        "heva.app.routes.project.generate_automatic_color_proposals",
+        lambda root, selected_id: 1,
+    )
+    client = TestClient(create_app(tmp_path))
+
+    available = client.get(f"/api/documents/{document_id}/colors")
+    proposed = client.post(f"/api/documents/{document_id}/colors/propose")
+
+    assert available.json()["automatic_proposal_available"] is True
+    assert proposed.status_code == 200
+    assert proposed.json()["proposed_color_count"] == 1
 
 
 def test_extraction_interface_has_progress_timeout_and_visible_errors() -> None:
@@ -177,6 +210,8 @@ def test_extraction_interface_has_progress_timeout_and_visible_errors() -> None:
     assert "progress.hidden = true" in script
     assert "Extraction did not finish within two minutes" in script
     assert "result.message" in script
+    assert "/colors/propose" in script
+    assert "Automatic proposals did not finish in time" in script
 
 
 def test_annotator_is_persisted_in_project_collection(tmp_path: Path) -> None:

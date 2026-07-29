@@ -196,10 +196,21 @@ report = validate_shared_batch_mapping(
 A shared mapping is allowed only when the palettes match and every document has its own
 human confirmation. A palette mismatch means the documents must use independent mappings.
 
-## Current limit
+## Web application proposal request
 
-The older `src/heva/extraction/auto_color_mapper.py` prototype still writes a sidecar map and immediately
-extracts using its Ollama result. It does not call the package writer yet and should not
-be treated as a curator-ready HEVA workflow. A later initializer or web workflow can
-compose automatic classification with `write_automatic_color_proposals` without changing
-the classifier itself.
+The document Color Review step can request suggestions for unresolved observed colors.
+The application:
+
+1. extracts raw highlighted text without applying a semantic map;
+2. sends only unresolved color groups to local Ollama;
+3. rejects missing colors, malformed JSON, and labels outside the controlled HEVA set;
+4. saves valid results as `pending_review` evidence in `package-metadata.json`;
+5. still requires the annotator to approve a label or document an ignore decision.
+
+Ollama defaults to `http://127.0.0.1:11434` using `llama3.1:8b`. The interface reports a
+clear error if the service is unavailable or the model is not installed. Automatic
+proposal generation requires both the app and extraction dependency groups.
+
+The older `src/heva/extraction/auto_color_mapper.py` command remains a legacy standalone
+prototype that writes a sidecar map and immediately extracts using its result. It should
+not be treated as the curator-ready web workflow.

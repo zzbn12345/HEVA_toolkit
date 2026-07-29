@@ -19,6 +19,10 @@
 - A document-local color review form that displays the colors actually stored in the
   package, distinguishes automatic suggestions from decisions, and requires an explicit
   controlled label or documented ignore reason for every color.
+- A supervised **Request automatic proposals** action that extracts unresolved color
+  evidence, asks local Ollama for controlled-label suggestions, persists them as pending
+  evidence, and reports connection, timeout, or specification errors without changing
+  confirmed decisions.
 - A responsive extraction action with visible progress, a two-minute browser timeout,
   persisted-checkpoint feedback, and actionable extraction errors.
 - A document review queue that summarizes batch-prepared documents while opening only one

@@ -6,7 +6,7 @@
   <title>Create package · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/create.css?v=3">
-  <script src="/static/create.js?v=4" defer></script>
+  <script src="/static/create.js?v=5" defer></script>
 </head>
 <body class="create-body">
   <div id="create-app" class="create-app">
@@ -100,6 +100,10 @@
           Select a registered document to load its observed colors.
         </div>
         <div id="color-list" class="color-list"></div>
+        <div id="proposal-progress" class="extraction-progress" hidden>
+          <progress aria-label="Requesting automatic color proposals"></progress>
+          <span>Extracting color evidence and asking local Ollama…</span>
+        </div>
         <label class="confirmation" id="color-confirmation">
           <input id="mapping-confirmed" type="checkbox" disabled>
           <span>I reviewed every observed color and made an explicit label or ignore decision.</span>
@@ -113,6 +117,7 @@
         </div>
         <div class="form-actions">
           <button class="button secondary" type="button" data-back="3">Back</button>
+          <button id="propose-colors" class="button secondary" type="button" disabled>Request automatic proposals</button>
           <button id="confirm-colors" class="button secondary" type="button" disabled>Confirm color configuration</button>
           <button id="extract-annotations" class="button" type="button" disabled>Extract annotations</button>
         </div>

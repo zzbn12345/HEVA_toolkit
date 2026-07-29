@@ -143,6 +143,13 @@ automatic suggestion, when one exists, as evidence. The annotator must select a 
 HEVA label or explicitly ignore the color with a reason. Only a confirmed configuration
 enables extraction.
 
+When an observed color has no suggestion, **Request automatic proposals** extracts raw
+highlight evidence and sends only those unresolved color groups to the configured local
+Ollama model. The action shows progress and provides corrective errors when extraction,
+Ollama, or its response fails. Returned labels must belong to the controlled HEVA
+specification and remain `pending_review`; the operation cannot replace a confirmed
+configuration or count as human approval.
+
 While extraction runs, the workspace displays progress and prevents a second request.
 Completion reports the number of persisted sentence records and whether an existing
 checkpoint was reused. Failures and a two-minute browser timeout produce a visible

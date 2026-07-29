@@ -17,6 +17,10 @@ from heva.workflow.annotator_registry import (
     remove_annotator,
     update_annotator,
 )
+from heva.workflow.automatic_color_proposal import (
+    AutomaticColorProposalError,
+    generate_automatic_color_proposals,
+)
 from heva.workflow.document_metadata import AnnotatorMetadata
 from heva.workflow.color_mapping import (
     ColorMappingError,
@@ -311,6 +315,33 @@ def create_project_router(
             "document_id": document_id,
             "labels": sorted(HEVA_LABELS),
             "configuration": configuration.model_dump(mode="json"),
+            "automatic_proposal_available": (
+                not configuration.human_confirmed
+                and any(
+                    color.status == "pending_review"
+                    and color.suggested_label is None
+                    for color in configuration.colors
+                )
+            ),
+        }
+
+    @router.post("/api/documents/{document_id}/colors/propose")
+    def propose_colors(document_id: str):
+        try:
+            proposed = generate_automatic_color_proposals(root, document_id)
+        except AutomaticColorProposalError as error:
+            return JSONResponse(
+                {
+                    "code": "automatic_color_proposal_failed",
+                    "message": "Automatic color proposals were not created.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+        return {
+            "document_id": document_id,
+            "proposed_color_count": proposed,
+            "message": "Automatic suggestions are ready for human review.",
         }
 
     @router.post("/api/documents/{document_id}/colors/confirm")
