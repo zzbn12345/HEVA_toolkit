@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/home.js" defer></script>
+  <script src="/static/home.js?v=3" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -20,15 +20,49 @@
         <span class="workflow-step"><b>3</b>Review annotations</span>
         <span class="workflow-step"><b>4</b>Submit for curation</span>
       </nav>
-      <div id="project-state" class="project-state" aria-live="polite">Loading project…</div>
+      <div id="project-state" class="project-state" aria-live="polite">Checking for an open project…</div>
     </aside>
     <main class="main-content">
       <section class="hero">
         <p class="eyebrow">Welcome to HEVA</p>
-        <h1>Create trustworthy heritage-value annotations.</h1>
-        <p class="lead">Prepare, inspect, and validate annotated documents without needing Git or command-line knowledge.</p>
+        <h1 id="home-title">Open your heritage annotation project.</h1>
+        <p id="home-lead" class="lead">Like opening a working file in a desktop application, HEVA shows documents only after you choose the project they belong to.</p>
       </section>
-      <section class="choice-grid" aria-label="Choose a HEVA task">
+      <section id="project-chooser" class="project-chooser" aria-labelledby="chooser-title">
+        <h2 id="chooser-title">Choose a project</h2>
+        <p class="section-help">Enter a local folder path. HEVA does not upload or move your source documents.</p>
+        <div id="project-message" class="notice neutral" aria-live="polite">
+          Open a HEVA project, or create one from a folder containing PDF or DOCX files.
+        </div>
+        <div class="project-choice-grid">
+          <form id="open-project-form" class="project-choice">
+            <span class="choice-icon" aria-hidden="true">↗</span>
+            <h3>Open existing project</h3>
+            <p>Load a folder that already contains <code>data/project-registry.json</code>.</p>
+            <label for="open-project-path">HEVA project folder</label>
+            <input id="open-project-path" name="path" required placeholder="/Users/name/Projects/my-heva-project">
+            <button class="button" type="submit">Open project</button>
+          </form>
+          <form id="create-project-form" class="project-choice">
+            <span class="choice-icon" aria-hidden="true">＋</span>
+            <h3>Create from source folder</h3>
+            <p>Initialize a HEVA project around the PDFs and DOCX files already in this folder.</p>
+            <label for="create-project-path">Source folder</label>
+            <input id="create-project-path" name="path" required placeholder="/Users/name/Documents/annotated-sources">
+            <button class="button" type="submit">Create project</button>
+          </form>
+        </div>
+      </section>
+      <section id="active-project" hidden>
+        <div class="active-project-header">
+          <div>
+            <p class="eyebrow">Active HEVA project</p>
+            <h2 id="active-project-name"></h2>
+            <p id="active-project-path" class="project-path"></p>
+          </div>
+          <button id="close-project" class="button secondary" type="button">Close project</button>
+        </div>
+        <section class="choice-grid" aria-label="Choose a HEVA task">
         <a class="choice" href="/annotator">
           <span class="choice-icon" aria-hidden="true">●</span>
           <h2>Annotator profile</h2>
@@ -36,8 +70,8 @@
         </a>
         <a class="choice primary" href="/create">
           <span class="choice-icon" aria-hidden="true">＋</span>
-          <h2>Create a data package</h2>
-          <p>Register source documents, identify the annotator, and prepare extraction.</p>
+          <h2>Add or prepare documents</h2>
+          <p>Register source documents and prepare their document packages.</p>
         </a>
         <a class="choice" href="/validate">
           <span class="choice-icon" aria-hidden="true">✓</span>
@@ -49,10 +83,11 @@
           <h2>Review documents</h2>
           <p>Open one extracted document at a time with its PDF, flags, and decisions.</p>
         </a>
-      </section>
-      <section id="summary" class="summary-card" hidden>
-        <h2>Current project</h2>
-        <div id="summary-counts" class="summary-counts"></div>
+        </section>
+        <section id="summary" class="summary-card">
+          <h2>Project overview</h2>
+          <div id="summary-counts" class="summary-counts"></div>
+        </section>
       </section>
     </main>
   </div>

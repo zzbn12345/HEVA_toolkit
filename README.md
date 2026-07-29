@@ -110,10 +110,12 @@ The optional web dependencies are installed only when the interface is needed:
 
 ```bash
 ./venv/bin/python -m pip install -e ".[app]"
-./venv/bin/python -m heva.app --project-root .
+./venv/bin/python -m heva.app
 ```
 
-Then open `http://127.0.0.1:8000`.
+Then open `http://127.0.0.1:8000` and open an existing HEVA project or create one from a
+folder containing PDF/DOCX sources. To bypass the chooser for scripting or development,
+pass `--project-root /path/to/project`.
 
 ## Setup
 

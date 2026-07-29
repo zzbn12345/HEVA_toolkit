@@ -39,11 +39,18 @@ from heva.workflow.extraction_session import (
     ExtractionSessionError,
     run_registered_extraction,
 )
-from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
+from heva.workflow.project_registry import (
+    DEFAULT_REGISTRY_PATH,
+    SUPPORTED_SUFFIXES,
+    ProjectRegistry,
+    RegistryError,
+    sync_registry,
+)
 from heva.workflow.review_queue import (
     ReviewQueueError,
     registered_source_path,
 )
+from heva.app.project_context import ProjectContext
 
 
 class ColorDecisionInput(BaseModel):
@@ -60,8 +67,14 @@ class ColorReviewInput(BaseModel):
     decisions: list[ColorDecisionInput]
 
 
+class ProjectFolderInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    path: str
+
+
 def create_project_router(
-    root: Path,
+    root: ProjectContext,
     template: Callable[[str], str],
 ) -> APIRouter:
     router = APIRouter()
@@ -86,8 +99,86 @@ def create_project_router(
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    def validated_folder(value: str) -> Path:
+        candidate = Path(value).expanduser().resolve()
+        if not candidate.exists() or not candidate.is_dir():
+            raise HTTPException(
+                status_code=422,
+                detail="Choose an existing local folder.",
+            )
+        return candidate
+
+    @router.post("/api/projects/open")
+    def open_project(payload: ProjectFolderInput):
+        candidate = validated_folder(payload.path)
+        registry_path = candidate / DEFAULT_REGISTRY_PATH
+        try:
+            registry = ProjectRegistry.model_validate_json(
+                registry_path.read_text(encoding="utf-8")
+            )
+        except FileNotFoundError as error:
+            raise HTTPException(
+                status_code=422,
+                detail="This folder is not a HEVA project. Create it from source data first.",
+            ) from error
+        except (OSError, ValidationError) as error:
+            raise HTTPException(
+                status_code=422,
+                detail=f"The HEVA project registry is invalid: {error}",
+            ) from error
+        selected = root.select(candidate)
+        return {
+            "project_root": str(selected),
+            "source_directory": registry.source_directory,
+            "document_count": registry.summary.total,
+        }
+
+    @router.post("/api/projects/create")
+    def create_project(payload: ProjectFolderInput):
+        candidate = validated_folder(payload.path)
+        if (candidate / DEFAULT_REGISTRY_PATH).exists():
+            raise HTTPException(
+                status_code=409,
+                detail="This folder already contains a HEVA project. Open it instead.",
+            )
+        has_sources = any(
+            path.is_file()
+            and path.suffix.lower() in SUPPORTED_SUFFIXES
+            and not path.name.startswith("~$")
+            for path in candidate.rglob("*")
+        )
+        if not has_sources:
+            raise HTTPException(
+                status_code=422,
+                detail="No PDF or DOCX source documents were found in this folder.",
+            )
+        try:
+            report = sync_registry(candidate, source_dir=".")
+        except RegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        selected = root.select(candidate)
+        return {
+            "project_root": str(selected),
+            "source_directory": ".",
+            "document_count": report.total,
+        }
+
+    @router.post("/api/projects/close")
+    def close_project():
+        root.close()
+        return {"closed": True}
+
     @router.get("/api/project")
     def project_status():
+        if not root.selected:
+            return JSONResponse(
+                {
+                    "code": "no_active_project",
+                    "message": "No HEVA project is open.",
+                    "action": "Open an existing project or create one from a source folder.",
+                },
+                status_code=404,
+            )
         registry_path = root / DEFAULT_REGISTRY_PATH
         try:
             registry = ProjectRegistry.model_validate_json(

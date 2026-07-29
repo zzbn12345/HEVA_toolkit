@@ -4,6 +4,24 @@ This document defines the researcher-facing workflow for preparing and reviewing
 annotation projects. Automatic operations may prepare several documents, but human review
 always takes place within one clearly identified document.
 
+## 0. Open or create a project
+
+The application starts without assuming that its installation folder is an annotation
+project. Like opening a working file in a desktop application, the user first selects one
+HEVA project:
+
+- **Open existing project** accepts a folder containing
+  `data/project-registry.json` and restores only that registry's records.
+- **Create from source folder** accepts a folder containing PDF or DOCX source files,
+  initializes `data/project-registry.json`, and creates one document-package workspace per
+  discovered source.
+
+The selected source folder becomes the project root. HEVA scans its source documents but
+does not rename, move, or upload them. The dashboard, annotator profiles, validation,
+document preparation, and review routes remain scoped to the active project. Closing the
+project returns to the neutral chooser; invalid or empty folders display a corrective
+error and do not become active.
+
 ## 1. Global annotator profile
 
 The annotator profile belongs to the project, not to an individual document or submission.

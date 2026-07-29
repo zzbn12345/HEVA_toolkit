@@ -23,11 +23,83 @@ def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -
 
     assert response.status_code == 200
     assert "Welcome to HEVA" in response.text
-    assert "Create a data package" in response.text
+    assert "Open existing project" in response.text
+    assert "Create from source folder" in response.text
+    assert "Add or prepare documents" in response.text
     assert "Validate this project" in response.text
     assert 'href="/static/app.css"' in response.text
+    assert 'src="/static/home.js?v=3"' in response.text
     assert "<style>" not in response.text
     assert 'href="/"' in response.text
+
+
+def test_app_starts_without_exposing_repository_documents() -> None:
+    client = TestClient(create_app())
+
+    project = client.get("/api/project")
+    protected = client.get("/api/annotator", follow_redirects=False)
+
+    assert project.status_code == 404
+    assert project.json()["code"] == "no_active_project"
+    assert protected.status_code == 409
+    assert protected.json()["code"] == "no_active_project"
+
+
+def test_existing_project_can_be_opened_and_closed(tmp_path: Path) -> None:
+    project_root = tmp_path / "existing-project"
+    sources = project_root / "documents"
+    sources.mkdir(parents=True)
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(project_root, source_dir="documents")
+    client = TestClient(create_app())
+
+    opened = client.post(
+        "/api/projects/open",
+        json={"path": str(project_root)},
+    )
+    status = client.get("/api/project")
+    closed = client.post("/api/projects/close")
+    after_close = client.get("/api/project")
+
+    assert opened.status_code == 200
+    assert opened.json()["document_count"] == 1
+    assert status.json()["project_root"] == str(project_root.resolve())
+    assert closed.json() == {"closed": True}
+    assert after_close.status_code == 404
+
+
+def test_project_can_be_created_from_a_source_folder(tmp_path: Path) -> None:
+    source_folder = tmp_path / "new-project"
+    source_folder.mkdir()
+    (source_folder / "annotated.pdf").write_bytes(b"source")
+    (source_folder / "notes.txt").write_text("not a source", encoding="utf-8")
+    client = TestClient(create_app())
+
+    created = client.post(
+        "/api/projects/create",
+        json={"path": str(source_folder)},
+    )
+    status = client.get("/api/project")
+
+    assert created.status_code == 200
+    assert created.json()["document_count"] == 1
+    assert (source_folder / "data/project-registry.json").is_file()
+    assert status.json()["source_directory"] == "."
+    assert status.json()["documents"][0]["source_path"] == "annotated.pdf"
+
+
+def test_open_and_create_project_report_wrong_folder_usage(tmp_path: Path) -> None:
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    client = TestClient(create_app())
+
+    opened = client.post("/api/projects/open", json={"path": str(empty)})
+    created = client.post("/api/projects/create", json={"path": str(empty)})
+
+    assert opened.status_code == 422
+    assert "not a HEVA project" in opened.json()["detail"]
+    assert created.status_code == 422
+    assert "No PDF or DOCX" in created.json()["detail"]
 
 
 def test_project_status_restores_registry_summary(tmp_path: Path) -> None:

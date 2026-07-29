@@ -4,6 +4,9 @@
 
 ### Added
 
+- A neutral project chooser that opens an existing HEVA project, creates one around a
+  folder of PDF/DOCX sources, and closes or switches the active project without exposing
+  repository-level records by default.
 - A schema-driven project annotator editor with filterable reusable profiles, validated
   form fields, read-only schema/generated-JSON views, stable identifiers, active-profile
   selection, and migration from the former single-profile JSON.
