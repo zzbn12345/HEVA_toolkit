@@ -131,7 +131,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=7"' in response.text
+    assert 'src="/static/create.js?v=8"' in response.text
     assert 'href="/static/create.css?v=4"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -605,8 +605,8 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=5"' in response.text
-    assert 'href="/static/review.css?v=5"' in response.text
+    assert 'src="/static/review_document.js?v=6"' in response.text
+    assert 'href="/static/review.css?v=6"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text
@@ -615,8 +615,12 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     assert 'data-batch-status="needs_correction"' in response.text
     assert 'data-batch-status="excluded"' in response.text
     assert 'id="sentence-editor"' in response.text
-    assert 'id="edit-sentence"' in response.text
     assert 'id="edit-entities"' in response.text
+    assert 'id="edit-tokens"' not in response.text
+    assert 'id="edit-ner-tags"' not in response.text
+    assert 'id="review-citation-link"' in response.text
+    assert 'id="review-colors-link"' in response.text
+    assert 'href="/annotator"' in response.text
     assert 'id="review-readiness"' in response.text
     assert 'id="submit-document-review"' in response.text
     assert "raw JSON" not in response.text
@@ -642,6 +646,11 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert '"Edit sentence"' in script
     assert "correctedRecord" in script
     assert "values: [...new Set" in script
+    assert "locateExtraction" in script
+    assert "deriveBioTags" in script
+    assert "row.dataset.originalStart" in script
+    assert "&section=citation" in script
+    assert "&section=colors" in script
     assert "highlightedSentence(record)" in script
     assert 'textElement("mark", "annotation-highlight", text)' in script
     assert '"aria-label"' in script
@@ -649,6 +658,21 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert "renderReadiness" in script
     assert "/submit" in script
     assert '"Submitted for curator review"' in script
+
+
+def test_document_setup_asset_opens_requested_review_section() -> None:
+    script = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "create.js"
+    ).read_text(encoding="utf-8")
+
+    assert 'parameters.get("section")' in script
+    assert 'requestedSection === "citation"' in script
+    assert 'requestedSection === "colors"' in script
 
 
 def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path) -> None:

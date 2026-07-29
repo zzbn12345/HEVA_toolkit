@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Review document · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/review.css?v=5">
-  <script src="/static/review_document.js?v=5" defer></script>
+  <link rel="stylesheet" href="/static/review.css?v=6">
+  <script src="/static/review_document.js?v=6" defer></script>
 </head>
 <body data-document-id="DOCUMENT_ID_PLACEHOLDER" class="review-body">
   <div id="review-app" class="review-app">
@@ -14,6 +14,11 @@
       <a class="home-link" href="/">← HEVA home</a>
       <a class="home-link" href="/review">Review queue</a>
       <strong id="document-name">Loading document…</strong>
+      <nav class="document-tools" aria-label="Document settings">
+        <a id="review-citation-link" class="button secondary" href="#">Citation</a>
+        <a id="review-colors-link" class="button secondary" href="#">Color configuration</a>
+        <a class="button secondary" href="/annotator">Annotator profile</a>
+      </nav>
       <button id="toggle-review-pdf" class="button secondary" type="button" aria-expanded="true">Hide PDF</button>
     </header>
     <main class="sentence-pane">
@@ -69,12 +74,12 @@
     <form id="sentence-editor-form">
       <div class="editor-heading">
         <div>
-          <p class="eyebrow">Validated annotation correction</p>
-          <h2 id="sentence-editor-title">Edit sentence</h2>
+          <p class="eyebrow">Validated extraction correction</p>
+          <h2 id="sentence-editor-title">Edit extracted annotations</h2>
         </div>
         <button id="close-sentence-editor" class="button secondary" type="button">Close</button>
       </div>
-      <p class="muted">Edit the safe fields below. HEVA checks labels, entity offsets, colors, tokens, and BIO tags before saving.</p>
+      <p class="muted">Edit every extracted phrase below. Each phrase must occur exactly in the sentence; HEVA derives the technical offsets and tags before saving.</p>
       <div id="sentence-editor-error" class="notice error" aria-live="assertive" hidden></div>
       <div class="editor-grid">
         <label>Sentence ID
@@ -84,24 +89,11 @@
           <input id="edit-page" type="number" min="1" required>
         </label>
       </div>
-      <label>Sentence text <span aria-hidden="true">*</span>
-        <textarea id="edit-sentence" rows="4" required></textarea>
-      </label>
-      <div class="editor-grid">
-        <label>Tokens <span aria-hidden="true">*</span>
-          <span class="field-help">One token per line</span>
-          <textarea id="edit-tokens" rows="8" required></textarea>
-        </label>
-        <label>BIO tags <span aria-hidden="true">*</span>
-          <span class="field-help">One tag per line; the count must match tokens</span>
-          <textarea id="edit-ner-tags" rows="8" required></textarea>
-        </label>
-      </div>
       <fieldset class="entity-editor">
-        <legend>Entities</legend>
-        <p class="field-help">Offsets use character positions in the sentence. Entity text must exactly match that slice.</p>
+        <legend>Extracted annotations</legend>
+        <p class="field-help">Every extraction is shown, including sentences containing more than two. Correct the phrase, label, or color as needed.</p>
         <div id="edit-entities"></div>
-        <button id="add-entity" class="button secondary" type="button">Add entity</button>
+        <button id="add-entity" class="button secondary" type="button">Add extraction</button>
       </fieldset>
       <div class="editor-actions">
         <button class="button secondary" id="cancel-sentence-editor" type="button">Cancel</button>

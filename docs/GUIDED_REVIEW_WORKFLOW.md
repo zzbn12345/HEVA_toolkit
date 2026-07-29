@@ -185,6 +185,11 @@ For a registered PDF, the source opens immediately in the right-hand viewer. The
 not asked to choose the file again. The PDF pane and annotation pane scroll independently,
 and the PDF can be hidden or shown.
 
+The review toolbar provides direct access to the selected document's **Citation** and
+**Color configuration**, plus the reusable project **Annotator profile**. These controls
+open the existing persisted forms for that exact document rather than creating duplicate
+configuration state.
+
 ## 6. Sentence states
 
 Every extracted sentence begins requiring a check. The interface may summarize this as
@@ -200,6 +205,11 @@ Every extracted sentence begins requiring a check. The interface may summarize t
 Each sentence card shows sentence text, page, controlled labels, raw colors and hex codes,
 quality flags, decision state, and available actions. Decisions and edits record the actor,
 time, and change history.
+
+The correction form exposes only page and one editable row per extraction: extracted
+text, controlled label, and color. It displays every row when a sentence contains several
+annotations. Technical offsets and BIO tags remain hidden and are derived and validated
+before persistence.
 
 ## 7. Batch checking and quality flags
 

@@ -52,6 +52,8 @@
   context while retaining accessible label and hex-color details.
 - Live document readiness gates and guarded curator submission that timestamps completed
   annotation review, moves the record to `in_review`, and locks submitted evidence.
+- Direct Citation, Color configuration, and Annotator profile access from document review,
+  plus a simplified repeatable extraction editor that derives hidden offsets and BIO tags.
 
 ### Changed
 

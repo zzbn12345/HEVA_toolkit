@@ -147,29 +147,18 @@ async function submitDocumentReview() {
   }
 }
 
-function lineValues(value) {
-  return value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
-}
-
 function entityRow(entity = {}) {
   const row = document.createElement("div");
   row.className = "entity-row";
-  const fields = [
-    ["Text", "text", "text"],
-    ["Start", "start", "number"],
-    ["End", "end", "number"],
-  ];
-  fields.forEach(([labelText, name, type]) => {
-    const label = textElement("label", "", labelText);
-    const input = document.createElement("input");
-    input.type = type;
-    input.dataset.entityField = name;
-    input.required = true;
-    if (type === "number") input.min = "0";
-    input.value = entity[name] ?? "";
-    label.appendChild(input);
-    row.appendChild(label);
-  });
+  row.dataset.originalStart = entity.start ?? "-1";
+  const textWrapper = textElement("label", "", "Extracted text");
+  const extractedText = document.createElement("textarea");
+  extractedText.rows = 2;
+  extractedText.dataset.entityField = "text";
+  extractedText.required = true;
+  extractedText.value = entity.text ?? "";
+  textWrapper.appendChild(extractedText);
+  row.appendChild(textWrapper);
   const labelWrapper = textElement("label", "", "HEVA label");
   const labelSelect = document.createElement("select");
   labelSelect.dataset.entityField = "label";
@@ -206,20 +195,70 @@ function openEditor(record) {
   editorError.hidden = true;
   document.getElementById("edit-sentence-id").value = record.sentence_id;
   document.getElementById("edit-page").value = record.page;
-  document.getElementById("edit-sentence").value = record.sentence;
-  document.getElementById("edit-tokens").value = record.tokens.join("\n");
-  document.getElementById("edit-ner-tags").value = record.ner_tags.join("\n");
   entityRows.replaceChildren(...record.entities.map(entityRow));
   editor.showModal();
+}
+
+function locateExtraction(sentence, text, preferredStart) {
+  const matches = [];
+  let position = sentence.indexOf(text);
+  while (position !== -1) {
+    matches.push(position);
+    position = sentence.indexOf(text, position + 1);
+  }
+  if (!matches.length) {
+    throw new Error(`“${text}” does not occur exactly in the sentence.`);
+  }
+  return matches.reduce((best, candidate) =>
+    Math.abs(candidate - preferredStart) < Math.abs(best - preferredStart)
+      ? candidate
+      : best
+  );
+}
+
+function tokenSpans(sentence, tokens) {
+  let cursor = 0;
+  return tokens.map((token) => {
+    const start = sentence.indexOf(token, cursor);
+    if (start === -1) {
+      throw new Error(
+        `The stored token “${token}” cannot be aligned with this sentence.`,
+      );
+    }
+    cursor = start + token.length;
+    return {start, end: cursor};
+  });
+}
+
+function deriveBioTags(sentence, tokens, entities) {
+  let previousEntity = null;
+  return tokenSpans(sentence, tokens).map((token) => {
+    const entityIndex = entities.findIndex(
+      (entity) => entity.start < token.end && entity.end > token.start,
+    );
+    if (entityIndex === -1) {
+      previousEntity = null;
+      return "O";
+    }
+    const prefix = previousEntity === entityIndex ? "I" : "B";
+    previousEntity = entityIndex;
+    return `${prefix}-${entities[entityIndex].label}`;
+  });
 }
 
 function correctedRecord() {
   const entities = [...entityRows.querySelectorAll(".entity-row")].map((row) => {
     const value = (name) => row.querySelector(`[data-entity-field="${name}"]`).value;
+    const text = value("text").trim();
+    const start = locateExtraction(
+      editingRecord.sentence,
+      text,
+      Number(row.dataset.originalStart),
+    );
     const entity = {
-      text: value("text"),
-      start: Number(value("start")),
-      end: Number(value("end")),
+      text,
+      start,
+      end: start + text.length,
       label: value("label"),
     };
     const color = value("color").trim();
@@ -230,11 +269,9 @@ function correctedRecord() {
     ...editingRecord,
     sentence_id: Number(document.getElementById("edit-sentence-id").value),
     page: Number(document.getElementById("edit-page").value),
-    sentence: document.getElementById("edit-sentence").value,
-    tokens: lineValues(document.getElementById("edit-tokens").value),
     values: [...new Set(entities.map((entity) => entity.label))],
     entities,
-    ner_tags: lineValues(document.getElementById("edit-ner-tags").value),
+    ner_tags: deriveBioTags(editingRecord.sentence, editingRecord.tokens, entities),
   };
 }
 
@@ -385,6 +422,10 @@ async function loadDocument() {
   }
   reviewDocument = result;
   document.getElementById("document-name").textContent = result.source_path;
+  document.getElementById("review-citation-link").href =
+    `/create?document_id=${encodeURIComponent(documentId)}&section=citation`;
+  document.getElementById("review-colors-link").href =
+    `/create?document_id=${encodeURIComponent(documentId)}&section=colors`;
   document.getElementById("review-pdf-frame").src = `/api/review/${encodeURIComponent(documentId)}/source`;
   const navigation = document.getElementById("document-navigation");
   if (result.previous_document_id) navigation.appendChild(navigationLink(result.previous_document_id, "← Previous document"));

@@ -481,7 +481,8 @@ async function extractAnnotations(force = false) {
 }
 
 async function loadSelectedDocument() {
-  const documentId = new URLSearchParams(window.location.search).get("document_id");
+  const parameters = new URLSearchParams(window.location.search);
+  const documentId = parameters.get("document_id");
   if (!documentId) return;
   const status = document.getElementById("selected-document-status");
   status.hidden = false;
@@ -504,6 +505,9 @@ async function loadSelectedDocument() {
     await loadCitation(documentId);
     await loadColors(documentId);
     await loadExtractionStatus(documentId);
+    const requestedSection = parameters.get("section");
+    if (requestedSection === "citation") showStep(2);
+    if (requestedSection === "colors") showStep(4);
     if (result.preview_available) {
       openPreview(
         `/api/documents/${encodeURIComponent(documentId)}/source`,

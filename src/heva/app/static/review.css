@@ -17,6 +17,8 @@
   background: var(--panel);
 }
 .review-toolbar strong { margin-right: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.document-tools { display: flex; align-items: center; gap: .45rem; }
+.document-tools .button { margin: 0; padding: .5rem .7rem; }
 .sentence-pane { min-height: 0; padding: 1rem 1.4rem 2rem; overflow-y: auto; }
 .review-controls { display: flex; gap: 1rem; }
 .review-controls label { color: var(--muted); }
@@ -138,7 +140,7 @@
 .entity-editor { padding: 1rem; border: 1px solid var(--border); border-radius: 10px; }
 .entity-row {
   display: grid;
-  grid-template-columns: minmax(150px, 2fr) 85px 85px minmax(130px, 1fr) 115px auto;
+  grid-template-columns: minmax(220px, 3fr) minmax(130px, 1fr) 130px auto;
   align-items: end;
   gap: .55rem;
   margin-bottom: .75rem;
@@ -157,5 +159,7 @@
   .batch-actions { grid-column: auto; }
   .review-readiness { grid-template-columns: 1fr; }
   .review-blockers { grid-column: auto; }
+  .review-toolbar { flex-wrap: wrap; }
+  .document-tools { order: 2; width: 100%; flex-wrap: wrap; }
   .editor-grid, .entity-row { grid-template-columns: 1fr; }
 }

@@ -54,15 +54,24 @@ sentence evidence read-only.
 
 ## Editing annotations
 
-Choose **Edit sentence** on a sentence card to correct its page, text, tokens, BIO tags,
-and entities through structured fields. This is intentionally not a raw JSON editor.
-Entity labels come from the HEVA controlled vocabulary, while categorical `values` are
-derived from those entity labels so the two cannot silently disagree.
+Choose **Edit sentence** on a sentence card to correct the page and every extracted
+annotation through structured fields. Each extraction appears as its own text box with a
+controlled HEVA label and color, including sentences with more than two extractions. This
+is intentionally not a raw JSON editor and does not expose offsets, tokens, BIO tags, or
+other implementation details.
+
+The edited extraction text must occur exactly in the displayed sentence. HEVA derives
+character offsets, categorical `values`, and BIO tags from the visible fields before
+validation, so those related representations cannot silently disagree.
 
 Choose **Validate and save correction** to run the complete HEVA contract. If a correction
 is invalid, the form stays open and identifies the field and reason—for example, a token
 and BIO-tag count mismatch or entity offsets that do not match the entity text. Invalid
 changes do not overwrite `annotations.json`.
+
+Use **Citation**, **Color configuration**, or **Annotator profile** at the top of the
+document workspace to correct a blocking gate without returning to the project dashboard.
+Citation and colors open the selected document directly in its persisted setup workflow.
 
 After a valid correction, the system writes it atomically, reads it back unchanged,
 resets the sentence to `needs_correction`, and records the editor plus complete before and
