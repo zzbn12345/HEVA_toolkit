@@ -161,6 +161,13 @@ Completion reports the number of persisted sentence records and whether an exist
 checkpoint was reused. Failures and a two-minute browser timeout produce a visible
 corrective message instead of leaving the action apparently unfinished.
 
+Reopening a document restores its persisted extraction count and warnings. A checkpoint
+is current only when its source checksum, selected mapping checksum, and positive record
+count still match. Legacy provenance, changed sources, changed mappings, unreadable files,
+and count mismatches are shown as stale or invalid while preserving the old files for
+inspection. The annotator must choose **Rebuild extraction** deliberately. Extracting zero
+records is an error with corrective guidance, never a successful empty package.
+
 ## 5. Opening a document
 
 Selecting **Edit this annotation** opens a document workspace. It may be a full page or a

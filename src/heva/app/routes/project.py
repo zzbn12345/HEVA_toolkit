@@ -42,6 +42,7 @@ from heva.workflow.package_validator import (
 )
 from heva.workflow.extraction_session import (
     ExtractionSessionError,
+    load_extraction_checkpoint_status,
     run_registered_extraction,
 )
 from heva.workflow.project_registry import (
@@ -439,10 +440,26 @@ def create_project_router(
             "applied_document_ids": list(applied),
         }
 
-    @router.post("/api/documents/{document_id}/extract")
-    def extract_document(document_id: str):
+    @router.get("/api/documents/{document_id}/extraction")
+    def extraction_status(document_id: str):
         try:
-            result = run_registered_extraction(root, document_id)
+            status = load_extraction_checkpoint_status(root, document_id)
+        except ExtractionSessionError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {
+            "document_id": status.document_id,
+            "state": status.state,
+            "record_count": status.record_count,
+            "completed_at": status.completed_at,
+            "mapping_status": status.mapping_status,
+            "warnings": list(status.warnings),
+            "stale_reasons": list(status.stale_reasons),
+        }
+
+    @router.post("/api/documents/{document_id}/extract")
+    def extract_document(document_id: str, force: bool = False):
+        try:
+            result = run_registered_extraction(root, document_id, force=force)
         except (ColorMappingError, ExtractionSessionError, OSError, ValidationError) as error:
             return JSONResponse(
                 {

@@ -408,21 +408,54 @@ async function confirmColors() {
     "Color configuration confirmed. Extraction is ready.";
 }
 
-async function extractAnnotations() {
+async function loadExtractionStatus(documentId) {
+  const status = document.getElementById("extraction-status");
+  const rebuild = document.getElementById("rebuild-annotations");
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/extraction`,
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      status.className = "notice error";
+      status.textContent = result.detail || "Extraction status could not be loaded.";
+      return;
+    }
+    rebuild.hidden = result.state === "not_extracted";
+    rebuild.disabled = document.getElementById("extract-annotations").disabled;
+    if (result.state === "not_extracted") {
+      status.className = "notice neutral";
+      status.textContent = "No persisted extraction exists for this document.";
+    } else if (result.state === "current") {
+      status.className = result.warnings.length ? "notice warning" : "notice success";
+      status.textContent = `Current checkpoint contains ${result.record_count} sentence record${result.record_count === 1 ? "" : "s"}.${result.warnings.length ? ` ${result.warnings.join(" ")}` : ""}`;
+    } else {
+      status.className = result.state === "invalid" ? "notice error" : "notice warning";
+      status.textContent = `Persisted extraction contains ${result.record_count} record${result.record_count === 1 ? "" : "s"} but must be rebuilt. ${result.stale_reasons.join(" ")}`;
+    }
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = "Extraction status could not be loaded.";
+  }
+}
+
+async function extractAnnotations(force = false) {
   const documentId = document.getElementById("selected-document-id").value;
-  const button = document.getElementById("extract-annotations");
+  const button = document.getElementById(
+    force ? "rebuild-annotations" : "extract-annotations",
+  );
   const progress = document.getElementById("extraction-progress");
   const status = document.getElementById("extraction-status");
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 120000);
   button.disabled = true;
-  button.textContent = "Extracting…";
+  button.textContent = force ? "Rebuilding…" : "Extracting…";
   progress.hidden = false;
   status.className = "notice neutral";
   status.textContent = "Extraction is running. Keep this page open.";
   try {
     const response = await fetch(
-      `/api/documents/${encodeURIComponent(documentId)}/extract`,
+      `/api/documents/${encodeURIComponent(documentId)}/extract${force ? "?force=true" : ""}`,
       { method: "POST", signal: controller.signal },
     );
     const result = await response.json();
@@ -433,6 +466,7 @@ async function extractAnnotations() {
     }
     status.className = result.warnings.length ? "notice warning" : "notice success";
     status.textContent = `${result.reused_checkpoint ? "Reused" : "Created"} ${result.record_count} extracted sentence records.${result.warnings.length ? ` ${result.warnings.join(" ")}` : ""}`;
+    await loadExtractionStatus(documentId);
   } catch (error) {
     status.className = "notice error";
     status.textContent = error.name === "AbortError"
@@ -441,7 +475,7 @@ async function extractAnnotations() {
   } finally {
     window.clearTimeout(timeout);
     progress.hidden = true;
-    button.textContent = "Extract annotations";
+    button.textContent = force ? "Rebuild extraction" : "Extract annotations";
     button.disabled = false;
   }
 }
@@ -469,6 +503,7 @@ async function loadSelectedDocument() {
     status.textContent = `Editing ${result.filename}. Its existing project state will be reused.`;
     await loadCitation(documentId);
     await loadColors(documentId);
+    await loadExtractionStatus(documentId);
     if (result.preview_available) {
       openPreview(
         `/api/documents/${encodeURIComponent(documentId)}/source`,
@@ -502,7 +537,11 @@ document.getElementById("apply-batch-mapping").addEventListener(
 );
 document.getElementById("extract-annotations").addEventListener(
   "click",
-  extractAnnotations,
+  () => extractAnnotations(false),
+);
+document.getElementById("rebuild-annotations").addEventListener(
+  "click",
+  () => extractAnnotations(true),
 );
 
 pdfInput.addEventListener("change", () => {

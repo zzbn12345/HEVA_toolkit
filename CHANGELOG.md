@@ -26,6 +26,9 @@
 - Supervised batch mapping reuse that lists every other document with an explicit
   compatibility reason, enables only exact unconfirmed palette matches, and records the
   source document plus separate confirmation provenance in each selected package.
+- Mapping-aware extraction checkpoints with visible current/stale/invalid state, persisted
+  sentence counts and warnings, explicit rebuild controls, and corrective zero-record
+  failures that preserve earlier extraction work.
 - A responsive extraction action with visible progress, a two-minute browser timeout,
   persisted-checkpoint feedback, and actionable extraction errors.
 - A document review queue that summarizes batch-prepared documents while opening only one

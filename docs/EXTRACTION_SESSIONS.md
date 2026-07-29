@@ -38,10 +38,14 @@ It also:
 - preserves raw entity colors;
 - marks sentence review incomplete;
 - moves the registry document to `in_progress`;
-- stores the source checksum in the session checkpoint.
+- stores source and selected color-mapping checksums in the session checkpoint.
 
 If any record violates the HEVA contract, `ExtractionValidationError` contains all issues.
 No existing `annotations.json` is replaced in that case.
+
+An extraction that produces zero records raises `EmptyExtractionError` with corrective
+guidance. It is not persisted as a successful empty resource and does not replace an
+earlier checkpoint.
 
 `persist_extraction_results` itself does not invoke an extractor; it remains available as
 the validation-and-persistence boundary for other workflows.
@@ -63,9 +67,15 @@ deliberately selected document-local mapping, and uses toolkit version `0.1.0` i
 provenance. An authorized pending map produces `mapping_review_pending`; a confirmed map
 produces `awaiting_review`.
 
-If matching `annotations.json` and `extraction-session.json` already exist for the source
-checksum, they are reused. Pass `force=True` only when an intentional re-extraction is
-required.
+Existing `annotations.json` and `extraction-session.json` are reused only when the source
+checksum, mapping checksum, declared count, and actual positive record count all match.
+Legacy checkpoints without mapping provenance remain readable but are marked stale.
+Changing a source or color decision therefore preserves existing records while requiring
+a rebuild. Pass `force=True` only when an intentional re-extraction is required.
+
+The web workspace restores this state when a document opens. It reports the persisted
+sentence count, pending-map warning, and any stale reason. **Rebuild extraction** is a
+separate deliberate action from ordinary extraction/checkpoint reuse.
 
 PDFs with no extractable text are rejected with an explicit explanation that image-only
 or scanned input is unsupported because the toolkit does not currently provide OCR.

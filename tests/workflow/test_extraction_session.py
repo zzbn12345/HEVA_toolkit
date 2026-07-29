@@ -15,8 +15,10 @@ from heva.workflow.color_mapping import (
     save_color_configuration,
 )
 from heva.workflow.extraction_session import (
+    EmptyExtractionError,
     ExtractionSessionError,
     ExtractionValidationError,
+    load_extraction_checkpoint_status,
     persist_extraction_results,
     run_registered_batch,
     run_registered_extraction,
@@ -105,6 +107,75 @@ def test_registered_runner_reuses_matching_completed_checkpoint(tmp_path: Path) 
     assert resumed.reused_checkpoint
     assert resumed.annotations_path == persisted.annotations_path
     assert resumed.record_count == 1
+    assert load_extraction_checkpoint_status(tmp_path, document_id).state == "current"
+
+
+def test_mapping_change_marks_checkpoint_stale_without_deleting_records(
+    tmp_path: Path,
+) -> None:
+    document_id = project(tmp_path)
+    persisted = persist_extraction_results(
+        tmp_path,
+        document_id,
+        [record()],
+        extraction_method="automatic",
+        extractor="test",
+        extractor_version="1",
+    )
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    metadata_path = tmp_path / registry["documents"][0]["metadata_path"]
+    metadata = json.loads(metadata_path.read_text())
+    metadata["color_configuration"]["colors"][0]["label"] = "political"
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    status = load_extraction_checkpoint_status(tmp_path, document_id)
+
+    assert status.state == "stale"
+    assert "color mapping has changed" in status.stale_reasons[0]
+    assert json.loads(persisted.annotations_path.read_text()) == [record()]
+
+
+def test_changed_source_state_marks_checkpoint_stale(tmp_path: Path) -> None:
+    document_id = project(tmp_path)
+    persist_extraction_results(
+        tmp_path,
+        document_id,
+        [record()],
+        extraction_method="automatic",
+        extractor="test",
+        extractor_version="1",
+    )
+    registry_path = tmp_path / "data/project-registry.json"
+    registry = json.loads(registry_path.read_text())
+    registry["documents"][0]["source_state"] = "changed"
+    registry["documents"][0]["observed_checksum_sha256"] = "a" * 64
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+    status = load_extraction_checkpoint_status(tmp_path, document_id)
+
+    assert status.state == "stale"
+    assert any("source state is changed" in reason for reason in status.stale_reasons)
+
+
+def test_zero_record_extraction_is_a_corrective_failure_and_preserves_checkpoint(
+    tmp_path: Path,
+) -> None:
+    document_id = project(tmp_path)
+    package = tmp_path / "data/packages" / document_id
+    annotations = package / "annotations.json"
+    annotations.write_text('[{"preserved": true}]', encoding="utf-8")
+
+    with pytest.raises(EmptyExtractionError, match="No annotation records"):
+        persist_extraction_results(
+            tmp_path,
+            document_id,
+            [],
+            extraction_method="automatic",
+            extractor="test",
+            extractor_version="1",
+        )
+
+    assert json.loads(annotations.read_text()) == [{"preserved": True}]
 
 
 def test_registered_runner_reports_scanned_pdf_without_claiming_ocr(

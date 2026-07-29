@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 import pytest
@@ -130,7 +131,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=6"' in response.text
+    assert 'src="/static/create.js?v=7"' in response.text
     assert 'href="/static/create.css?v=4"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -144,6 +145,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="propose-colors"' in response.text
     assert 'id="batch-mapping"' in response.text
     assert 'id="apply-batch-mapping"' in response.text
+    assert 'id="rebuild-annotations"' in response.text
     assert "#FFFF00" not in response.text
     assert "Label not decided" not in response.text
 
@@ -249,6 +251,39 @@ def test_extraction_interface_has_progress_timeout_and_visible_errors() -> None:
     assert "result.message" in script
     assert "/colors/propose" in script
     assert "Automatic proposals did not finish in time" in script
+    assert "/extraction" in script
+    assert "?force=true" in script
+    assert "must be rebuilt" in script
+
+
+def test_extraction_endpoint_passes_deliberate_force_rebuild(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = []
+
+    def fake_run(root, document_id, *, force):
+        calls.append((document_id, force))
+        package = tmp_path / "package"
+        return SimpleNamespace(
+            document_id=document_id,
+            annotations_path=package / "annotations.json",
+            session_path=package / "extraction-session.json",
+            record_count=3,
+            reused_checkpoint=False,
+            warnings=(),
+        )
+
+    monkeypatch.setattr(
+        "heva.app.routes.project.run_registered_extraction",
+        fake_run,
+    )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/documents/HEVA-TEST/extract?force=true")
+
+    assert response.status_code == 200
+    assert calls == [("HEVA-TEST", True)]
 
 
 def test_annotator_is_persisted_in_project_collection(tmp_path: Path) -> None:

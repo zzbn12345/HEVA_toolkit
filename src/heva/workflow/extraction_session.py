@@ -5,9 +5,10 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
-from typing import Any, Callable, Iterable, Literal, Sequence
+from typing import Any, Callable, Iterable, Literal, Mapping, Sequence
 
 from pydantic import ValidationError
 
@@ -38,6 +39,12 @@ class ExtractionSessionError(ValueError):
     """Raised when extraction results cannot safely enter a document package."""
 
 
+class EmptyExtractionError(ExtractionSessionError):
+    """Raised when extraction finds no annotation records."""
+
+    code = "no_annotations_found"
+
+
 @dataclass(frozen=True)
 class ExtractionValidationError(ExtractionSessionError):
     """All record issues found before package files are changed."""
@@ -56,6 +63,30 @@ class SessionResult:
     record_count: int
     reused_checkpoint: bool = False
     warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class ExtractionCheckpointStatus:
+    document_id: str
+    state: Literal["not_extracted", "current", "stale", "invalid"]
+    record_count: int = 0
+    completed_at: str | None = None
+    mapping_status: str | None = None
+    warnings: tuple[str, ...] = ()
+    stale_reasons: tuple[str, ...] = ()
+
+
+def _mapping_checksum(mapping_status: str, values: Mapping[str, str]) -> str:
+    encoded = json.dumps(
+        {
+            "mapping_status": mapping_status,
+            "values": sorted(values.items()),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -144,16 +175,26 @@ def persist_extraction_results(
         )
     try:
         if mapping_status == "approved":
-            load_confirmed_color_mapping(root, document_id, registry_path=registry_path)
+            mapping_values = load_confirmed_color_mapping(
+                root,
+                document_id,
+                registry_path=registry_path,
+            )
         else:
             selected = load_extraction_color_mapping(
                 root, document_id, registry_path=registry_path
             )
             if selected.status != "pending_review":
                 raise ColorMappingError("Expected an authorized pending color mapping.")
+            mapping_values = selected.values
     except ColorMappingError as error:
         raise ExtractionSessionError(str(error)) from error
 
+    if not records:
+        raise EmptyExtractionError(
+            "No annotation records were extracted. Check that the document contains "
+            "colored annotations covered by its confirmed color configuration."
+        )
     results = [validate_record(record) for record in records]
     issues = tuple(issue for result in results for issue in result.issues)
     if issues:
@@ -194,7 +235,7 @@ def persist_extraction_results(
     _write_json(
         session_file,
         {
-            "session_version": "1.0",
+            "session_version": "1.1",
             "document_id": document_id,
             "status": (
                 "mapping_review_pending"
@@ -202,6 +243,10 @@ def persist_extraction_results(
                 else "awaiting_review"
             ),
             "mapping_status": mapping_status,
+            "mapping_checksum_sha256": _mapping_checksum(
+                mapping_status,
+                mapping_values,
+            ),
             "source_checksum_sha256": entry.checksum_sha256,
             "annotations_path": "annotations.json",
             "record_count": len(canonical),
@@ -222,6 +267,108 @@ def persist_extraction_results(
         session_file,
         len(canonical),
         warnings=warnings,
+    )
+
+
+def load_extraction_checkpoint_status(
+    project_root: str | Path,
+    document_id: str,
+) -> ExtractionCheckpointStatus:
+    """Describe persisted extraction state without modifying or rebuilding it."""
+
+    root = Path(project_root).resolve()
+    try:
+        registry = ProjectRegistry.model_validate_json(
+            (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
+        )
+    except (OSError, ValidationError) as error:
+        raise ExtractionSessionError(
+            f"Cannot load project registry: {error}"
+        ) from error
+    entry = next(
+        (item for item in registry.documents if item.document_id == document_id),
+        None,
+    )
+    if entry is None:
+        raise ExtractionSessionError(f"Document {document_id} is not registered.")
+    package = root / entry.package_path
+    session_file = package / "extraction-session.json"
+    annotations_file = package / "annotations.json"
+    if not session_file.exists() and not annotations_file.exists():
+        return ExtractionCheckpointStatus(document_id, "not_extracted")
+    if not session_file.exists() or not annotations_file.exists():
+        return ExtractionCheckpointStatus(
+            document_id,
+            "invalid",
+            stale_reasons=(
+                "The extraction checkpoint is incomplete; rebuild annotations.",
+            ),
+        )
+    try:
+        session = json.loads(session_file.read_text(encoding="utf-8"))
+        annotations = json.loads(annotations_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ExtractionCheckpointStatus(
+            document_id,
+            "invalid",
+            stale_reasons=(
+                "The persisted extraction files cannot be read; rebuild annotations.",
+            ),
+        )
+    if not isinstance(session, dict) or not isinstance(annotations, list):
+        return ExtractionCheckpointStatus(
+            document_id,
+            "invalid",
+            stale_reasons=(
+                "The persisted extraction files have an invalid structure.",
+            ),
+        )
+    reasons: list[str] = []
+    declared_count = session.get("record_count")
+    if not isinstance(declared_count, int) or declared_count != len(annotations):
+        reasons.append("The persisted record count does not match annotations.json.")
+    if not annotations:
+        reasons.append("The persisted extraction contains zero annotation records.")
+    if entry.source_state != "present":
+        reasons.append(
+            f"The registered source state is {entry.source_state}; synchronize it "
+            "before rebuilding."
+        )
+    if session.get("source_checksum_sha256") != entry.checksum_sha256:
+        reasons.append("The source document has changed since extraction.")
+    try:
+        selected = load_extraction_color_mapping(root, document_id)
+        expected_mapping_checksum = _mapping_checksum(
+            selected.status,
+            selected.values,
+        )
+        if session.get("mapping_checksum_sha256") != expected_mapping_checksum:
+            reasons.append(
+                "The selected color mapping has changed or its legacy checkpoint "
+                "does not record mapping provenance."
+            )
+    except ColorMappingError as error:
+        reasons.append(f"The extraction mapping is unavailable: {error}")
+    mapping_status = session.get("mapping_status")
+    warnings = (
+        ("Checkpoint uses a pending color map and is not curator-ready.",)
+        if mapping_status == "pending_review"
+        else ()
+    )
+    return ExtractionCheckpointStatus(
+        document_id=document_id,
+        state="stale" if reasons else "current",
+        record_count=len(annotations),
+        completed_at=(
+            str(session.get("completed_at"))
+            if session.get("completed_at")
+            else None
+        ),
+        mapping_status=(
+            str(mapping_status) if mapping_status is not None else None
+        ),
+        warnings=warnings,
+        stale_reasons=tuple(reasons),
     )
 
 
@@ -247,15 +394,34 @@ def run_registered_extraction(
     package = root / entry.package_path
     session_file = package / "extraction-session.json"
     annotations_file = package / "annotations.json"
+    extraction_mapping = load_extraction_color_mapping(root, document_id)
+    mapping_checksum = _mapping_checksum(
+        extraction_mapping.status,
+        extraction_mapping.values,
+    )
     if not force and session_file.is_file() and annotations_file.is_file():
-        session = json.loads(session_file.read_text(encoding="utf-8"))
-        if session.get("source_checksum_sha256") == entry.checksum_sha256:
+        try:
+            session = json.loads(session_file.read_text(encoding="utf-8"))
+            annotations = json.loads(annotations_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            session = {}
+            annotations = None
+        record_count = session.get("record_count")
+        checkpoint_current = (
+            session.get("source_checksum_sha256") == entry.checksum_sha256
+            and session.get("mapping_checksum_sha256") == mapping_checksum
+            and isinstance(annotations, list)
+            and isinstance(record_count, int)
+            and record_count > 0
+            and len(annotations) == record_count
+        )
+        if checkpoint_current:
             mapping_status = session.get("mapping_status")
             return SessionResult(
                 document_id,
                 annotations_file,
                 session_file,
-                int(session.get("record_count", 0)),
+                record_count,
                 reused_checkpoint=True,
                 warnings=(
                     ("Checkpoint uses a pending color map and is not curator-ready.",)
@@ -264,7 +430,6 @@ def run_registered_extraction(
                 ),
             )
 
-    extraction_mapping = load_extraction_color_mapping(root, document_id)
     mapping = extraction_mapping.values
     source = root / entry.source_path
     if source.suffix.lower() == ".pdf":
