@@ -46,6 +46,8 @@
   while editing retains the registered source.
 - Researcher-facing sentence cards with pending/problematic filters, 20/50 record views,
   readable color hex codes, quality flags, and explicit review decisions.
+- A validated sentence-correction form for text, page, tokens, BIO tags, and controlled
+  entities, with field-specific errors and before/after audit evidence.
 
 ### Changed
 

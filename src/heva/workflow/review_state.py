@@ -176,7 +176,13 @@ def replace_sentence_record(
 
     result = validate_record(replacement)
     if not result.valid or result.record is None:
-        raise ReviewError("Edited sentence does not satisfy the HEVA record contract.")
+        details = "; ".join(
+            f"{issue.path}: {issue.message}" for issue in result.issues
+        )
+        raise ReviewError(
+            "Edited sentence does not satisfy the HEVA record contract"
+            + (f": {details}" if details else ".")
+        )
     root = Path(project_root).resolve()
     package = _package(root, document_id)
     annotations_path = package / "annotations.json"

@@ -106,3 +106,21 @@ def test_edit_is_validated_read_back_and_audited(tmp_path: Path) -> None:
     assert persisted[0]["sentence"] == "The historic port remains visible."
     assert review["sentences"][0]["status"] == "needs_correction"
     assert review["sentences"][0]["audit"][-1]["event"] == "edit"
+
+
+def test_invalid_edit_names_contract_field_and_does_not_write(tmp_path: Path) -> None:
+    document_id, package = project(tmp_path)
+    initialize_sentence_reviews(tmp_path, document_id)
+    replacement = record(1)
+    replacement["entities"][0]["label"] = "invented"
+
+    with pytest.raises(ReviewError, match=r"\$\.entities\[0\]\.label"):
+        replace_sentence_record(
+            tmp_path,
+            document_id,
+            1,
+            replacement,
+            editor="Research Annotator",
+        )
+
+    assert json.loads((package / "annotations.json").read_text())[0] == record(1)

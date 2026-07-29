@@ -45,10 +45,20 @@ are `approved` or `excluded`, the registry document moves to `in_review`.
 
 ## Editing annotations
 
-`replace_sentence_record` accepts a complete replacement HEVA record and editor identity.
-The replacement must pass the HEVA contract. The system writes it atomically, reads it
-back unchanged, resets the sentence to `needs_correction`, and records the before and
-after values in an audit event.
+Choose **Edit sentence** on a sentence card to correct its page, text, tokens, BIO tags,
+and entities through structured fields. This is intentionally not a raw JSON editor.
+Entity labels come from the HEVA controlled vocabulary, while categorical `values` are
+derived from those entity labels so the two cannot silently disagree.
+
+Choose **Validate and save correction** to run the complete HEVA contract. If a correction
+is invalid, the form stays open and identifies the field and reason—for example, a token
+and BIO-tag count mismatch or entity offsets that do not match the entity text. Invalid
+changes do not overwrite `annotations.json`.
+
+After a valid correction, the system writes it atomically, reads it back unchanged,
+resets the sentence to `needs_correction`, and records the editor plus complete before and
+after values in an audit event. The annotator must then inspect and explicitly approve,
+exclude, or correct the sentence again.
 
 Review state is stored in `review-state.json` beside `annotations.json`. If re-extraction
 changes a record, its prior decision is not silently reused: the sentence returns to

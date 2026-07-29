@@ -605,8 +605,8 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=2"' in response.text
-    assert 'href="/static/review.css?v=2"' in response.text
+    assert 'src="/static/review_document.js?v=3"' in response.text
+    assert 'href="/static/review.css?v=3"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text
@@ -614,6 +614,10 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     assert 'data-batch-status="approved"' in response.text
     assert 'data-batch-status="needs_correction"' in response.text
     assert 'data-batch-status="excluded"' in response.text
+    assert 'id="sentence-editor"' in response.text
+    assert 'id="edit-sentence"' in response.text
+    assert 'id="edit-entities"' in response.text
+    assert "raw JSON" not in response.text
 
 
 def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> None:
@@ -633,6 +637,102 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert "sentence_ids: sentenceIds" in script
     assert 'filter === "checked"' in script
     assert 'filter === "to_check"' in script
+    assert '"Edit sentence"' in script
+    assert "correctedRecord" in script
+    assert "values: [...new Set" in script
+
+
+def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    entry = registry["documents"][0]
+    package = tmp_path / entry["package_path"]
+    original = {
+        "sentence_id": 1,
+        "page": 1,
+        "sentence": "A historic port.",
+        "tokens": ["A", "historic", "port", "."],
+        "values": ["historic"],
+        "entities": [{
+            "start": 2,
+            "end": 15,
+            "text": "historic port",
+            "label": "historic",
+            "color": "#FFFF00",
+        }],
+        "ner_tags": ["O", "B-historic", "I-historic", "O"],
+        "schema_version": "1.0",
+    }
+    (package / "annotations.json").write_text(json.dumps([original]), encoding="utf-8")
+    initialize_sentence_reviews(tmp_path, entry["document_id"])
+    client = TestClient(create_app(tmp_path))
+    assert client.post("/api/annotators", json={"name": "Sentence Editor"}).status_code == 201
+    corrected = {
+        **original,
+        "sentence": "A historic harbour.",
+        "tokens": ["A", "historic", "harbour", "."],
+        "entities": [{
+            "start": 2,
+            "end": 18,
+            "text": "historic harbour",
+            "label": "historic",
+            "color": "#FFFF00",
+        }],
+    }
+
+    response = client.put(
+        f"/api/review/{entry['document_id']}/sentences/1",
+        json={"record": corrected},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["sentences"][0]["review"]["status"] == "needs_correction"
+    saved = json.loads((package / "annotations.json").read_text())
+    audit = json.loads((package / "review-state.json").read_text())
+    assert saved[0]["sentence"] == "A historic harbour."
+    assert audit["sentences"][0]["audit"][-1]["actor"] == "Sentence Editor"
+    assert audit["sentences"][0]["audit"][-1]["details"]["before"] == original
+    assert audit["sentences"][0]["audit"][-1]["details"]["after"] == corrected
+
+
+def test_invalid_sentence_correction_reports_field_and_preserves_record(tmp_path: Path) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    entry = registry["documents"][0]
+    package = tmp_path / entry["package_path"]
+    original = {
+        "sentence_id": 1,
+        "page": 1,
+        "sentence": "A historic port.",
+        "tokens": ["A", "historic", "port", "."],
+        "values": ["historic"],
+        "entities": [{
+            "start": 2, "end": 15, "text": "historic port",
+            "label": "historic", "color": "#FFFF00",
+        }],
+        "ner_tags": ["O", "B-historic", "I-historic", "O"],
+        "schema_version": "1.0",
+    }
+    (package / "annotations.json").write_text(json.dumps([original]), encoding="utf-8")
+    initialize_sentence_reviews(tmp_path, entry["document_id"])
+    client = TestClient(create_app(tmp_path))
+    client.post("/api/annotators", json={"name": "Sentence Editor"})
+    invalid = {**original, "ner_tags": ["O"]}
+
+    response = client.put(
+        f"/api/review/{entry['document_id']}/sentences/1",
+        json={"record": invalid},
+    )
+
+    assert response.status_code == 422
+    assert "$.ner_tags" in response.json()["action"]
+    assert json.loads((package / "annotations.json").read_text()) == [original]
 
 
 def test_review_queue_asset_always_offers_edit_annotation_action() -> None:

@@ -19,7 +19,11 @@ from heva.workflow.review_queue import (
     load_review_document,
     registered_source_path,
 )
-from heva.workflow.review_state import ReviewError, record_decisions
+from heva.workflow.review_state import (
+    ReviewError,
+    record_decisions,
+    replace_sentence_record,
+)
 
 
 def create_review_router(
@@ -126,6 +130,52 @@ def create_review_router(
                 {
                     "code": "review_decision_not_saved",
                     "message": "The review decision was not saved.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+
+    @router.put("/api/review/{document_id}/sentences/{sentence_id}")
+    def save_sentence_correction(
+        document_id: str,
+        sentence_id: int,
+        payload: dict,
+    ):
+        replacement = payload.get("record")
+        if not isinstance(replacement, dict):
+            raise HTTPException(
+                status_code=422,
+                detail="Provide the corrected sentence fields.",
+            )
+        if replacement.get("sentence_id") != sentence_id:
+            raise HTTPException(
+                status_code=422,
+                detail="The sentence identifier cannot be changed.",
+            )
+        try:
+            annotator = load_annotator_registry(root).active()
+            if annotator is None or not annotator.name:
+                raise ValueError("Select an active project annotator before editing.")
+            replace_sentence_record(
+                root,
+                document_id,
+                sentence_id,
+                replacement,
+                editor=annotator.name,
+            )
+            return load_review_document(root, document_id)
+        except (
+            OSError,
+            ValueError,
+            ValidationError,
+            AnnotatorRegistryError,
+            ReviewError,
+            ReviewQueueError,
+        ) as error:
+            return JSONResponse(
+                {
+                    "code": "sentence_correction_not_saved",
+                    "message": "The sentence correction was not saved.",
                     "action": str(error),
                 },
                 status_code=422,

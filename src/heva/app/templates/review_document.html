@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Review document · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/review.css?v=2">
-  <script src="/static/review_document.js?v=2" defer></script>
+  <link rel="stylesheet" href="/static/review.css?v=3">
+  <script src="/static/review_document.js?v=3" defer></script>
 </head>
 <body data-document-id="DOCUMENT_ID_PLACEHOLDER" class="review-body">
   <div id="review-app" class="review-app">
@@ -54,5 +54,49 @@
       <iframe id="review-pdf-frame" title="Annotated source PDF"></iframe>
     </aside>
   </div>
+  <dialog id="sentence-editor" class="sentence-editor" aria-labelledby="sentence-editor-title">
+    <form id="sentence-editor-form">
+      <div class="editor-heading">
+        <div>
+          <p class="eyebrow">Validated annotation correction</p>
+          <h2 id="sentence-editor-title">Edit sentence</h2>
+        </div>
+        <button id="close-sentence-editor" class="button secondary" type="button">Close</button>
+      </div>
+      <p class="muted">Edit the safe fields below. HEVA checks labels, entity offsets, colors, tokens, and BIO tags before saving.</p>
+      <div id="sentence-editor-error" class="notice error" aria-live="assertive" hidden></div>
+      <div class="editor-grid">
+        <label>Sentence ID
+          <input id="edit-sentence-id" type="number" readonly>
+        </label>
+        <label>Page <span aria-hidden="true">*</span>
+          <input id="edit-page" type="number" min="1" required>
+        </label>
+      </div>
+      <label>Sentence text <span aria-hidden="true">*</span>
+        <textarea id="edit-sentence" rows="4" required></textarea>
+      </label>
+      <div class="editor-grid">
+        <label>Tokens <span aria-hidden="true">*</span>
+          <span class="field-help">One token per line</span>
+          <textarea id="edit-tokens" rows="8" required></textarea>
+        </label>
+        <label>BIO tags <span aria-hidden="true">*</span>
+          <span class="field-help">One tag per line; the count must match tokens</span>
+          <textarea id="edit-ner-tags" rows="8" required></textarea>
+        </label>
+      </div>
+      <fieldset class="entity-editor">
+        <legend>Entities</legend>
+        <p class="field-help">Offsets use character positions in the sentence. Entity text must exactly match that slice.</p>
+        <div id="edit-entities"></div>
+        <button id="add-entity" class="button secondary" type="button">Add entity</button>
+      </fieldset>
+      <div class="editor-actions">
+        <button class="button secondary" id="cancel-sentence-editor" type="button">Cancel</button>
+        <button class="button" id="save-sentence-editor" type="submit">Validate and save correction</button>
+      </div>
+    </form>
+  </dialog>
 </body>
 </html>

@@ -75,6 +75,47 @@
 .flag { padding: .3rem .5rem; border-radius: 6px; background: #3c301a; color: var(--warning); font-size: .84rem; }
 .decision-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
 .decision-actions button { margin: 0; }
+.sentence-editor {
+  width: min(900px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  padding: 1.25rem;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--ink);
+}
+.sentence-editor::backdrop { background: rgb(0 0 0 / .72); }
+.sentence-editor form, .sentence-editor label { display: grid; gap: .4rem; }
+.sentence-editor form { gap: 1rem; }
+.sentence-editor input, .sentence-editor textarea, .sentence-editor select {
+  width: 100%;
+  padding: .65rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+}
+.sentence-editor input[readonly] { color: var(--muted); }
+.editor-heading, .editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.editor-heading h2, .editor-heading p { margin: 0; }
+.editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.entity-editor { padding: 1rem; border: 1px solid var(--border); border-radius: 10px; }
+.entity-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 2fr) 85px 85px minmax(130px, 1fr) 115px auto;
+  align-items: end;
+  gap: .55rem;
+  margin-bottom: .75rem;
+}
+.field-help, .muted { color: var(--muted); font-size: .85rem; }
+.editor-actions { justify-content: flex-end; }
 .review-pdf { min-height: 0; border-left: 1px solid var(--border); background: #34383f; }
 .review-pdf iframe { width: 100%; height: 100%; border: 0; }
 .document-navigation { display: flex; justify-content: space-between; margin-top: 1.5rem; }
@@ -85,4 +126,5 @@
   .review-pdf { height: 70vh; border-left: 0; border-top: 1px solid var(--border); }
   .batch-review { grid-template-columns: 1fr; }
   .batch-actions { grid-column: auto; }
+  .editor-grid, .entity-row { grid-template-columns: 1fr; }
 }
