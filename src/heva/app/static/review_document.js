@@ -10,6 +10,12 @@ const hevaLabels = [
   "social", "economic", "political", "historic", "aesthetical",
   "scientific", "age", "ecological",
 ];
+const gateLabels = {
+  citation: "Citation",
+  color_configuration: "Colors",
+  extraction: "Extraction",
+  sentence_review: "Sentences",
+};
 let reviewDocument = null;
 let visibleSentences = [];
 let editingRecord = null;
@@ -84,6 +90,61 @@ async function decide(sentenceIds, status, comment = null) {
   reviewDocument = result;
   selectedSentenceIds.clear();
   render();
+}
+
+function renderReadiness() {
+  const panel = document.getElementById("review-readiness");
+  const gates = document.getElementById("review-gates");
+  const blockers = document.getElementById("review-blockers");
+  const submit = document.getElementById("submit-document-review");
+  gates.replaceChildren(...Object.entries(reviewDocument.readiness_gates).map(
+    ([key, passed]) => textElement(
+      "span",
+      `workspace-gate ${passed ? "passed" : "blocked"}`,
+      `${passed ? "✓" : "○"} ${gateLabels[key]}`,
+    ),
+  ));
+  blockers.replaceChildren(...reviewDocument.blocking_reasons.map(
+    (reason) => textElement("li", "", reason),
+  ));
+  const submitted = ["in_review", "done"].includes(reviewDocument.status);
+  panel.classList.toggle("submitted", submitted);
+  submit.disabled = !reviewDocument.annotation_complete || submitted;
+  submit.textContent = submitted
+    ? "Submitted for curator review"
+    : "Submit for curator review";
+  document.getElementById("review-readiness-title").textContent = submitted
+    ? "Annotation submitted"
+    : reviewDocument.annotation_complete
+      ? "Ready for curator review"
+      : "Complete the annotation gates";
+}
+
+async function submitDocumentReview() {
+  const submit = document.getElementById("submit-document-review");
+  submit.disabled = true;
+  submit.textContent = "Submitting…";
+  try {
+    const response = await fetch(
+      `/api/review/${encodeURIComponent(documentId)}/submit`,
+      {method: "POST"},
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      statusBox.className = "notice error";
+      statusBox.textContent = `${result.message} ${result.action}`;
+      renderReadiness();
+      return;
+    }
+    reviewDocument = result;
+    render();
+    statusBox.className = "notice success";
+    statusBox.textContent = "This document is now read-only and awaiting curator review.";
+  } catch (error) {
+    statusBox.className = "notice error";
+    statusBox.textContent = `The document could not be submitted: ${error.message}`;
+    renderReadiness();
+  }
 }
 
 function lineValues(value) {
@@ -213,15 +274,17 @@ async function saveCorrection() {
 }
 
 function updateSelectionControls() {
+  const editable = !["in_review", "done"].includes(reviewDocument.status);
   const selectedCount = visibleSentences.filter((item) =>
     selectedSentenceIds.has(item.record.sentence_id)
   ).length;
   document.getElementById("selected-count").textContent =
     `${selectedCount} selected`;
   document.querySelectorAll("[data-batch-status]").forEach((button) => {
-    button.disabled = selectedCount === 0;
+    button.disabled = selectedCount === 0 || !editable;
   });
   const selectVisible = document.getElementById("select-visible");
+  selectVisible.disabled = !editable;
   selectVisible.checked =
     visibleSentences.length > 0 && selectedCount === visibleSentences.length;
   selectVisible.indeterminate =
@@ -239,6 +302,7 @@ function sentenceCard(item) {
   selection.className = "sentence-selection";
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
+  checkbox.disabled = ["in_review", "done"].includes(reviewDocument.status);
   checkbox.checked = selectedSentenceIds.has(record.sentence_id);
   checkbox.setAttribute("aria-label", `Select sentence ${record.sentence_id}`);
   checkbox.addEventListener("change", () => {
@@ -259,13 +323,16 @@ function sentenceCard(item) {
   }
   const actions = document.createElement("div");
   actions.className = "decision-actions";
+  const editable = !["in_review", "done"].includes(reviewDocument.status);
   const editButton = textElement("button", "button secondary", "Edit sentence");
   editButton.type = "button";
+  editButton.disabled = !editable;
   editButton.addEventListener("click", () => openEditor(record));
   actions.appendChild(editButton);
   [["Approve", "approved"], ["Needs correction", "needs_correction"], ["Exclude", "excluded"]].forEach(([label, status]) => {
     const button = textElement("button", `button${status === "approved" ? "" : " secondary"}`, label);
     button.type = "button";
+    button.disabled = !editable;
     button.addEventListener("click", () => decide([record.sentence_id], status));
     actions.appendChild(button);
   });
@@ -294,6 +361,7 @@ function render() {
   });
   list.replaceChildren(...visibleSentences.map(sentenceCard));
   updateSelectionControls();
+  renderReadiness();
   const completed = reviewDocument.sentences.filter((item) =>
     ["approved", "excluded"].includes(item.review.status)
   ).length;
@@ -349,6 +417,10 @@ document.querySelectorAll("[data-batch-status]").forEach((button) => {
     decide(visibleIds, button.dataset.batchStatus, comment);
   });
 });
+document.getElementById("submit-document-review").addEventListener(
+  "click",
+  submitDocumentReview,
+);
 document.getElementById("add-entity").addEventListener("click", () => {
   entityRows.appendChild(entityRow());
 });

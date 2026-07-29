@@ -79,6 +79,22 @@ def _package(root: Path, document_id: str) -> Path:
     return root / matches[0].package_path
 
 
+def _require_editable(root: Path, document_id: str) -> None:
+    registry = ProjectRegistry.model_validate_json(
+        (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
+    )
+    entry = next(
+        (item for item in registry.documents if item.document_id == document_id),
+        None,
+    )
+    if entry is None:
+        raise ReviewError(f"Document {document_id} is not registered.")
+    if entry.status in {"in_review", "done"}:
+        raise ReviewError(
+            "This document is read-only after submission. Return it to in progress before editing."
+        )
+
+
 def initialize_sentence_reviews(
     project_root: str | Path,
     document_id: str,
@@ -137,6 +153,7 @@ def record_decisions(
     if not reviewer.strip():
         raise ReviewError("Reviewer identity is required.")
     root = Path(project_root).resolve()
+    _require_editable(root, document_id)
     target = _package(root, document_id) / "review-state.json"
     review = DocumentReview.model_validate_json(target.read_text(encoding="utf-8"))
     selected = set(sentence_ids)
@@ -184,6 +201,7 @@ def replace_sentence_record(
             + (f": {details}" if details else ".")
         )
     root = Path(project_root).resolve()
+    _require_editable(root, document_id)
     package = _package(root, document_id)
     annotations_path = package / "annotations.json"
     records = json.loads(annotations_path.read_text(encoding="utf-8"))

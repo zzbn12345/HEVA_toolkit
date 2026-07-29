@@ -18,6 +18,7 @@ from heva.workflow.review_queue import (
     list_review_queue,
     load_review_document,
     registered_source_path,
+    submit_review_document,
 )
 from heva.workflow.review_state import (
     ReviewError,
@@ -176,6 +177,30 @@ def create_review_router(
                 {
                     "code": "sentence_correction_not_saved",
                     "message": "The sentence correction was not saved.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+
+    @router.post("/api/review/{document_id}/submit")
+    def submit_document_review(document_id: str):
+        try:
+            annotator = load_annotator_registry(root).active()
+            if annotator is None or not annotator.name:
+                raise ValueError("Select an active project annotator before submitting.")
+            return submit_review_document(root, document_id)
+        except (
+            OSError,
+            ValueError,
+            ValidationError,
+            AnnotatorRegistryError,
+            ReviewError,
+            ReviewQueueError,
+        ) as error:
+            return JSONResponse(
+                {
+                    "code": "document_review_not_submitted",
+                    "message": "The document was not submitted for curator review.",
                     "action": str(error),
                 },
                 status_code=422,

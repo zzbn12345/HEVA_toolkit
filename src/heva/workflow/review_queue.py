@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from heva.workflow.document_metadata import PackageMetadata
+from heva.workflow.document_metadata import PackageMetadata, save_package_metadata
 from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
 from heva.workflow.quality_flags import assess_record
 from heva.workflow.review_state import DocumentReview
@@ -266,7 +267,11 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
                 ],
             }
         )
-    queue = [item for item in list_review_queue(root) if item.review_available]
+    all_items = list_review_queue(root)
+    selected_summary = next(
+        item for item in all_items if item.document_id == document_id
+    )
+    queue = [item for item in all_items if item.review_available]
     identifiers = [item.document_id for item in queue]
     position = identifiers.index(document_id)
     return {
@@ -274,12 +279,60 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
         "source_path": entry.source_path,
         "status": entry.status,
         "source_state": entry.source_state,
+        "annotation_complete": selected_summary.annotation_complete,
+        "completion_percent": selected_summary.completion_percent,
+        "readiness_gates": selected_summary.readiness_gates,
+        "blocking_reasons": selected_summary.blocking_reasons,
         "previous_document_id": identifiers[position - 1] if position > 0 else None,
         "next_document_id": (
             identifiers[position + 1] if position + 1 < len(identifiers) else None
         ),
         "sentences": sentences,
     }
+
+
+def submit_review_document(project_root: str | Path, document_id: str) -> dict[str, Any]:
+    """Finish annotator review only when the shared four-gate projection passes."""
+
+    root = Path(project_root).resolve()
+    summary = next(
+        (item for item in list_review_queue(root) if item.document_id == document_id),
+        None,
+    )
+    if summary is None:
+        raise ReviewQueueError(f"Document {document_id} is not registered.")
+    if summary.status in {"in_review", "done"}:
+        raise ReviewQueueError("This document has already been submitted for review.")
+    if not summary.annotation_complete:
+        reasons = " ".join(summary.blocking_reasons)
+        raise ReviewQueueError(
+            f"This document is not ready for submission. {reasons}".strip()
+        )
+    package = _package_for_document(root, document_id)
+    try:
+        metadata = PackageMetadata.model_validate_json(
+            (package / "package-metadata.json").read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError) as error:
+        raise ReviewQueueError(f"Cannot update annotation-process metadata: {error}") from error
+    metadata.annotation_process.review.completed = True
+    metadata.annotation_process.review.reviewed_at = datetime.now(timezone.utc)
+    save_package_metadata(root, metadata)
+
+    from heva.workflow.review_state import submit_document_for_review
+
+    submit_document_for_review(root, document_id)
+    return load_review_document(root, document_id)
+
+
+def _package_for_document(root: Path, document_id: str) -> Path:
+    entry = next(
+        (item for item in _registry(root).documents if item.document_id == document_id),
+        None,
+    )
+    if entry is None:
+        raise ReviewQueueError(f"Document {document_id} is not registered.")
+    return root / entry.package_path
 
 
 def registered_source_path(project_root: str | Path, document_id: str) -> Path:

@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from heva.workflow.document_metadata import (
     ColorConfigurationMetadata,
     ColorMappingMetadata,
@@ -13,8 +15,16 @@ from heva.workflow.document_metadata import (
     SourceMetadata,
 )
 from heva.workflow.project_registry import sync_registry
-from heva.workflow.review_queue import list_review_queue, load_review_document
-from heva.workflow.review_state import initialize_sentence_reviews, record_decisions
+from heva.workflow.review_queue import (
+    list_review_queue,
+    load_review_document,
+    submit_review_document,
+)
+from heva.workflow.review_state import (
+    ReviewError,
+    initialize_sentence_reviews,
+    record_decisions,
+)
 
 
 def record(sentence_id: int, sentence: str) -> dict[str, object]:
@@ -192,6 +202,39 @@ def test_document_is_complete_only_when_all_four_gates_pass(tmp_path: Path) -> N
     assert item.completion_percent == 100
     assert all(item.readiness_gates.values())
     assert item.blocking_reasons == []
+
+
+def test_ready_document_submission_updates_metadata_and_locks_review(
+    tmp_path: Path,
+) -> None:
+    documents = prepared_project(tmp_path)
+    entry = documents[0]
+    document_id = str(entry["document_id"])
+    write_ready_metadata(tmp_path, entry)
+    record_decisions(
+        tmp_path,
+        document_id,
+        [1, 2],
+        status="approved",
+        reviewer="Annotator",
+    )
+
+    selected = submit_review_document(tmp_path, document_id)
+
+    assert selected["status"] == "in_review"
+    assert selected["annotation_complete"] is True
+    package = tmp_path / str(entry["package_path"])
+    metadata = json.loads((package / "package-metadata.json").read_text())
+    assert metadata["annotation_process"]["review"]["completed"] is True
+    assert metadata["annotation_process"]["review"]["reviewed_at"]
+    with pytest.raises(ReviewError, match="read-only after submission"):
+        record_decisions(
+            tmp_path,
+            document_id,
+            [1],
+            status="excluded",
+            reviewer="Annotator",
+        )
 
 
 def test_incomplete_document_explains_failed_gate(tmp_path: Path) -> None:

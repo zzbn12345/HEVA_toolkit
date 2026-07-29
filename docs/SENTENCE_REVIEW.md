@@ -47,7 +47,10 @@ Submit a completely decided document:
 ```
 
 Submission fails while any sentence is `pending` or `needs_correction`. Once all sentences
-are `approved` or `excluded`, the registry document moves to `in_review`.
+are `approved` or `excluded` and the citation, color configuration, and extraction gates
+also pass, the workspace enables **Submit for curator review**. Submission timestamps the
+annotation-process review, moves the registry document to `in_review`, and makes its
+sentence evidence read-only.
 
 ## Editing annotations
 

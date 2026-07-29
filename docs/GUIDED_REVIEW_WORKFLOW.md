@@ -226,6 +226,18 @@ The PDF remains visible on the right while reviewing sentences so the annotator 
 the extracted sentence, color evidence, and page context and can spot omissions or
 incorrect boundaries.
 
+## 8. Finishing annotator review
+
+The document workspace shows the same Citation, Colors, Extraction, and Sentences gates as
+the project dashboard. The readiness display refreshes after every sentence decision or
+correction. **Submit for curator review** remains unavailable until all four gates pass.
+
+Submitting timestamps completion in the package's annotation-process metadata and changes
+the registry state to `in_review`. The sentence workspace then becomes read-only and
+clearly displays **Submitted for curator review**. This protects the exact evidence sent
+to the curator; a later correction workflow must explicitly return the document to
+`in_progress` before changing records or decisions.
+
 ## Acceptance criteria
 
 - The project list shows friendly state, sentence-review completion, and Edit action for
@@ -241,4 +253,6 @@ incorrect boundaries.
 - Batch review affects only visible, selected sentences and creates individual audit events.
 - Flagged sentences remain visible and require human resolution.
 - A document cannot enter In review with pending or needs-correction sentences.
+- A document cannot be submitted until citation, colors, extraction, and sentence review
+  are all complete; submitted evidence becomes read-only.
 - The PDF and review list remain independently scrollable.

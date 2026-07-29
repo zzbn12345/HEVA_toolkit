@@ -50,6 +50,8 @@
   entities, with field-specific errors and before/after audit evidence.
 - Inline sentence highlights that place every extracted annotation back into its textual
   context while retaining accessible label and hex-color details.
+- Live document readiness gates and guarded curator submission that timestamps completed
+  annotation review, moves the record to `in_review`, and locks submitted evidence.
 
 ### Changed
 
