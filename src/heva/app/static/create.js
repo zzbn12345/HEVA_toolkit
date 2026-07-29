@@ -235,9 +235,102 @@ async function loadColors(documentId) {
       return;
     }
     renderColorConfiguration(result);
+    await loadBatchCandidates(documentId, result.configuration.human_confirmed);
   } catch (error) {
     status.className = "notice error";
     status.textContent = "The color configuration could not be loaded.";
+  }
+}
+
+function updateBatchAction() {
+  const selected = document.querySelectorAll(".batch-candidate input:checked").length;
+  document.getElementById("apply-batch-mapping").disabled =
+    !selected || !document.getElementById("batch-confirmed").checked;
+}
+
+async function loadBatchCandidates(documentId, sourceConfirmed) {
+  const panel = document.getElementById("batch-mapping");
+  const list = document.getElementById("batch-candidates");
+  const status = document.getElementById("batch-status");
+  panel.hidden = !sourceConfirmed;
+  if (!sourceConfirmed) {
+    list.replaceChildren();
+    return;
+  }
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/colors/batch`,
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      status.className = "notice error";
+      status.textContent = result.detail || "Batch compatibility could not be checked.";
+      return;
+    }
+    list.replaceChildren(...result.candidates.map((candidate) => {
+      const row = document.createElement("label");
+      row.className = `batch-candidate ${candidate.eligible ? "" : "incompatible"}`;
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = candidate.document_id;
+      input.disabled = !candidate.eligible;
+      input.addEventListener("change", updateBatchAction);
+      const details = document.createElement("span");
+      const name = document.createElement("strong");
+      name.textContent = candidate.source_path;
+      const reason = document.createElement("small");
+      reason.textContent = candidate.reason;
+      details.append(name, reason);
+      row.append(input, details);
+      return row;
+    }));
+    const eligible = result.candidates.filter((item) => item.eligible).length;
+    status.className = `notice ${eligible ? "success" : "warning"}`;
+    status.textContent = eligible
+      ? `${eligible} document${eligible === 1 ? "" : "s"} have an exact palette match.`
+      : "No other registered document has an eligible matching palette.";
+    document.getElementById("batch-confirmed").checked = false;
+    updateBatchAction();
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = "Batch compatibility could not be checked.";
+  }
+}
+
+async function applyBatchMapping() {
+  const documentId = document.getElementById("selected-document-id").value;
+  const button = document.getElementById("apply-batch-mapping");
+  const status = document.getElementById("batch-status");
+  const documentIds = [...document.querySelectorAll(".batch-candidate input:checked")]
+    .map((input) => input.value);
+  button.disabled = true;
+  button.textContent = "Applying…";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/colors/batch`,
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          document_ids: documentIds,
+          confirmed: document.getElementById("batch-confirmed").checked,
+        }),
+      },
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      status.className = "notice error";
+      status.textContent = result.detail || "The shared mapping was not applied.";
+      return;
+    }
+    await loadBatchCandidates(documentId, true);
+    status.className = "notice success";
+    status.textContent = `Mapping applied to ${result.applied_document_ids.length} document${result.applied_document_ids.length === 1 ? "" : "s"} with separate confirmation records.`;
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = "The shared mapping could not be applied.";
+  } finally {
+    button.textContent = "Apply to selected documents";
   }
 }
 
@@ -402,6 +495,11 @@ document.getElementById("confirm-citation").addEventListener(
 );
 document.getElementById("propose-colors").addEventListener("click", proposeColors);
 document.getElementById("confirm-colors").addEventListener("click", confirmColors);
+document.getElementById("batch-confirmed").addEventListener("change", updateBatchAction);
+document.getElementById("apply-batch-mapping").addEventListener(
+  "click",
+  applyBatchMapping,
+);
 document.getElementById("extract-annotations").addEventListener(
   "click",
   extractAnnotations,

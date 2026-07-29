@@ -150,6 +150,12 @@ Ollama, or its response fails. Returned labels must belong to the controlled HEV
 specification and remain `pending_review`; the operation cannot replace a confirmed
 configuration or count as human approval.
 
+After confirming one document, the annotator may inspect registered batch candidates.
+Every candidate remains visible with its compatibility reason. Only an unconfirmed
+document with the exact same observed hex palette can be selected. Reuse requires a
+separate acknowledgement and writes confirmation evidence plus the source document ID
+into every selected package. A mismatch never receives a partial or approximate mapping.
+
 While extraction runs, the workspace displays progress and prevents a second request.
 Completion reports the number of persisted sentence records and whether an existing
 checkpoint was reused. Failures and a two-minute browser timeout produce a visible

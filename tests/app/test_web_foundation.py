@@ -10,7 +10,9 @@ import pytest
 
 from heva.app.main import create_app
 from heva.workflow.color_mapping import (
+    confirm_color_configuration,
     propose_color_configuration,
+    resolve_color,
     save_color_configuration,
 )
 from heva.workflow.project_registry import sync_registry
@@ -128,8 +130,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=5"' in response.text
-    assert 'href="/static/create.css?v=3"' in response.text
+    assert 'src="/static/create.js?v=6"' in response.text
+    assert 'href="/static/create.css?v=4"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text
@@ -140,6 +142,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="extraction-progress"' in response.text
     assert 'id="proposal-progress"' in response.text
     assert 'id="propose-colors"' in response.text
+    assert 'id="batch-mapping"' in response.text
+    assert 'id="apply-batch-mapping"' in response.text
     assert "#FFFF00" not in response.text
     assert "Label not decided" not in response.text
 
@@ -198,6 +202,39 @@ def test_automatic_color_proposal_route_reports_generated_evidence(
     assert available.json()["automatic_proposal_available"] is True
     assert proposed.status_code == 200
     assert proposed.json()["proposed_color_count"] == 1
+
+
+def test_batch_color_candidates_explain_palette_mismatch(tmp_path: Path) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    (sources / "target.pdf").write_bytes(b"target")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    ids = {
+        Path(item["source_path"]).name: item["document_id"]
+        for item in registry["documents"]
+    }
+    source = propose_color_configuration(["#CCCC00"])
+    source = resolve_color(source, "#CCCC00", label="political")
+    source = confirm_color_configuration(source, confirmed_by="Reviewer")
+    save_color_configuration(tmp_path, ids["source.pdf"], source)
+    save_color_configuration(
+        tmp_path,
+        ids["target.pdf"],
+        propose_color_configuration(["#FF66CC"]),
+    )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get(
+        f"/api/documents/{ids['source.pdf']}/colors/batch"
+    )
+
+    assert response.status_code == 200
+    candidate = response.json()["candidates"][0]
+    assert candidate["palette_matches"] is False
+    assert candidate["eligible"] is False
+    assert "Palette mismatch" in candidate["reason"]
 
 
 def test_extraction_interface_has_progress_timeout_and_visible_errors() -> None:

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Create package · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/create.css?v=3">
-  <script src="/static/create.js?v=5" defer></script>
+  <link rel="stylesheet" href="/static/create.css?v=4">
+  <script src="/static/create.js?v=6" defer></script>
 </head>
 <body class="create-body">
   <div id="create-app" class="create-app">
@@ -108,6 +108,17 @@
           <input id="mapping-confirmed" type="checkbox" disabled>
           <span>I reviewed every observed color and made an explicit label or ignore decision.</span>
         </label>
+        <section id="batch-mapping" class="batch-mapping" hidden>
+          <h2>Reuse this confirmed mapping</h2>
+          <p>Only documents with the exact same observed palette can be selected. Every selected document records its own confirmation.</p>
+          <div id="batch-status" class="notice neutral" aria-live="polite"></div>
+          <div id="batch-candidates" class="batch-candidates"></div>
+          <label class="confirmation">
+            <input id="batch-confirmed" type="checkbox">
+            <span>I inspected the selected documents and approve reusing this mapping.</span>
+          </label>
+          <button id="apply-batch-mapping" class="button secondary" type="button" disabled>Apply to selected documents</button>
+        </section>
         <div id="extraction-status" class="notice neutral" aria-live="polite">
           Confirm the document color configuration before extraction.
         </div>

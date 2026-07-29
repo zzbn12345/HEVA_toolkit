@@ -163,6 +163,33 @@ fieldset { margin: 1rem 0; padding: 0; border: 0; }
 }
 
 .color-evidence { margin: .55rem 0 0; color: var(--muted); line-height: 1.45; }
+
+.batch-mapping {
+  margin: 1.5rem 0;
+  padding: 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.batch-mapping h2 { margin: 0 0 .35rem; font-size: 1.15rem; }
+.batch-mapping > p { margin: 0; color: var(--muted); line-height: 1.5; }
+.batch-candidates { display: grid; gap: .55rem; }
+
+.batch-candidate {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .7rem;
+  align-items: start;
+  padding: .75rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--field);
+}
+
+.batch-candidate strong, .batch-candidate small { display: block; }
+.batch-candidate small { margin-top: .2rem; color: var(--muted); }
+.batch-candidate.incompatible { opacity: .72; }
 .ignore-reason[hidden] { display: none; }
 
 .color-swatch {

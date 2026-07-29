@@ -116,6 +116,7 @@ def review_and_confirm_color_configuration(
             label=str(label) if label else None,
             ignore_reason=str(ignore_reason) if ignore_reason else None,
         )
+    updated.shared_from_document_id = None
     updated = confirm_color_configuration(updated, confirmed_by=confirmed_by)
     save_color_configuration(project_root, document_id, updated)
     return updated
@@ -359,6 +360,67 @@ def validate_shared_batch_mapping(
                 )
             )
     return BatchMappingReport(issues=tuple(issues))
+
+
+def apply_shared_color_mapping(
+    project_root: str | Path,
+    source_document_id: str,
+    target_document_ids: Sequence[str],
+    *,
+    confirmed_by: str,
+) -> tuple[str, ...]:
+    """Copy one confirmed mapping only to unconfirmed documents with exact palettes."""
+
+    targets = tuple(dict.fromkeys(target_document_ids))
+    if not targets:
+        raise ColorMappingError("Select at least one compatible target document.")
+    if source_document_id in targets:
+        raise ColorMappingError("The source document cannot be its own batch target.")
+    source = load_color_configuration(project_root, source_document_id)
+    if not source.human_confirmed:
+        raise ColorMappingError(
+            "Confirm the source document mapping before sharing it."
+        )
+    source_by_hex = {color.hex: color for color in source.colors}
+    source_palette = set(source_by_hex)
+    prospective: dict[str, ColorConfigurationMetadata] = {
+        source_document_id: source
+    }
+    for document_id in targets:
+        target = load_color_configuration(project_root, document_id)
+        if target.human_confirmed:
+            raise ColorMappingError(
+                f"Document {document_id} already has a confirmed mapping."
+            )
+        target_palette = {color.hex for color in target.colors}
+        if target_palette != source_palette:
+            raise ColorMappingError(
+                f"Document {document_id} has a different color palette."
+            )
+        updated = target.model_copy(deep=True)
+        for color in updated.colors:
+            shared = source_by_hex[color.hex]
+            color.label = shared.label
+            color.status = shared.status
+            color.ignore_reason = shared.ignore_reason
+        updated.shared_from_document_id = source_document_id
+        prospective[document_id] = confirm_color_configuration(
+            updated,
+            confirmed_by=confirmed_by,
+        )
+    report = validate_shared_batch_mapping(prospective)
+    if not report.allowed:
+        raise ColorMappingError(
+            "The selected batch is not compatible: "
+            + " ".join(issue.message for issue in report.issues)
+        )
+    for document_id in targets:
+        save_color_configuration(
+            project_root,
+            document_id,
+            prospective[document_id],
+        )
+    return targets
 
 
 def save_color_configuration(

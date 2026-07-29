@@ -7,7 +7,7 @@ from typing import Callable
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, StrictBool, ValidationError
 
 from heva.workflow.annotator_registry import (
     AnnotatorRegistryError,
@@ -23,6 +23,7 @@ from heva.workflow.automatic_color_proposal import (
 )
 from heva.workflow.document_metadata import AnnotatorMetadata
 from heva.workflow.color_mapping import (
+    apply_shared_color_mapping,
     ColorMappingError,
     load_color_configuration,
     review_and_confirm_color_configuration,
@@ -75,6 +76,13 @@ class ProjectFolderInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     path: str
+
+
+class BatchColorApplyInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    document_ids: list[str]
+    confirmed: StrictBool
 
 
 def create_project_router(
@@ -357,6 +365,79 @@ def create_project_router(
         except (AnnotatorRegistryError, ColorMappingError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return configuration.model_dump(mode="json")
+
+    @router.get("/api/documents/{document_id}/colors/batch")
+    def batch_color_candidates(document_id: str):
+        try:
+            source = load_color_configuration(root, document_id)
+            registry = ProjectRegistry.model_validate_json(
+                (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
+            )
+        except (ColorMappingError, OSError, ValidationError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        source_palette = {color.hex for color in source.colors}
+        candidates = []
+        for entry in registry.documents:
+            if entry.document_id == document_id:
+                continue
+            try:
+                target = load_color_configuration(root, entry.document_id)
+                palette_matches = {
+                    color.hex for color in target.colors
+                } == source_palette
+                eligible = (
+                    source.human_confirmed
+                    and palette_matches
+                    and not target.human_confirmed
+                )
+                if target.human_confirmed:
+                    reason = "This document already has its own confirmed mapping."
+                elif not palette_matches:
+                    reason = "Palette mismatch; review this document independently."
+                elif not source.human_confirmed:
+                    reason = "Confirm the source mapping before sharing it."
+                else:
+                    reason = "Exact palette match; eligible for supervised reuse."
+            except ColorMappingError as error:
+                palette_matches = False
+                eligible = False
+                reason = str(error)
+            candidates.append(
+                {
+                    "document_id": entry.document_id,
+                    "source_path": entry.source_path,
+                    "palette_matches": palette_matches,
+                    "eligible": eligible,
+                    "reason": reason,
+                }
+            )
+        return {
+            "source_document_id": document_id,
+            "source_confirmed": source.human_confirmed,
+            "candidates": candidates,
+        }
+
+    @router.post("/api/documents/{document_id}/colors/batch")
+    def apply_batch_colors(document_id: str, payload: BatchColorApplyInput):
+        if not payload.confirmed:
+            raise HTTPException(
+                status_code=422,
+                detail="Confirm that the selected documents share the inspected palette.",
+            )
+        try:
+            active = load_annotator_registry(root).active()
+            applied = apply_shared_color_mapping(
+                root,
+                document_id,
+                payload.document_ids,
+                confirmed_by=active.name if active and active.name else "",
+            )
+        except (AnnotatorRegistryError, ColorMappingError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {
+            "source_document_id": document_id,
+            "applied_document_ids": list(applied),
+        }
 
     @router.post("/api/documents/{document_id}/extract")
     def extract_document(document_id: str):

@@ -196,6 +196,13 @@ report = validate_shared_batch_mapping(
 A shared mapping is allowed only when the palettes match and every document has its own
 human confirmation. A palette mismatch means the documents must use independent mappings.
 
+In the Color Review interface, a confirmed document lists all other registered documents
+as batch candidates. Mismatched palettes and documents that already have their own
+confirmed mapping remain visible with an explanation but cannot be selected. Applying a
+shared mapping requires an explicit acknowledgement, confirms each selected document under
+the active annotator, and records the source as `shared_from_document_id`. The source
+configuration itself is not changed.
+
 ## Web application proposal request
 
 The document Color Review step can request suggestions for unresolved observed colors.

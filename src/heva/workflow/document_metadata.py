@@ -184,6 +184,7 @@ class ColorConfigurationMetadata(BaseModel):
     use_for_extraction: StrictBool = False
     extraction_authorized_by: str | None = None
     extraction_authorized_at: datetime | None = None
+    shared_from_document_id: str | None = None
     colors: list[ColorMappingMetadata] = Field(default_factory=list)
 
 

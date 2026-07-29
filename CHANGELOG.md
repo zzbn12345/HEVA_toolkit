@@ -23,6 +23,9 @@
   evidence, asks local Ollama for controlled-label suggestions, persists them as pending
   evidence, and reports connection, timeout, or specification errors without changing
   confirmed decisions.
+- Supervised batch mapping reuse that lists every other document with an explicit
+  compatibility reason, enables only exact unconfirmed palette matches, and records the
+  source document plus separate confirmation provenance in each selected package.
 - A responsive extraction action with visible progress, a two-minute browser timeout,
   persisted-checkpoint feedback, and actionable extraction errors.
 - A document review queue that summarizes batch-prepared documents while opening only one

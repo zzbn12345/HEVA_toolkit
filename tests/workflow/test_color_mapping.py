@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from heva.workflow.color_mapping import (
+    apply_shared_color_mapping,
     ColorMappingError,
     authorize_pending_mapping_for_extraction,
     confirm_color_configuration,
@@ -305,3 +306,61 @@ def test_document_color_review_requires_a_decision_for_every_observed_color(
             [{"hex": "#CCCC00", "label": "political"}],
             confirmed_by="Research Annotator",
         )
+
+
+def test_confirmed_mapping_can_be_shared_only_with_an_exact_pending_palette(
+    tmp_path: Path,
+) -> None:
+    documents = tmp_path / "documents"
+    documents.mkdir()
+    for name in ("source.pdf", "matching.pdf", "different.pdf"):
+        (documents / name).write_bytes(name.encode())
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    ids = {
+        Path(item["source_path"]).name: item["document_id"]
+        for item in registry["documents"]
+    }
+    source = propose_color_configuration(["#CCCC00", "#FF66CC"])
+    source = resolve_color(source, "#CCCC00", label="political")
+    source = resolve_color(source, "#FF66CC", label="historic")
+    source = confirm_color_configuration(source, confirmed_by="Source Reviewer")
+    save_color_configuration(tmp_path, ids["source.pdf"], source)
+    save_color_configuration(
+        tmp_path,
+        ids["matching.pdf"],
+        propose_color_configuration(["#CCCC00", "#FF66CC"]),
+    )
+    save_color_configuration(
+        tmp_path,
+        ids["different.pdf"],
+        propose_color_configuration(["#CCCC00"]),
+    )
+
+    applied = apply_shared_color_mapping(
+        tmp_path,
+        ids["source.pdf"],
+        [ids["matching.pdf"]],
+        confirmed_by="Batch Reviewer",
+    )
+
+    matching = load_color_configuration(tmp_path, ids["matching.pdf"])
+    assert applied == (ids["matching.pdf"],)
+    assert matching.human_confirmed
+    assert matching.confirmed_by == "Batch Reviewer"
+    assert matching.shared_from_document_id == ids["source.pdf"]
+    assert {item.hex: item.label for item in matching.colors} == {
+        "#CCCC00": "political",
+        "#FF66CC": "historic",
+    }
+    with pytest.raises(ColorMappingError, match="different color palette"):
+        apply_shared_color_mapping(
+            tmp_path,
+            ids["source.pdf"],
+            [ids["different.pdf"]],
+            confirmed_by="Batch Reviewer",
+        )
+    assert not load_color_configuration(
+        tmp_path,
+        ids["different.pdf"],
+    ).human_confirmed
