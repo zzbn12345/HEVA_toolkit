@@ -3,6 +3,8 @@ const app = document.getElementById("review-app");
 const list = document.getElementById("sentence-list");
 const statusBox = document.getElementById("review-status");
 let reviewDocument = null;
+let visibleSentences = [];
+const selectedSentenceIds = new Set();
 
 function textElement(tag, className, text) {
   const element = document.createElement(tag);
@@ -11,11 +13,11 @@ function textElement(tag, className, text) {
   return element;
 }
 
-async function decide(sentenceId, status) {
+async function decide(sentenceIds, status, comment = null) {
   const response = await fetch(`/api/review/${encodeURIComponent(documentId)}/decisions`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sentence_ids: [sentenceId], status }),
+    body: JSON.stringify({ sentence_ids: sentenceIds, status, comment }),
   });
   const result = await response.json();
   if (!response.ok) {
@@ -24,7 +26,24 @@ async function decide(sentenceId, status) {
     return;
   }
   reviewDocument = result;
+  selectedSentenceIds.clear();
   render();
+}
+
+function updateSelectionControls() {
+  const selectedCount = visibleSentences.filter((item) =>
+    selectedSentenceIds.has(item.record.sentence_id)
+  ).length;
+  document.getElementById("selected-count").textContent =
+    `${selectedCount} selected`;
+  document.querySelectorAll("[data-batch-status]").forEach((button) => {
+    button.disabled = selectedCount === 0;
+  });
+  const selectVisible = document.getElementById("select-visible");
+  selectVisible.checked =
+    visibleSentences.length > 0 && selectedCount === visibleSentences.length;
+  selectVisible.indeterminate =
+    selectedCount > 0 && selectedCount < visibleSentences.length;
 }
 
 function sentenceCard(item) {
@@ -33,6 +52,21 @@ function sentenceCard(item) {
   card.className = `sentence-card${item.flags.length ? " problematic" : ""}`;
   card.dataset.status = item.review.status;
   card.dataset.problematic = String(Boolean(item.flags.length));
+  if (selectedSentenceIds.has(record.sentence_id)) card.classList.add("selected");
+  const selection = document.createElement("label");
+  selection.className = "sentence-selection";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = selectedSentenceIds.has(record.sentence_id);
+  checkbox.setAttribute("aria-label", `Select sentence ${record.sentence_id}`);
+  checkbox.addEventListener("change", () => {
+    if (checkbox.checked) selectedSentenceIds.add(record.sentence_id);
+    else selectedSentenceIds.delete(record.sentence_id);
+    card.classList.toggle("selected", checkbox.checked);
+    updateSelectionControls();
+  });
+  selection.append(checkbox, `Select sentence ${record.sentence_id}`);
+  card.appendChild(selection);
   card.appendChild(textElement("div", "sentence-meta", `Sentence ${record.sentence_id} · Page ${record.page} · ${item.review.status}`));
   card.appendChild(textElement("p", "sentence-text", record.sentence));
   const entities = document.createElement("div");
@@ -61,7 +95,7 @@ function sentenceCard(item) {
   [["Approve", "approved"], ["Needs correction", "needs_correction"], ["Exclude", "excluded"]].forEach(([label, status]) => {
     const button = textElement("button", `button${status === "approved" ? "" : " secondary"}`, label);
     button.type = "button";
-    button.addEventListener("click", () => decide(record.sentence_id, status));
+    button.addEventListener("click", () => decide([record.sentence_id], status));
     actions.appendChild(button);
   });
   card.appendChild(actions);
@@ -71,14 +105,29 @@ function sentenceCard(item) {
 function render() {
   const filter = document.getElementById("review-filter").value;
   const limit = Number(document.getElementById("page-size").value);
-  const visible = reviewDocument.sentences.filter((item) => {
-    if (filter === "pending") return item.review.status === "pending";
+  visibleSentences = reviewDocument.sentences.filter((item) => {
+    if (filter === "to_check") {
+      return ["pending", "needs_correction"].includes(item.review.status);
+    }
     if (filter === "problematic") return item.flags.length > 0 || item.review.status === "needs_correction";
+    if (filter === "checked") {
+      return ["approved", "excluded"].includes(item.review.status);
+    }
     return true;
   }).slice(0, limit);
-  list.replaceChildren(...visible.map(sentenceCard));
+  const visibleIds = new Set(
+    visibleSentences.map((item) => item.record.sentence_id),
+  );
+  [...selectedSentenceIds].forEach((sentenceId) => {
+    if (!visibleIds.has(sentenceId)) selectedSentenceIds.delete(sentenceId);
+  });
+  list.replaceChildren(...visibleSentences.map(sentenceCard));
+  updateSelectionControls();
+  const completed = reviewDocument.sentences.filter((item) =>
+    ["approved", "excluded"].includes(item.review.status)
+  ).length;
   statusBox.className = "notice success";
-  statusBox.textContent = `Showing ${visible.length} of ${reviewDocument.sentences.length} sentences from this document only.`;
+  statusBox.textContent = `Showing ${visibleSentences.length} of ${reviewDocument.sentences.length} sentences from this document only. ${completed} have final decisions.`;
 }
 
 function navigationLink(documentIdValue, label) {
@@ -112,4 +161,21 @@ document.getElementById("toggle-review-pdf").addEventListener("click", (event) =
 });
 document.getElementById("review-filter").addEventListener("change", render);
 document.getElementById("page-size").addEventListener("change", render);
+document.getElementById("select-visible").addEventListener("change", (event) => {
+  visibleSentences.forEach((item) => {
+    const sentenceId = item.record.sentence_id;
+    if (event.currentTarget.checked) selectedSentenceIds.add(sentenceId);
+    else selectedSentenceIds.delete(sentenceId);
+  });
+  render();
+});
+document.querySelectorAll("[data-batch-status]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const visibleIds = visibleSentences
+      .map((item) => item.record.sentence_id)
+      .filter((sentenceId) => selectedSentenceIds.has(sentenceId));
+    const comment = document.getElementById("batch-comment").value.trim() || null;
+    decide(visibleIds, button.dataset.batchStatus, comment);
+  });
+});
 loadDocument();

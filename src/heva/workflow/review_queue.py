@@ -150,6 +150,10 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
         package = root / entry.package_path
         annotations_path = package / "annotations.json"
         review_path = package / "review-state.json"
+        if annotations_path.exists() and not review_path.exists():
+            from heva.workflow.review_state import initialize_sentence_reviews
+
+            initialize_sentence_reviews(root, entry.document_id)
         if not annotations_path.exists() or not review_path.exists():
             records = _load_records(package) if annotations_path.exists() else []
             gates, reasons = _readiness(package, records, None)
@@ -225,9 +229,14 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
         raise ReviewQueueError(f"Document {document_id} is not registered.")
     package = root / entry.package_path
     records = _load_records(package)
+    review_path = package / "review-state.json"
+    if not review_path.exists():
+        from heva.workflow.review_state import initialize_sentence_reviews
+
+        initialize_sentence_reviews(root, document_id)
     try:
         review = DocumentReview.model_validate_json(
-            (package / "review-state.json").read_text(encoding="utf-8")
+            review_path.read_text(encoding="utf-8")
         )
     except OSError as error:
         raise ReviewQueueError(

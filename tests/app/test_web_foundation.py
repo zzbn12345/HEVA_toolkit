@@ -538,6 +538,52 @@ def test_review_queue_opens_only_one_document_at_a_time(tmp_path: Path) -> None:
     assert len(selected.json()["sentences"]) == 1
 
 
+def test_legacy_annotations_receive_pending_review_state_when_queue_opens(
+    tmp_path: Path,
+) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    entry = registry["documents"][0]
+    package = tmp_path / entry["package_path"]
+    canonical = {
+        "sentence_id": 1,
+        "page": 1,
+        "sentence": "Historic harbour.",
+        "tokens": ["Historic", "harbour", "."],
+        "values": ["historic"],
+        "entities": [
+            {
+                "start": 0,
+                "end": 17,
+                "text": "Historic harbour",
+                "label": "historic",
+                "color": "#FF40FF",
+            }
+        ],
+        "ner_tags": ["B-historic", "I-historic", "O"],
+        "schema_version": "1.0",
+    }
+    (package / "annotations.json").write_text(
+        json.dumps([canonical]),
+        encoding="utf-8",
+    )
+    client = TestClient(create_app(tmp_path))
+
+    selected = client.get(f"/api/review/{entry['document_id']}")
+    queue = client.get("/api/review-queue")
+
+    assert selected.status_code == 200
+    assert selected.json()["sentences"][0]["review"]["status"] == "pending"
+    assert queue.status_code == 200
+    assert queue.json()["documents"][0]["review_available"] is True
+    review = json.loads((package / "review-state.json").read_text())
+    assert review["sentences"][0]["status"] == "pending"
+    assert review["sentences"][0]["audit"] == []
+
+
 def test_review_queue_page_exposes_list_columns(tmp_path: Path) -> None:
     client = TestClient(create_app(tmp_path))
 
@@ -551,6 +597,42 @@ def test_review_queue_page_exposes_list_columns(tmp_path: Path) -> None:
     assert 'data-readiness="incomplete"' in response.text
     assert "Action" in response.text
     assert 'href="/create">＋ Add document</a>' in response.text
+
+
+def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get("/review/HEVA-TEST")
+
+    assert response.status_code == 200
+    assert 'src="/static/review_document.js?v=2"' in response.text
+    assert 'href="/static/review.css?v=2"' in response.text
+    assert 'value="to_check"' in response.text
+    assert 'value="problematic"' in response.text
+    assert 'value="checked"' in response.text
+    assert 'id="select-visible"' in response.text
+    assert 'data-batch-status="approved"' in response.text
+    assert 'data-batch-status="needs_correction"' in response.text
+    assert 'data-batch-status="excluded"' in response.text
+
+
+def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> None:
+    script = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "review_document.js"
+    ).read_text(encoding="utf-8")
+
+    assert "visibleSentences" in script
+    assert "selectedSentenceIds" in script
+    assert '.slice(0, limit)' in script
+    assert "Select this visible batch" not in script
+    assert "sentence_ids: sentenceIds" in script
+    assert 'filter === "checked"' in script
+    assert 'filter === "to_check"' in script
 
 
 def test_review_queue_asset_always_offers_edit_annotation_action() -> None:

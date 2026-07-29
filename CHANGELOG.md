@@ -29,6 +29,11 @@
 - Mapping-aware extraction checkpoints with visible current/stale/invalid state, persisted
   sentence counts and warnings, explicit rebuild controls, and corrective zero-record
   failures that preserve earlier extraction work.
+- Explicit sentence selection and visible-batch review actions for 20/50-record views,
+  with To be checked, Problematic, and Checked filters plus optional comments and one
+  persisted audit decision per selected sentence.
+- Safe migration of legacy extracted packages that have annotations but no review state:
+  opening the queue creates pending sentence records without inventing decisions.
 - A responsive extraction action with visible progress, a two-minute browser timeout,
   persisted-checkpoint feedback, and actionable extraction errors.
 - A document review queue that summarizes batch-prepared documents while opening only one

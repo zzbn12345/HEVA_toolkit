@@ -25,6 +25,14 @@ Other decision states are `needs_correction` and `excluded`. Each selected sente
 its own audit event with actor, timestamp, previous state, new state, and optional comment.
 There is no invisible document-level approve-all shortcut.
 
+In the document workspace, users choose a 20- or 50-sentence visible view and may select
+individual cards or **Select this visible batch**. Batch actions operate only on IDs that
+are both visible and explicitly selected; changing the filter or view removes hidden IDs
+from the selection. **To be checked** contains `pending` and `needs_correction`,
+**Problematic** contains quality-flagged or correction-needed records, and **Checked**
+contains `approved` and `excluded`. Quality flags never select a sentence or create a
+decision automatically.
+
 Submit a completely decided document:
 
 ```bash
@@ -45,3 +53,7 @@ after values in an audit event.
 Review state is stored in `review-state.json` beside `annotations.json`. If re-extraction
 changes a record, its prior decision is not silently reused: the sentence returns to
 `pending` with a `source_record_changed` audit event.
+
+When a legacy package contains `annotations.json` but no `review-state.json`, opening the
+review queue initializes one pending state per extracted sentence. This migration does not
+approve, exclude, flag, or otherwise invent any human decision.

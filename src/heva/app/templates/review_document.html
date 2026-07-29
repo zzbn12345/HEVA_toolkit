@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Review document · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/review.css">
-  <script src="/static/review_document.js" defer></script>
+  <link rel="stylesheet" href="/static/review.css?v=2">
+  <script src="/static/review_document.js?v=2" defer></script>
 </head>
 <body data-document-id="DOCUMENT_ID_PLACEHOLDER" class="review-body">
   <div id="review-app" class="review-app">
@@ -21,8 +21,9 @@
         <label>Show
           <select id="review-filter">
             <option value="all">All sentences</option>
-            <option value="pending">Pending</option>
+            <option value="to_check">To be checked</option>
             <option value="problematic">Problematic</option>
+            <option value="checked">Checked</option>
           </select>
         </label>
         <label>Page size
@@ -32,6 +33,19 @@
           </select>
         </label>
       </div>
+      <section class="batch-review" aria-label="Selected sentence actions">
+        <label class="batch-select">
+          <input id="select-visible" type="checkbox">
+          <span>Select this visible batch</span>
+        </label>
+        <strong id="selected-count">0 selected</strong>
+        <input id="batch-comment" placeholder="Optional review comment" aria-label="Optional batch review comment">
+        <div class="batch-actions">
+          <button class="button" type="button" data-batch-status="approved" disabled>Approve selected</button>
+          <button class="button secondary" type="button" data-batch-status="needs_correction" disabled>Flag selected for correction</button>
+          <button class="button secondary" type="button" data-batch-status="excluded" disabled>Exclude selected</button>
+        </div>
+      </section>
       <div id="review-status" class="notice neutral" aria-live="polite">Loading persisted review state…</div>
       <section id="sentence-list" class="sentence-list"></section>
       <nav id="document-navigation" class="document-navigation" aria-label="Document navigation"></nav>

@@ -207,6 +207,11 @@ Users may check sentences in batches, but only sentences that are currently visi
 explicitly selected may be changed. A batch action produces one persisted decision and
 audit event per sentence.
 
+The workspace provides **Select this visible batch** for the current 20/50-record view,
+shows the exact selected count, and disables batch decisions when nothing is selected.
+Changing filters or page size prunes hidden sentences from the selection. An optional
+comment is copied into each selected sentence's individual audit event.
+
 The interface supports batches of 20 or 50 and filters for:
 
 - sentences still requiring a decision;
