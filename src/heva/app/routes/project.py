@@ -605,6 +605,6 @@ def create_project_router(
                 status_code=422,
             )
         payload = report.model_dump(mode="json")
-        return JSONResponse(payload, status_code=200 if report.valid else 422)
+        return JSONResponse(payload, status_code=200)
 
     return router

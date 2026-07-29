@@ -5,20 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Validate project · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/validate.js" defer></script>
+  <link rel="stylesheet" href="/static/validation.css?v=2">
+  <script src="/static/validate.js?v=3" defer></script>
 </head>
 <body>
   <header class="topbar">
     <a class="home-link" href="/">← HEVA home</a>
     <span>Project validation</span>
   </header>
-  <main class="page-content">
+  <main class="page-content validation-page">
     <p class="eyebrow">Validation</p>
     <h1>Is this project ready?</h1>
-    <p class="lead">HEVA checks the records and the decisions around them. Nothing is changed by this check.</p>
-    <button id="validate-project" class="button" type="button">Validate project</button>
+    <p class="lead">
+      Run one read-only check across every document package. Passing the specification and
+      completing curator review are reported separately.
+    </p>
+    <div class="validation-toolbar">
+      <button id="validate-project" class="button" type="button">Run validation</button>
+      <button id="download-validation" class="button secondary" type="button" disabled>Download JSON report</button>
+    </div>
     <div id="validation-status" class="notice neutral" aria-live="polite">
-      Select Validate project to begin.
+      Select Run validation to begin. No project data will be changed.
+    </div>
+    <section id="validation-summary" class="validation-summary" aria-label="Validation summary"></section>
+    <div class="validation-filters" role="group" aria-label="Filter validation results">
+      <button class="button secondary active" type="button" data-validation-filter="all">All documents</button>
+      <button class="button secondary" type="button" data-validation-filter="issues">Needs attention</button>
+      <button class="button secondary" type="button" data-validation-filter="completed">Completed</button>
+      <button class="button secondary" type="button" data-validation-filter="incomplete">Not completed</button>
     </div>
     <section id="validation-results" class="results" aria-label="Validation results"></section>
   </main>

@@ -1,0 +1,66 @@
+.validation-page { width: min(1180px, 100%); }
+.validation-toolbar, .validation-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin: 1rem 0;
+}
+.validation-toolbar .button, .validation-filters .button { margin: 0; }
+.validation-filters .active { border-color: var(--accent); color: var(--accent); }
+.validation-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: .7rem;
+  margin: 1rem 0;
+}
+.validation-stat {
+  display: grid;
+  gap: .15rem;
+  padding: .8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.validation-stat strong { font-size: 1.5rem; }
+.validation-stat span { color: var(--muted); }
+.document-result { border-left: 4px solid var(--border); }
+.document-result.passed { border-left-color: var(--accent); }
+.document-result.failed { border-left-color: var(--warning); }
+.validation-document-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.validation-document-heading h2 { margin: 0 0 .2rem; font-size: 1.1rem; }
+.validation-document-heading small { color: var(--muted); }
+.validation-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
+.validation-badge {
+  padding: .3rem .55rem;
+  border-radius: 999px;
+  background: var(--field);
+  font-size: .78rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+.validation-badge.passed, .validation-badge.completed { color: var(--accent); }
+.validation-badge.failed, .validation-badge.incomplete { color: var(--warning); }
+.validation-issues { display: grid; gap: .7rem; padding: 0; list-style: none; }
+.document-result details { margin-top: .8rem; }
+.document-result summary { cursor: pointer; color: var(--warning); font-weight: 800; }
+.validation-issue {
+  display: grid;
+  gap: .22rem;
+  padding: .75rem;
+  border-radius: 8px;
+  background: var(--field);
+}
+.issue-code { font-weight: 850; }
+.issue-path { color: var(--muted); overflow-wrap: anywhere; }
+.issue-action { color: var(--accent); }
+.validation-actions { display: flex; justify-content: flex-end; margin-top: .8rem; }
+.validation-actions .button { margin: 0; }
+@media (max-width: 700px) {
+  .validation-document-heading { display: grid; }
+  .validation-badges { justify-content: flex-start; }
+}

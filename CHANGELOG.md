@@ -67,6 +67,9 @@
 - A curator-approved evaluation manifest and reproducible scorer that separates
   record/span precision and recall, label accuracy, human correction/abstention measures,
   elapsed time, and peak memory while failing incomplete corpus coverage.
+- A test-runner-style project validation report in both the app and command line, showing
+  per-document pass/fail, independent completion state, issue locations, corrective
+  actions, filters, summaries, stable JSON, and meaningful exit codes.
 
 ### Changed
 

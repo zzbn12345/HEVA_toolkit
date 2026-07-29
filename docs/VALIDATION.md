@@ -10,6 +10,58 @@ HEVA validates a record in two stages:
 In simple terms, Pydantic checks that a form was filled in correctly. HEVA validation
 checks whether the answers on that form make sense together.
 
+## Run the complete project check
+
+The complete check is HEVA's minimum awesome product. It is read-only: it reports what is
+complete, what passes, and what needs correction without changing annotations or metadata.
+
+From the app, open **Validate project**, select **Run validation**, and use the filters for
+Needs attention, Completed, or Not completed. Every finding displays:
+
+- the source filename and stable document ID;
+- workflow completion separately from specification pass/fail;
+- severity and stable issue code;
+- the exact JSON-style location;
+- a plain-language explanation; and
+- a recommended corrective action.
+
+The displayed JSON report can be downloaded.
+
+Run the same project check from a terminal:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m heva.workflow.package_validator . validate
+```
+
+The default output is a concise test-runner report. Request stable JSON on standard output:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m heva.workflow.package_validator . validate --json
+```
+
+Write the same JSON report to a file while retaining readable terminal output:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m heva.workflow.package_validator . validate \
+  --report data/validation-report.json
+```
+
+Validate one registered document:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m heva.workflow.package_validator . validate \
+  --document-id HEVA-EXAMPLE
+```
+
+Project-check exit codes follow test-runner conventions:
+
+- `0`: the check ran and every selected package passed;
+- `1`: the check ran and found specification failures;
+- `2`: the check could not run because project or command input was unusable.
+
+Warnings remain visible but do not fail a document. A document may pass the specification
+while still being **Not completed** because only curator acceptance completes the workflow.
+
 ## A simple example
 
 Pydantic checks basic questions such as:
@@ -208,8 +260,8 @@ issues.
 
 ## Interpreting a successful result
 
-A successful structural and semantic validation means that the extracted records are
-internally consistent with contract version 1.0. It does **not** prove that:
+A successful **record-only** structural and semantic validation means that extracted
+records are internally consistent with contract version 1.0. It does **not** prove that:
 
 - every highlight in the source document was extracted;
 - the selected sentence or span is academically correct;
@@ -219,9 +271,10 @@ internally consistent with contract version 1.0. It does **not** prove that:
 - source provenance and publication rights are complete;
 - the document package is ready for curator review or public release.
 
-Those are later validation levels. Until they are implemented, this validator should be
-described as a **record-contract validator**, not a complete HEVA package or FAIRness
-validator.
+Use the complete project check described above for color mapping, sentence decisions,
+source provenance, rights, and release state. Even the complete check demonstrates
+conformance to the current HEVA specification; it does not prove scholarly correctness,
+extraction recall against every source mark, or FAIR publication/deposit.
 
 ## Run the acceptance tests
 

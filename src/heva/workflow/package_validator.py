@@ -66,9 +66,26 @@ class DocumentValidation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     document_id: str
+    source_path: str
+    workflow_status: str
+    completed: bool
     valid: bool
     release_ready: bool
     issues: list[ValidationIssue]
+
+
+class ValidationSummary(BaseModel):
+    """Test-runner-style counts for one project validation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    documents: int
+    passed: int
+    failed: int
+    completed: int
+    not_completed: int
+    errors: int
+    warnings: int
 
 
 class ProjectValidation(BaseModel):
@@ -79,6 +96,7 @@ class ProjectValidation(BaseModel):
     report_version: str = REPORT_VERSION
     valid: bool
     release_ready: bool
+    summary: ValidationSummary
     documents: list[DocumentValidation]
 
 
@@ -391,9 +409,39 @@ def validate_document_package(
     blocking = any(item.severity == "error" for item in issues)
     return DocumentValidation(
         document_id=document_id,
+        source_path=entry.source_path,
+        workflow_status=entry.status,
+        completed=entry.status == "done",
         valid=not blocking,
         release_ready=not blocking and entry.status == "done",
         issues=issues,
+    )
+
+
+def _project_report(documents: list[DocumentValidation]) -> ProjectValidation:
+    """Summarize document reports without conflating validity and completion."""
+
+    return ProjectValidation(
+        valid=all(item.valid for item in documents),
+        release_ready=bool(documents) and all(item.release_ready for item in documents),
+        summary=ValidationSummary(
+            documents=len(documents),
+            passed=sum(item.valid for item in documents),
+            failed=sum(not item.valid for item in documents),
+            completed=sum(item.completed for item in documents),
+            not_completed=sum(not item.completed for item in documents),
+            errors=sum(
+                issue.severity == "error"
+                for document in documents
+                for issue in document.issues
+            ),
+            warnings=sum(
+                issue.severity == "warning"
+                for document in documents
+                for issue in document.issues
+            ),
+        ),
+        documents=documents,
     )
 
 
@@ -411,11 +459,32 @@ def validate_project(project_root: str | Path) -> ProjectValidation:
         validate_document_package(root, entry.document_id)
         for entry in sorted(registry.documents, key=lambda item: item.document_id)
     ]
-    return ProjectValidation(
-        valid=all(item.valid for item in documents),
-        release_ready=bool(documents) and all(item.release_ready for item in documents),
-        documents=documents,
+    return _project_report(documents)
+
+
+def format_validation_report(report: ProjectValidation) -> str:
+    """Render a concise human report while preserving JSON as a separate interface."""
+
+    lines = ["HEVA validation"]
+    for document in report.documents:
+        outcome = "PASS" if document.valid else "FAIL"
+        completion = "completed" if document.completed else "not completed"
+        lines.append(
+            f"{outcome} {document.source_path} "
+            f"({document.document_id}, {completion}, {document.workflow_status})"
+        )
+        for issue in document.issues:
+            lines.append(
+                f"  {issue.severity.upper()} {issue.code} {issue.path}: {issue.message}"
+            )
+            lines.append(f"    Fix: {issue.action}")
+    summary = report.summary
+    lines.append(
+        f"{summary.passed} passed, {summary.failed} failed; "
+        f"{summary.completed} completed, {summary.not_completed} not completed; "
+        f"{summary.errors} errors, {summary.warnings} warnings"
     )
+    return "\n".join(lines)
 
 
 def approve_document(project_root: str | Path, document_id: str) -> None:
@@ -673,6 +742,11 @@ def main(argv: Iterable[str] | None = None) -> int:
     validate = commands.add_parser("validate")
     validate.add_argument("--document-id")
     validate.add_argument("--report")
+    validate.add_argument(
+        "--json",
+        action="store_true",
+        help="Print the stable machine-readable report instead of the terminal summary.",
+    )
     approve = commands.add_parser("approve")
     approve.add_argument("--document-id", required=True)
     release = commands.add_parser("release")
@@ -682,11 +756,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         if args.command == "validate":
             if args.document_id:
                 document = validate_document_package(args.project_root, args.document_id)
-                report = ProjectValidation(
-                    valid=document.valid,
-                    release_ready=document.release_ready,
-                    documents=[document],
-                )
+                report = _project_report([document])
             else:
                 report = validate_project(args.project_root)
             rendered = json.dumps(
@@ -696,8 +766,10 @@ def main(argv: Iterable[str] | None = None) -> int:
                 sort_keys=True,
             )
             if args.report:
-                Path(args.report).write_text(rendered + "\n", encoding="utf-8")
-            print(rendered)
+                report_path = Path(args.report)
+                report_path.parent.mkdir(parents=True, exist_ok=True)
+                report_path.write_text(rendered + "\n", encoding="utf-8")
+            print(rendered if args.json else format_validation_report(report))
             return 0 if report.valid else 1
         if args.command == "approve":
             approve_document(args.project_root, args.document_id)
@@ -708,7 +780,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         return 0
     except (PackageValidationError, OSError, ValidationError, ValueError) as error:
         print(f"VALIDATION ERROR: {error}")
-        return 1
+        return 2
 
 
 if __name__ == "__main__":

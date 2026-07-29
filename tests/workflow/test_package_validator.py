@@ -25,7 +25,9 @@ from heva.workflow.package_validator import (
     PackageValidationError,
     approve_document,
     build_release,
+    format_validation_report,
     validate_document_package,
+    validate_project,
 )
 from heva.workflow.curation_state import (
     create_candidate_snapshot,
@@ -175,6 +177,25 @@ def test_layered_report_has_actionable_stable_fields(tmp_path: Path) -> None:
     assert issue.document_id == document_id
     assert issue.path == "$.package_metadata.rights.authorization_status"
     assert issue.action
+    assert report.source_path == "documents/source.pdf"
+    assert report.workflow_status == "in_review"
+    assert report.completed is False
+
+
+def test_project_report_separates_validation_from_workflow_completion(
+    tmp_path: Path,
+) -> None:
+    document_id, _, _ = project(tmp_path)
+
+    report = validate_project(tmp_path)
+    rendered = format_validation_report(report)
+
+    assert report.valid is True
+    assert report.summary.passed == 1
+    assert report.summary.completed == 0
+    assert report.summary.not_completed == 1
+    assert f"PASS documents/source.pdf ({document_id}, not completed, in_review)" in rendered
+    assert "1 passed, 0 failed" in rendered
 
 
 def test_incomplete_review_blocks_approval(tmp_path: Path) -> None:
@@ -212,6 +233,7 @@ def test_invalid_package_returns_failing_cli_status(tmp_path: Path) -> None:
             "validate",
             "--document-id",
             document_id,
+            "--json",
         ],
         check=False,
         capture_output=True,
@@ -220,6 +242,32 @@ def test_invalid_package_returns_failing_cli_status(tmp_path: Path) -> None:
 
     assert completed.returncode == 1
     assert '"code": "invalid_json"' in completed.stdout
+
+
+def test_cli_human_report_has_test_runner_summary_and_action(tmp_path: Path) -> None:
+    document_id, package, _ = project(tmp_path)
+    (package / "annotations.json").write_text("{broken", encoding="utf-8")
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "heva.workflow.package_validator",
+            str(tmp_path),
+            "validate",
+            "--document-id",
+            document_id,
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 1
+    assert "FAIL documents/source.pdf" in completed.stdout
+    assert "ERROR invalid_json $.annotations" in completed.stdout
+    assert "Fix:" in completed.stdout
+    assert "0 passed, 1 failed" in completed.stdout
 
 
 def test_approved_release_is_deterministic_and_excludes_working_files(tmp_path: Path) -> None:

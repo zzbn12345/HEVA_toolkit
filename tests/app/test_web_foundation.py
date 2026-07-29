@@ -523,11 +523,31 @@ def test_validation_endpoint_uses_package_validator(tmp_path: Path) -> None:
 
     response = client.post("/api/validate")
 
-    assert response.status_code == 422
+    assert response.status_code == 200
     report = response.json()
     assert report["documents"][0]["document_id"] == document_id
     assert report["documents"][0]["valid"] is False
+    assert report["documents"][0]["source_path"] == "documents/source.pdf"
+    assert report["documents"][0]["completed"] is False
+    assert report["summary"]["failed"] == 1
     assert all(issue["action"] for issue in report["documents"][0]["issues"])
+
+
+def test_validation_page_exposes_report_runner_filters_and_download(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get("/validate")
+
+    assert response.status_code == 200
+    assert "Run validation" in response.text
+    assert 'id="download-validation"' in response.text
+    assert 'data-validation-filter="issues"' in response.text
+    assert 'data-validation-filter="completed"' in response.text
+    assert 'data-validation-filter="incomplete"' in response.text
+    assert 'src="/static/validate.js?v=3"' in response.text
+    assert 'href="/static/validation.css?v=2"' in response.text
 
 
 def test_review_queue_opens_only_one_document_at_a_time(tmp_path: Path) -> None:
