@@ -8,10 +8,13 @@ from pathlib import Path
 import pytest
 
 from heva.workflow.document_metadata import (
+    AnnotationProcessMetadata,
+    AnnotatorMetadata,
     ColorConfigurationMetadata,
     ColorMappingMetadata,
     PackageMetadata,
     ResourceMetadata,
+    RightsMetadata,
     SourceMetadata,
 )
 from heva.workflow.project_registry import sync_registry
@@ -28,22 +31,32 @@ from heva.workflow.review_state import (
 
 
 def record(sentence_id: int, sentence: str) -> dict[str, object]:
-    return {
-        "sentence_id": sentence_id,
-        "page": 1,
-        "sentence": sentence,
-        "tokens": ["Historic", "harbour", "."],
-        "values": ["historic"],
-        "entities": [
+    if sentence == "Short":
+        tokens = ["Short"]
+        values: list[str] = []
+        entities: list[dict[str, object]] = []
+        ner_tags = ["O"]
+    else:
+        tokens = ["Historic", "harbour", "."]
+        values = ["historic"]
+        entities = [
             {
                 "start": 0,
-                "end": 17,
+                "end": 16,
                 "text": "Historic harbour",
                 "label": "historic",
                 "color": "#FF40FF",
             }
-        ],
-        "ner_tags": ["B-historic", "I-historic", "O"],
+        ]
+        ner_tags = ["B-historic", "I-historic", "O"]
+    return {
+        "sentence_id": sentence_id,
+        "page": 1,
+        "sentence": sentence,
+        "tokens": tokens,
+        "values": values,
+        "entities": entities,
+        "ner_tags": ner_tags,
         "schema_version": "1.0",
     }
 
@@ -86,10 +99,29 @@ def write_ready_metadata(
             human_confirmed=citation_confirmed,
             confirmed_by="Annotator" if citation_confirmed else None,
         ),
+        annotator=AnnotatorMetadata(name="Annotator"),
+        rights=RightsMetadata(
+            access_level="restricted",
+            authorization_status="authorized",
+            authorization_date="2026-07-29",
+            authorized_by="Rights holder",
+            evidence_reference="rights/authorization",
+            source_distribution_allowed=False,
+            extracted_text_distribution_allowed=True,
+            annotation_distribution_allowed=True,
+            license="CC-BY-4.0",
+        ),
+        annotation_process=AnnotationProcessMetadata(
+            method="automatic",
+            extractor="HEVA",
+            extractor_version="0.1.0",
+            performed_at="2026-07-29T09:00:00Z",
+        ),
         color_configuration=ColorConfigurationMetadata(
             detection_method="manual",
             human_confirmed=True,
             confirmed_by="Annotator",
+            confirmed_at="2026-07-29T09:15:00Z",
             colors=[
                 ColorMappingMetadata(
                     hex="#FF40FF",
@@ -219,7 +251,11 @@ def test_ready_document_submission_updates_metadata_and_locks_review(
         reviewer="Annotator",
     )
 
-    selected = submit_review_document(tmp_path, document_id)
+    selected = submit_review_document(
+        tmp_path,
+        document_id,
+        submitted_by="Annotator",
+    )
 
     assert selected["status"] == "in_review"
     assert selected["annotation_complete"] is True
@@ -227,6 +263,10 @@ def test_ready_document_submission_updates_metadata_and_locks_review(
     metadata = json.loads((package / "package-metadata.json").read_text())
     assert metadata["annotation_process"]["review"]["completed"] is True
     assert metadata["annotation_process"]["review"]["reviewed_at"]
+    curation = json.loads((package / "curation-state.json").read_text())
+    assert curation["candidates"][0]["submitted_by"] == "Annotator"
+    assert curation["candidates"][0]["validator_report"]["valid"] is True
+    assert len(curation["candidates"][0]["candidate_id"]) == 64
     with pytest.raises(ReviewError, match="read-only after submission"):
         record_decisions(
             tmp_path,

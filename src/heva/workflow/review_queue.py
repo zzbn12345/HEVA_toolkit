@@ -291,7 +291,12 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
     }
 
 
-def submit_review_document(project_root: str | Path, document_id: str) -> dict[str, Any]:
+def submit_review_document(
+    project_root: str | Path,
+    document_id: str,
+    *,
+    submitted_by: str,
+) -> dict[str, Any]:
     """Finish annotator review only when the shared four-gate projection passes."""
 
     root = Path(project_root).resolve()
@@ -319,10 +324,18 @@ def submit_review_document(project_root: str | Path, document_id: str) -> dict[s
     metadata.annotation_process.review.reviewed_at = datetime.now(timezone.utc)
     save_package_metadata(root, metadata)
 
+    from heva.workflow.curation_state import create_candidate_snapshot
     from heva.workflow.review_state import submit_document_for_review
 
+    snapshot = create_candidate_snapshot(
+        root,
+        document_id,
+        submitted_by=submitted_by,
+    )
     submit_document_for_review(root, document_id)
-    return load_review_document(root, document_id)
+    result = load_review_document(root, document_id)
+    result["candidate"] = snapshot.model_dump(mode="json")
+    return result
 
 
 def _package_for_document(root: Path, document_id: str) -> Path:

@@ -38,7 +38,7 @@ def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -
     assert 'href="/"' in response.text
 
 
-def test_curator_page_is_read_only_and_exposes_validation_filters(
+def test_curator_page_exposes_local_decision_queue_and_validation_filters(
     tmp_path: Path,
 ) -> None:
     client = TestClient(create_app(tmp_path))
@@ -47,16 +47,15 @@ def test_curator_page_is_read_only_and_exposes_validation_filters(
 
     assert response.status_code == 200
     assert "Local curator queue" in response.text
-    assert 'src="/static/curation.js?v=1"' in response.text
-    assert 'href="/static/curation.css?v=1"' in response.text
+    assert 'src="/static/curation.js?v=2"' in response.text
+    assert 'href="/static/curation.css?v=2"' in response.text
     assert 'data-curation-filter="in_review"' in response.text
     assert 'data-curation-filter="attention"' in response.text
     assert 'data-curation-filter="valid"' in response.text
-    assert "Accept" not in response.text
-    assert "Reject" not in response.text
+    assert "exact validated candidate" in response.text
 
 
-def test_curator_asset_combines_registry_and_validator_without_deciding() -> None:
+def test_curator_asset_combines_evidence_and_audited_decisions() -> None:
     script = (
         Path(__file__).parents[2]
         / "src"
@@ -71,7 +70,10 @@ def test_curator_asset_combines_registry_and_validator_without_deciding() -> Non
     assert 'item.status === "in_review"' in script
     assert '"Open annotation evidence"' in script
     assert "issue.action" in script
-    assert "approve" not in script.lower()
+    assert "/api/curation/" in script
+    assert '"accepted"' in script
+    assert '"changes_requested"' in script
+    assert '"quarantined"' in script
 
 
 def test_app_starts_without_exposing_repository_documents() -> None:

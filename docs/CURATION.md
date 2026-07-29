@@ -1,21 +1,30 @@
 # Local curator review
 
-The first F10 slice provides a read-only curator queue at `/curation`. It works entirely
-from the local HEVA project and does not require GitHub or Git knowledge.
+HEVA keeps curator review usable without GitHub. The queue at `/curation` combines the
+project registry, complete package validation, and package-local curation evidence.
 
-The queue combines two existing sources of truth:
+When an annotator selects **Submit for curator review**, the toolkit first runs the
+complete package validator and records:
 
-- `data/project-registry.json` supplies source names and workflow states;
-- `heva.workflow.package_validator` supplies complete structural, semantic, provenance,
-  rights, mapping, extraction, and review findings.
+- a SHA-256 identifier for the candidate;
+- checksums for annotations, package metadata, and sentence-review evidence;
+- the source checksum;
+- the complete validator report; and
+- the submitting annotator and submission time.
 
-The default **Awaiting review** filter shows documents whose registry state is
-`in_review`. Curators may also inspect documents that need validation attention, all
-validator-passing documents, or every registered document. Each row links to the
-document's read-only annotation and PDF evidence.
+The source PDF is not copied into this snapshot. Before saving a decision, HEVA
+recalculates the evidence checksums. A changed package must be reopened and submitted
+again, preventing a curator from accepting content different from what they inspected.
 
-This slice intentionally does not expose Accept, Reject, Quarantine, or Request changes.
-Those actions will be added only after local curator identity, immutable candidate
-checksums, validator snapshots, decision evidence, timestamps, and requested-change
-records are persisted. Until then, command-line approval remains development
-infrastructure rather than the intended researcher-facing workflow.
+## Decisions
+
+Every decision requires the curator name and written evidence:
+
+- **Accept** marks the registry record `done`. This is the only route to `done`.
+- **Request changes** requires one or more requested changes and returns the record to
+  `in_progress`, where the annotator can correct and resubmit it as a new candidate.
+- **Reject** records the reason but does not describe the package as approved.
+- **Quarantine** records that the candidate should be isolated for investigation.
+
+The package-local `curation-state.json` retains candidate and decision history. GitHub
+credentials are never stored in project JSON.

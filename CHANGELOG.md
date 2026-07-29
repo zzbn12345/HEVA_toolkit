@@ -58,6 +58,9 @@
   as visible read-only evidence from the document configuration.
 - A read-only local curator queue combining registry workflow state with complete package
   validation findings and direct access to submitted annotation evidence.
+- Immutable candidate snapshots with validator evidence and checksums, plus audited local
+  accept, request-changes, reject, and quarantine decisions. Only acceptance marks a
+  document done.
 
 ### Changed
 

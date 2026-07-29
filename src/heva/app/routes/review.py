@@ -13,6 +13,11 @@ from heva.workflow.annotator_registry import (
     AnnotatorRegistryError,
     load_annotator_registry,
 )
+from heva.workflow.curation_state import (
+    CurationError,
+    load_curation_state,
+    record_curator_decision,
+)
 from heva.workflow.review_queue import (
     ReviewQueueError,
     list_review_queue,
@@ -188,12 +193,17 @@ def create_review_router(
             annotator = load_annotator_registry(root).active()
             if annotator is None or not annotator.name:
                 raise ValueError("Select an active project annotator before submitting.")
-            return submit_review_document(root, document_id)
+            return submit_review_document(
+                root,
+                document_id,
+                submitted_by=annotator.name,
+            )
         except (
             OSError,
             ValueError,
             ValidationError,
             AnnotatorRegistryError,
+            CurationError,
             ReviewError,
             ReviewQueueError,
         ) as error:
@@ -201,6 +211,62 @@ def create_review_router(
                 {
                     "code": "document_review_not_submitted",
                     "message": "The document was not submitted for curator review.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+
+    @router.get("/api/curation/{document_id}")
+    def curation_state(document_id: str):
+        """Expose submitted snapshot evidence and decisions for one queue record."""
+
+        try:
+            return load_curation_state(root, document_id)
+        except CurationError as error:
+            return JSONResponse(
+                {
+                    "code": "curation_state_unavailable",
+                    "message": "The curator evidence cannot be loaded.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+
+    @router.post("/api/curation/{document_id}/decisions")
+    def save_curator_decision(document_id: str, payload: dict):
+        """Validate and persist a curator decision against immutable evidence."""
+
+        decision = payload.get("decision")
+        actor = payload.get("actor")
+        evidence = payload.get("evidence")
+        requested_changes = payload.get("requested_changes", [])
+        if (
+            decision
+            not in {"accepted", "changes_requested", "rejected", "quarantined"}
+            or not isinstance(actor, str)
+            or not isinstance(evidence, str)
+            or not isinstance(requested_changes, list)
+            or not all(isinstance(item, str) for item in requested_changes)
+        ):
+            raise HTTPException(
+                status_code=422,
+                detail="Provide a supported decision, curator, and evidence.",
+            )
+        try:
+            result = record_curator_decision(
+                root,
+                document_id,
+                decision=decision,
+                actor=actor,
+                evidence=evidence,
+                requested_changes=requested_changes,
+            )
+            return result
+        except CurationError as error:
+            return JSONResponse(
+                {
+                    "code": "curator_decision_not_saved",
+                    "message": "The curator decision was not saved.",
                     "action": str(error),
                 },
                 status_code=422,
