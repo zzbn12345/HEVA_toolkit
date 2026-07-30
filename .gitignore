@@ -43,6 +43,7 @@ vts/
 
 # Environments
 .env
+.heva/
 .venv
 env/
 venv/

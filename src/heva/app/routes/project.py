@@ -138,9 +138,16 @@ def create_project_router(
             )
         return candidate
 
+    def existing_project_root(candidate: Path) -> Path:
+        """Accept either a HEVA root or its conventional data subfolder."""
+
+        if candidate.name == "data" and (candidate / "project-registry.json").is_file():
+            return candidate.parent
+        return candidate
+
     @router.post("/api/projects/open")
     def open_project(payload: ProjectFolderInput):
-        candidate = validated_folder(payload.path)
+        candidate = existing_project_root(validated_folder(payload.path))
         registry_path = candidate / DEFAULT_REGISTRY_PATH
         try:
             registry = ProjectRegistry.model_validate_json(
@@ -166,6 +173,14 @@ def create_project_router(
     @router.post("/api/projects/create")
     def create_project(payload: ProjectFolderInput):
         candidate = validated_folder(payload.path)
+        if candidate.name == "data" and (candidate / "project-registry.json").is_file():
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "This is the data folder of an existing HEVA project. "
+                    "Choose Open existing project; HEVA will open its parent workspace."
+                ),
+            )
         if (candidate / DEFAULT_REGISTRY_PATH).exists():
             raise HTTPException(
                 status_code=409,

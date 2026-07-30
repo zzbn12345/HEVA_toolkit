@@ -143,6 +143,43 @@ def test_existing_project_can_be_opened_and_closed(tmp_path: Path) -> None:
     assert after_close.status_code == 404
 
 
+def test_existing_project_can_be_opened_by_selecting_its_data_folder(
+    tmp_path: Path,
+) -> None:
+    project_root = tmp_path / "existing-project"
+    sources = project_root / "documents"
+    sources.mkdir(parents=True)
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(project_root, source_dir="documents")
+    client = TestClient(create_app())
+
+    opened = client.post(
+        "/api/projects/open",
+        json={"path": str(project_root / "data")},
+    )
+
+    assert opened.status_code == 200
+    assert opened.json()["project_root"] == str(project_root.resolve())
+
+
+def test_active_project_is_restored_from_local_app_session(tmp_path: Path) -> None:
+    project_root = tmp_path / "existing-project"
+    sources = project_root / "documents"
+    sources.mkdir(parents=True)
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(project_root, source_dir="documents")
+    session = tmp_path / "app-state" / "active-project.json"
+
+    first = TestClient(create_app(session_path=session))
+    opened = first.post("/api/projects/open", json={"path": str(project_root)})
+    restored = TestClient(create_app(session_path=session)).get("/api/project")
+
+    assert opened.status_code == 200
+    assert session.is_file()
+    assert restored.status_code == 200
+    assert restored.json()["project_root"] == str(project_root.resolve())
+
+
 def test_native_folder_picker_returns_selection_without_uploading_files(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -204,6 +241,21 @@ def test_open_and_create_project_report_wrong_folder_usage(tmp_path: Path) -> No
     assert "not a HEVA project" in opened.json()["detail"]
     assert created.status_code == 422
     assert "No PDF or DOCX" in created.json()["detail"]
+
+
+def test_create_rejects_data_folder_that_already_belongs_to_project(
+    tmp_path: Path,
+) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    client = TestClient(create_app())
+
+    response = client.post("/api/projects/create", json={"path": str(tmp_path / "data")})
+
+    assert response.status_code == 409
+    assert "data folder of an existing HEVA project" in response.json()["detail"]
 
 
 def test_project_status_restores_registry_summary(tmp_path: Path) -> None:

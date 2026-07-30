@@ -6,6 +6,8 @@
 
 - A native folder chooser for opening or creating local projects, replacing inconvenient
   manually typed paths without uploading or copying source files.
+- Persistent local active-project selection and data-folder recognition, so reopening the
+  app restores the same HEVA workspace and cannot initialize an accidental nested project.
 - A documentation home, newcomer Quickstart, task guides, and command/package references
   that provide one navigable entrance while preserving the existing authoritative docs.
 - A read-only environment doctor with human and JSON reports for core, app, extraction,
