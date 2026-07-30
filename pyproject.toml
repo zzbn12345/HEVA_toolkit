@@ -24,11 +24,17 @@ app = [
     "python-multipart>=0.0.20,<1.0",
     "uvicorn>=0.35,<1.0",
 ]
+docs = [
+    "mkdocs>=1.6,<2.0",
+    "mkdocs-material>=9.6,<10.0",
+]
 dev = [
     "bleach>=6.1,<7.0",
     "fastapi>=0.116,<1.0",
     "httpx>=0.28,<1.0",
     "markdown>=3.6,<4.0",
+    "mkdocs>=1.6,<2.0",
+    "mkdocs-material>=9.6,<10.0",
     "pymupdf==1.27.2.3",
     "pytest>=8.0,<10.0",
     "python-docx==1.1.2",

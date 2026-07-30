@@ -11,6 +11,8 @@
 - A sanitized in-app guide that renders the same packaged Markdown used by the repository,
   remains available before opening a project, and provides contextual navigation from the
   main workflow screens.
+- A strict MkDocs website build and GitHub Pages workflow that checks pull requests and
+  publishes the same documentation source after changes reach `main`.
 - A neutral project chooser that opens an existing HEVA project, creates one around a
   folder of PDF/DOCX sources, and closes or switches the active project without exposing
   repository-level records by default.

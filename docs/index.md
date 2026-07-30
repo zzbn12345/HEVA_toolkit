@@ -32,6 +32,7 @@ Source documents remain local unless their rights explicitly permit distribution
 - [Validate a project](guides/validate-project.md)
 - [Edit annotations through CSV](guides/edit-with-csv.md)
 - [Prepare an annotation-only distribution](guides/distribute-without-sources.md)
+- [Publish the documentation website](guides/publish-documentation.md)
 
 ## Technical reference
 
