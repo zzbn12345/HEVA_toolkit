@@ -17,14 +17,18 @@ extraction = [
     "spacy==3.7.4",
 ]
 app = [
+    "bleach>=6.1,<7.0",
     "fastapi>=0.116,<1.0",
     "httpx>=0.28,<1.0",
+    "markdown>=3.6,<4.0",
     "python-multipart>=0.0.20,<1.0",
     "uvicorn>=0.35,<1.0",
 ]
 dev = [
+    "bleach>=6.1,<7.0",
     "fastapi>=0.116,<1.0",
     "httpx>=0.28,<1.0",
+    "markdown>=3.6,<4.0",
     "pymupdf==1.27.2.3",
     "pytest>=8.0,<10.0",
     "python-docx==1.1.2",
@@ -39,6 +43,11 @@ include = ["heva*"]
 
 [tool.setuptools.package-data]
 "heva.app" = ["templates/*.html", "static/*.css", "static/*.js"]
+
+[tool.setuptools.data-files]
+"share/heva/docs" = ["docs/*.md"]
+"share/heva/docs/guides" = ["docs/guides/*.md"]
+"share/heva/docs/reference" = ["docs/reference/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

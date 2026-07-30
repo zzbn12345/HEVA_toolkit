@@ -8,6 +8,9 @@
   that provide one navigable entrance while preserving the existing authoritative docs.
 - A read-only environment doctor with human and JSON reports for core, app, extraction,
   project-registry, and optional local Ollama readiness.
+- A sanitized in-app guide that renders the same packaged Markdown used by the repository,
+  remains available before opening a project, and provides contextual navigation from the
+  main workflow screens.
 - A neutral project chooser that opens an existing HEVA project, creates one around a
   folder of PDF/DOCX sources, and closes or switches the active project without exposing
   repository-level records by default.

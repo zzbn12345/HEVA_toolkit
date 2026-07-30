@@ -1,0 +1,98 @@
+.documentation-shell {
+  display: grid;
+  grid-template-columns: minmax(220px, 290px) minmax(0, 850px);
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem;
+}
+.documentation-navigation {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.documentation-brand {
+  display: block;
+  margin-bottom: 1.2rem;
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+.documentation-navigation section { display: grid; gap: .25rem; margin-bottom: 1rem; }
+.documentation-navigation section strong {
+  margin-bottom: .25rem;
+  color: var(--muted);
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.documentation-navigation section a {
+  padding: .4rem .5rem;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: .88rem;
+  text-decoration: none;
+}
+.documentation-navigation section a:hover,
+.documentation-navigation section a:focus-visible,
+.documentation-navigation section a.active {
+  background: var(--field);
+  color: var(--ink);
+}
+.documentation-content {
+  min-width: 0;
+  padding: 1rem 0 4rem;
+  line-height: 1.7;
+}
+.documentation-content h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
+.documentation-content h2 { margin-top: 2.4rem; }
+.documentation-content h3 { margin-top: 1.8rem; }
+.documentation-content p,
+.documentation-content li { color: #d5deea; }
+.documentation-content a { color: var(--accent); }
+.documentation-content pre,
+.documentation-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.documentation-content code {
+  padding: .12rem .3rem;
+  border-radius: 4px;
+  background: var(--field);
+}
+.documentation-content pre {
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #040b15;
+}
+.documentation-content pre code { padding: 0; background: transparent; }
+.documentation-content table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+.documentation-content th,
+.documentation-content td {
+  padding: .55rem .7rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.documentation-content blockquote {
+  margin-left: 0;
+  padding-left: 1rem;
+  border-left: 4px solid var(--accent);
+}
+.guide-link { color: var(--accent); font-weight: 750; text-decoration: none; }
+@media (max-width: 760px) {
+  .documentation-shell { grid-template-columns: 1fr; padding: 1rem; }
+  .documentation-navigation { position: static; max-height: none; }
+}

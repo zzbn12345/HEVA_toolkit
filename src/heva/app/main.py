@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from heva.app.project_context import ProjectContext
+from heva.app.documentation import create_documentation_router
 from heva.app.routes.project import create_project_router
 from heva.app.routes.review import create_review_router
 
@@ -29,6 +30,7 @@ def create_app(project_root: str | Path | None = None) -> FastAPI:
     app = FastAPI(title="HEVA Toolkit", version="0.1.0")
     app.state.project_context = context
     app.mount("/static", StaticFiles(directory=WEB_ROOT / "static"), name="static")
+    app.include_router(create_documentation_router(_template))
     app.include_router(create_project_router(context, _template))
     app.include_router(create_review_router(context, _template))
 
@@ -39,6 +41,8 @@ def create_app(project_root: str | Path | None = None) -> FastAPI:
             path == "/"
             or path == "/health"
             or path == "/api/project"
+            or path == "/guide"
+            or path.startswith("/guide/")
             or path.startswith("/api/projects/")
             or path.startswith("/static/")
         )

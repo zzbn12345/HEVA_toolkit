@@ -36,6 +36,34 @@ def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -
     assert 'src="/static/home.js?v=3"' in response.text
     assert "<style>" not in response.text
     assert 'href="/"' in response.text
+    assert 'href="/guide"' in response.text
+
+
+def test_bundled_guide_is_available_without_an_open_project() -> None:
+    client = TestClient(create_app())
+
+    home = client.get("/guide")
+    quickstart = client.get("/guide/quickstart")
+
+    assert home.status_code == 200
+    assert "<h1" in home.text
+    assert "HEVA Toolkit documentation" in home.text
+    assert 'href="/guide/quickstart"' in home.text
+    assert "DOCUMENTATION_CONTENT" not in home.text
+    assert quickstart.status_code == 200
+    assert "HEVA Quickstart" in quickstart.text
+    assert 'href="/guide/GUIDED_REVIEW_WORKFLOW"' in quickstart.text
+    assert 'href="/static/documentation.css?v=1"' in quickstart.text
+
+
+def test_guide_rejects_unknown_or_traversing_pages() -> None:
+    client = TestClient(create_app())
+
+    missing = client.get("/guide/not-a-page")
+    traversal = client.get("/guide/../README", follow_redirects=False)
+
+    assert missing.status_code == 404
+    assert traversal.status_code in {303, 307, 404}
 
 
 def test_curator_page_exposes_local_decision_queue_and_validation_filters(

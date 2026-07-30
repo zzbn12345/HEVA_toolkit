@@ -230,6 +230,7 @@ h1 {
   border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
+.topbar-links { display: flex; align-items: center; gap: 1rem; }
 
 .home-link { color: var(--ink); font-weight: 750; text-decoration: none; }
 .home-link:hover, .home-link:focus-visible { color: var(--accent); }

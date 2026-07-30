@@ -166,7 +166,7 @@ def check_environment(
             install_extra="",
         ),
     ]
-    for module in ("fastapi", "uvicorn"):
+    for module in ("bleach", "fastapi", "markdown", "uvicorn"):
         checks.append(
             _dependency_check(
                 module,
