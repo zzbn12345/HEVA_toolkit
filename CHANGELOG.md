@@ -6,6 +6,8 @@
 
 - A documentation home, newcomer Quickstart, task guides, and command/package references
   that provide one navigable entrance while preserving the existing authoritative docs.
+- A read-only environment doctor with human and JSON reports for core, app, extraction,
+  project-registry, and optional local Ollama readiness.
 - A neutral project chooser that opens an existing HEVA project, creates one around a
   folder of PDF/DOCX sources, and closes or switches the active project without exposing
   repository-level records by default.

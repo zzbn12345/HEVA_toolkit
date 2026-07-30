@@ -5,6 +5,7 @@ separately installed shell command.
 
 | Task | Command |
 |---|---|
+| Check installation | `python -m heva.doctor --require app --require extraction` |
 | Start the app | `python -m heva.app` |
 | Validate a project | `python -m heva.workflow.package_validator PROJECT validate` |
 | Validate one document | `python -m heva.workflow.package_validator PROJECT validate --document-id ID` |

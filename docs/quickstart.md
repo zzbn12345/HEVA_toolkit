@@ -50,11 +50,26 @@ python -m pip install -e ".[app,extraction]"
 ## 4. Check the installation
 
 ```bash
-python -c "import heva; print('HEVA import: OK')"
-python -m heva.workflow.package_validator --help
+python -m heva.doctor --require app
 ```
 
-Both commands should finish without a traceback.
+For extraction support:
+
+```bash
+python -m heva.doctor --require app --require extraction
+```
+
+Every required check should report `PASS`, followed by `READY`. Ollama is optional:
+
+```bash
+python -m heva.doctor --check-ollama
+```
+
+Check an existing project folder:
+
+```bash
+python -m heva.doctor --project /path/to/project
+```
 
 ## 5. Start the application
 
