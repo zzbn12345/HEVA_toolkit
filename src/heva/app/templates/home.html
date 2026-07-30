@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/home.js?v=3" defer></script>
+  <script src="/static/home.js?v=4" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -31,27 +31,23 @@
       </section>
       <section id="project-chooser" class="project-chooser" aria-labelledby="chooser-title">
         <h2 id="chooser-title">Choose a project</h2>
-        <p class="section-help">Enter a local folder path. HEVA does not upload or move your source documents.</p>
+        <p class="section-help">Choose a folder from your computer. HEVA does not upload, copy, or move your source documents.</p>
         <div id="project-message" class="notice neutral" aria-live="polite">
           Open a HEVA project, or create one from a folder containing PDF or DOCX files.
         </div>
         <div class="project-choice-grid">
-          <form id="open-project-form" class="project-choice">
+          <section id="open-project-choice" class="project-choice">
             <span class="choice-icon" aria-hidden="true">↗</span>
             <h3>Open existing project</h3>
             <p>Load a folder that already contains <code>data/project-registry.json</code>.</p>
-            <label for="open-project-path">HEVA project folder</label>
-            <input id="open-project-path" name="path" required placeholder="/Users/name/Projects/my-heva-project">
-            <button class="button" type="submit">Open project</button>
-          </form>
-          <form id="create-project-form" class="project-choice">
+            <button class="button" type="button" data-select-project="open">Choose folder and open</button>
+          </section>
+          <section id="create-project-choice" class="project-choice">
             <span class="choice-icon" aria-hidden="true">＋</span>
             <h3>Create from source folder</h3>
             <p>Initialize a HEVA project around the PDFs and DOCX files already in this folder.</p>
-            <label for="create-project-path">Source folder</label>
-            <input id="create-project-path" name="path" required placeholder="/Users/name/Documents/annotated-sources">
-            <button class="button" type="submit">Create project</button>
-          </form>
+            <button class="button" type="button" data-select-project="create">Choose source folder</button>
+          </section>
         </div>
       </section>
       <section id="active-project" hidden>

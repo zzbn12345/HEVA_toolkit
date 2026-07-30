@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from heva.app.main import create_app
+from heva.app.routes import project as project_routes
 from heva.workflow.color_mapping import (
     confirm_color_configuration,
     propose_color_configuration,
@@ -33,7 +34,10 @@ def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -
     assert "Validate this project" in response.text
     assert "Curator review queue" in response.text
     assert 'href="/static/app.css"' in response.text
-    assert 'src="/static/home.js?v=3"' in response.text
+    assert 'src="/static/home.js?v=4"' in response.text
+    assert "Choose folder and open" in response.text
+    assert "Choose source folder" in response.text
+    assert 'name="path"' not in response.text
     assert "<style>" not in response.text
     assert 'href="/"' in response.text
     assert 'href="/guide"' in response.text
@@ -137,6 +141,35 @@ def test_existing_project_can_be_opened_and_closed(tmp_path: Path) -> None:
     assert status.json()["project_root"] == str(project_root.resolve())
     assert closed.json() == {"closed": True}
     assert after_close.status_code == 404
+
+
+def test_native_folder_picker_returns_selection_without_uploading_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        project_routes,
+        "select_local_folder",
+        lambda prompt: str(tmp_path),
+    )
+    client = TestClient(create_app())
+
+    response = client.post("/api/folders/select")
+
+    assert response.status_code == 200
+    assert response.json() == {"selected": True, "path": str(tmp_path)}
+
+
+def test_cancelled_native_folder_picker_is_not_an_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(project_routes, "select_local_folder", lambda prompt: None)
+    client = TestClient(create_app())
+
+    response = client.post("/api/folders/select")
+
+    assert response.status_code == 200
+    assert response.json() == {"selected": False, "path": ""}
 
 
 def test_project_can_be_created_from_a_source_folder(tmp_path: Path) -> None:

@@ -57,6 +57,7 @@ from heva.workflow.review_queue import (
     registered_source_path,
 )
 from heva.app.project_context import ProjectContext
+from heva.app.folder_picker import FolderPickerUnavailable, select_local_folder
 
 
 class ColorDecisionInput(BaseModel):
@@ -115,6 +116,18 @@ def create_project_router(
     @router.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @router.post("/api/folders/select")
+    def select_folder() -> dict[str, str | bool]:
+        """Open a native chooser without uploading or copying project files."""
+
+        try:
+            selected = select_local_folder("Choose a HEVA project folder")
+        except FolderPickerUnavailable as error:
+            raise HTTPException(status_code=501, detail=str(error)) from error
+        if selected is None:
+            return {"selected": False, "path": ""}
+        return {"selected": True, "path": selected}
 
     def validated_folder(value: str) -> Path:
         candidate = Path(value).expanduser().resolve()

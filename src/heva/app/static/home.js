@@ -42,22 +42,34 @@ async function loadProject() {
   }
 }
 
-async function selectProject(event, operation) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const button = form.querySelector("button");
+/**
+ * Ask the local service to show the system folder chooser, then open or create.
+ * No selected files are uploaded to the browser or copied by HEVA.
+ * @param {"open"|"create"} operation
+ * @param {HTMLButtonElement} button
+ */
+async function selectProject(operation, button) {
   const message = document.getElementById("project-message");
-  const path = new FormData(form).get("path").trim();
   button.disabled = true;
   message.className = "notice neutral";
-  message.textContent = operation === "create"
-    ? "Creating the project and registering source documents…"
-    : "Opening the project…";
+  message.textContent = "Waiting for you to choose a folder…";
   try {
+    const pickerResponse = await fetch("/api/folders/select", {method: "POST"});
+    const selection = await pickerResponse.json();
+    if (!pickerResponse.ok) {
+      throw new Error(selection.detail || "The folder chooser is not available.");
+    }
+    if (!selection.selected) {
+      message.textContent = "No folder was selected.";
+      return;
+    }
+    message.textContent = operation === "create"
+      ? "Creating the project and registering source documents…"
+      : "Opening the project…";
     const response = await fetch(`/api/projects/${operation}`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({path}),
+      body: JSON.stringify({path: selection.path}),
     });
     const result = await response.json();
     if (!response.ok) {
@@ -68,20 +80,15 @@ async function selectProject(event, operation) {
     await loadProject();
   } catch (error) {
     message.className = "notice error";
-    message.textContent = "The local HEVA service could not select this project.";
+    message.textContent = error.message || "The local HEVA service could not select this project.";
   } finally {
     button.disabled = false;
   }
 }
 
-document.getElementById("open-project-form").addEventListener(
-  "submit",
-  (event) => selectProject(event, "open"),
-);
-document.getElementById("create-project-form").addEventListener(
-  "submit",
-  (event) => selectProject(event, "create"),
-);
+document.querySelectorAll("[data-select-project]").forEach((button) => {
+  button.addEventListener("click", () => selectProject(button.dataset.selectProject, button));
+});
 document.getElementById("close-project").addEventListener("click", async () => {
   await fetch("/api/projects/close", {method: "POST"});
   await loadProject();

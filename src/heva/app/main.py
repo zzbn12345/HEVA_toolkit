@@ -43,6 +43,7 @@ def create_app(project_root: str | Path | None = None) -> FastAPI:
             or path == "/api/project"
             or path == "/guide"
             or path.startswith("/guide/")
+            or path.startswith("/api/folders/")
             or path.startswith("/api/projects/")
             or path.startswith("/static/")
         )
