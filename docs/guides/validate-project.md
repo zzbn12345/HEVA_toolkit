@@ -11,3 +11,7 @@ python -m heva.workflow.package_validator /path/to/project validate
 
 Each issue has a stable code, exact JSON path, explanation, and corrective action. See
 [Validating HEVA](../VALIDATION.md) for JSON reports, exit codes, and interpretation.
+
+Every finding also includes a guide reference. In the web application, choose
+**Read the relevant guide** beside a finding. The human command-line report prints the
+matching file under `docs/`, so the same help remains available without the app.

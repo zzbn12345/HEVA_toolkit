@@ -177,6 +177,10 @@ def test_layered_report_has_actionable_stable_fields(tmp_path: Path) -> None:
     assert issue.document_id == document_id
     assert issue.path == "$.package_metadata.rights.authorization_status"
     assert issue.action
+    assert issue.guide == "DOCUMENT_METADATA"
+    assert "Guide: docs/DOCUMENT_METADATA.md" in format_validation_report(
+        validate_project(tmp_path)
+    )
     assert report.source_path == "documents/source.pdf"
     assert report.workflow_status == "in_review"
     assert report.completed is False

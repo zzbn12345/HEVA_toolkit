@@ -56,6 +56,11 @@
   background: var(--field);
 }
 .issue-code { font-weight: 850; }
+.issue-guide {
+  color: var(--mint);
+  font-weight: 800;
+  width: fit-content;
+}
 .issue-path { color: var(--muted); overflow-wrap: anywhere; }
 .issue-action { color: var(--accent); }
 .validation-actions { display: flex; justify-content: flex-end; margin-top: .8rem; }

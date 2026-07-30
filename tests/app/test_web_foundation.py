@@ -571,6 +571,7 @@ def test_validation_endpoint_uses_package_validator(tmp_path: Path) -> None:
     assert report["documents"][0]["completed"] is False
     assert report["summary"]["failed"] == 1
     assert all(issue["action"] for issue in report["documents"][0]["issues"])
+    assert all(issue["guide"] for issue in report["documents"][0]["issues"])
 
 
 def test_validation_page_exposes_report_runner_filters_and_download(
@@ -586,8 +587,18 @@ def test_validation_page_exposes_report_runner_filters_and_download(
     assert 'data-validation-filter="issues"' in response.text
     assert 'data-validation-filter="completed"' in response.text
     assert 'data-validation-filter="incomplete"' in response.text
-    assert 'src="/static/validate.js?v=3"' in response.text
+    assert 'src="/static/validate.js?v=4"' in response.text
     assert 'href="/static/validation.css?v=2"' in response.text
+    script = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "validate.js"
+    ).read_text(encoding="utf-8")
+    assert '"Read the relevant guide"' in script
+    assert "/guide/${issue.guide" in script
 
 
 def test_review_queue_opens_only_one_document_at_a_time(tmp_path: Path) -> None:

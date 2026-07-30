@@ -68,18 +68,21 @@ function showSummary(report) {
 }
 
 /**
- * Render one stable issue with code, location, explanation, and corrective action.
+ * Render one stable issue with its location, corrective action, and relevant guide.
  * @param {object} issue
  * @returns {HTMLLIElement}
  */
 function issueElement(issue) {
   const item = document.createElement("li");
   item.className = `validation-issue issue-${issue.severity}`;
+  const guide = textElement("a", "issue-guide", "Read the relevant guide");
+  guide.href = `/guide/${issue.guide.split("/").map(encodeURIComponent).join("/")}`;
   item.append(
     textElement("span", "issue-code", `${issue.severity.toUpperCase()} · ${issue.code}`),
     textElement("code", "issue-path", issue.path),
     textElement("div", "issue-message", issue.message),
     textElement("span", "issue-action", `Fix: ${issue.action}`),
+    guide,
   );
   return item;
 }

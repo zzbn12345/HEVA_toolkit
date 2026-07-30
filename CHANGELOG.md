@@ -13,6 +13,8 @@
   main workflow screens.
 - A strict MkDocs website build and GitHub Pages workflow that checks pull requests and
   publishes the same documentation source after changes reach `main`.
+- Contextual guide references on validation findings in both the web report and
+  human-readable command-line output.
 - A neutral project chooser that opens an existing HEVA project, creates one around a
   folder of PDF/DOCX sources, and closes or switches the active project without exposing
   repository-level records by default.

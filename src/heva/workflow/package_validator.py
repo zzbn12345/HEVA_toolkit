@@ -58,6 +58,7 @@ class ValidationIssue(BaseModel):
     path: str
     message: str
     action: str
+    guide: str
 
 
 class DocumentValidation(BaseModel):
@@ -104,6 +105,24 @@ class PackageValidationError(ValueError):
     """Raised when validation or release creation cannot proceed safely."""
 
 
+def _guide_for_issue(code: str, path: str) -> str:
+    """Return the most relevant stable documentation slug for a validation issue."""
+
+    if code in {"source_missing", "source_not_current"} or "registry" in path:
+        return "PROJECT_REGISTRY"
+    if code.startswith("source_") or "rights" in path or "citation" in path:
+        return "DOCUMENT_METADATA"
+    if "color" in code or "mapping" in code or "color" in path:
+        return "guides/review-colors"
+    if "review" in code or "review" in path:
+        return "SENTENCE_REVIEW"
+    if "annotation" in code or "record" in code or path.startswith("$.annotations"):
+        return "HEVA_RECORD_CONTRACT"
+    if "metadata" in code or "package_metadata" in path:
+        return "DOCUMENT_METADATA"
+    return "guides/validate-project"
+
+
 def _issue(
     document_id: str,
     code: str,
@@ -119,6 +138,7 @@ def _issue(
         path=path,
         message=message,
         action=action,
+        guide=_guide_for_issue(code, path),
     )
 
 
@@ -478,6 +498,7 @@ def format_validation_report(report: ProjectValidation) -> str:
                 f"  {issue.severity.upper()} {issue.code} {issue.path}: {issue.message}"
             )
             lines.append(f"    Fix: {issue.action}")
+            lines.append(f"    Guide: docs/{issue.guide}.md")
     summary = report.summary
     lines.append(
         f"{summary.passed} passed, {summary.failed} failed; "
