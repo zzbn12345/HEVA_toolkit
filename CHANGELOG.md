@@ -8,6 +8,13 @@
   manually typed paths without uploading or copying source files.
 - Persistent local active-project selection and data-folder recognition, so reopening the
   app restores the same HEVA workspace and cannot initialize an accidental nested project.
+- Runtime-generated PDF and DOCX extraction fixtures, preserving regression coverage
+  without distributing binary research documents in the toolkit repository.
+
+### Removed
+
+- Research PDFs, Word documents, spreadsheets, and other binary source material from the
+  toolkit repository; HEVA projects now remain external and are selected through the app.
 - A documentation home, newcomer Quickstart, task guides, and command/package references
   that provide one navigable entrance while preserving the existing authoritative docs.
 - A read-only environment doctor with human and JSON reports for core, app, extraction,

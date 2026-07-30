@@ -72,6 +72,15 @@ Thumbs.db
 ~$*.xlsx
 ~$*.xls
 
+# Binary source and office documents belong in external HEVA projects
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
 # Generated HEVA project state
 /data/project-registry.json
 /data/annotator.json

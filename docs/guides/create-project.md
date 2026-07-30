@@ -15,3 +15,7 @@ Choosing **Close project** deliberately clears that remembered selection.
 The browser receives only the selected folder path. HEVA does not upload, copy, rename,
 or move source documents. See
 [Project registry](../PROJECT_REGISTRY.md) for synchronization behavior and stable IDs.
+
+Keep working HEVA projects outside the toolkit source-code checkout. Binary PDFs, Word
+documents, spreadsheets, and presentations are intentionally ignored by Git; only
+annotation packages approved for distribution should be versioned in a data repository.

@@ -1,100 +1,95 @@
-"""Golden pass-to-pass tests for the existing PDF and DOCX extractors."""
+"""Regression tests that generate their binary extraction inputs at runtime."""
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
+
+import docx
+import fitz
+from docx.shared import RGBColor
+
 from heva.extraction.docx_extractor import extract_docx_highlights
 from heva.extraction.pdf_extractor import extract_colored_highlights
 
 
-ROOT = Path(__file__).parents[2]
+def create_highlighted_pdf(path: Path) -> None:
+    """Create a minimal PDF with a yellow drawing behind two words."""
+
+    document = fitz.open()
+    page = document.new_page()
+    text = "Historic harbour remains protected."
+    page.insert_text((100, 100), text, fontsize=12)
+    highlighted = page.search_for("Historic harbour")[0]
+    page.draw_rect(highlighted, fill=(1, 1, 0), color=None, overlay=False)
+    document.save(path)
+    document.close()
 
 
-def expected_records(filename: str) -> list[dict[str, object]]:
-    """Load the committed golden output for an extraction sample."""
+def create_colored_docx(path: Path) -> None:
+    """Create a minimal Word document with two custom-colored phrases."""
 
-    return json.loads((ROOT / "data" / filename).read_text(encoding="utf-8"))
-
-
-def mapping_from_aligned_records(
-    raw_records: list[dict[str, object]],
-    golden_records: list[dict[str, object]],
-) -> dict[str, str]:
-    """Recover a sample mapping without making legacy sidecars runtime fixtures."""
-
-    mapping: dict[str, str] = {}
-    assert len(raw_records) == len(golden_records)
-    for raw_record, golden_record in zip(raw_records, golden_records, strict=True):
-        assert raw_record["sentence"] == golden_record["sentence"]
-        raw_entities = raw_record["entities"]
-        golden_entities = golden_record["entities"]
-        assert len(raw_entities) == len(golden_entities)
-        for raw_entity, golden_entity in zip(raw_entities, golden_entities, strict=True):
-            assert raw_entity["text"] == golden_entity["text"]
-            assert raw_entity["start"] == golden_entity["start"]
-            assert raw_entity["end"] == golden_entity["end"]
-            color = raw_entity["label"]
-            label = golden_entity["label"]
-            assert color.startswith("#")
-            if color in mapping:
-                assert mapping[color] == label
-            mapping[color] = label
-    return mapping
+    document = docx.Document()
+    paragraph = document.add_paragraph()
+    purple = paragraph.add_run("Historic harbour")
+    purple.font.color.rgb = RGBColor(0x70, 0x30, 0xA0)
+    paragraph.add_run(" remains ")
+    green = paragraph.add_run("protected")
+    green.font.color.rgb = RGBColor(0x92, 0xD0, 0x50)
+    paragraph.add_run(".")
+    document.save(path)
 
 
-def without_color_evidence(records: list[dict[str, object]]) -> list[dict[str, object]]:
-    """Compare new records with legacy goldens without discarding runtime evidence."""
+def test_pdf_extractor_reads_generated_highlight_and_mapping(tmp_path: Path) -> None:
+    source = tmp_path / "highlighted.pdf"
+    create_highlighted_pdf(source)
 
-    comparable = json.loads(json.dumps(records))
-    for record in comparable:
-        for entity in record["entities"]:
-            entity.pop("color", None)
-    return comparable
-
-
-def test_pdf_extractor_matches_committed_galle_records() -> None:
-    source = ROOT / "data" / "Galle_P127.pdf"
-    expected = expected_records("Galle_P127_extracted.json")
     raw = extract_colored_highlights(source)
-    actual = extract_colored_highlights(
-        source,
-        color_label_map=mapping_from_aligned_records(raw, expected),
-    )
+    mapped = extract_colored_highlights(source, color_label_map={"#FFFF00": "historic"})
 
-    assert without_color_evidence(actual) == expected
-    assert all(
-        entity["color"].startswith("#")
-        for record in actual
-        for entity in record["entities"]
-    )
+    assert raw[0]["sentence"] == "Historic harbour remains protected."
+    assert raw[0]["entities"] == [
+        {
+            "start": 0,
+            "end": 16,
+            "text": "Historic harbour",
+            "label": "#FFFF00",
+            "color": "#FFFF00",
+        }
+    ]
+    assert mapped[0]["entities"][0]["label"] == "historic"
 
 
-def test_docx_extractor_matches_committed_eop_records() -> None:
-    source = ROOT / "data" / "Deel_1_EOP_Chapter_4_Analysis_p2.docx"
-    expected = expected_records("Deel_1_EOP_Chapter_4_Analysis_p2_extracted.json")
-    raw = extract_docx_highlights(source)
+def test_docx_extractor_reads_generated_custom_font_colors(tmp_path: Path) -> None:
+    source = tmp_path / "colored.docx"
+    create_colored_docx(source)
+
+    actual = extract_docx_highlights(source)
+
+    assert actual[0]["sentence"] == "Historic harbour remains protected."
+    assert [entity["text"] for entity in actual[0]["entities"]] == [
+        "Historic harbour",
+        "protected",
+    ]
+    assert [entity["color"] for entity in actual[0]["entities"]] == [
+        "#7030A0",
+        "#92D050",
+    ]
+
+
+def test_docx_extractor_maps_each_generated_color(tmp_path: Path) -> None:
+    source = tmp_path / "colored.docx"
+    create_colored_docx(source)
+
     actual = extract_docx_highlights(
         source,
-        color_label_map=mapping_from_aligned_records(raw, expected),
+        color_label_map={"#7030A0": "historic", "#92D050": "social"},
     )
 
-    assert without_color_evidence(actual) == expected
-    assert all(
-        entity["color"].startswith("#")
-        for record in actual
-        for entity in record["entities"]
-    )
-
-
-def test_docx_without_mapping_preserves_its_custom_font_colors() -> None:
-    actual = extract_docx_highlights(
-        ROOT / "data" / "Deel_1_EOP_Chapter_4_Analysis_p2.docx"
-    )
-    labels = {
-        entity["label"]
-        for record in actual
-        for entity in record["entities"]
-    }
-
-    assert labels == {"#7030A0", "#92D050", "#CCCC00", "#FF66CC", "#FFC000"}
+    assert actual[0]["values"] == ["historic", "social"]
+    assert actual[0]["ner_tags"] == [
+        "B-historic",
+        "I-historic",
+        "O",
+        "B-social",
+        "O",
+    ]
