@@ -4,6 +4,17 @@
 
 ---
 
+## Start here
+
+- [Install and run HEVA in the Quickstart](docs/quickstart.md)
+- [Browse the complete toolkit documentation](docs/index.md)
+- [Understand project validation](docs/VALIDATION.md)
+- [Review current capabilities and limitations](docs/EVALUATION.md#current-product-boundary)
+
+The Quickstart is the recommended entry point for annotators, curators, and technical
+contributors. The remainder of this README describes the research dataset and its
+annotation framework.
+
 ## Table of Contents
 
 1. [Overview](#overview)
