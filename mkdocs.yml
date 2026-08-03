@@ -32,7 +32,7 @@ nav:
       - Validate a project: guides/validate-project.md
       - Edit with CSV: guides/edit-with-csv.md
       - Distribute without sources: guides/distribute-without-sources.md
-      - Publish this documentation: guides/publish-documentation.md
+      - Publish the private Wiki: guides/publish-documentation.md
   - Concepts:
       - Guided review workflow: GUIDED_REVIEW_WORKFLOW.md
       - Project boundaries: PROJECT_BOUNDARIES.md

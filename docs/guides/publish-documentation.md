@@ -1,6 +1,6 @@
-# Publish the documentation
+# Publish the private documentation Wiki
 
-HEVA uses the Markdown files in `docs/` for both the toolkit website and the
+HEVA uses the Markdown files in `docs/` for the private repository Wiki and the
 guidance shown inside the web application. A documentation correction therefore
 has one source and appears in both places.
 
@@ -18,25 +18,36 @@ Start the local documentation website:
 mkdocs serve
 ```
 
-Before committing, run the same strict build used by automation:
+Before committing, run the same strict documentation and Wiki builds used by automation:
 
 ```bash
 mkdocs build --strict
+python -m heva.wiki docs wiki-build
 ```
 
-The generated `site/` directory is temporary and is not committed.
+The generated `site/` and `wiki-build/` directories are temporary and are not committed.
 
-## Enable GitHub Pages once
+## Initialize the private Wiki once
 
-A repository maintainer must open **Settings → Pages** and select
-**GitHub Actions** as the publishing source. This setting is separate from the
-workflow file and requires repository administration permission.
+A repository maintainer must:
+
+1. Enable **Wikis** under the repository's **Settings → General → Features**.
+2. Open the **Wiki** tab and create its first page. GitHub creates the separate
+   `.wiki.git` repository only after this initial page exists.
+3. Create a token that can clone and push the private Wiki repository.
+4. Save it as the Actions repository secret `WIKI_TOKEN` under
+   **Settings → Secrets and variables → Actions**.
+
+The token belongs only in GitHub's encrypted secret store. Do not put it in a local
+environment file, workflow source, command example, or project package.
 
 ## What the workflow publishes
 
-Pull requests build the documentation and catch broken navigation without
-publishing. A documentation change merged into `main` builds and deploys the
-site through GitHub Pages.
+Pull requests run the strict MkDocs build, generate the complete Wiki, and attach a
+preview artifact without publishing. A documentation change merged into `main`
+synchronizes the generated pages to the private Wiki. The workflow replaces generated
+Wiki Markdown so `docs/` remains the authoritative source.
 
-Only the generated documentation site is uploaded. Project data, PDFs,
-annotations, and local registries are not included.
+Only generated Markdown is pushed. Project data, PDFs, annotations, local registries,
+and secrets are not included. Access to a private repository Wiki follows access to its
+repository.

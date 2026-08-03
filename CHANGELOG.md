@@ -22,8 +22,8 @@
 - A sanitized in-app guide that renders the same packaged Markdown used by the repository,
   remains available before opening a project, and provides contextual navigation from the
   main workflow screens.
-- A strict MkDocs website build and GitHub Pages workflow that checks pull requests and
-  publishes the same documentation source after changes reach `main`.
+- A deterministic private Wiki builder and synchronization workflow that validates pull
+  requests and publishes the same documentation source after changes reach `main`.
 - Contextual guide references on validation findings in both the web report and
   human-readable command-line output.
 - A neutral project chooser that opens an existing HEVA project, creates one around a
