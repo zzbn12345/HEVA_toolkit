@@ -10,6 +10,9 @@
 - [Browse the complete toolkit documentation](docs/index.md)
 - [Understand project validation](docs/VALIDATION.md)
 - [Review current capabilities and limitations](docs/EVALUATION.md#current-product-boundary)
+- Developer guides: [web application](src/heva/app/README.md),
+  [extraction adapters](src/heva/extraction/README.md), and
+  [project workflow](src/heva/workflow/README.md)
 
 The Quickstart is the recommended entry point for annotators, curators, and technical
 contributors. The remainder of this README describes the research dataset and its

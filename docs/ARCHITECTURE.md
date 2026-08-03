@@ -1,5 +1,10 @@
 # The Highlight Extraction Pipeline
 
+Developer-facing package guides document the local responsibilities and entry points for
+the [web application](https://github.com/jurra/heva-toolkit/blob/main/src/heva/app/README.md),
+[extraction adapters](https://github.com/jurra/heva-toolkit/blob/main/src/heva/extraction/README.md),
+and [project workflow](https://github.com/jurra/heva-toolkit/blob/main/src/heva/workflow/README.md).
+
 The extraction pipeline is designed to process documents, extract structured text and metadata, detect highlighting, segment sentences, and map highlight colors to semantic labels, producing a token-level dataset with BIO tags.
 
 ---

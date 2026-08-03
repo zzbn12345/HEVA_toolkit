@@ -1,0 +1,59 @@
+# HEVA extraction adapters
+
+This package reads colored evidence from PDF and DOCX source documents and converts it
+into sentence-level HEVA records. Extraction preserves the observed hexadecimal color;
+semantic meaning is supplied by a supervised document color mapping.
+
+Extraction is optional. Validation, review, and release management can be installed and
+used without the PDF, Word, spaCy, or Ollama dependencies.
+
+## Install
+
+```bash
+python -m pip install -e ".[extraction]"
+```
+
+## Python usage
+
+```python
+from heva.extraction.pdf_extractor import extract_colored_highlights
+
+records = extract_colored_highlights(
+    "/path/to/annotated.pdf",
+    color_label_map={"#FFFF00": "architectural"},
+)
+```
+
+For Word documents, use `extract_docx_highlights` from `docx_extractor` with the same
+mapping shape.
+
+## Responsibilities
+
+- `pdf_extractor.py` aligns PDF text with colored drawings and font evidence.
+- `docx_extractor.py` aligns Word runs and colors with sentences.
+- `tokenization.py` provides language detection and sentence/token segmentation.
+- `word_colors.py` translates stable Word highlight names into hexadecimal colors.
+- `auto_color_mapper.py` optionally asks local Ollama for controlled-label proposals.
+- `extract_highlights.py` preserves the original script interoperability layer.
+
+Automatic mappings are proposals, not scholarly decisions. The workflow package records
+their provenance and requires human confirmation.
+
+## Known boundaries
+
+- Flattened visual colors may not be represented as structured annotation evidence.
+- Image-only documents require OCR outside the current extractor.
+- Layout reconstruction and sentence segmentation can fail on unusual page structures.
+- Successful extraction does not prove complete recall or correct semantic labels.
+
+## Tests
+
+Binary fixtures are generated at runtime so source documents are never committed:
+
+```bash
+python -m pytest tests/extraction
+```
+
+See the [extraction guide](../../../docs/README_VE.md),
+[color mapping contract](../../../docs/COLOR_MAPPING.md), and
+[evaluation limits](../../../docs/EVALUATION.md).
