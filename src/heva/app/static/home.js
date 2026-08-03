@@ -21,9 +21,7 @@ async function loadProject() {
     title.textContent = "HEVA project workspace";
     lead.textContent = "Manage only the documents, annotators, packages, and validation state belonging to the active project.";
     state.textContent = `${result.summary.total} registered document${result.summary.total === 1 ? "" : "s"}`;
-    document.getElementById("active-project-name").textContent =
-      result.project_root.split("/").filter(Boolean).at(-1) || result.project_root;
-    document.getElementById("active-project-path").textContent = result.project_root;
+    document.getElementById("active-project-name").textContent = result.project_name;
     const fields = [
       ["Backlog", result.summary.backlog],
       ["In progress", result.summary.in_progress],

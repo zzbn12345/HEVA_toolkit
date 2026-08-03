@@ -163,9 +163,9 @@ def create_project_router(
                 status_code=422,
                 detail=f"The HEVA project registry is invalid: {error}",
             ) from error
-        selected = root.select(candidate)
+        root.select(candidate)
         return {
-            "project_root": str(selected),
+            "project_name": candidate.name,
             "source_directory": registry.source_directory,
             "document_count": registry.summary.total,
         }
@@ -201,9 +201,9 @@ def create_project_router(
             report = sync_registry(candidate, source_dir=".")
         except RegistryError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
-        selected = root.select(candidate)
+        root.select(candidate)
         return {
-            "project_root": str(selected),
+            "project_name": candidate.name,
             "source_directory": ".",
             "document_count": report.total,
         }
@@ -249,7 +249,7 @@ def create_project_router(
                 status_code=422,
             )
         return {
-            "project_root": str(root),
+            "project_name": root.require().name,
             "source_directory": registry.source_directory,
             "summary": registry.summary.model_dump(mode="json"),
             "documents": [

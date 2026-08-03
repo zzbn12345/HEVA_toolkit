@@ -34,7 +34,7 @@ def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -
     assert "Validate this project" in response.text
     assert "Curator review queue" in response.text
     assert 'href="/static/app.css"' in response.text
-    assert 'src="/static/home.js?v=4"' in response.text
+    assert 'src="/static/home.js?v=5"' in response.text
     assert "Choose folder and open" in response.text
     assert "Choose source folder" in response.text
     assert 'name="path"' not in response.text
@@ -138,7 +138,8 @@ def test_existing_project_can_be_opened_and_closed(tmp_path: Path) -> None:
 
     assert opened.status_code == 200
     assert opened.json()["document_count"] == 1
-    assert status.json()["project_root"] == str(project_root.resolve())
+    assert status.json()["project_name"] == "existing-project"
+    assert "project_root" not in status.json()
     assert closed.json() == {"closed": True}
     assert after_close.status_code == 404
 
@@ -159,25 +160,23 @@ def test_existing_project_can_be_opened_by_selecting_its_data_folder(
     )
 
     assert opened.status_code == 200
-    assert opened.json()["project_root"] == str(project_root.resolve())
+    assert opened.json()["project_name"] == "existing-project"
+    assert "project_root" not in opened.json()
 
 
-def test_active_project_is_restored_from_local_app_session(tmp_path: Path) -> None:
+def test_project_selection_is_not_restored_by_a_new_app_session(tmp_path: Path) -> None:
     project_root = tmp_path / "existing-project"
     sources = project_root / "documents"
     sources.mkdir(parents=True)
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(project_root, source_dir="documents")
-    session = tmp_path / "app-state" / "active-project.json"
-
-    first = TestClient(create_app(session_path=session))
+    first = TestClient(create_app())
     opened = first.post("/api/projects/open", json={"path": str(project_root)})
-    restored = TestClient(create_app(session_path=session)).get("/api/project")
+    restored = TestClient(create_app()).get("/api/project")
 
     assert opened.status_code == 200
-    assert session.is_file()
-    assert restored.status_code == 200
-    assert restored.json()["project_root"] == str(project_root.resolve())
+    assert restored.status_code == 404
+    assert restored.json()["code"] == "no_active_project"
 
 
 def test_native_folder_picker_returns_selection_without_uploading_files(

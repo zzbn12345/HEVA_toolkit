@@ -6,8 +6,8 @@
 
 - A native folder chooser for opening or creating local projects, replacing inconvenient
   manually typed paths without uploading or copying source files.
-- Persistent local active-project selection and data-folder recognition, so reopening the
-  app restores the same HEVA workspace and cannot initialize an accidental nested project.
+- Session-only active-project selection and data-folder recognition, avoiding persisted or
+  displayed user-directory paths while preventing accidental nested projects.
 - Runtime-generated PDF and DOCX extraction fixtures, preserving regression coverage
   without distributing binary research documents in the toolkit repository.
 

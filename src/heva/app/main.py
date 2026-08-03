@@ -23,13 +23,10 @@ def _template(name: str) -> str:
     return (WEB_ROOT / "templates" / name).read_text(encoding="utf-8")
 
 
-def create_app(
-    project_root: str | Path | None = None,
-    session_path: str | Path | None = None,
-) -> FastAPI:
+def create_app(project_root: str | Path | None = None) -> FastAPI:
     """Create an app that can open one persistent HEVA project at a time."""
 
-    context = ProjectContext(project_root, session_path=session_path)
+    context = ProjectContext(project_root)
     app = FastAPI(title="HEVA Toolkit", version="0.1.0")
     app.state.project_context = context
     app.mount("/static", StaticFiles(directory=WEB_ROOT / "static"), name="static")
@@ -81,12 +78,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     args = parser.parse_args(list(argv) if argv is not None else None)
     import uvicorn
 
-    session_path = Path.cwd() / ".heva" / "active-project.json"
-    uvicorn.run(
-        create_app(args.project_root, session_path=session_path),
-        host=args.host,
-        port=args.port,
-    )
+    uvicorn.run(create_app(args.project_root), host=args.host, port=args.port)
     return 0
 
 

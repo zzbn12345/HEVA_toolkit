@@ -26,8 +26,7 @@ tool, not as a multi-user internet service.
 ## Responsibilities
 
 - `main.py` composes the FastAPI application and project boundary.
-- `project_context.py` remembers the active local project without placing session state
-  in annotation packages.
+- `project_context.py` holds the active project only for the running app session.
 - `routes/` translates HTTP requests into workflow operations.
 - `templates/` and `static/` contain the accessible browser interface.
 - `documentation.py` renders the same sanitized Markdown used by the repository guide.
@@ -35,7 +34,8 @@ tool, not as a multi-user internet service.
 
 ## Persistence boundary
 
-The currently selected project is local application state. Citation, annotator, color,
+The currently selected project exists only in memory for the running application and is
+not restored after restart. Citation, annotator, color,
 extraction, review, validation, and curation changes are persisted by `heva.workflow` in
 the selected project's JSON package files. Browser state is never the authoritative copy.
 
