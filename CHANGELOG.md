@@ -24,6 +24,8 @@
   main workflow screens.
 - A deterministic private Wiki builder and synchronization workflow that validates pull
   requests and publishes the same documentation source after changes reach `main`.
+- An independent strict HTML documentation workflow that packages an offline MkDocs site
+  with a SHA-256 checksum as a 30-day workflow artifact.
 - Contextual guide references on validation findings in both the web report and
   human-readable command-line output.
 - A neutral project chooser that opens an existing HEVA project, creates one around a

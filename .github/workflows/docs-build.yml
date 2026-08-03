@@ -1,0 +1,53 @@
+name: Build standalone HEVA documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "pyproject.toml"
+      - ".github/workflows/docs-build.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "pyproject.toml"
+      - ".github/workflows/docs-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: html-documentation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-html:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the toolkit
+        uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install documentation dependencies
+        run: python -m pip install ".[docs]"
+      - name: Build strict standalone HTML
+        run: mkdocs build --strict --site-dir site
+      - name: Package offline documentation
+        run: |
+          tar -czf heva-documentation-html.tar.gz -C site .
+          sha256sum heva-documentation-html.tar.gz > heva-documentation-html.tar.gz.sha256
+      - name: Upload standalone HTML package
+        uses: actions/upload-artifact@v4
+        with:
+          name: heva-documentation-html-${{ github.sha }}
+          path: |
+            heva-documentation-html.tar.gz
+            heva-documentation-html.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30

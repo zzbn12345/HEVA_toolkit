@@ -27,6 +27,17 @@ python -m heva.wiki docs wiki-build
 
 The generated `site/` and `wiki-build/` directories are temporary and are not committed.
 
+## Download standalone HTML
+
+The **Build standalone HEVA documentation** workflow is independent from both the Wiki
+and the FastAPI application. Every documentation pull request and change to `main` creates
+a strict MkDocs build, packages the complete HTML site as
+`heva-documentation-html.tar.gz`, and records its SHA-256 checksum.
+
+Download the `heva-documentation-html-<commit>` artifact from the workflow run. Extract
+the archive and open `index.html`, or serve the extracted directory with any static web
+server. Artifacts are retained for 30 days and contain documentation assets only.
+
 ## Initialize the private Wiki once
 
 A repository maintainer must:
@@ -43,8 +54,8 @@ environment file, workflow source, command example, or project package.
 
 ## What the workflow publishes
 
-Pull requests run the strict MkDocs build, generate the complete Wiki, and attach a
-preview artifact without publishing. A documentation change merged into `main`
+Pull requests generate the complete Wiki and attach a preview artifact without
+publishing. A documentation change merged into `main`
 synchronizes the generated pages to the private Wiki. The workflow replaces generated
 Wiki Markdown so `docs/` remains the authoritative source.
 

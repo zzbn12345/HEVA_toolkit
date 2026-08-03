@@ -26,7 +26,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  validate-wiki:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the toolkit
@@ -36,10 +36,8 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install documentation dependencies
-        run: python -m pip install ".[docs]"
-      - name: Validate the documentation website
-        run: mkdocs build --strict
+      - name: Install HEVA
+        run: python -m pip install .
       - name: Build Wiki pages
         run: python -m heva.wiki docs wiki-build
       - name: Upload Wiki preview
@@ -50,7 +48,7 @@ jobs:
 
   publish:
     if: github.event_name != 'pull_request'
-    needs: build
+    needs: validate-wiki
     runs-on: ubuntu-latest
     steps:
       - name: Check out the toolkit
