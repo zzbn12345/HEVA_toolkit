@@ -993,7 +993,8 @@ def test_review_queue_asset_always_offers_edit_annotation_action() -> None:
         / "static"
         / "app.css"
     ).read_text(encoding="utf-8")
-    assert "@media (max-width: 1100px)" in styles
+    assert "container-type: inline-size" in styles
+    assert "@container (max-width: 1000px)" in styles
     assert "grid-column: 3" in styles
     assert ".project-action .button { display: block; text-align: center; }" in styles
 

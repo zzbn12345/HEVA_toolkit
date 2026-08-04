@@ -31,8 +31,9 @@
 
 ### Fixed
 
-- The document review queue now moves its action onto a second responsive row before the
-  table becomes too narrow, keeping **Edit this annotation** fully visible and usable.
+- The document review queue now responds to the width of the list itself and moves its
+  action onto a second row before the table becomes too narrow, keeping **Edit this
+  annotation** fully visible even inside a constrained page layout.
 - Contextual guide references on validation findings in both the web report and
   human-readable command-line output.
 - A neutral project chooser that opens an existing HEVA project, creates one around a
