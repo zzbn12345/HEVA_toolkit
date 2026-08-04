@@ -80,7 +80,7 @@ def test_valid_results_enter_registered_package_with_provenance(tmp_path: Path) 
 
 def test_invalid_results_do_not_replace_existing_annotations(tmp_path: Path) -> None:
     document_id = project(tmp_path)
-    package = tmp_path / "data/documents" / document_id
+    package = tmp_path / "documents" / document_id
     annotations = package / "annotations.json"
     annotations.write_text('[{"preserved": true}]', encoding="utf-8")
     invalid = record()
@@ -161,7 +161,7 @@ def test_zero_record_extraction_is_a_corrective_failure_and_preserves_checkpoint
     tmp_path: Path,
 ) -> None:
     document_id = project(tmp_path)
-    package = tmp_path / "data/documents" / document_id
+    package = tmp_path / "documents" / document_id
     annotations = package / "annotations.json"
     annotations.write_text('[{"preserved": true}]', encoding="utf-8")
 
@@ -217,7 +217,7 @@ def test_batch_runs_independent_packages_in_stable_order_and_isolates_failures(
         calls.append(document_id)
         if document_id == ordered_ids[1]:
             raise ExtractionSessionError("Document-specific failure.")
-        package = root / "data/documents" / document_id
+        package = root / "documents" / document_id
         return type(
             "Result",
             (),

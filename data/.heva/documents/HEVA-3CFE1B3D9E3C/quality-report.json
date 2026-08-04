@@ -1,0 +1,127 @@
+{
+  "quality_report_version": "1.0",
+  "document_id": "HEVA-3CFE1B3D9E3C",
+  "record_count": 22,
+  "flagged_record_count": 1,
+  "findings": [
+    {
+      "record_index": 0,
+      "sentence_id": 1,
+      "flags": []
+    },
+    {
+      "record_index": 1,
+      "sentence_id": 2,
+      "flags": []
+    },
+    {
+      "record_index": 2,
+      "sentence_id": 3,
+      "flags": []
+    },
+    {
+      "record_index": 3,
+      "sentence_id": 4,
+      "flags": []
+    },
+    {
+      "record_index": 4,
+      "sentence_id": 5,
+      "flags": []
+    },
+    {
+      "record_index": 5,
+      "sentence_id": 6,
+      "flags": []
+    },
+    {
+      "record_index": 6,
+      "sentence_id": 7,
+      "flags": []
+    },
+    {
+      "record_index": 7,
+      "sentence_id": 8,
+      "flags": []
+    },
+    {
+      "record_index": 8,
+      "sentence_id": 9,
+      "flags": []
+    },
+    {
+      "record_index": 9,
+      "sentence_id": 10,
+      "flags": []
+    },
+    {
+      "record_index": 10,
+      "sentence_id": 11,
+      "flags": []
+    },
+    {
+      "record_index": 11,
+      "sentence_id": 12,
+      "flags": []
+    },
+    {
+      "record_index": 12,
+      "sentence_id": 13,
+      "flags": []
+    },
+    {
+      "record_index": 13,
+      "sentence_id": 14,
+      "flags": []
+    },
+    {
+      "record_index": 14,
+      "sentence_id": 15,
+      "flags": []
+    },
+    {
+      "record_index": 15,
+      "sentence_id": 16,
+      "flags": []
+    },
+    {
+      "record_index": 16,
+      "sentence_id": 17,
+      "flags": []
+    },
+    {
+      "record_index": 17,
+      "sentence_id": 18,
+      "flags": []
+    },
+    {
+      "record_index": 18,
+      "sentence_id": 19,
+      "flags": []
+    },
+    {
+      "record_index": 19,
+      "sentence_id": 20,
+      "flags": []
+    },
+    {
+      "record_index": 20,
+      "sentence_id": 21,
+      "flags": []
+    },
+    {
+      "record_index": 21,
+      "sentence_id": 22,
+      "flags": [
+        {
+          "code": "likely_sentence_boundary_error",
+          "severity": "warning",
+          "message": "Sentence has no terminal punctuation.",
+          "evidence": {
+            "ending": "bescheiden"
+          }
+        }
+      ]
+    }
+  ]
+}

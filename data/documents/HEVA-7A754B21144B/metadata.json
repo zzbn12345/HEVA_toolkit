@@ -1,0 +1,198 @@
+{
+  "metadata_version": "1.0",
+  "document_id": "HEVA-7A754B21144B",
+  "source": {
+    "title": null,
+    "creators": [],
+    "citation": null,
+    "reference": null,
+    "not_findable_reason": null
+  },
+  "annotator": {
+    "name": null,
+    "orcid": null
+  },
+  "rights": {
+    "access_level": null,
+    "authorization_status": null,
+    "authorization_date": null,
+    "authorized_by": null,
+    "evidence_reference": null,
+    "source_distribution_allowed": null,
+    "extracted_text_distribution_allowed": null,
+    "annotation_distribution_allowed": null,
+    "license": null,
+    "embargo_until": null
+  },
+  "annotation_process": {
+    "method": "automatic",
+    "extractor": "HEVA PDF extractor",
+    "extractor_version": "0.1.0",
+    "performed_at": "2026-07-24T09:50:24.422918Z",
+    "review": {
+      "all_sentences_require_approval": true,
+      "completed": false,
+      "reviewed_at": null
+    }
+  },
+  "color_configuration": {
+    "detection_method": "automatic",
+    "document_consistency": "unknown",
+    "human_confirmed": false,
+    "confirmed_by": null,
+    "confirmed_at": null,
+    "use_for_extraction": true,
+    "extraction_authorized_by": "Research Annotator",
+    "extraction_authorized_at": "2026-07-24T09:50:22.546665Z",
+    "colors": [
+      {
+        "hex": "#006B6B",
+        "color_name": "Near navy",
+        "text_color": "#FFFFFF",
+        "suggested_label": "scientific",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted text 'Scientific' directly corresponds to the scientific category.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#6FCCDD",
+        "color_name": "Near turquoise",
+        "text_color": "#000000",
+        "suggested_label": "aesthetical",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts mention a unique urban environment, outstanding material manifestation, and architecture, which relate to aesthetic harmony and visual design, thus falling under aesthetical.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#8E67AC",
+        "color_name": "Near violet",
+        "text_color": "#FFFFFF",
+        "suggested_label": "economic",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts mention shopping streets, shop-front houses, and labyrinth of narrow shopping streets, which relate to commercial activity and markets, thus falling under economic.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#ACCE37",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "ecological",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted text mentions ecological balance and green areas, which relate to environmental settings and terrain layout, thus falling under ecological.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#B9529F",
+        "color_name": "Near violet",
+        "text_color": "#FFFFFF",
+        "suggested_label": "historic",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts mention historical evolution, de-regulation to combat trade, and how city-planning was regulated, which relate to the historic category as they describe heritage objects and historical context.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#EF4723",
+        "color_name": "Near red",
+        "text_color": "#FFFFFF",
+        "suggested_label": "age",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "There is no clear indication in the provided text that 'Age' is a correct category. However, it seems like there might be some confusion with the term 'age'. The actual highlighted texts do not clearly indicate any age or longevity of structures.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#F6EB13",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "political",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "There is no clear indication in the provided text that 'Politic' is a correct category. However, it seems like there might be some confusion with the term 'politics'. The actual highlighted texts do not clearly indicate any political actions or governance.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#F7941D",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "social",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted text 'Social' directly corresponds to the social category.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#FFCD05",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "social",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts mention enclosed spaces and unplanned building, but there is no clear indication that these relate to any specific category. However, considering the context of 'communal open spaces' mentioned later, it seems like this might be related to social or economic aspects.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#FFD31E",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "social",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts mention communal open spaces, which relates to community life and residents, thus falling under social.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "name": "annotations",
+      "path": "annotations.json",
+      "format": "json",
+      "record_count": 19
+    }
+  ]
+}

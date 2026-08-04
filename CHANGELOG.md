@@ -4,7 +4,10 @@
 
 ### Added
 
-- A clean project layout where canonical analytical records live in `data/documents/`,
+- Source-folder project roots and collaborative workspace tracking, allowing another
+  researcher to clone canonical annotations plus durable extraction, review, and curation
+  state while keeping caches, locks, local sessions, binaries, and exports out of Git.
+- A clean project layout where canonical analytical records live in `documents/`,
   application state lives in hidden `.heva/` workspace directories, and validated HEVA
   Data Packages are generated under `exports/`; legacy projects migrate automatically.
 - A native folder chooser for opening or creating local projects, replacing inconvenient

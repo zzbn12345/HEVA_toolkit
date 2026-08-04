@@ -25,7 +25,7 @@ print(result.annotations_path)
 Successful persistence creates:
 
 ```text
-data/documents/HEVA-ABC123/
+documents/HEVA-ABC123/
 ├── annotations.json
 └── metadata.json
 

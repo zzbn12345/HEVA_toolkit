@@ -35,7 +35,7 @@ def test_filename_proposal_is_visible_but_not_confirmed(tmp_path: Path) -> None:
     assert record.proposed_fields == ["title"]
     assert record.human_confirmed is False
     metadata = json.loads(
-        next((tmp_path / "data/documents").glob("*/metadata.json")).read_text()
+        next((tmp_path / "documents").glob("*/metadata.json")).read_text()
     )
     assert metadata["source"]["title"] is None
 

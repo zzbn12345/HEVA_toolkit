@@ -52,6 +52,7 @@ from heva.workflow.project_registry import (
     ProjectRegistry,
     RegistryError,
     load_project_registry,
+    relocate_project_root_to_sources,
     sync_registry,
 )
 from heva.workflow.review_queue import (
@@ -141,18 +142,28 @@ def create_project_router(
         return candidate
 
     def existing_project_root(candidate: Path) -> Path:
-        """Accept either a HEVA root or its conventional data subfolder."""
+        """Open the selected source folder, relocating a former parent-root project."""
 
-        if candidate.name == "data":
-            if (candidate.parent / DEFAULT_REGISTRY_PATH).is_file():
-                return candidate.parent
-            if (candidate / "project-registry.json").is_file():
-                return candidate.parent
+        if (candidate / DEFAULT_REGISTRY_PATH).is_file() or (
+            candidate / LEGACY_REGISTRY_PATH
+        ).is_file():
+            return candidate
+        parent = candidate.parent
+        if (parent / DEFAULT_REGISTRY_PATH).is_file() or (
+            parent / LEGACY_REGISTRY_PATH
+        ).is_file():
+            registry = load_project_registry(parent)
+            recorded_sources = (parent / registry.source_directory).resolve()
+            if recorded_sources == candidate:
+                return relocate_project_root_to_sources(parent, registry.source_directory)
         return candidate
 
     @router.post("/api/projects/open")
     def open_project(payload: ProjectFolderInput):
-        candidate = existing_project_root(validated_folder(payload.path))
+        try:
+            candidate = existing_project_root(validated_folder(payload.path))
+        except RegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
         if not (candidate / DEFAULT_REGISTRY_PATH).is_file() and not (
             candidate / LEGACY_REGISTRY_PATH
         ).is_file():
@@ -182,17 +193,22 @@ def create_project_router(
     @router.post("/api/projects/create")
     def create_project(payload: ProjectFolderInput):
         candidate = validated_folder(payload.path)
-        if candidate.name == "data" and (
-            (candidate / "project-registry.json").is_file()
-            or (candidate.parent / DEFAULT_REGISTRY_PATH).is_file()
-        ):
-            raise HTTPException(
-                status_code=409,
-                detail=(
-                    "This is the data folder of an existing HEVA project. "
-                    "Choose Open existing project; HEVA will open its parent workspace."
-                ),
-            )
+        parent = candidate.parent
+        if (parent / DEFAULT_REGISTRY_PATH).is_file() or (
+            parent / LEGACY_REGISTRY_PATH
+        ).is_file():
+            try:
+                parent_registry = load_project_registry(parent)
+            except RegistryError as error:
+                raise HTTPException(status_code=422, detail=str(error)) from error
+            if (parent / parent_registry.source_directory).resolve() == candidate:
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        "This folder already contains the sources of a HEVA project. "
+                        "Open it to move the workspace into this folder safely."
+                    ),
+                )
         if (candidate / DEFAULT_REGISTRY_PATH).exists() or (
             candidate / LEGACY_REGISTRY_PATH
         ).exists():

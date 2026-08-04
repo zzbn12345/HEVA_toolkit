@@ -104,7 +104,7 @@ save_color_configuration(
 This updates only the `color_configuration` section of:
 
 ```text
-data/documents/HEVA-ABC123/metadata.json
+documents/HEVA-ABC123/metadata.json
 ```
 
 It does not create extracted annotations or change the source document.

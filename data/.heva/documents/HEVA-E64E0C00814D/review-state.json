@@ -1,0 +1,406 @@
+{
+  "review_version": "1.0",
+  "document_id": "HEVA-E64E0C00814D",
+  "sentences": [
+    {
+      "sentence_id": 1,
+      "record_sha256": "2403ee27c01c07a1ba6da266ec7f2ca9b7c76d7e6235c2f1c5074ed9ecf3b15a",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 2,
+      "record_sha256": "ffa6f8fc8ccb2aef87ba8094d8365634cd53864823ef2b4629daf5e917b8e1b5",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 3,
+      "record_sha256": "f8b6b3fca112b94633f2ff2d0786e7666fd8a31ee1f2cfa2d1b70105f737cd6a",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 4,
+      "record_sha256": "92eec340d0f94908b78e24ef60e6343e0f810cce2d79348004f41748706d8f31",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 5,
+      "record_sha256": "e066f8366e8b996b0a81fb841baeac9cb1e4af2973f3a726f89da302047e6715",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 6,
+      "record_sha256": "ebe00324539ac7b38b214787a8cfb2bf359554ac6b41a8b0e62c30f4c7a75e0e",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 7,
+      "record_sha256": "c78a80e0550488368b70a98c6f471e9130453aca766268f940b603887c42d3ca",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 8,
+      "record_sha256": "4b053039729268646dda1e0e4c6b2542b40f019e3c7b25e9faaac61e643d9b8e",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 9,
+      "record_sha256": "a5caffa80d119010ca433fabaa4c7a54ce3c687a47497d4ca5479b4c46f11fff",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 10,
+      "record_sha256": "4c6835e5417d0edccb279d23d7d5e4460603ca54973bc8c0d72c8fdb6ddc9453",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 11,
+      "record_sha256": "3b4c7be737945620d6078bbd324e441f4e83001efe9314ac49a5d6048aea9c29",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 12,
+      "record_sha256": "6d7be17eee661182f03ff2ce2ab88aa005d39e4545e568de3f915b6cc61b69ef",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 13,
+      "record_sha256": "580c256bd02c9e891fcb5d7d001c63aea0eb7602d36257df6f1b2acab510743a",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 14,
+      "record_sha256": "a25c0fb826b5bf37dc6a9d341ce03565c93334964dd0d70085800d2f2bc4c31d",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 15,
+      "record_sha256": "c3e42c33839e59dee01d8d3cfc99b04091296c790f7c1916158e9bf3da088edc",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 16,
+      "record_sha256": "26e3faa9713446455e64fe6de120aa5bbf9279752f97942e554f8253a34acd78",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 17,
+      "record_sha256": "3922fd065800900a35e56fbb9eca35ea3d93e7e49b9bb43dab583acda6495981",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 18,
+      "record_sha256": "55a9408bb03e94a82f3f9e670e62014d9653522f3f7aff90f0382afcbd070c6f",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 19,
+      "record_sha256": "ca0b3c813705d824dd298976e8d7805a7952c62a1384ae11e2d9b1cb30317c97",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    },
+    {
+      "sentence_id": 20,
+      "record_sha256": "ba68f697259339d3135784d7eec469c88102a3b674d556105895dad8b827f2c7",
+      "status": "approved",
+      "reviewer": "Jose Carlos Urra",
+      "decided_at": "2026-07-29T20:21:06.531267Z",
+      "comment": null,
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Jose Carlos Urra",
+          "occurred_at": "2026-07-29T20:21:06.531267Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": null
+          }
+        }
+      ]
+    }
+  ]
+}

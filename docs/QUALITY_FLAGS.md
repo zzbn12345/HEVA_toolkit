@@ -14,7 +14,7 @@ Generate a report for one registered package:
 The report is written to:
 
 ```text
-data/documents/HEVA-ABC123/quality-report.json
+documents/HEVA-ABC123/quality-report.json
 ```
 
 Every annotation remains represented in `findings`, including records with no flags. This

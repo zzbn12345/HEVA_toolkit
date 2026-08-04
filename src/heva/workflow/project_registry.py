@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 REGISTRY_VERSION = "1.0"
 DEFAULT_REGISTRY_PATH = Path(".heva/project.json")
 LEGACY_REGISTRY_PATH = Path("data/project-registry.json")
-DATA_DOCUMENTS_DIRECTORY = Path("data/documents")
+DATA_DOCUMENTS_DIRECTORY = Path("documents")
 WORKSPACE_DOCUMENTS_DIRECTORY = Path(".heva/documents")
 SUPPORTED_SUFFIXES = frozenset({".pdf", ".docx"})
 WORKFLOW_FILENAMES = frozenset(
@@ -113,7 +113,7 @@ def migrate_project_layout(project_root: str | Path) -> bool:
     """Upgrade a legacy mixed package layout without overwriting existing data.
 
     Returns ``True`` when the legacy registry or any document file was moved. The
-    migration keeps analytical metadata and annotations under ``data/documents`` and
+    migration keeps analytical metadata and annotations under ``documents`` and
     moves application-only state under ``.heva/documents``.
     """
 
@@ -193,6 +193,82 @@ def load_project_registry(project_root: str | Path) -> ProjectRegistry:
         )
     except (OSError, ValidationError) as error:
         raise RegistryError(f"Cannot load project registry: {error}") from error
+
+
+def relocate_project_root_to_sources(
+    project_root: str | Path,
+    source_directory: str | Path,
+) -> Path:
+    """Make the source-document directory the project root without changing IDs.
+
+    Durable analytical data and hidden workflow JSON move with the project. Source paths,
+    document-data paths, and metadata paths are rewritten relative to the new root. Any
+    destination conflict is rejected before files move.
+    """
+
+    root = Path(project_root).resolve()
+    migrate_project_layout(root)
+    source_relative = Path(source_directory)
+    if source_relative.is_absolute() or source_relative == Path("."):
+        raise RegistryError("Choose a source directory inside the current project root.")
+    target_root = (root / source_relative).resolve()
+    if not target_root.is_dir():
+        raise RegistryError(f"Source directory does not exist: {target_root}")
+    registry_path = root / DEFAULT_REGISTRY_PATH
+    original_registry = registry_path.read_bytes()
+    try:
+        registry = ProjectRegistry.model_validate_json(original_registry)
+    except ValidationError as error:
+        raise RegistryError(f"Cannot relocate invalid project registry: {error}") from error
+    if Path(registry.source_directory) != source_relative:
+        raise RegistryError(
+            "The selected folder does not match the source directory recorded by the project."
+        )
+
+    moves: list[tuple[Path, Path]] = []
+    for entry in registry.documents:
+        try:
+            entry.source_path = Path(entry.source_path).relative_to(source_relative).as_posix()
+        except ValueError as error:
+            raise RegistryError(
+                f"Document {entry.document_id} is outside the selected source directory."
+            ) from error
+        source_data = root / entry.package_path
+        target_data = target_root / "documents" / entry.document_id
+        if source_data.resolve() != target_data.resolve():
+            moves.append((source_data, target_data))
+        entry.package_path = f"documents/{entry.document_id}"
+        entry.metadata_path = f"{entry.package_path}/metadata.json"
+    registry.source_directory = "."
+    moves.append((root / ".heva", target_root / ".heva"))
+    source_exports = root / "exports"
+    if source_exports.exists():
+        moves.append((source_exports, target_root / "exports"))
+
+    for source, target in moves:
+        if not source.exists():
+            continue
+        if target.exists():
+            raise RegistryError(f"Cannot relocate project: {target} already exists.")
+
+    completed: list[tuple[Path, Path]] = []
+    try:
+        for source, target in moves:
+            if not source.exists():
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(source), str(target))
+            completed.append((source, target))
+        _write_registry(target_root / DEFAULT_REGISTRY_PATH, registry)
+    except OSError as error:
+        target_registry = target_root / DEFAULT_REGISTRY_PATH
+        if target_registry.exists():
+            target_registry.write_bytes(original_registry)
+        for source, target in reversed(completed):
+            source.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(target), str(source))
+        raise RegistryError(f"Cannot relocate HEVA project: {error}") from error
+    return target_root
 
 
 def _checksum(path: Path) -> str:
@@ -315,7 +391,7 @@ def _summarize(documents: list[DocumentEntry]) -> RegistrySummary:
 def sync_registry(
     project_root: str | Path,
     *,
-    source_dir: str | Path = "data",
+    source_dir: str | Path = ".",
     registry_path: str | Path = DEFAULT_REGISTRY_PATH,
 ) -> SyncReport:
     """Create or synchronize a registry without renaming or modifying source files."""

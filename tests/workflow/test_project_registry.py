@@ -13,6 +13,7 @@ from heva.workflow.project_registry import (
     REGISTRY_VERSION,
     RegistryError,
     load_project_registry,
+    relocate_project_root_to_sources,
     sync_registry,
 )
 
@@ -44,7 +45,7 @@ def test_initialization_creates_registry_without_renaming_sources(tmp_path: Path
     ]
     assert all(item["document_id"].startswith("HEVA-") for item in registry["documents"])
     assert all(
-        item["package_path"] == f"data/documents/{item['document_id']}"
+        item["package_path"] == f"documents/{item['document_id']}"
         for item in registry["documents"]
     )
     assert all(
@@ -119,9 +120,9 @@ def test_resync_adds_new_document_once(tmp_path: Path) -> None:
     assert second.added == 0
     assert second.unchanged == 2
     registry = json.loads((tmp_path / ".heva" / "project.json").read_text())
-    assert len(list((tmp_path / "data" / "documents").iterdir())) == len(
-        registry["documents"]
-    )
+    assert len(
+        [path for path in (tmp_path / "documents").iterdir() if path.name.startswith("HEVA-")]
+    ) == len(registry["documents"])
 
 
 def test_resync_reports_changed_and_missing_sources_without_replacing_ids(
@@ -227,8 +228,8 @@ def test_opening_legacy_project_separates_data_from_hidden_workflow_state(
     registry = load_project_registry(tmp_path)
 
     entry = registry.documents[0]
-    assert entry.package_path == f"data/documents/{document_id}"
-    assert entry.metadata_path == f"data/documents/{document_id}/metadata.json"
+    assert entry.package_path == f"documents/{document_id}"
+    assert entry.metadata_path == f"documents/{document_id}/metadata.json"
     assert (tmp_path / entry.metadata_path).read_text() == '{"kind":"metadata"}'
     data_directory = tmp_path / entry.package_path
     assert (data_directory / "annotations.json").is_file()
@@ -254,7 +255,7 @@ def test_legacy_migration_refuses_conflicts_before_moving_any_file(tmp_path: Pat
     legacy_metadata.write_text('{"legacy":true}')
     legacy_annotations = legacy_directory / "annotations.json"
     legacy_annotations.write_text("[]")
-    current_directory = tmp_path / "data/documents" / document_id
+    current_directory = tmp_path / "documents" / document_id
     current_directory.mkdir(parents=True)
     (current_directory / "metadata.json").write_text('{"current":true}')
     registry = {
@@ -284,3 +285,31 @@ def test_legacy_migration_refuses_conflicts_before_moving_any_file(tmp_path: Pat
     assert legacy_annotations.is_file()
     assert legacy_registry.is_file()
     assert not (tmp_path / ".heva/project.json").exists()
+
+
+def test_git_tracks_durable_workspace_json_but_ignores_local_runtime_state() -> None:
+    ignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+
+    assert "\n/.heva/\n" not in ignore
+    assert "\n/data/documents/\n" not in ignore
+    assert "**/.heva/cache/" in ignore
+    assert "**/.heva/locks/" in ignore
+    assert "**/.heva/session.json" in ignore
+    assert "**/exports/" in ignore
+
+
+def test_source_folder_relocation_refuses_workspace_conflict_without_moving(
+    tmp_path: Path,
+) -> None:
+    sources = tmp_path / "sources"
+    add_source(sources, "source.pdf", b"source")
+    sync_registry(tmp_path, source_dir="sources")
+    conflicting_workspace = sources / ".heva"
+    conflicting_workspace.mkdir()
+    (conflicting_workspace / "project.json").write_text("conflict")
+
+    with pytest.raises(RegistryError, match="already exists"):
+        relocate_project_root_to_sources(tmp_path, "sources")
+
+    assert (tmp_path / ".heva/project.json").is_file()
+    assert (sources / "source.pdf").is_file()

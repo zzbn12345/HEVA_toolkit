@@ -1,0 +1,142 @@
+{
+  "metadata_version": "1.0",
+  "document_id": "HEVA-A55452EE0DDE",
+  "source": {
+    "title": null,
+    "creators": [],
+    "citation": null,
+    "reference": null,
+    "not_findable_reason": null
+  },
+  "annotator": {
+    "name": null,
+    "orcid": null
+  },
+  "rights": {
+    "access_level": null,
+    "authorization_status": null,
+    "authorization_date": null,
+    "authorized_by": null,
+    "evidence_reference": null,
+    "source_distribution_allowed": null,
+    "extracted_text_distribution_allowed": null,
+    "annotation_distribution_allowed": null,
+    "license": null,
+    "embargo_until": null
+  },
+  "annotation_process": {
+    "method": "automatic",
+    "extractor": "HEVA PDF extractor",
+    "extractor_version": "0.1.0",
+    "performed_at": "2026-07-24T09:50:23.799656Z",
+    "review": {
+      "all_sentences_require_approval": true,
+      "completed": false,
+      "reviewed_at": null
+    }
+  },
+  "color_configuration": {
+    "detection_method": "automatic",
+    "document_consistency": "unknown",
+    "human_confirmed": false,
+    "confirmed_by": null,
+    "confirmed_at": null,
+    "use_for_extraction": true,
+    "extraction_authorized_by": "Research Annotator",
+    "extraction_authorized_at": "2026-07-24T09:50:22.545961Z",
+    "colors": [
+      {
+        "hex": "#00B26A",
+        "color_name": "Near green",
+        "text_color": "#FFFFFF",
+        "suggested_label": "age",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlight relates to the age or longevity of structures, as indicated by the word 'historisch'. This is an important distinction from the HISTORIC category, which refers to heritage significance rather than physical age.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#3DC7F4",
+        "color_name": "Near turquoise",
+        "text_color": "#000000",
+        "suggested_label": "aesthetical",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlights relate to visual design, layout, and aesthetic harmony, which are all aesthetical aspects. The presence of 'kleurgebruik' and 'mooi' explicitly indicate this category.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#9E76B4",
+        "color_name": "Near violet",
+        "text_color": "#FFFFFF",
+        "suggested_label": "economic",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlights relate to commercial activity, markets, financial values, and infrastructure, which are all economic in nature. The presence of 'economisch', 'havengebied', 'infrastructuur', and 'toeristischer' explicitly indicate this category.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#9ECC75",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "ecological",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlights relate to physical geography, natural landforms, environmental settings, and terrain layout, which are all ecological characteristics. The presence of 'Sint Annabaai' and 'aan het water' explicitly indicate this category.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#D4C126",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "political",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlights relate to governance, administrative regulations, and laws, which are all political actions. The presence of 'begrip' and 'wetten' explicitly indicate this category.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#FDB932",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "social",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlights relate to community life, residents, and public interaction, which are all aspects of social value. The presence of 'sociale' explicitly indicates this category.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "name": "annotations",
+      "path": "annotations.json",
+      "format": "json",
+      "record_count": 21
+    }
+  ]
+}

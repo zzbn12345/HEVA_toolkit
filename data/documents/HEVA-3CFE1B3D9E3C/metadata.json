@@ -1,0 +1,133 @@
+{
+  "metadata_version": "1.0",
+  "document_id": "HEVA-3CFE1B3D9E3C",
+  "source": {
+    "title": null,
+    "creators": [],
+    "citation": null,
+    "reference": null,
+    "not_findable_reason": null,
+    "human_confirmed": false,
+    "confirmed_by": null,
+    "confirmed_at": null
+  },
+  "annotator": {
+    "name": null,
+    "affiliation": null,
+    "email": null,
+    "orcid": null
+  },
+  "rights": {
+    "access_level": null,
+    "authorization_status": null,
+    "authorization_date": null,
+    "authorized_by": null,
+    "evidence_reference": null,
+    "source_distribution_allowed": null,
+    "extracted_text_distribution_allowed": null,
+    "annotation_distribution_allowed": null,
+    "license": null,
+    "embargo_until": null
+  },
+  "annotation_process": {
+    "method": "automatic",
+    "extractor": "HEVA DOCX extractor",
+    "extractor_version": "0.1.0",
+    "performed_at": "2026-07-24T09:50:23.494531Z",
+    "review": {
+      "all_sentences_require_approval": true,
+      "completed": false,
+      "reviewed_at": null
+    }
+  },
+  "color_configuration": {
+    "detection_method": "automatic",
+    "document_consistency": "unknown",
+    "human_confirmed": true,
+    "confirmed_by": "Jose Carlos Urra",
+    "confirmed_at": "2026-07-29T09:06:21.383216Z",
+    "use_for_extraction": true,
+    "extraction_authorized_by": "Jose Carlos Urra",
+    "extraction_authorized_at": "2026-07-29T09:06:21.383216Z",
+    "colors": [
+      {
+        "hex": "#7030A0",
+        "color_name": "Near violet",
+        "text_color": "#FFFFFF",
+        "suggested_label": "economic",
+        "label": "ecological",
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": "The highlighted texts mention various types of businesses and infrastructure, such as ambachtelijke bedrijfjes (craft businesses), pakhuizen (warehouses), and handelswijk (trade district). This relates to the economic or political categories.",
+        "ignore_reason": null,
+        "source_mechanism": "word_font_color"
+      },
+      {
+        "hex": "#92D050",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "ecological",
+        "label": "economic",
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": "The highlighted texts describe changes made to the city's waterways, specifically the demping of parts of the Waaigat. This relates to the ecological category.",
+        "ignore_reason": null,
+        "source_mechanism": "word_font_color"
+      },
+      {
+        "hex": "#CCCC00",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "political",
+        "label": "social",
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": "The highlighted texts describe the city's defenses, including the need for a schootsveld (shooting range) and the existence of stadsmuren (city walls). This relates to the political category.",
+        "ignore_reason": null,
+        "source_mechanism": "word_font_color"
+      },
+      {
+        "hex": "#FF66CC",
+        "color_name": "Near magenta",
+        "text_color": "#000000",
+        "suggested_label": "historic",
+        "label": "economic",
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": "The highlighted texts describe architectural features of buildings, such as middle sections, galleries, and street patterns. This relates to the historic category.",
+        "ignore_reason": null,
+        "source_mechanism": "word_font_color"
+      },
+      {
+        "hex": "#FFC000",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "social",
+        "label": "scientific",
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": "The highlighted texts mention specific types of housing, such as bediendewoningen (servant houses) and welgestelde scheepskapiteins (well-off ship captains). This relates to the social or economic categories.",
+        "ignore_reason": null,
+        "source_mechanism": "word_font_color"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "name": "annotations",
+      "path": "annotations.json",
+      "format": "json",
+      "record_count": 22
+    }
+  ]
+}

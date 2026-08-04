@@ -230,7 +230,7 @@ def test_metadata_is_saved_in_registered_package_and_linked_from_registry(
     metadata_path = save_package_metadata(tmp_path, complete_metadata(document_id))
     updated = json.loads(registry_path.read_text())
 
-    assert metadata_path == tmp_path / "data" / "documents" / document_id / "metadata.json"
+    assert metadata_path == tmp_path / "documents" / document_id / "metadata.json"
     assert metadata_path.is_file()
     saved = json.loads(metadata_path.read_text())
     assert saved["annotation_process"]["extractor"] == "HEVA PDF extractor"
@@ -248,7 +248,7 @@ def test_metadata_is_saved_in_registered_package_and_linked_from_registry(
         }
     ]
     assert updated["documents"][0]["metadata_path"] == (
-        f"data/documents/{document_id}/metadata.json"
+        f"documents/{document_id}/metadata.json"
     )
 
 

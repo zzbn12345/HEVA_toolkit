@@ -1,0 +1,142 @@
+{
+  "metadata_version": "1.0",
+  "document_id": "HEVA-E64E0C00814D",
+  "source": {
+    "title": null,
+    "creators": [],
+    "citation": null,
+    "reference": null,
+    "not_findable_reason": null
+  },
+  "annotator": {
+    "name": null,
+    "orcid": null
+  },
+  "rights": {
+    "access_level": null,
+    "authorization_status": null,
+    "authorization_date": null,
+    "authorized_by": null,
+    "evidence_reference": null,
+    "source_distribution_allowed": null,
+    "extracted_text_distribution_allowed": null,
+    "annotation_distribution_allowed": null,
+    "license": null,
+    "embargo_until": null
+  },
+  "annotation_process": {
+    "method": "automatic",
+    "extractor": "HEVA PDF extractor",
+    "extractor_version": "0.1.0",
+    "performed_at": "2026-07-24T09:50:23.703554Z",
+    "review": {
+      "all_sentences_require_approval": true,
+      "completed": false,
+      "reviewed_at": null
+    }
+  },
+  "color_configuration": {
+    "detection_method": "automatic",
+    "document_consistency": "unknown",
+    "human_confirmed": false,
+    "confirmed_by": null,
+    "confirmed_at": null,
+    "use_for_extraction": true,
+    "extraction_authorized_by": "Research Annotator",
+    "extraction_authorized_at": "2026-07-24T09:50:22.544973Z",
+    "colors": [
+      {
+        "hex": "#00D5FF",
+        "color_name": "Near turquoise",
+        "text_color": "#000000",
+        "suggested_label": "aesthetical",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts describe the layout of the city on a regular grid pattern, which is an aesthetical characteristic.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#A8D200",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "ecological",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts describe the physical geography of Galle, including a bay, peninsula, and terrain configuration. This relates to ecological characteristics.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#D7AEFF",
+        "color_name": "Near white",
+        "text_color": "#000000",
+        "suggested_label": "economic",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts describe the economic and administrative activities that took place in the area, including trade, public administrations, and warehouses. This relates to economic activity.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#FF40FF",
+        "color_name": "Near magenta",
+        "text_color": "#FFFFFF",
+        "suggested_label": "historic",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts mention historical events, dates, and the transfer of control over the fort of Galle from one power to another. This relates to historic events and heritage.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#FFD300",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "social",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts mention European colonists, churches, and converts, indicating the presence of religious institutions and communities. This relates to social activities and community life.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#FFFC00",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": "political",
+        "label": null,
+        "display_name": null,
+        "method": "ollama",
+        "confidence": null,
+        "status": "pending_review",
+        "reasoning": "The highlighted texts describe the fortifications and military infrastructure of Galle, including bastions, ramparts, and a stronghold. This relates to political actions and governance.",
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "name": "annotations",
+      "path": "annotations.json",
+      "format": "json",
+      "record_count": 20
+    }
+  ]
+}

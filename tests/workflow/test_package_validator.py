@@ -143,7 +143,7 @@ def project(tmp_path: Path) -> tuple[str, Path, Path]:
     registry["summary"]["backlog"] = 0
     registry["summary"]["in_review"] = 1
     registry_path.write_text(json.dumps(registry), encoding="utf-8")
-    (tmp_path / "data/dataset-metadata.json").write_text(
+    (tmp_path / "dataset-metadata.json").write_text(
         json.dumps(
             {
                 "name": "heva-harbour-annotations",

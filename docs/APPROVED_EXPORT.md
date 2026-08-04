@@ -29,7 +29,7 @@ After an annotator submits a fully decided document, its registry status is `in_
 A curator accepts the exact checksummed candidate in the local `/curation` view. Acceptance
 is the only action that changes the status to `done`.
 
-Before the first build, create `data/dataset-metadata.json`:
+Before the first build, create `dataset-metadata.json`:
 
 ```json
 {

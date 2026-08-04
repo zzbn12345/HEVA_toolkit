@@ -1,0 +1,55 @@
+{
+  "registry_version": "1.0",
+  "source_directory": ".",
+  "documents": [
+    {
+      "document_id": "HEVA-3CFE1B3D9E3C",
+      "source_path": "Deel_1_EOP_Chapter_4_Analysis_p2.docx",
+      "package_path": "documents/HEVA-3CFE1B3D9E3C",
+      "metadata_path": "documents/HEVA-3CFE1B3D9E3C/metadata.json",
+      "checksum_sha256": "ceddd1e7d6d3dc8e08ce8140e65c0c7310ef3f8783432c1aaefd6b0e77f341e8",
+      "observed_checksum_sha256": null,
+      "status": "in_progress",
+      "source_state": "present"
+    },
+    {
+      "document_id": "HEVA-E64E0C00814D",
+      "source_path": "Galle_P127.pdf",
+      "package_path": "documents/HEVA-E64E0C00814D",
+      "metadata_path": "documents/HEVA-E64E0C00814D/metadata.json",
+      "checksum_sha256": "bd54f14032c687056e7a3dcd2b831fe66e159cbe30ba75f3d72aea924868a14a",
+      "observed_checksum_sha256": null,
+      "status": "in_progress",
+      "source_state": "present"
+    },
+    {
+      "document_id": "HEVA-A55452EE0DDE",
+      "source_path": "Willemstad_P45.pdf",
+      "package_path": "documents/HEVA-A55452EE0DDE",
+      "metadata_path": "documents/HEVA-A55452EE0DDE/metadata.json",
+      "checksum_sha256": "f4b62b0ff5896d8f3dbacd101354bf84ab234ade0dac24888e4a8528855a8fa1",
+      "observed_checksum_sha256": null,
+      "status": "in_progress",
+      "source_state": "present"
+    },
+    {
+      "document_id": "HEVA-7A754B21144B",
+      "source_path": "Zanzibar_P132.pdf",
+      "package_path": "documents/HEVA-7A754B21144B",
+      "metadata_path": "documents/HEVA-7A754B21144B/metadata.json",
+      "checksum_sha256": "258ca04061d4a4103d7bc9688c07ef1d782a07371fffac4596dfcef1a675efec",
+      "observed_checksum_sha256": null,
+      "status": "in_progress",
+      "source_state": "present"
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "backlog": 0,
+    "in_progress": 4,
+    "in_review": 0,
+    "done": 0,
+    "changed": 0,
+    "missing": 0
+  }
+}

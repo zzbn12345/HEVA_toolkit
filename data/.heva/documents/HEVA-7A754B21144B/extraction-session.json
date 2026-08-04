@@ -1,0 +1,10 @@
+{
+  "session_version": "1.0",
+  "document_id": "HEVA-7A754B21144B",
+  "status": "mapping_review_pending",
+  "mapping_status": "pending_review",
+  "source_checksum_sha256": "258ca04061d4a4103d7bc9688c07ef1d782a07371fffac4596dfcef1a675efec",
+  "annotations_path": "annotations.json",
+  "record_count": 19,
+  "completed_at": "2026-07-24T09:50:24.422918+00:00"
+}

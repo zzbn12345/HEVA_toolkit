@@ -195,7 +195,7 @@ print(saved_path)
 The module writes:
 
 ```text
-data/documents/<document-id>/metadata.json
+documents/<document-id>/metadata.json
 ```
 
 It also adds `metadata_path` to the matching document in
@@ -204,7 +204,7 @@ It also adds `metadata_path` to the matching document in
 The resulting package keeps description and data separate:
 
 ```text
-data/documents/<document-id>/
+documents/<document-id>/
 ├── metadata.json
 └── annotations.json
 ```

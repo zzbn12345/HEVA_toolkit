@@ -144,7 +144,7 @@ def test_existing_project_can_be_opened_and_closed(tmp_path: Path) -> None:
     assert after_close.status_code == 404
 
 
-def test_existing_project_can_be_opened_by_selecting_its_data_folder(
+def test_existing_parent_root_project_moves_into_selected_source_folder(
     tmp_path: Path,
 ) -> None:
     project_root = tmp_path / "existing-project"
@@ -156,11 +156,17 @@ def test_existing_project_can_be_opened_by_selecting_its_data_folder(
 
     opened = client.post(
         "/api/projects/open",
-        json={"path": str(project_root / "data")},
+        json={"path": str(sources)},
     )
 
     assert opened.status_code == 200
-    assert opened.json()["project_name"] == "existing-project"
+    assert opened.json()["project_name"] == "documents"
+    assert (sources / ".heva/project.json").is_file()
+    assert not (project_root / ".heva").exists()
+    relocated = json.loads((sources / ".heva/project.json").read_text())
+    assert relocated["source_directory"] == "."
+    assert relocated["documents"][0]["source_path"] == "source.pdf"
+    assert relocated["documents"][0]["package_path"].startswith("documents/HEVA-")
     assert "project_root" not in opened.json()
 
 
@@ -242,7 +248,7 @@ def test_open_and_create_project_report_wrong_folder_usage(tmp_path: Path) -> No
     assert "No PDF or DOCX" in created.json()["detail"]
 
 
-def test_create_rejects_data_folder_that_already_belongs_to_project(
+def test_create_rejects_source_folder_that_already_belongs_to_parent_project(
     tmp_path: Path,
 ) -> None:
     sources = tmp_path / "documents"
@@ -251,10 +257,10 @@ def test_create_rejects_data_folder_that_already_belongs_to_project(
     sync_registry(tmp_path, source_dir="documents")
     client = TestClient(create_app())
 
-    response = client.post("/api/projects/create", json={"path": str(tmp_path / "data")})
+    response = client.post("/api/projects/create", json={"path": str(sources)})
 
     assert response.status_code == 409
-    assert "data folder of an existing HEVA project" in response.json()["detail"]
+    assert "sources of a HEVA project" in response.json()["detail"]
 
 
 def test_project_status_restores_registry_summary(tmp_path: Path) -> None:

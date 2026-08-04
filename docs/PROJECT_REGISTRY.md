@@ -6,7 +6,7 @@ belongs. Source files are scanned but never renamed or modified.
 
 ## Initialize or synchronize a project
 
-From the project root, scan the default `data/` directory:
+From the folder containing the source documents, scan that folder directly:
 
 ```bash
 ./venv/bin/python -m heva.workflow.project_registry .
@@ -28,7 +28,7 @@ people. Scripts can request JSON output:
 ## What synchronization does
 
 - New PDF and DOCX files receive a stable `HEVA-...` identifier.
-- The corresponding data path is `data/documents/<document-id>`.
+- The corresponding data path is `documents/<document-id>`.
 - An analytical document directory and incomplete `metadata.json` template are created at that
   path. Missing authorship, rights, process, color, and resource details remain visibly
   empty for later HEVA steps; synchronization never invents them.

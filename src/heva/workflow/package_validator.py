@@ -29,7 +29,7 @@ from heva.workflow.review_state import DocumentReview
 REPORT_VERSION = "1.0"
 RELEASE_VERSION = "1.0"
 DEFAULT_RELEASE_DIRECTORY = Path("exports/heva-data-package")
-DEFAULT_DATASET_METADATA_PATH = Path("data/dataset-metadata.json")
+DEFAULT_DATASET_METADATA_PATH = Path("dataset-metadata.json")
 TOOLKIT_VERSION = "0.1.0"
 
 
@@ -593,7 +593,7 @@ def build_release(
         )
     except (OSError, ValidationError) as error:
         raise PackageValidationError(
-            "Cannot build a citable release without valid data/dataset-metadata.json: "
+            "Cannot build a citable release without valid dataset-metadata.json: "
             f"{error}"
         ) from error
     registry = ProjectRegistry.model_validate_json(

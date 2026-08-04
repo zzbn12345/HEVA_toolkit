@@ -1,0 +1,195 @@
+{
+  "review_version": "1.0",
+  "document_id": "HEVA-A55452EE0DDE",
+  "sentences": [
+    {
+      "sentence_id": 1,
+      "record_sha256": "f7685bc232ce07530d12b99726c58275c5b5661e27eb78f0f91fa2d8d4f69499",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 2,
+      "record_sha256": "583da06f612bf6e3accc214299ce1c3a70d35d418cb541bb450cb4db88779c9b",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 3,
+      "record_sha256": "2d788ac475139424be849f2701f5e02c9928f18821db38697c647d0864d25683",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 4,
+      "record_sha256": "dad06c80eab77e094d411dc3a7846d379ad968ed5a69c643b5f3a23a4dde2231",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 5,
+      "record_sha256": "2a5c68991f1c7119e7d1d2030e1dcc22b06d4c0acb77a76b9b5024e9c534fa67",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 6,
+      "record_sha256": "c06406b708330bf4ed4675e62a1d12d92e3847cee93bbeee0ac92955eb8c02c1",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 7,
+      "record_sha256": "9d410ad65579f1315928ad2dd60ebee81468591b27142b8652512b5bfc162e89",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 8,
+      "record_sha256": "0414a9906ab19bb50e9faf2b2c299d02f0e8dcab524c4c1db0581913b8a1f26c",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 9,
+      "record_sha256": "7350e00af6489e74a979ac917cc480ede889f06262e0964267871a64e454037a",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 10,
+      "record_sha256": "28eb68ebd8b263b3ec069be2fce885ff3a996125959785019fe26ed69ccbe9f1",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 11,
+      "record_sha256": "c214c551234409af2fc299f430571318327a123472f59800450ef418a8740d55",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 12,
+      "record_sha256": "ac6124a9d0bdeeeae43b001940202d303228d815568d78bc25d52852ec9dc225",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 13,
+      "record_sha256": "2a8d5d2d6bc7e19378f563d5f7d2ff7057565f7ef905a217d407c5f6200ea4dd",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 14,
+      "record_sha256": "9bab0f13e48602d608d20ba69b09baf908500f9e66fa0001325d9f856ba6fe42",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 15,
+      "record_sha256": "db68abfd517ea33cdb8497e53309873468f265238d1a11f82dfe9ffceaa0c90e",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 16,
+      "record_sha256": "e67ee71b4ca054c0155f86f6dcc4bfc7b14c11d5ae1cd4cce176a993c74d7230",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 17,
+      "record_sha256": "8cfd191c1d627824320c8ee2bfe2ac46ee472c0a6a84f8f501a615e70c913051",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 18,
+      "record_sha256": "a9f257b304501d7d413008245a17c0ee711a1a9904bcc2f4945fad29689cecb0",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 19,
+      "record_sha256": "d90183d37334765930babeae6d3272c8e2cdfdf2661d15e7a5417c2dbae52b4d",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 20,
+      "record_sha256": "cc54d1458b2bd45a4e6837c52b16cfa7461a27f627198e7a70ed5c37b73df5f4",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    },
+    {
+      "sentence_id": 21,
+      "record_sha256": "494e81ae92c753e11fdd6a539820a7b03b1915bca26f96e65f0bde15e7e634e7",
+      "status": "pending",
+      "reviewer": null,
+      "decided_at": null,
+      "comment": null,
+      "audit": []
+    }
+  ]
+}

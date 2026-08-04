@@ -81,16 +81,11 @@ Thumbs.db
 *.ppt
 *.pptx
 
-# Generated HEVA project state
-/.heva/
-/data/documents/
-/exports/
-/data/project-registry.json
-/data/annotator.json
-/data/annotators.json
-/data/packages/
-/data/heva-collection.json
-/data/release/
-/data/validation-report.json
+# Reproducible or machine-local HEVA state
+**/.heva/cache/
+**/.heva/locks/
+**/.heva/session.json
+**/exports/
+**/validation-report.json
 /legacy_data/
 /issues_jose/
