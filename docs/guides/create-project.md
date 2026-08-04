@@ -4,9 +4,10 @@ Start HEVA with `python -m heva.app`, then open <http://127.0.0.1:8000>.
 
 - **Create project** opens the system folder chooser, scans the selected local folder for
   PDF/DOCX sources, assigns stable
-  document IDs, and creates document package workspaces.
+  document IDs, creates analytical records under `data/documents/`, and keeps application
+  state in the hidden `.heva/` workspace.
 - **Open existing project** opens the same chooser and loads a folder that already contains
-  `data/project-registry.json`.
+  `.heva/project.json`.
 
 You may choose either the project root or its `data/` folder; HEVA resolves both to the
 same project. Project selection lasts only for the running application session. HEVA
@@ -19,4 +20,4 @@ or move source documents. See
 
 Keep working HEVA projects outside the toolkit source-code checkout. Binary PDFs, Word
 documents, spreadsheets, and presentations are intentionally ignored by Git; only
-annotation packages approved for distribution should be versioned in a data repository.
+validated exports or canonical annotation data should be versioned in a data repository.

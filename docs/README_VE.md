@@ -63,7 +63,7 @@ Semantic color mappings are not configured in Python. Every registered document 
 its own proposals and confirmed decisions in:
 
 ```text
-data/packages/<document-id>/package-metadata.json
+data/documents/<document-id>/metadata.json
 ```
 
 Run an extractor without a mapping to inspect raw normalized hex colors. An Ollama or

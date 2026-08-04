@@ -11,9 +11,9 @@ project. Like opening a working file in a desktop application, the user first se
 HEVA project:
 
 - **Open existing project** accepts a folder containing
-  `data/project-registry.json` and restores only that registry's records.
+  `.heva/project.json` and restores only that registry's records.
 - **Create from source folder** accepts a folder containing PDF or DOCX source files,
-  initializes `data/project-registry.json`, and creates one document-package workspace per
+  initializes `.heva/project.json`, and creates one document-package workspace per
   discovered source.
 
 The selected source folder becomes the project root. HEVA scans its source documents but
@@ -34,7 +34,7 @@ stored and reviewed separately within each document record.
 
 Use **Annotator profile** from the home page to load, filter, add, or edit project
 annotators. Each record has a stable ID plus a name and optional affiliation, email, and
-ORCID. The collection and active selection are stored in `data/annotators.json`. A former
+ORCID. The collection and active selection are stored in `.heva/annotators.json`. A former
 `data/annotator.json` profile is migrated automatically when first loaded.
 
 The editor offers Form, Schema, and Generated JSON views. Users edit only safe form fields;

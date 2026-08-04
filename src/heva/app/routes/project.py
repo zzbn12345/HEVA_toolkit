@@ -47,9 +47,11 @@ from heva.workflow.extraction_session import (
 )
 from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
+    LEGACY_REGISTRY_PATH,
     SUPPORTED_SUFFIXES,
     ProjectRegistry,
     RegistryError,
+    load_project_registry,
     sync_registry,
 )
 from heva.workflow.review_queue import (
@@ -141,24 +143,31 @@ def create_project_router(
     def existing_project_root(candidate: Path) -> Path:
         """Accept either a HEVA root or its conventional data subfolder."""
 
-        if candidate.name == "data" and (candidate / "project-registry.json").is_file():
-            return candidate.parent
+        if candidate.name == "data":
+            if (candidate.parent / DEFAULT_REGISTRY_PATH).is_file():
+                return candidate.parent
+            if (candidate / "project-registry.json").is_file():
+                return candidate.parent
         return candidate
 
     @router.post("/api/projects/open")
     def open_project(payload: ProjectFolderInput):
         candidate = existing_project_root(validated_folder(payload.path))
-        registry_path = candidate / DEFAULT_REGISTRY_PATH
-        try:
-            registry = ProjectRegistry.model_validate_json(
-                registry_path.read_text(encoding="utf-8")
+        if not (candidate / DEFAULT_REGISTRY_PATH).is_file() and not (
+            candidate / LEGACY_REGISTRY_PATH
+        ).is_file():
+            raise HTTPException(
+                status_code=422,
+                detail="This folder is not a HEVA project. Create it from source data first.",
             )
+        try:
+            registry = load_project_registry(candidate)
         except FileNotFoundError as error:
             raise HTTPException(
                 status_code=422,
                 detail="This folder is not a HEVA project. Create it from source data first.",
             ) from error
-        except (OSError, ValidationError) as error:
+        except (OSError, ValidationError, RegistryError) as error:
             raise HTTPException(
                 status_code=422,
                 detail=f"The HEVA project registry is invalid: {error}",
@@ -173,7 +182,10 @@ def create_project_router(
     @router.post("/api/projects/create")
     def create_project(payload: ProjectFolderInput):
         candidate = validated_folder(payload.path)
-        if candidate.name == "data" and (candidate / "project-registry.json").is_file():
+        if candidate.name == "data" and (
+            (candidate / "project-registry.json").is_file()
+            or (candidate.parent / DEFAULT_REGISTRY_PATH).is_file()
+        ):
             raise HTTPException(
                 status_code=409,
                 detail=(
@@ -181,7 +193,9 @@ def create_project_router(
                     "Choose Open existing project; HEVA will open its parent workspace."
                 ),
             )
-        if (candidate / DEFAULT_REGISTRY_PATH).exists():
+        if (candidate / DEFAULT_REGISTRY_PATH).exists() or (
+            candidate / LEGACY_REGISTRY_PATH
+        ).exists():
             raise HTTPException(
                 status_code=409,
                 detail="This folder already contains a HEVA project. Open it instead.",
@@ -224,17 +238,14 @@ def create_project_router(
                 },
                 status_code=404,
             )
-        registry_path = root / DEFAULT_REGISTRY_PATH
         try:
-            registry = ProjectRegistry.model_validate_json(
-                registry_path.read_text(encoding="utf-8")
-            )
-        except FileNotFoundError:
+            registry = load_project_registry(root.require())
+        except (FileNotFoundError, RegistryError):
             return JSONResponse(
                 {
                     "code": "project_not_initialized",
                     "message": "This folder is not a HEVA project yet.",
-                    "action": "Choose Create package to register the project documents.",
+                    "action": "Choose Create project to register the source documents.",
                 },
                 status_code=404,
             )
@@ -243,7 +254,7 @@ def create_project_router(
                 {
                     "code": "invalid_project_registry",
                     "message": "The project registry cannot be read.",
-                    "action": "Restore or correct data/project-registry.json.",
+                    "action": "Restore or correct .heva/project.json.",
                     "detail": str(error),
                 },
                 status_code=422,
@@ -266,9 +277,7 @@ def create_project_router(
     @router.get("/api/documents/{document_id}")
     def document_status(document_id: str):
         try:
-            registry = ProjectRegistry.model_validate_json(
-                (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
-            )
+            registry = load_project_registry(root.require())
         except (OSError, ValidationError) as error:
             raise HTTPException(
                 status_code=422,
@@ -403,9 +412,7 @@ def create_project_router(
     def batch_color_candidates(document_id: str):
         try:
             source = load_color_configuration(root, document_id)
-            registry = ProjectRegistry.model_validate_json(
-                (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
-            )
+            registry = load_project_registry(root.require())
         except (ColorMappingError, OSError, ValidationError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         source_palette = {color.hex for color in source.colors}
@@ -517,7 +524,7 @@ def create_project_router(
                 {
                     "code": "invalid_annotator_profile",
                     "message": str(error),
-                    "action": "Correct or replace data/annotators.json.",
+                    "action": "Correct or replace .heva/annotators.json.",
                     "detail": str(error),
                 },
                 status_code=422,

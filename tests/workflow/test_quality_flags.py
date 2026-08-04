@@ -78,7 +78,7 @@ def test_package_report_preserves_every_sentence_for_human_review(tmp_path: Path
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     entry = registry["documents"][0]
     annotations = tmp_path / entry["package_path"] / "annotations.json"
     annotations.write_text(json.dumps([record(), record("Short")]), encoding="utf-8")

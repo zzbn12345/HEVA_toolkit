@@ -217,7 +217,7 @@ document.getElementById("activate-annotator").addEventListener("click", async ()
   }
   registry.active_annotator_id = selectedId;
   selectRecord(registry.annotators.find((item) => item.annotator_id === selectedId));
-  showStatus("success", "This annotator will be reused for new document packages.");
+  showStatus("success", "This annotator will be reused for new documents.");
 });
 
 document.getElementById("remove-annotator").addEventListener("click", async () => {

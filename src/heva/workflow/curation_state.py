@@ -20,6 +20,7 @@ from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
     ProjectRegistry,
     RegistrySummary,
+    document_workspace_directory,
 )
 
 
@@ -27,7 +28,7 @@ CURATION_VERSION = "1.0"
 CURATION_FILENAME = "curation-state.json"
 SNAPSHOT_FILES = (
     "annotations.json",
-    "package-metadata.json",
+    "metadata.json",
     "review-state.json",
 )
 
@@ -143,7 +144,7 @@ def load_curation_state(
 
     root = Path(project_root).resolve()
     _, entry = _registry_entry(root, document_id)
-    path = root / entry.package_path / CURATION_FILENAME
+    path = document_workspace_directory(root, document_id) / CURATION_FILENAME
     if not path.exists():
         return CurationState(document_id=document_id)
     try:
@@ -170,7 +171,11 @@ def create_candidate_snapshot(
         raise CurationError(f"Candidate failed HEVA validation: {codes}")
     package = root / entry.package_path
     checksums = {
-        filename: _file_checksum(package / filename)
+        filename: _file_checksum(
+            document_workspace_directory(root, document_id) / filename
+            if filename == "review-state.json"
+            else package / filename
+        )
         for filename in SNAPSHOT_FILES
     }
     identity = {
@@ -191,7 +196,7 @@ def create_candidate_snapshot(
     if not state.candidates or state.candidates[-1].candidate_id != snapshot.candidate_id:
         state.candidates.append(snapshot)
     _write_json(
-        package / CURATION_FILENAME,
+        document_workspace_directory(root, document_id) / CURATION_FILENAME,
         state.model_dump(mode="json"),
     )
     return snapshot
@@ -211,7 +216,11 @@ def verify_current_candidate(
         raise CurationError("This document has no submitted candidate snapshot.")
     package = root / entry.package_path
     current = {
-        filename: _file_checksum(package / filename)
+        filename: _file_checksum(
+            document_workspace_directory(root, document_id) / filename
+            if filename == "review-state.json"
+            else package / filename
+        )
         for filename in SNAPSHOT_FILES
     }
     if current != candidate.file_checksums_sha256:
@@ -288,7 +297,7 @@ def record_curator_decision(
     state.decisions.append(result)
     _, current_entry = _registry_entry(root, document_id)
     _write_json(
-        root / current_entry.package_path / CURATION_FILENAME,
+        document_workspace_directory(root, document_id) / CURATION_FILENAME,
         state.model_dump(mode="json"),
     )
     return result

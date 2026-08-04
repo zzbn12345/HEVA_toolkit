@@ -516,7 +516,7 @@ def save_package_metadata(
     if not matches:
         raise MetadataError(f"Document {metadata.document_id} is not registered in this project.")
     entry = matches[0]
-    metadata_relative = f"{entry.package_path}/package-metadata.json"
+    metadata_relative = f"{entry.package_path}/metadata.json"
     metadata_file = root / metadata_relative
     _write_json(metadata_file, metadata.model_dump(mode="json"))
     entry.metadata_path = metadata_relative

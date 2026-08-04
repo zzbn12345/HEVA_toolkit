@@ -38,7 +38,7 @@ def project(tmp_path: Path) -> tuple[str, Path]:
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     entry = registry["documents"][0]
     package = tmp_path / entry["package_path"]
     (package / "annotations.json").write_text(
@@ -82,7 +82,7 @@ def test_document_cannot_enter_review_with_unresolved_sentences(tmp_path: Path) 
         tmp_path, document_id, [2], status="excluded", reviewer="Annotator"
     )
     submit_document_for_review(tmp_path, document_id)
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     assert registry["documents"][0]["status"] == "in_review"
 
 
@@ -102,7 +102,7 @@ def test_edit_is_validated_read_back_and_audited(tmp_path: Path) -> None:
     )
 
     persisted = json.loads((package / "annotations.json").read_text())
-    review = json.loads((package / "review-state.json").read_text())
+    review = json.loads((tmp_path / ".heva/documents" / document_id / "review-state.json").read_text())
     assert persisted[0]["sentence"] == "The historic port remains visible."
     assert review["sentences"][0]["status"] == "needs_correction"
     assert review["sentences"][0]["audit"][-1]["event"] == "edit"

@@ -1,7 +1,7 @@
 # HEVA project registry
 
 The project registry is a JSON account of the PDF and DOCX sources known to a HEVA
-project. It gives each document a stable ID and records where its future document package
+project. It gives each document a stable ID and records where its analytical document data
 belongs. Source files are scanned but never renamed or modified.
 
 ## Initialize or synchronize a project
@@ -18,7 +18,7 @@ To scan another folder inside the project:
 ./venv/bin/python -m heva.workflow.project_registry . --source-dir documents
 ```
 
-The registry is written to `data/project-registry.json`. A concise summary is printed for
+The registry is written to `.heva/project.json`. A concise summary is printed for
 people. Scripts can request JSON output:
 
 ```bash
@@ -28,13 +28,13 @@ people. Scripts can request JSON output:
 ## What synchronization does
 
 - New PDF and DOCX files receive a stable `HEVA-...` identifier.
-- The corresponding package path is `data/packages/<document-id>`.
-- A package workspace and incomplete `package-metadata.json` template are created at that
+- The corresponding data path is `data/documents/<document-id>`.
+- An analytical document directory and incomplete `metadata.json` template are created at that
   path. Missing authorship, rights, process, color, and resource details remain visibly
   empty for later HEVA steps; synchronization never invents them.
-- When package metadata is saved, the registry records its `metadata_path`; detailed
-  provenance, rights, color configuration, and extraction resources stay in the package.
-- Re-running synchronization does not overwrite package metadata already edited by a
+- When document metadata is saved, the registry records its `metadata_path`; detailed
+  provenance, rights, color configuration, and extraction resources stay with the data.
+- Re-running synchronization does not overwrite document metadata already edited by a
   researcher.
 - Re-running synchronization preserves existing IDs and workflow states.
 - New documents are added once.
@@ -50,8 +50,8 @@ dashboard to load project status without scanning all source files again.
 
 ## Registry authority and limits
 
-The registry is authoritative for document IDs, source paths, package paths, checksums, and
-project status. A document package must use the same ID recorded here.
+The registry is authoritative for document IDs, source paths, data paths, checksums, and
+project status. A document record must use the same ID recorded here.
 
 At this stage, synchronization does not create annotation packages, validate sentences,
 approve changed documents, or decide publication rights. Those are separate HEVA

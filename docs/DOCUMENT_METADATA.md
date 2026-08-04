@@ -2,7 +2,7 @@
 
 The package metadata module records who created a source, who annotated it, how the
 annotations were produced, how document colors were interpreted, how the source can be
-cited, and what may be distributed. One `package-metadata.json` describes each registered
+cited, and what may be distributed. One `metadata.json` describes each registered
 document package.
 
 The module does two different jobs:
@@ -16,7 +16,7 @@ report first.
 
 ## Prerequisite: register the source documents
 
-The document must already exist in `data/project-registry.json`. Initialize or synchronize
+The document must already exist in `.heva/project.json`. Initialize or synchronize
 the registry from the project root:
 
 ```bash
@@ -25,7 +25,7 @@ the registry from the project root:
 
 Copy the relevant `document_id` from the registry. The ID connects the metadata to the
 correct source and document package. Synchronization also creates an incomplete
-`package-metadata.json` template for every registered document. It intentionally leaves
+`metadata.json` template for every registered document. It intentionally leaves
 unknown authorship, rights, extraction, and color decisions empty rather than guessing.
 
 ## Create a reusable annotator profile
@@ -40,7 +40,7 @@ Annotator profiles use JSON:
 ```
 
 For a standalone script, this may be saved as `data/annotator.json`. The web application
-stores multiple reusable records and their active selection in `data/annotators.json`,
+stores multiple reusable records and their active selection in `.heva/annotators.json`,
 migrating the former single file when necessary. The source creator and annotator are
 separate concepts: the source creator belongs under `source.creators`; the person doing
 the HEVA annotation belongs under `annotator`.
@@ -195,17 +195,17 @@ print(saved_path)
 The module writes:
 
 ```text
-data/packages/<document-id>/package-metadata.json
+data/documents/<document-id>/metadata.json
 ```
 
 It also adds `metadata_path` to the matching document in
-`data/project-registry.json`. Metadata cannot be saved for an unregistered document.
+`.heva/project.json`. Metadata cannot be saved for an unregistered document.
 
 The resulting package keeps description and data separate:
 
 ```text
-data/packages/<document-id>/
-├── package-metadata.json
+data/documents/<document-id>/
+├── metadata.json
 └── annotations.json
 ```
 

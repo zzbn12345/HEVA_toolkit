@@ -19,7 +19,11 @@ from heva.workflow.extraction_session import (
     ExtractionSessionError,
     persist_extraction_results,
 )
-from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
+from heva.workflow.project_registry import (
+    DEFAULT_REGISTRY_PATH,
+    ProjectRegistry,
+    document_workspace_directory,
+)
 
 
 CSV_FIELDS = (
@@ -145,13 +149,13 @@ def compile_csv_packages(
     protected_paths = [root / DEFAULT_REGISTRY_PATH]
     for document_id in grouped:
         package = root / entries[document_id].package_path
+        workspace = document_workspace_directory(root, document_id)
         protected_paths.extend(
-            package / filename
-            for filename in (
-                "annotations.json",
-                "review-state.json",
-                "package-metadata.json",
-                "extraction-session.json",
+            (
+                package / "annotations.json",
+                package / "metadata.json",
+                workspace / "review-state.json",
+                workspace / "extraction-session.json",
             )
         )
     backups = {

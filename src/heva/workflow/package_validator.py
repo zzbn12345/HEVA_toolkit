@@ -21,13 +21,14 @@ from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
     ProjectRegistry,
     RegistrySummary,
+    document_workspace_directory,
 )
 from heva.workflow.review_state import DocumentReview
 
 
 REPORT_VERSION = "1.0"
 RELEASE_VERSION = "1.0"
-DEFAULT_RELEASE_DIRECTORY = Path("data/release")
+DEFAULT_RELEASE_DIRECTORY = Path("exports/heva-data-package")
 DEFAULT_DATASET_METADATA_PATH = Path("data/dataset-metadata.json")
 TOOLKIT_VERSION = "0.1.0"
 
@@ -230,7 +231,7 @@ def validate_document_package(
         )
 
     metadata_value = _read_json(
-        package / "package-metadata.json",
+        root / entry.metadata_path if entry.metadata_path else package / "metadata.json",
         document_id,
         "$.package_metadata",
         issues,
@@ -351,7 +352,7 @@ def validate_document_package(
                 )
 
     review_value = _read_json(
-        package / "review-state.json",
+        document_workspace_directory(root, document_id) / "review-state.json",
         document_id,
         "$.review_state",
         issues,
@@ -639,10 +640,12 @@ def build_release(
             (root / entry.package_path / "annotations.json").read_text(encoding="utf-8")
         )
         reviews = DocumentReview.model_validate_json(
-            (root / entry.package_path / "review-state.json").read_text(encoding="utf-8")
+            (
+                document_workspace_directory(root, entry.document_id) / "review-state.json"
+            ).read_text(encoding="utf-8")
         )
         package_metadata = PackageMetadata.model_validate_json(
-            (root / entry.package_path / "package-metadata.json").read_text(
+            (root / (entry.metadata_path or f"{entry.package_path}/metadata.json")).read_text(
                 encoding="utf-8"
             )
         )

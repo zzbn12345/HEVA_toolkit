@@ -223,14 +223,14 @@ def test_metadata_is_saved_in_registered_package_and_linked_from_registry(
     documents.mkdir()
     (documents / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry_path = tmp_path / "data" / "project-registry.json"
+    registry_path = tmp_path / ".heva" / "project.json"
     registry = json.loads(registry_path.read_text())
     document_id = registry["documents"][0]["document_id"]
 
     metadata_path = save_package_metadata(tmp_path, complete_metadata(document_id))
     updated = json.loads(registry_path.read_text())
 
-    assert metadata_path == tmp_path / "data" / "packages" / document_id / "package-metadata.json"
+    assert metadata_path == tmp_path / "data" / "documents" / document_id / "metadata.json"
     assert metadata_path.is_file()
     saved = json.loads(metadata_path.read_text())
     assert saved["annotation_process"]["extractor"] == "HEVA PDF extractor"
@@ -248,13 +248,13 @@ def test_metadata_is_saved_in_registered_package_and_linked_from_registry(
         }
     ]
     assert updated["documents"][0]["metadata_path"] == (
-        f"data/packages/{document_id}/package-metadata.json"
+        f"data/documents/{document_id}/metadata.json"
     )
 
 
 def test_metadata_cannot_be_saved_for_unregistered_document(tmp_path: Path) -> None:
-    (tmp_path / "data").mkdir()
-    (tmp_path / "data" / "project-registry.json").write_text(
+    (tmp_path / ".heva").mkdir()
+    (tmp_path / ".heva" / "project.json").write_text(
         json.dumps(
             {
                 "registry_version": "1.0",

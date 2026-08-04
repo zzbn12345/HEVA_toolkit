@@ -49,7 +49,7 @@ def test_legacy_profile_migrates_once_with_stable_id(tmp_path: Path) -> None:
     second = load_annotator_registry(tmp_path)
 
     assert first.annotators[0].annotator_id == second.annotators[0].annotator_id
-    assert (tmp_path / "data/annotators.json").is_file()
+    assert (tmp_path / ".heva/annotators.json").is_file()
 
 
 def test_blank_name_is_rejected(tmp_path: Path) -> None:

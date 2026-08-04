@@ -22,7 +22,7 @@ def registered_document(tmp_path: Path) -> str:
     sources.mkdir()
     (sources / "Historic_Harbour.pdf").write_bytes(b"not-a-real-pdf")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     return registry["documents"][0]["document_id"]
 
 
@@ -35,7 +35,7 @@ def test_filename_proposal_is_visible_but_not_confirmed(tmp_path: Path) -> None:
     assert record.proposed_fields == ["title"]
     assert record.human_confirmed is False
     metadata = json.loads(
-        next((tmp_path / "data/packages").glob("*/package-metadata.json")).read_text()
+        next((tmp_path / "data/documents").glob("*/metadata.json")).read_text()
     )
     assert metadata["source"]["title"] is None
 

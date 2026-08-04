@@ -80,7 +80,7 @@ def _context(project_root: str | Path, document_id: str):
         raise CitationError("The selected document is not registered.")
     try:
         metadata = PackageMetadata.model_validate_json(
-            (root / entry.package_path / "package-metadata.json").read_text(
+            (root / (entry.metadata_path or f"{entry.package_path}/metadata.json")).read_text(
                 encoding="utf-8"
             )
         )

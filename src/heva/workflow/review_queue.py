@@ -10,7 +10,11 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 from heva.workflow.document_metadata import PackageMetadata, save_package_metadata
-from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
+from heva.workflow.project_registry import (
+    DEFAULT_REGISTRY_PATH,
+    ProjectRegistry,
+    document_workspace_directory,
+)
 from heva.workflow.quality_flags import assess_record
 from heva.workflow.review_state import DocumentReview
 
@@ -74,7 +78,7 @@ def _readiness(
     reasons: list[str] = []
     try:
         metadata = PackageMetadata.model_validate_json(
-            (package / "package-metadata.json").read_text(encoding="utf-8")
+            (package / "metadata.json").read_text(encoding="utf-8")
         )
     except (OSError, ValueError):
         metadata = None
@@ -150,7 +154,7 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
     for entry in sorted(_registry(root).documents, key=lambda item: item.source_path):
         package = root / entry.package_path
         annotations_path = package / "annotations.json"
-        review_path = package / "review-state.json"
+        review_path = document_workspace_directory(root, entry.document_id) / "review-state.json"
         if annotations_path.exists() and not review_path.exists():
             from heva.workflow.review_state import initialize_sentence_reviews
 
@@ -230,7 +234,7 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
         raise ReviewQueueError(f"Document {document_id} is not registered.")
     package = root / entry.package_path
     records = _load_records(package)
-    review_path = package / "review-state.json"
+    review_path = document_workspace_directory(root, document_id) / "review-state.json"
     if not review_path.exists():
         from heva.workflow.review_state import initialize_sentence_reviews
 
@@ -316,7 +320,7 @@ def submit_review_document(
     package = _package_for_document(root, document_id)
     try:
         metadata = PackageMetadata.model_validate_json(
-            (package / "package-metadata.json").read_text(encoding="utf-8")
+            (package / "metadata.json").read_text(encoding="utf-8")
         )
     except (OSError, ValueError) as error:
         raise ReviewQueueError(f"Cannot update annotation-process metadata: {error}") from error

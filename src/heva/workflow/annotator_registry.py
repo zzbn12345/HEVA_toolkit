@@ -11,8 +11,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from heva.workflow.document_metadata import AnnotatorMetadata
 
 
-ANNOTATORS_PATH = Path("data/annotators.json")
-LEGACY_ANNOTATOR_PATH = Path("data/annotator.json")
+ANNOTATORS_PATH = Path(".heva/annotators.json")
+LEGACY_ANNOTATOR_PATHS = (Path("data/annotators.json"), Path("data/annotator.json"))
 
 
 class AnnotatorRecord(AnnotatorMetadata):
@@ -65,23 +65,29 @@ def load_annotator_registry(project_root: str | Path) -> AnnotatorRegistry:
     try:
         return AnnotatorRegistry.model_validate_json(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        legacy_path = root / LEGACY_ANNOTATOR_PATH
-        try:
-            legacy = AnnotatorMetadata.model_validate_json(
-                legacy_path.read_text(encoding="utf-8")
-            )
-        except FileNotFoundError:
+        legacy_path = next(
+            (root / candidate for candidate in LEGACY_ANNOTATOR_PATHS if (root / candidate).is_file()),
+            None,
+        )
+        if legacy_path is None:
             return AnnotatorRegistry()
-        except (OSError, ValidationError) as error:
+        try:
+            decoded = json.loads(legacy_path.read_text(encoding="utf-8"))
+            if "annotators" in decoded:
+                registry = AnnotatorRegistry.model_validate(decoded)
+            else:
+                legacy = AnnotatorMetadata.model_validate(decoded)
+                record = AnnotatorRecord(**legacy.model_dump())
+                registry = AnnotatorRegistry(
+                    active_annotator_id=record.annotator_id,
+                    annotators=[record],
+                )
+        except (OSError, json.JSONDecodeError, ValidationError) as error:
             raise AnnotatorRegistryError(
                 "The saved annotator profile cannot be read."
             ) from error
-        record = AnnotatorRecord(**legacy.model_dump())
-        registry = AnnotatorRegistry(
-            active_annotator_id=record.annotator_id,
-            annotators=[record],
-        )
         save_annotator_registry(root, registry)
+        legacy_path.unlink()
         return registry
     except (OSError, ValidationError) as error:
         raise AnnotatorRegistryError(

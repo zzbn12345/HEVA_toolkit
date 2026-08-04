@@ -4,6 +4,9 @@
 
 ### Added
 
+- A clean project layout where canonical analytical records live in `data/documents/`,
+  application state lives in hidden `.heva/` workspace directories, and validated HEVA
+  Data Packages are generated under `exports/`; legacy projects migrate automatically.
 - A native folder chooser for opening or creating local projects, replacing inconvenient
   manually typed paths without uploading or copying source files.
 - Session-only active-project selection and data-folder recognition, avoiding persisted or

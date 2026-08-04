@@ -67,7 +67,7 @@ def prepared_project(tmp_path: Path) -> list[dict[str, object]]:
     (sources / "b.pdf").write_bytes(b"b")
     (sources / "a.pdf").write_bytes(b"a")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     for entry in registry["documents"]:
         package = tmp_path / entry["package_path"]
         (package / "annotations.json").write_text(
@@ -140,7 +140,7 @@ def write_ready_metadata(
         ],
     )
     package = tmp_path / str(entry["package_path"])
-    (package / "package-metadata.json").write_text(
+    (package / "metadata.json").write_text(
         metadata.model_dump_json(indent=2),
         encoding="utf-8",
     )
@@ -260,10 +260,10 @@ def test_ready_document_submission_updates_metadata_and_locks_review(
     assert selected["status"] == "in_review"
     assert selected["annotation_complete"] is True
     package = tmp_path / str(entry["package_path"])
-    metadata = json.loads((package / "package-metadata.json").read_text())
+    metadata = json.loads((package / "metadata.json").read_text())
     assert metadata["annotation_process"]["review"]["completed"] is True
     assert metadata["annotation_process"]["review"]["reviewed_at"]
-    curation = json.loads((package / "curation-state.json").read_text())
+    curation = json.loads((tmp_path / ".heva/documents" / entry["document_id"] / "curation-state.json").read_text())
     assert curation["candidates"][0]["submitted_by"] == "Annotator"
     assert curation["candidates"][0]["validator_report"]["valid"] is True
     assert len(curation["candidates"][0]["candidate_id"]) == 64

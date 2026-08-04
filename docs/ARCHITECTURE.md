@@ -163,7 +163,7 @@ To handle complex layout formats (like multi-column tables, headers, and side-by
 ### 6. Entity Alignment & Dataset Formatting
 * **Color Mapping**: With no mapping, extractors preserve normalized raw hex evidence.
   Semantic labels are applied only when an explicit mapping is passed. Confirmed mappings
-  are loaded from the registered document's `package-metadata.json`.
+  are loaded from the registered document's `metadata.json`.
 * **Space-Insensitive Token Grouping**: Highlighted characters are matched back to spaCy tokens. Consecutive tokens highlighting the same category are grouped into a single entity (stripping leading/trailing spaces and punctuation). This prevents entity fragmentation.
 * **BIO Matrix Generation**: BIO tags are generated: the first token of an entity gets a `B-<label>` tag, subsequent tokens get `I-<label>`, and unhighlighted tokens get `O`.
 * **Output Serialization**: The sentences, values lists, tokens, entities, page index, and BIO tags are saved as structured JSON datasets in the target output path.

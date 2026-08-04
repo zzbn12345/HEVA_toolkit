@@ -29,6 +29,7 @@ from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
     ProjectRegistry,
     RegistrySummary,
+    document_workspace_directory,
 )
 
 
@@ -207,7 +208,8 @@ def persist_extraction_results(
     metadata = PackageMetadata.model_validate_json(metadata_file.read_text(encoding="utf-8"))
     package = root / entry.package_path
     annotations_file = package / "annotations.json"
-    session_file = package / "extraction-session.json"
+    session_file = document_workspace_directory(root, document_id) / "extraction-session.json"
+    session_file.parent.mkdir(parents=True, exist_ok=True)
     now = datetime.now(timezone.utc)
 
     _write_json(annotations_file, canonical)
@@ -292,7 +294,7 @@ def load_extraction_checkpoint_status(
     if entry is None:
         raise ExtractionSessionError(f"Document {document_id} is not registered.")
     package = root / entry.package_path
-    session_file = package / "extraction-session.json"
+    session_file = document_workspace_directory(root, document_id) / "extraction-session.json"
     annotations_file = package / "annotations.json"
     if not session_file.exists() and not annotations_file.exists():
         return ExtractionCheckpointStatus(document_id, "not_extracted")
@@ -392,7 +394,7 @@ def run_registered_extraction(
             f"Document {document_id} source state is {entry.source_state}; synchronize it first."
         )
     package = root / entry.package_path
-    session_file = package / "extraction-session.json"
+    session_file = document_workspace_directory(root, document_id) / "extraction-session.json"
     annotations_file = package / "annotations.json"
     extraction_mapping = load_extraction_color_mapping(root, document_id)
     mapping_checksum = _mapping_checksum(

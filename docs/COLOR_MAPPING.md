@@ -11,7 +11,7 @@ The safe sequence is:
 3. Create pending proposals from a document legend, Ollama, or a generic convention.
 4. Let an annotator approve or explicitly ignore every color.
 5. Confirm the complete mapping.
-6. Save it into the document's `package-metadata.json`.
+6. Save it into the document's `metadata.json`.
 7. Only then use approved mappings for candidate HEVA extraction.
 
 There is no global semantic `COLOR_MAP`. Calling either extractor without
@@ -104,7 +104,7 @@ save_color_configuration(
 This updates only the `color_configuration` section of:
 
 ```text
-data/packages/HEVA-ABC123/package-metadata.json
+data/documents/HEVA-ABC123/metadata.json
 ```
 
 It does not create extracted annotations or change the source document.
@@ -211,7 +211,7 @@ The application:
 1. extracts raw highlighted text without applying a semantic map;
 2. sends only unresolved color groups to local Ollama;
 3. rejects missing colors, malformed JSON, and labels outside the controlled HEVA set;
-4. saves valid results as `pending_review` evidence in `package-metadata.json`;
+4. saves valid results as `pending_review` evidence in `metadata.json`;
 5. still requires the annotator to approve a label or document an ignore decision.
 
 The Color Review form preselects each valid `suggested_label`, so the annotator can inspect

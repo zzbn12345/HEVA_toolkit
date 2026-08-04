@@ -13,7 +13,7 @@ from heva.workflow.contract import ContractIssue, validate_record
 from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
 
 
-DEFAULT_COLLECTION_PATH = Path("data/heva-collection.json")
+DEFAULT_COLLECTION_PATH = Path("exports/heva-collection.json")
 COLLECTION_VERSION = "1.0"
 
 

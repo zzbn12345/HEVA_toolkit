@@ -33,7 +33,7 @@ def test_collection_includes_only_done_packages_in_stable_order(tmp_path: Path) 
     (sources / "b.pdf").write_bytes(b"b")
     (sources / "a.pdf").write_bytes(b"a")
     sync_registry(tmp_path, source_dir="documents")
-    registry_path = tmp_path / "data/project-registry.json"
+    registry_path = tmp_path / ".heva/project.json"
     registry = json.loads(registry_path.read_text())
     for index, entry in enumerate(registry["documents"]):
         entry["status"] = "done" if index == 0 else "in_progress"
@@ -60,13 +60,14 @@ def test_invalid_done_package_does_not_replace_existing_collection(tmp_path: Pat
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry_path = tmp_path / "data/project-registry.json"
+    registry_path = tmp_path / ".heva/project.json"
     registry = json.loads(registry_path.read_text())
     registry["documents"][0]["status"] = "done"
     registry_path.write_text(json.dumps(registry), encoding="utf-8")
     package = tmp_path / registry["documents"][0]["package_path"]
     (package / "annotations.json").write_text('[{"invalid": true}]', encoding="utf-8")
-    collection_path = tmp_path / "data/heva-collection.json"
+    collection_path = tmp_path / "exports/heva-collection.json"
+    collection_path.parent.mkdir()
     collection_path.write_text('{"preserved": true}', encoding="utf-8")
 
     with pytest.raises(CollectionBuildError, match="invalid annotation"):

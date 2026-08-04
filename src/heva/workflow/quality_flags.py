@@ -12,7 +12,11 @@ from typing import Any, Iterable, Literal, Mapping, Sequence
 from pydantic import BaseModel, ConfigDict, Field
 
 from heva.workflow.contract import validate_record
-from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
+from heva.workflow.project_registry import (
+    DEFAULT_REGISTRY_PATH,
+    ProjectRegistry,
+    document_workspace_directory,
+)
 
 
 class QualityThresholds(BaseModel):
@@ -174,7 +178,8 @@ def build_quality_report(
         "flagged_record_count": sum(bool(item["flags"]) for item in findings),
         "findings": findings,
     }
-    target = package / "quality-report.json"
+    target = document_workspace_directory(root, document_id) / "quality-report.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_suffix(".json.tmp")
     temporary.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     temporary.replace(target)

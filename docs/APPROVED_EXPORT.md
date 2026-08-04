@@ -55,7 +55,7 @@ Build the release candidate with:
 This creates:
 
 ```text
-data/release/
+exports/heva-data-package/
 ├── build-log.json
 ├── datapackage.json
 ├── heva-annotations.json

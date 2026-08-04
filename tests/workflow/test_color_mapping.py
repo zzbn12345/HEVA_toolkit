@@ -139,7 +139,7 @@ def test_confirmed_configuration_is_saved_in_document_package(tmp_path: Path) ->
     documents.mkdir()
     (documents / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data" / "project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva" / "project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     configuration = propose_color_configuration(
         ["#FFFF00"], legend_mapping={"#FFFF00": "historic"}
@@ -165,7 +165,7 @@ def test_unconfirmed_package_mapping_cannot_drive_semantic_extraction(
     documents.mkdir()
     (documents / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data" / "project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva" / "project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     proposal = propose_color_configuration(
         ["#FFFF00"], ollama_suggestions={"#FFFF00": "historic"}
@@ -183,7 +183,7 @@ def test_automatic_proposals_are_written_pending_without_overwriting(
     documents.mkdir()
     (documents / "source.docx").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data" / "project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva" / "project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
 
     metadata_path = write_automatic_color_proposals(
@@ -223,7 +223,7 @@ def test_pending_map_requires_explicit_decision_before_extraction(tmp_path: Path
     documents.mkdir()
     (documents / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     proposal = propose_color_configuration(
         ["#FFFF00"], ollama_suggestions={"#FFFF00": "historic"}
@@ -251,7 +251,7 @@ def test_document_color_review_persists_explicit_label_and_ignore_decisions(
     documents.mkdir()
     (documents / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     save_color_configuration(
         tmp_path,
@@ -291,7 +291,7 @@ def test_document_color_review_requires_a_decision_for_every_observed_color(
     documents.mkdir()
     (documents / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     save_color_configuration(
         tmp_path,
@@ -316,7 +316,7 @@ def test_confirmed_mapping_can_be_shared_only_with_an_exact_pending_palette(
     for name in ("source.pdf", "matching.pdf", "different.pdf"):
         (documents / name).write_bytes(name.encode())
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     ids = {
         Path(item["source_path"]).name: item["document_id"]
         for item in registry["documents"]

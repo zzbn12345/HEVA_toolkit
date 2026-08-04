@@ -34,7 +34,7 @@ def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -
     assert "Validate this project" in response.text
     assert "Curator review queue" in response.text
     assert 'href="/static/app.css"' in response.text
-    assert 'src="/static/home.js?v=5"' in response.text
+    assert 'src="/static/home.js?v=6"' in response.text
     assert "Choose folder and open" in response.text
     assert "Choose source folder" in response.text
     assert 'name="path"' not in response.text
@@ -223,7 +223,7 @@ def test_project_can_be_created_from_a_source_folder(tmp_path: Path) -> None:
 
     assert created.status_code == 200
     assert created.json()["document_count"] == 1
-    assert (source_folder / "data/project-registry.json").is_file()
+    assert (source_folder / ".heva/project.json").is_file()
     assert status.json()["source_directory"] == "."
     assert status.json()["documents"][0]["source_path"] == "annotated.pdf"
 
@@ -306,7 +306,7 @@ def test_color_review_api_loads_the_document_palette(tmp_path: Path) -> None:
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     save_color_configuration(
         tmp_path,
@@ -336,7 +336,7 @@ def test_automatic_color_proposal_route_reports_generated_evidence(
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     save_color_configuration(
         tmp_path,
@@ -363,7 +363,7 @@ def test_batch_color_candidates_explain_palette_mismatch(tmp_path: Path) -> None
     (sources / "source.pdf").write_bytes(b"source")
     (sources / "target.pdf").write_bytes(b"target")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     ids = {
         Path(item["source_path"]).name: item["document_id"]
         for item in registry["documents"]
@@ -460,7 +460,7 @@ def test_annotator_is_persisted_in_project_collection(tmp_path: Path) -> None:
 
     assert saved.status_code == 200
     assert restored.json()["annotator"]["name"] == "Research Annotator"
-    collection = json.loads((tmp_path / "data/annotators.json").read_text())
+    collection = json.loads((tmp_path / ".heva/annotators.json").read_text())
     assert collection["active_annotator_id"]
     assert collection["annotators"][0]["name"] == "Research Annotator"
     assert collection["annotators"][0]["orcid"] == "0000-0002-1825-0097"
@@ -507,7 +507,7 @@ def test_extended_annotator_profile_is_restored_across_documents(tmp_path: Path)
     assert restored.json()["annotator"]["affiliation"] == "Heritage Lab"
     assert restored.json()["annotator"]["email"] == "annotator@example.org"
     assert restored.json()["annotator"]["orcid"] == "0000-0002-1825-0097"
-    collection = json.loads((tmp_path / "data/annotators.json").read_text())
+    collection = json.loads((tmp_path / ".heva/annotators.json").read_text())
     assert collection["annotators"][0]["name"] == restored.json()["annotator"]["name"]
 
 
@@ -623,7 +623,7 @@ def test_legacy_single_annotator_is_migrated_to_collection(tmp_path: Path) -> No
 
     assert collection.status_code == 200
     assert collection.json()["annotators"][0]["name"] == "Legacy Annotator"
-    assert (tmp_path / "data/annotators.json").is_file()
+    assert (tmp_path / ".heva/annotators.json").is_file()
 
 
 def test_missing_project_has_plain_language_corrective_action(tmp_path: Path) -> None:
@@ -641,7 +641,7 @@ def test_validation_endpoint_uses_package_validator(tmp_path: Path) -> None:
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     client = TestClient(create_app(tmp_path))
 
@@ -691,7 +691,7 @@ def test_review_queue_opens_only_one_document_at_a_time(tmp_path: Path) -> None:
     (sources / "one.pdf").write_bytes(b"one")
     (sources / "two.pdf").write_bytes(b"two")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     canonical = {
         "sentence_id": 1,
         "page": 1,
@@ -739,7 +739,7 @@ def test_legacy_annotations_receive_pending_review_state_when_queue_opens(
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     entry = registry["documents"][0]
     package = tmp_path / entry["package_path"]
     canonical = {
@@ -773,7 +773,7 @@ def test_legacy_annotations_receive_pending_review_state_when_queue_opens(
     assert selected.json()["sentences"][0]["review"]["status"] == "pending"
     assert queue.status_code == 200
     assert queue.json()["documents"][0]["review_available"] is True
-    review = json.loads((package / "review-state.json").read_text())
+    review = json.loads((tmp_path / ".heva/documents" / entry["document_id"] / "review-state.json").read_text())
     assert review["sentences"][0]["status"] == "pending"
     assert review["sentences"][0]["audit"] == []
 
@@ -881,7 +881,7 @@ def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path)
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     entry = registry["documents"][0]
     package = tmp_path / entry["package_path"]
     original = {
@@ -925,7 +925,7 @@ def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path)
     assert response.status_code == 200
     assert response.json()["sentences"][0]["review"]["status"] == "needs_correction"
     saved = json.loads((package / "annotations.json").read_text())
-    audit = json.loads((package / "review-state.json").read_text())
+    audit = json.loads((tmp_path / ".heva/documents" / entry["document_id"] / "review-state.json").read_text())
     assert saved[0]["sentence"] == "A historic harbour."
     assert audit["sentences"][0]["audit"][-1]["actor"] == "Sentence Editor"
     assert audit["sentences"][0]["audit"][-1]["details"]["before"] == original
@@ -937,7 +937,7 @@ def test_invalid_sentence_correction_reports_field_and_preserves_record(tmp_path
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     entry = registry["documents"][0]
     package = tmp_path / entry["package_path"]
     original = {
@@ -1005,7 +1005,7 @@ def test_registered_pdf_can_be_loaded_for_immediate_edit_preview(tmp_path: Path)
     pdf = sources / "source.pdf"
     pdf.write_bytes(b"%PDF-1.4\n%%EOF")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     client = TestClient(create_app(tmp_path))
 
@@ -1027,7 +1027,7 @@ def test_registered_document_citation_can_be_confirmed_by_active_annotator(
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"not-a-real-pdf")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     client = TestClient(create_app(tmp_path))
     client.post("/api/annotators", json={"name": "Citation Reviewer"})
@@ -1056,7 +1056,7 @@ def test_citation_confirmation_explains_missing_findability(tmp_path: Path) -> N
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"not-a-real-pdf")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     client = TestClient(create_app(tmp_path))
     client.post("/api/annotators", json={"name": "Citation Reviewer"})

@@ -50,7 +50,7 @@ def project(tmp_path: Path) -> str:
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     config = propose_color_configuration(
         ["#FF40FF"], legend_mapping={"#FF40FF": "historic"}
@@ -71,16 +71,16 @@ def test_valid_results_enter_registered_package_with_provenance(tmp_path: Path) 
     )
 
     assert json.loads(result.annotations_path.read_text())[0]["entities"][0]["color"] == "#FF40FF"
-    metadata = json.loads((result.annotations_path.parent / "package-metadata.json").read_text())
+    metadata = json.loads((result.annotations_path.parent / "metadata.json").read_text())
     assert metadata["resources"][0]["record_count"] == 1
     assert metadata["annotation_process"]["extractor_version"] == "0.1.0"
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     assert registry["documents"][0]["status"] == "in_progress"
 
 
 def test_invalid_results_do_not_replace_existing_annotations(tmp_path: Path) -> None:
     document_id = project(tmp_path)
-    package = tmp_path / "data/packages" / document_id
+    package = tmp_path / "data/documents" / document_id
     annotations = package / "annotations.json"
     annotations.write_text('[{"preserved": true}]', encoding="utf-8")
     invalid = record()
@@ -122,7 +122,7 @@ def test_mapping_change_marks_checkpoint_stale_without_deleting_records(
         extractor="test",
         extractor_version="1",
     )
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     metadata_path = tmp_path / registry["documents"][0]["metadata_path"]
     metadata = json.loads(metadata_path.read_text())
     metadata["color_configuration"]["colors"][0]["label"] = "political"
@@ -145,7 +145,7 @@ def test_changed_source_state_marks_checkpoint_stale(tmp_path: Path) -> None:
         extractor="test",
         extractor_version="1",
     )
-    registry_path = tmp_path / "data/project-registry.json"
+    registry_path = tmp_path / ".heva/project.json"
     registry = json.loads(registry_path.read_text())
     registry["documents"][0]["source_state"] = "changed"
     registry["documents"][0]["observed_checksum_sha256"] = "a" * 64
@@ -161,7 +161,7 @@ def test_zero_record_extraction_is_a_corrective_failure_and_preserves_checkpoint
     tmp_path: Path,
 ) -> None:
     document_id = project(tmp_path)
-    package = tmp_path / "data/packages" / document_id
+    package = tmp_path / "data/documents" / document_id
     annotations = package / "annotations.json"
     annotations.write_text('[{"preserved": true}]', encoding="utf-8")
 
@@ -188,7 +188,7 @@ def test_registered_runner_reports_scanned_pdf_without_claiming_ocr(
     pdf.new_page()
     pdf.save(source)
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     config = propose_color_configuration(
         ["#FF40FF"], legend_mapping={"#FF40FF": "historic"}
@@ -209,7 +209,7 @@ def test_batch_runs_independent_packages_in_stable_order_and_isolates_failures(
     (documents / "b.pdf").write_bytes(b"b")
     (documents / "a.pdf").write_bytes(b"a")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     ordered_ids = [item["document_id"] for item in registry["documents"]]
     calls: list[str] = []
 
@@ -217,7 +217,7 @@ def test_batch_runs_independent_packages_in_stable_order_and_isolates_failures(
         calls.append(document_id)
         if document_id == ordered_ids[1]:
             raise ExtractionSessionError("Document-specific failure.")
-        package = root / "data/packages" / document_id
+        package = root / "data/documents" / document_id
         return type(
             "Result",
             (),
@@ -225,7 +225,7 @@ def test_batch_runs_independent_packages_in_stable_order_and_isolates_failures(
                 "reused_checkpoint": True,
                 "record_count": 3,
                 "annotations_path": package / "annotations.json",
-                "session_path": package / "extraction-session.json",
+                "session_path": tmp_path / ".heva/documents" / document_id / "extraction-session.json",
             },
         )()
 

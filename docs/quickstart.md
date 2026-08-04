@@ -82,7 +82,7 @@ Open <http://127.0.0.1:8000>. Keep the terminal running while using the app.
 From the home page:
 
 1. Choose **Create project** for a folder containing PDF/DOCX files, or **Open existing
-   project** for a folder containing `data/project-registry.json`.
+   project** for a folder containing `.heva/project.json`.
 2. Configure the reusable annotator profile.
 3. Open one document and confirm its citation and document-local color mapping.
 4. Extract annotations.

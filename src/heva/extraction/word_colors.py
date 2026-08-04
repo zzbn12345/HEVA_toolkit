@@ -1,7 +1,7 @@
 """Stable conversion of Word highlight names to normalized hex colors.
 
 This module contains file-format knowledge only. HEVA semantic mappings belong to each
-registered document's ``package-metadata.json``.
+registered document's ``metadata.json``.
 """
 
 

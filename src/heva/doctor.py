@@ -98,7 +98,7 @@ def _project_check(project_root: str | Path) -> DiagnosticCheck:
             code="project_registry",
             status="fail",
             message=f"The project registry cannot be read: {error}",
-            action="Restore or correct data/project-registry.json.",
+            action="Restore or correct .heva/project.json.",
         )
     return DiagnosticCheck(
         code="project_registry",

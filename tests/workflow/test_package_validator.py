@@ -121,13 +121,13 @@ def project(tmp_path: Path) -> tuple[str, Path, Path]:
     sources.mkdir()
     (sources / "source.pdf").write_bytes(b"authorized source")
     sync_registry(tmp_path, source_dir="documents")
-    registry_path = tmp_path / "data/project-registry.json"
+    registry_path = tmp_path / ".heva/project.json"
     registry = json.loads(registry_path.read_text())
     entry = registry["documents"][0]
     document_id = entry["document_id"]
     package = tmp_path / entry["package_path"]
     (package / "annotations.json").write_text(json.dumps([record()]), encoding="utf-8")
-    (package / "package-metadata.json").write_text(
+    (package / "metadata.json").write_text(
         ready_metadata(document_id).model_dump_json(indent=2),
         encoding="utf-8",
     )
@@ -165,9 +165,9 @@ def project(tmp_path: Path) -> tuple[str, Path, Path]:
 
 def test_layered_report_has_actionable_stable_fields(tmp_path: Path) -> None:
     document_id, package, _ = project(tmp_path)
-    metadata = json.loads((package / "package-metadata.json").read_text())
+    metadata = json.loads((package / "metadata.json").read_text())
     metadata["rights"]["authorization_status"] = "pending"
-    (package / "package-metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
+    (package / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
 
     report = validate_document_package(tmp_path, document_id)
     issue = next(item for item in report.issues if item.code == "source_not_authorized")
@@ -204,9 +204,9 @@ def test_project_report_separates_validation_from_workflow_completion(
 
 def test_incomplete_review_blocks_approval(tmp_path: Path) -> None:
     document_id, package, _ = project(tmp_path)
-    review = json.loads((package / "review-state.json").read_text())
+    review = json.loads((tmp_path / ".heva/documents" / document_id / "review-state.json").read_text())
     review["sentences"][0]["status"] = "pending"
-    (package / "review-state.json").write_text(json.dumps(review), encoding="utf-8")
+    (tmp_path / ".heva/documents" / document_id / "review-state.json").write_text(json.dumps(review), encoding="utf-8")
 
     with pytest.raises(PackageValidationError, match="sentence_review_incomplete"):
         approve_document(tmp_path, document_id)

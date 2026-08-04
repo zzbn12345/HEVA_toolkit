@@ -25,15 +25,17 @@ print(result.annotations_path)
 Successful persistence creates:
 
 ```text
-data/packages/HEVA-ABC123/
+data/documents/HEVA-ABC123/
 ├── annotations.json
-├── extraction-session.json
-└── package-metadata.json
+└── metadata.json
+
+.heva/documents/HEVA-ABC123/
+└── extraction-session.json
 ```
 
 It also:
 
-- records the annotation resource and record count in package metadata;
+- records the annotation resource and record count in document metadata;
 - records extraction method, tool name, version, and time;
 - preserves raw entity colors;
 - marks sentence review incomplete;

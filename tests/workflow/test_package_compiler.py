@@ -58,10 +58,10 @@ def test_compile_updates_package_and_invalidates_changed_sentence_review(
     assert counts == {document_id: 1}
     annotations = json.loads((package / "annotations.json").read_text())
     assert annotations[0]["sentence"].endswith("visible.")
-    review = json.loads((package / "review-state.json").read_text())
+    review = json.loads((tmp_path / ".heva/documents" / document_id / "review-state.json").read_text())
     assert review["sentences"][0]["status"] == "pending"
     assert review["sentences"][0]["audit"][0]["event"] == "source_record_changed"
-    metadata = json.loads((package / "package-metadata.json").read_text())
+    metadata = json.loads((package / "metadata.json").read_text())
     assert metadata["annotation_process"]["extractor"] == "HEVA CSV compiler"
 
 

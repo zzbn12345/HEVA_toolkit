@@ -7,14 +7,26 @@ from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
+import shutil
 from typing import Iterable, Literal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 
 REGISTRY_VERSION = "1.0"
-DEFAULT_REGISTRY_PATH = Path("data/project-registry.json")
+DEFAULT_REGISTRY_PATH = Path(".heva/project.json")
+LEGACY_REGISTRY_PATH = Path("data/project-registry.json")
+DATA_DOCUMENTS_DIRECTORY = Path("data/documents")
+WORKSPACE_DOCUMENTS_DIRECTORY = Path(".heva/documents")
 SUPPORTED_SUFFIXES = frozenset({".pdf", ".docx"})
+WORKFLOW_FILENAMES = frozenset(
+    {
+        "extraction-session.json",
+        "review-state.json",
+        "curation-state.json",
+        "quality-report.json",
+    }
+)
 
 
 class DocumentEntry(BaseModel):
@@ -85,6 +97,104 @@ class RegistryError(ValueError):
     """Raised when a project registry or source configuration is unusable."""
 
 
+def document_data_directory(project_root: str | Path, document_id: str) -> Path:
+    """Return the canonical analytical-data directory for one document."""
+
+    return Path(project_root).resolve() / DATA_DOCUMENTS_DIRECTORY / document_id
+
+
+def document_workspace_directory(project_root: str | Path, document_id: str) -> Path:
+    """Return the hidden application-workflow directory for one document."""
+
+    return Path(project_root).resolve() / WORKSPACE_DOCUMENTS_DIRECTORY / document_id
+
+
+def migrate_project_layout(project_root: str | Path) -> bool:
+    """Upgrade a legacy mixed package layout without overwriting existing data.
+
+    Returns ``True`` when the legacy registry or any document file was moved. The
+    migration keeps analytical metadata and annotations under ``data/documents`` and
+    moves application-only state under ``.heva/documents``.
+    """
+
+    root = Path(project_root).resolve()
+    legacy_registry = root / LEGACY_REGISTRY_PATH
+    registry_path = root / DEFAULT_REGISTRY_PATH
+    if not legacy_registry.exists():
+        return False
+    if registry_path.exists():
+        raise RegistryError(
+            "Both legacy and current HEVA project registries exist; remove the duplicate "
+            "only after confirming which registry is authoritative."
+        )
+    try:
+        decoded = json.loads(legacy_registry.read_text(encoding="utf-8"))
+        registry = ProjectRegistry.model_validate(decoded)
+    except (OSError, json.JSONDecodeError, ValidationError) as error:
+        raise RegistryError(f"Cannot migrate legacy registry {legacy_registry}: {error}") from error
+
+    planned_moves: list[tuple[Path, Path]] = []
+    legacy_directories: list[Path] = []
+    for entry in registry.documents:
+        legacy_directory = root / entry.package_path
+        data_directory = document_data_directory(root, entry.document_id)
+        workspace_directory = document_workspace_directory(root, entry.document_id)
+        legacy_directories.append(legacy_directory)
+        document_moves = [
+            (legacy_directory / "package-metadata.json", data_directory / "metadata.json"),
+            (legacy_directory / "annotations.json", data_directory / "annotations.json"),
+        ]
+        document_moves.extend(
+            (legacy_directory / filename, workspace_directory / filename)
+            for filename in WORKFLOW_FILENAMES
+        )
+        for source, target in document_moves:
+            if not source.exists():
+                continue
+            if target.exists():
+                raise RegistryError(
+                    f"Cannot migrate {entry.document_id}: {target.name} already exists."
+                )
+            planned_moves.append((source, target))
+        entry.package_path = f"{DATA_DOCUMENTS_DIRECTORY.as_posix()}/{entry.document_id}"
+        entry.metadata_path = f"{entry.package_path}/metadata.json"
+
+    completed_moves: list[tuple[Path, Path]] = []
+    try:
+        for source, target in planned_moves:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(source), str(target))
+            completed_moves.append((source, target))
+        _write_registry(registry_path, registry)
+    except OSError as error:
+        for source, target in reversed(completed_moves):
+            source.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(target), str(source))
+        raise RegistryError(f"Cannot migrate legacy HEVA project: {error}") from error
+
+    legacy_registry.unlink()
+    for legacy_directory in legacy_directories:
+        if legacy_directory.exists() and not any(legacy_directory.iterdir()):
+            legacy_directory.rmdir()
+    legacy_packages = root / "data/packages"
+    if legacy_packages.exists() and not any(legacy_packages.iterdir()):
+        legacy_packages.rmdir()
+    return True
+
+
+def load_project_registry(project_root: str | Path) -> ProjectRegistry:
+    """Load the current registry, migrating a legacy project when necessary."""
+
+    root = Path(project_root).resolve()
+    migrate_project_layout(root)
+    try:
+        return ProjectRegistry.model_validate_json(
+            (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
+        )
+    except (OSError, ValidationError) as error:
+        raise RegistryError(f"Cannot load project registry: {error}") from error
+
+
 def _checksum(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as source:
@@ -153,7 +263,7 @@ def _write_registry(path: Path, registry: ProjectRegistry) -> None:
 
 
 def _create_package_directories(root: Path, documents: list[DocumentEntry]) -> None:
-    """Create package workspaces and non-destructive metadata templates."""
+    """Create canonical document-data directories and metadata templates."""
 
     # Imported here to avoid coupling registry model import-time initialization to the
     # richer package contract. Synchronization is the point at which both are needed.
@@ -162,7 +272,7 @@ def _create_package_directories(root: Path, documents: list[DocumentEntry]) -> N
     for entry in documents:
         package_directory = root / entry.package_path
         package_directory.mkdir(parents=True, exist_ok=True)
-        metadata_relative = f"{entry.package_path}/package-metadata.json"
+        metadata_relative = f"{entry.package_path}/metadata.json"
         metadata_file = root / metadata_relative
         entry.metadata_path = metadata_relative
         if metadata_file.exists():
@@ -219,6 +329,8 @@ def sync_registry(
     registry_relative = Path(registry_path)
     if registry_relative.is_absolute():
         raise RegistryError("registry_path must be relative to the project root.")
+    if registry_relative == DEFAULT_REGISTRY_PATH:
+        migrate_project_layout(root)
     registry_file = root / registry_relative
 
     registry = _read_registry(registry_file, source_name)
@@ -243,7 +355,7 @@ def sync_registry(
                 DocumentEntry(
                     document_id=document_id,
                     source_path=source_path,
-                    package_path=f"data/packages/{document_id}",
+                    package_path=f"{DATA_DOCUMENTS_DIRECTORY.as_posix()}/{document_id}",
                     checksum_sha256=observed_checksum,
                 )
             )

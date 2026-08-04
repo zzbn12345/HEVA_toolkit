@@ -27,7 +27,7 @@ def _pending_document(tmp_path: Path) -> str:
     documents.mkdir()
     (documents / "source.pdf").write_bytes(b"source")
     sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / "data/project-registry.json").read_text())
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
     document_id = registry["documents"][0]["document_id"]
     save_color_configuration(
         tmp_path,

@@ -82,6 +82,9 @@ Thumbs.db
 *.pptx
 
 # Generated HEVA project state
+/.heva/
+/data/documents/
+/exports/
 /data/project-registry.json
 /data/annotator.json
 /data/annotators.json

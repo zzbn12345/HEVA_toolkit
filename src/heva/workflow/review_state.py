@@ -16,6 +16,8 @@ from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
     ProjectRegistry,
     RegistrySummary,
+    document_workspace_directory,
+    load_project_registry,
 )
 
 
@@ -70,9 +72,7 @@ def _write_json(path: Path, value: Any) -> None:
 
 
 def _package(root: Path, document_id: str) -> Path:
-    registry = ProjectRegistry.model_validate_json(
-        (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
-    )
+    registry = load_project_registry(root)
     matches = [entry for entry in registry.documents if entry.document_id == document_id]
     if not matches:
         raise ReviewError(f"Document {document_id} is not registered.")
@@ -80,9 +80,7 @@ def _package(root: Path, document_id: str) -> Path:
 
 
 def _require_editable(root: Path, document_id: str) -> None:
-    registry = ProjectRegistry.model_validate_json(
-        (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
-    )
+    registry = load_project_registry(root)
     entry = next(
         (item for item in registry.documents if item.document_id == document_id),
         None,
@@ -104,7 +102,8 @@ def initialize_sentence_reviews(
     root = Path(project_root).resolve()
     package = _package(root, document_id)
     annotations = json.loads((package / "annotations.json").read_text(encoding="utf-8"))
-    target = package / "review-state.json"
+    target = document_workspace_directory(root, document_id) / "review-state.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
     existing: dict[int, SentenceReview] = {}
     if target.exists():
         previous = DocumentReview.model_validate_json(target.read_text(encoding="utf-8"))
@@ -154,7 +153,7 @@ def record_decisions(
         raise ReviewError("Reviewer identity is required.")
     root = Path(project_root).resolve()
     _require_editable(root, document_id)
-    target = _package(root, document_id) / "review-state.json"
+    target = document_workspace_directory(root, document_id) / "review-state.json"
     review = DocumentReview.model_validate_json(target.read_text(encoding="utf-8"))
     selected = set(sentence_ids)
     known = {item.sentence_id for item in review.sentences}
@@ -237,7 +236,9 @@ def submit_document_for_review(project_root: str | Path, document_id: str) -> No
     root = Path(project_root).resolve()
     package = _package(root, document_id)
     review = DocumentReview.model_validate_json(
-        (package / "review-state.json").read_text(encoding="utf-8")
+        (document_workspace_directory(root, document_id) / "review-state.json").read_text(
+            encoding="utf-8"
+        )
     )
     unresolved = [
         item.sentence_id
