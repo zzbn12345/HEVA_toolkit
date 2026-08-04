@@ -985,6 +985,18 @@ def test_review_queue_asset_always_offers_edit_annotation_action() -> None:
     assert 'badge.textContent = item.annotation_complete ? "Complete" : "Incomplete"' in script
     assert "readiness_gates" in script
 
+    styles = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "app.css"
+    ).read_text(encoding="utf-8")
+    assert "@media (max-width: 1100px)" in styles
+    assert "grid-column: 3" in styles
+    assert ".project-action .button { display: block; text-align: center; }" in styles
+
 
 def test_registered_pdf_can_be_loaded_for_immediate_edit_preview(tmp_path: Path) -> None:
     sources = tmp_path / "documents"
