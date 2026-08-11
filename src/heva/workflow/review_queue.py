@@ -14,6 +14,7 @@ from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
     ProjectRegistry,
     document_workspace_directory,
+    resolve_document_source,
 )
 from heva.workflow.quality_flags import assess_record
 from heva.workflow.review_state import DocumentReview
@@ -362,7 +363,7 @@ def registered_source_path(project_root: str | Path, document_id: str) -> Path:
     )
     if entry is None:
         raise ReviewQueueError(f"Document {document_id} is not registered.")
-    source = (root / entry.source_path).resolve()
+    source = resolve_document_source(root, entry)
     try:
         source.relative_to(root)
     except ValueError as error:

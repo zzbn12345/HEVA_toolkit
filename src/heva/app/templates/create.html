@@ -76,9 +76,9 @@
           </div>
         </fieldset>
         <div id="new-document-source">
-          <label for="pdf-files">Choose document file</label>
-          <input id="pdf-files" type="file" accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx">
-          <small id="source-help">Choose one PDF or DOCX. A PDF will open in the side viewer.</small>
+          <label>Choose document file</label>
+          <button id="choose-external-source" class="button secondary" type="button">Choose PDF (.pdf) or DOCX (.docx)</button>
+          <small id="source-help">The source may remain outside this dataset repository. HEVA stores only a local binding and does not copy it.</small>
           <div id="selected-files" class="selected-files"></div>
         </div>
         <div id="existing-document-source" class="notice success" hidden>

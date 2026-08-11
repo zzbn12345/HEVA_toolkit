@@ -30,6 +30,7 @@ from heva.workflow.project_registry import (
     ProjectRegistry,
     RegistrySummary,
     document_workspace_directory,
+    require_current_document_source,
 )
 
 
@@ -433,7 +434,7 @@ def run_registered_extraction(
             )
 
     mapping = extraction_mapping.values
-    source = root / entry.source_path
+    source = require_current_document_source(root, entry)
     if source.suffix.lower() == ".pdf":
         try:
             import fitz

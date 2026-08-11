@@ -54,6 +54,7 @@ from heva.workflow.project_registry import (
     load_project_registry,
     relocate_project_root_to_sources,
     register_discovered_sources,
+    register_external_source,
     scan_project_sources,
     sync_registry,
 )
@@ -62,7 +63,7 @@ from heva.workflow.review_queue import (
     registered_source_path,
 )
 from heva.app.project_context import ProjectContext
-from heva.app.folder_picker import FolderPickerUnavailable, select_local_folder
+from heva.app.folder_picker import FolderPickerUnavailable, select_local_folder, select_local_source_file
 
 
 class ColorDecisionInput(BaseModel):
@@ -141,6 +142,22 @@ def create_project_router(
         if selected is None:
             return {"selected": False, "path": ""}
         return {"selected": True, "path": selected}
+
+    @router.post("/api/files/select-source")
+    def select_source_file() -> dict[str, str | bool]:
+        """Choose and register an external source without copying it into the dataset."""
+
+        try:
+            selected = select_local_source_file("Choose an annotated PDF or DOCX")
+        except FolderPickerUnavailable as error:
+            raise HTTPException(status_code=501, detail=str(error)) from error
+        if selected is None:
+            return {"selected": False, "document_id": "", "filename": ""}
+        try:
+            document_id = register_external_source(root.require(), selected)
+        except RegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"selected": True, "document_id": document_id, "filename": Path(selected).name}
 
     def validated_folder(value: str) -> Path:
         candidate = Path(value).expanduser().resolve()

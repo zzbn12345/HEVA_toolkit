@@ -16,7 +16,7 @@ from heva.workflow.document_metadata import (
     SourceMetadata,
     save_package_metadata,
 )
-from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
+from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry, resolve_document_source
 
 
 class CitationDraft(BaseModel):
@@ -172,7 +172,7 @@ def load_document_citation(
     proposal_method = None
     proposed_fields: list[str] = []
     if not source.human_confirmed:
-        proposal, proposal_method = propose_document_citation(root / entry.source_path)
+        proposal, proposal_method = propose_document_citation(resolve_document_source(root, entry))
         updates = data.model_dump()
         for field in ("title", "creators", "citation"):
             if not updates[field] and getattr(proposal, field):

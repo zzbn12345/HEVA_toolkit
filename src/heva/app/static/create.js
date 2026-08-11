@@ -2,8 +2,6 @@ const app = document.getElementById("create-app");
 const content = document.getElementById("create-content");
 const steps = [...document.querySelectorAll(".create-step")];
 const stepButtons = [...document.querySelectorAll(".step-button")];
-const pdfInput = document.getElementById("pdf-files");
-let previewUrls = [];
 
 function showStep(number) {
   steps.forEach((step) => step.classList.toggle("active", step.dataset.step === String(number)));
@@ -538,6 +536,22 @@ async function loadSelectedDocument() {
   }
 }
 
+async function chooseExternalSource() {
+  const selected = document.getElementById("selected-files");
+  selected.textContent = "Waiting for you to choose a file…";
+  const response = await fetch("/api/files/select-source", {method: "POST"});
+  const result = await response.json();
+  if (!response.ok) {
+    selected.textContent = result.detail || "The source could not be registered.";
+    return;
+  }
+  if (!result.selected) {
+    selected.textContent = "No file was selected.";
+    return;
+  }
+  window.location.assign(`/create?document_id=${encodeURIComponent(result.document_id)}`);
+}
+
 document.getElementById("save-citation").addEventListener(
   "click",
   () => persistCitation(false),
@@ -548,6 +562,7 @@ document.getElementById("confirm-citation").addEventListener(
 );
 document.getElementById("propose-colors").addEventListener("click", proposeColors);
 document.getElementById("confirm-colors").addEventListener("click", confirmColors);
+document.getElementById("choose-external-source").addEventListener("click", chooseExternalSource);
 document.getElementById("batch-confirmed").addEventListener("change", updateBatchAction);
 document.getElementById("apply-batch-mapping").addEventListener(
   "click",
@@ -562,30 +577,11 @@ document.getElementById("rebuild-annotations").addEventListener(
   () => extractAnnotations(true),
 );
 
-pdfInput.addEventListener("change", () => {
-  previewUrls.forEach((item) => URL.revokeObjectURL(item.url));
-  previewUrls = [...pdfInput.files].map((file) => ({ file, url: URL.createObjectURL(file) }));
-  const list = document.getElementById("selected-files");
-  list.replaceChildren(...previewUrls.map((item, index) => {
-    const link = document.createElement("a");
-    link.className = "selected-file";
-    link.href = item.url;
-    link.target = "pdf-preview";
-    link.textContent = item.file.name;
-    link.addEventListener("click", () => openPreview(item.url, item.file.name));
-    if (index === 0) openPreview(item.url, item.file.name);
-    return link;
-  }));
-});
-
 document.querySelectorAll("[name='processing-mode']").forEach((radio) => radio.addEventListener("change", () => {
   const batch = document.querySelector("[name='processing-mode']:checked").value === "batch";
-  pdfInput.multiple = batch;
   document.getElementById("source-help").textContent = batch
-    ? "Choose multiple PDF or DOCX files. Inspect every PDF in the side viewer."
-    : "Choose one PDF or DOCX. A PDF will open in the side viewer.";
+    ? "Choose and register external files one at a time; batch extraction can run after registration."
+    : "The source may remain outside this dataset repository. HEVA stores only a local binding and does not copy it.";
 }));
-
-window.addEventListener("beforeunload", () => previewUrls.forEach((item) => URL.revokeObjectURL(item.url)));
 restoreAnnotator();
 loadSelectedDocument();

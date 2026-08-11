@@ -43,3 +43,6 @@ identifiers, annotations, or review history.
 For collaboration, commit `documents/`, `.heva/project.json`, `.heva/people.json`, and
 `.heva/documents/`. Ignore `.heva/cache/`, `.heva/locks/`, `.heva/session.json`, and
 reproducible `exports/`.
+
+External source paths are stored only in ignored `.heva/local-sources.json`; the registry
+contains a portable logical name and checksum instead of a collaborator's absolute path.

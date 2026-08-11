@@ -239,6 +239,31 @@ def test_native_folder_picker_returns_selection_without_uploading_files(
     assert response.json() == {"selected": True, "path": str(tmp_path)}
 
 
+def test_native_source_picker_registers_external_file_without_copying(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The local app can bind an authorized source outside the dataset repository."""
+
+    project = tmp_path / "dataset"
+    project.mkdir()
+    (project / "seed.pdf").write_bytes(b"seed")
+    sync_registry(project, source_dir=".")
+    external = tmp_path / "private-sources/source.pdf"
+    external.parent.mkdir()
+    external.write_bytes(b"external")
+    monkeypatch.setattr(project_routes, "select_local_source_file", lambda prompt: str(external))
+    client = TestClient(create_app())
+    client.post("/api/projects/open", json={"path": str(project)})
+
+    response = client.post("/api/files/select-source")
+
+    assert response.status_code == 200
+    assert response.json()["filename"] == "source.pdf"
+    assert not (project / "source.pdf").exists()
+    assert str(external) not in (project / ".heva/project.json").read_text()
+
+
 def test_cancelled_native_folder_picker_is_not_an_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

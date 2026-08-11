@@ -85,6 +85,7 @@ Thumbs.db
 **/.heva/cache/
 **/.heva/locks/
 **/.heva/session.json
+**/.heva/local-sources.json
 **/exports/
 **/validation-report.json
 /legacy_data/

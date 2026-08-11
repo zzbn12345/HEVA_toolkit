@@ -36,6 +36,7 @@ nav:
   - Concepts:
       - Guided review workflow: GUIDED_REVIEW_WORKFLOW.md
       - Project boundaries: PROJECT_BOUNDARIES.md
+      - External sources and dataset repositories: EXTERNAL_SOURCES.md
       - Validation: VALIDATION.md
       - Record contract: HEVA_RECORD_CONTRACT.md
       - Document metadata: DOCUMENT_METADATA.md

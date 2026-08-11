@@ -17,6 +17,8 @@ from heva.workflow.project_registry import (
     sync_registry,
     scan_project_sources,
     register_discovered_sources,
+    register_external_source,
+    resolve_document_source,
 )
 
 
@@ -70,6 +72,30 @@ def test_only_explicitly_accepted_discovered_sources_are_registered(tmp_path: Pa
         "sources/accept.pdf",
     }
     assert scan_project_sources(tmp_path).discovered == ("sources/later.pdf",)
+
+
+def test_external_source_path_remains_local_while_dataset_state_is_portable(tmp_path: Path) -> None:
+    """A dataset repository records identity and checksum without a user's absolute path."""
+
+    project_root = tmp_path / "dataset-repository"
+    project_root.mkdir()
+    (project_root / "seed.pdf").write_bytes(b"seed")
+    sync_registry(project_root, source_dir=".")
+    external = tmp_path / "authorized-sources" / "research.pdf"
+    external.parent.mkdir()
+    external.write_bytes(b"external source")
+
+    document_id = register_external_source(project_root, external)
+    registry_text = (project_root / ".heva/project.json").read_text()
+    registry = load_project_registry(project_root)
+    entry = next(item for item in registry.documents if item.document_id == document_id)
+
+    assert str(external) not in registry_text
+    assert entry.source_path == "external/research.pdf"
+    assert entry.source_binding == "external"
+    assert resolve_document_source(project_root, entry) == external
+    assert scan_project_sources(project_root).discovered == ()
+    assert str(external) in (project_root / ".heva/local-sources.json").read_text()
 
 
 def test_initialization_creates_registry_without_renaming_sources(tmp_path: Path) -> None:

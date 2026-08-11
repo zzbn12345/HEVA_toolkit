@@ -18,6 +18,7 @@ DEFAULT_REGISTRY_PATH = Path(".heva/project.json")
 LEGACY_REGISTRY_PATH = Path("data/project-registry.json")
 DATA_DOCUMENTS_DIRECTORY = Path("documents")
 WORKSPACE_DOCUMENTS_DIRECTORY = Path(".heva/documents")
+LOCAL_SOURCES_PATH = Path(".heva/local-sources.json")
 SUPPORTED_SUFFIXES = frozenset({".pdf", ".docx"})
 WORKFLOW_FILENAMES = frozenset(
     {
@@ -43,6 +44,7 @@ class DocumentEntry(BaseModel):
     observed_checksum_sha256: str | None = None
     status: Literal["backlog", "in_progress", "in_review", "done"] = "backlog"
     source_state: Literal["present", "changed", "missing"] = "present"
+    source_binding: Literal["project", "external"] = "project"
 
 
 class RegistrySummary(BaseModel):
@@ -112,14 +114,43 @@ def scan_project_sources(project_root: str | Path) -> SourceScanReport:
     discovered = {
         _relative_posix(path, root): path for path in _discover_sources(source_root)
     }
-    existing = {entry.source_path: entry for entry in registry.documents}
+    existing = {
+        entry.source_path: entry
+        for entry in registry.documents
+        if entry.source_binding == "project"
+    }
     new_paths = sorted(set(discovered) - set(existing))
     missing = sorted(set(existing) - set(discovered))
     changed = sorted(
         path for path in set(existing) & set(discovered)
         if _checksum(discovered[path]) != existing[path].checksum_sha256
     )
-    return SourceScanReport(tuple(new_paths), tuple(changed), tuple(missing))
+    for entry in registry.documents:
+        if entry.source_binding != "external":
+            continue
+        try:
+            bound = resolve_document_source(root, entry)
+        except RegistryError:
+            missing.append(entry.source_path)
+            continue
+        if not bound.is_file():
+            missing.append(entry.source_path)
+        elif _checksum(bound) != entry.checksum_sha256:
+            changed.append(entry.source_path)
+    return SourceScanReport(
+        tuple(new_paths), tuple(sorted(changed)), tuple(sorted(missing))
+    )
+
+
+def require_current_document_source(project_root: str | Path, entry: DocumentEntry) -> Path:
+    """Resolve one source and reject a missing or checksum-changed local binding."""
+
+    source = resolve_document_source(project_root, entry)
+    if not source.is_file():
+        raise RegistryError(f"Source for {entry.document_id} is missing.")
+    if _checksum(source) != entry.checksum_sha256:
+        raise RegistryError(f"Source for {entry.document_id} changed since registration.")
+    return source
 
 
 def register_discovered_sources(
@@ -158,6 +189,85 @@ def register_discovered_sources(
     _create_package_directories(root, registry.documents)
     _write_registry(root / DEFAULT_REGISTRY_PATH, registry)
     return tuple(added_ids)
+
+
+def _local_source_bindings(root: Path) -> dict[str, str]:
+    """Load machine-local external paths that must never enter version control."""
+
+    path = root / LOCAL_SOURCES_PATH
+    try:
+        decoded = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError) as error:
+        raise RegistryError("The local external-source bindings cannot be read.") from error
+    if not isinstance(decoded, dict) or not all(
+        isinstance(key, str) and isinstance(value, str) for key, value in decoded.items()
+    ):
+        raise RegistryError("The local external-source bindings are invalid.")
+    return decoded
+
+
+def _write_local_source_bindings(root: Path, bindings: dict[str, str]) -> None:
+    path = root / LOCAL_SOURCES_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(bindings, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def resolve_document_source(project_root: str | Path, entry: DocumentEntry) -> Path:
+    """Resolve a project-relative or machine-local external source path."""
+
+    root = Path(project_root).resolve()
+    if entry.source_binding == "project":
+        return (root / entry.source_path).resolve()
+    binding = _local_source_bindings(root).get(entry.document_id)
+    if binding is None:
+        raise RegistryError(
+            f"External source for {entry.document_id} is not bound on this computer."
+        )
+    return Path(binding).expanduser().resolve()
+
+
+def register_external_source(project_root: str | Path, source_file: str | Path) -> str:
+    """Register one external PDF/DOCX while keeping its absolute path machine-local."""
+
+    root = Path(project_root).resolve()
+    source = Path(source_file).expanduser().resolve()
+    if not source.is_file() or source.suffix.lower() not in SUPPORTED_SUFFIXES:
+        raise RegistryError("Choose an existing PDF or DOCX source file.")
+    registry = load_project_registry(root)
+    checksum = _checksum(source)
+    for entry in registry.documents:
+        if entry.source_binding == "external" and entry.checksum_sha256 == checksum:
+            bindings = _local_source_bindings(root)
+            bindings[entry.document_id] = str(source)
+            _write_local_source_bindings(root, bindings)
+            return entry.document_id
+    logical = f"external/{source.name}"
+    occupied_paths = {entry.source_path for entry in registry.documents}
+    if logical in occupied_paths:
+        logical = f"external/{checksum[:12]}-{source.name}"
+    occupied = {entry.document_id: entry.source_path for entry in registry.documents}
+    document_id = _new_document_id(logical, occupied)
+    registry.documents.append(
+        DocumentEntry(
+            document_id=document_id,
+            source_path=logical,
+            package_path=f"{DATA_DOCUMENTS_DIRECTORY.as_posix()}/{document_id}",
+            checksum_sha256=checksum,
+            source_binding="external",
+        )
+    )
+    registry.documents.sort(key=lambda entry: entry.source_path)
+    registry.summary = _summarize(registry.documents)
+    _create_package_directories(root, registry.documents)
+    _write_registry(root / DEFAULT_REGISTRY_PATH, registry)
+    bindings = _local_source_bindings(root)
+    bindings[document_id] = str(source)
+    _write_local_source_bindings(root, bindings)
+    return document_id
 
 
 class RegistryError(ValueError):
@@ -477,7 +587,12 @@ def sync_registry(
     registry_file = root / registry_relative
 
     registry = _read_registry(registry_file, source_name)
-    existing = {entry.source_path: entry for entry in registry.documents}
+    external_entries = [entry for entry in registry.documents if entry.source_binding == "external"]
+    existing = {
+        entry.source_path: entry
+        for entry in registry.documents
+        if entry.source_binding == "project"
+    }
     occupied = {entry.document_id: entry.source_path for entry in registry.documents}
     discovered = {
         _relative_posix(path, root): path for path in _discover_sources(source_root)
@@ -486,7 +601,7 @@ def sync_registry(
     added = 0
     unchanged = 0
     changed: list[str] = []
-    documents: list[DocumentEntry] = []
+    documents: list[DocumentEntry] = list(external_entries)
 
     for source_path, physical_path in discovered.items():
         observed_checksum = _checksum(physical_path)

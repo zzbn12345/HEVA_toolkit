@@ -22,6 +22,7 @@ from heva.workflow.project_registry import (
     ProjectRegistry,
     RegistrySummary,
     document_workspace_directory,
+    require_current_document_source,
 )
 from heva.workflow.review_state import DocumentReview
 
@@ -218,8 +219,11 @@ def validate_document_package(
                 "Restore the source or synchronize and re-extract the changed document.",
             )
         )
-    source = root / entry.source_path
-    if not source.is_file():
+    try:
+        source = require_current_document_source(root, entry)
+    except Exception:
+        source = None
+    if source is None or not source.is_file():
         issues.append(
             _issue(
                 document_id,

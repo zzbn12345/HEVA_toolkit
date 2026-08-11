@@ -17,6 +17,7 @@ from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
     ProjectRegistry,
     document_workspace_directory,
+    require_current_document_source,
 )
 
 
@@ -266,7 +267,7 @@ def run_registered_raw_extraction(
 
     root = Path(project_root).resolve()
     entry = _registered_document(root, document_id)
-    source = root / entry.source_path
+    source = require_current_document_source(root, entry)
     if extractor is None:
         if source.suffix.lower() == ".pdf":
             from heva.extraction.pdf_extractor import extract_colored_highlights

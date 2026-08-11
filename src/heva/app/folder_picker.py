@@ -54,6 +54,39 @@ def select_local_folder(prompt: str) -> str | None:
     return selected or None
 
 
+def select_local_source_file(prompt: str) -> str | None:
+    """Open a native PDF/DOCX chooser and return a path without browser upload."""
+
+    system = platform.system()
+    if system == "Darwin":
+        command = [
+            "osascript",
+            "-e",
+            f'POSIX path of (choose file with prompt "{_apple_script_text(prompt)}" of type {{"com.adobe.pdf", "org.openxmlformats.wordprocessingml.document"}})',
+        ]
+    elif system == "Windows":
+        command = [
+            "powershell", "-NoProfile", "-Command",
+            (
+                "Add-Type -AssemblyName System.Windows.Forms; "
+                "$dialog = New-Object System.Windows.Forms.OpenFileDialog; "
+                "$dialog.Filter = 'PDF or DOCX (*.pdf;*.docx)|*.pdf;*.docx'; "
+                f"$dialog.Title = '{_powershell_text(prompt)}'; "
+                "if ($dialog.ShowDialog() -eq 'OK') { $dialog.FileName }"
+            ),
+        ]
+    elif shutil.which("zenity"):
+        command = ["zenity", "--file-selection", "--file-filter=PDF/DOCX | *.pdf *.docx", f"--title={prompt}"]
+    elif shutil.which("kdialog"):
+        command = ["kdialog", "--getopenfilename", ".", "*.pdf *.docx", "--title", prompt]
+    else:
+        raise FolderPickerUnavailable("No supported system file chooser is available on this computer.")
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
+
+
 def _apple_script_text(value: str) -> str:
     """Escape user-facing text embedded in an AppleScript string."""
 

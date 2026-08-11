@@ -16,6 +16,8 @@
   and session-only dismissal of newly discovered PDF/DOCX sources.
 - Per-document data-owner approval bound to exact curator-accepted evidence, with required
   license/waiver provenance and a hard gate before Data Package generation.
+- External PDF/DOCX bindings that keep protected source paths local and ignored while the
+  separate dataset repository versions stable IDs, checksums, annotations, and evidence.
 - Source-folder project roots and collaborative workspace tracking, allowing another
   researcher to clone canonical annotations plus durable extraction, review, and curation
   state while keeping caches, locks, local sessions, binaries, and exports out of Git.
