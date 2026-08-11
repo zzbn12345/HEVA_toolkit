@@ -25,6 +25,7 @@ WORKFLOW_FILENAMES = frozenset(
         "review-state.json",
         "curation-state.json",
         "quality-report.json",
+        "data-owner-approval.json",
     }
 )
 

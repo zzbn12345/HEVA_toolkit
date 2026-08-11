@@ -29,7 +29,8 @@ python -m pip install -e .
 7. `review_state.py` records explicit sentence decisions and corrections.
 8. `package_validator.py` reports structural, semantic, rights, review, and release issues.
 9. `curation_state.py` records curator decisions against immutable candidate evidence.
-10. `release_builder.py` creates deterministic approved annotation releases.
+10. `data_owner_approval.py` records per-document distribution accountability.
+11. `release_builder.py` creates deterministic approved annotation releases.
 
 ## Important interfaces
 

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://heva.example/schemas/heva-data-owner-approval.schema.json",
+  "title": "HEVA per-document data-owner approval",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "document_id", "candidate_id", "data_owner_id", "approved_at", "license_or_waiver", "statement"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "document_id": {"type": "string", "minLength": 1},
+    "candidate_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "data_owner_id": {"type": "string", "pattern": "^PERSON-[A-Z0-9]+$"},
+    "approved_at": {"type": "string", "format": "date-time"},
+    "license_or_waiver": {"type": "string", "minLength": 1},
+    "statement": {"type": "string", "minLength": 1}
+  }
+}

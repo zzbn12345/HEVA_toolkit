@@ -630,6 +630,19 @@ def build_release(
             raise PackageValidationError(
                 f"Approved document {entry.document_id} has no curator acceptance."
             )
+        from heva.workflow.data_owner_approval import (
+            DataOwnerApprovalError,
+            load_current_data_owner_approval,
+        )
+
+        try:
+            owner_approval, data_owner = load_current_data_owner_approval(
+                root, entry.document_id
+            )
+        except DataOwnerApprovalError as error:
+            raise PackageValidationError(
+                f"Approved document {entry.document_id} lacks data-owner approval: {error}"
+            ) from error
         report = validate_document_package(root, entry.document_id)
         if not report.release_ready:
             codes = ", ".join(item.code for item in report.issues if item.severity == "error")
@@ -671,6 +684,15 @@ def build_release(
                 ),
                 "rights": package_metadata.rights.model_dump(mode="json"),
                 "annotator": package_metadata.annotator.model_dump(mode="json"),
+                "data_owner": {
+                    "person_id": data_owner.person_id,
+                    "name": data_owner.name,
+                    "affiliation": data_owner.affiliation,
+                    "orcid": data_owner.orcid,
+                    "approved_at": owner_approval.approved_at.isoformat(),
+                    "license_or_waiver": owner_approval.license_or_waiver,
+                    "statement": owner_approval.statement,
+                },
                 "curator": {
                     "actor": decision.actor,
                     "decision": decision.decision,

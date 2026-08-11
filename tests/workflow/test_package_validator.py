@@ -33,6 +33,8 @@ from heva.workflow.curation_state import (
     create_candidate_snapshot,
     record_curator_decision,
 )
+from heva.workflow.data_owner_approval import approve_document_distribution
+from heva.workflow.people_registry import PersonRecord, add_person
 from heva.workflow.project_registry import sync_registry
 from heva.workflow.review_state import (
     initialize_sentence_reviews,
@@ -284,6 +286,17 @@ def test_approved_release_is_deterministic_and_excludes_working_files(tmp_path: 
         actor="Curator",
         evidence="Validated candidate and source comparison reviewed.",
     )
+    owner = add_person(
+        tmp_path,
+        PersonRecord(name="Responsible Owner", roles=["data_owner"], affiliation="Archive"),
+    )
+    approve_document_distribution(
+        tmp_path,
+        document_id,
+        data_owner_id=owner.person_id,
+        license_or_waiver="CC-BY-4.0",
+        statement="I approve distribution of this document's annotation data.",
+    )
 
     first = build_release(tmp_path)
     first_files = {path.name: path.read_bytes() for path in first.iterdir()}
@@ -309,6 +322,7 @@ def test_approved_release_is_deterministic_and_excludes_working_files(tmp_path: 
     assert payload["membership"] == [document_id]
     assert payload["documents"][0]["citation"]
     assert payload["documents"][0]["rights"]["source_distribution_allowed"] is False
+    assert payload["documents"][0]["data_owner"]["name"] == "Responsible Owner"
     descriptor = json.loads(first_files["datapackage.json"])
     assert all(resource["hash"].startswith("sha256:") for resource in descriptor["resources"])
 

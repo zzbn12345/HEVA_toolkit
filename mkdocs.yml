@@ -41,6 +41,7 @@ nav:
       - Document metadata: DOCUMENT_METADATA.md
       - Programmatic citation import: CITATION_IMPORT.md
       - People and workflow roles: PEOPLE_AND_ROLES.md
+      - Data-owner approval: DATA_OWNER_APPROVAL.md
       - Color mapping: COLOR_MAPPING.md
       - Project color configurations: PROJECT_COLOR_CONFIGURATIONS.md
       - Unresolved extraction drafts: EXTRACTION_DRAFTS.md

@@ -19,6 +19,7 @@ project/
 │           ├── extraction-session.json
 │           ├── review-state.json
 │           ├── curation-state.json
+│           ├── data-owner-approval.json
 │           └── quality-report.json
 ├── exports/
 │   └── heva-data-package/
