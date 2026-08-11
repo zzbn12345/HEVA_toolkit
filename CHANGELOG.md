@@ -22,6 +22,8 @@
   promotes it only through the selected complete project color-configuration version.
 - Automatic creation or reuse of the immutable project palette when a curator confirms a
   document's color decisions in the web interface.
+- A curator-queue data-owner form that creates the responsible project person and records
+  per-document license/waiver approval after curator acceptance.
 - Source-folder project roots and collaborative workspace tracking, allowing another
   researcher to clone canonical annotations plus durable extraction, review, and curation
   state while keeping caches, locks, local sessions, binaries, and exports out of Git.

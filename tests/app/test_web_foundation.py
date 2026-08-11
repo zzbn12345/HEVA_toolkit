@@ -87,6 +87,27 @@ def test_curator_page_exposes_local_decision_queue_and_validation_filters(
     assert "exact validated candidate" in response.text
 
 
+def test_curation_interface_can_add_project_data_owner(tmp_path: Path) -> None:
+    """Researchers can satisfy ownership setup without editing people.json."""
+
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    document_id = json.loads((tmp_path / ".heva/project.json").read_text())["documents"][0]["document_id"]
+    client = TestClient(create_app(tmp_path))
+
+    created = client.post(
+        "/api/people/data-owners",
+        json={"name": "Responsible Owner", "affiliation": "Archive"},
+    )
+    state = client.get(f"/api/curation/{document_id}")
+
+    assert created.status_code == 201
+    assert created.json()["roles"] == ["data_owner"]
+    assert state.json()["data_owners"][0]["name"] == "Responsible Owner"
+
+
 def test_curator_asset_combines_evidence_and_audited_decisions() -> None:
     script = (
         Path(__file__).parents[2]
@@ -106,6 +127,7 @@ def test_curator_asset_combines_evidence_and_audited_decisions() -> None:
     assert '"accepted"' in script
     assert '"changes_requested"' in script
     assert '"quarantined"' in script
+    assert "data-owner-approval" in script
 
 
 def test_app_starts_without_exposing_repository_documents() -> None:

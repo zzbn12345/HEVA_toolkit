@@ -18,6 +18,12 @@ from heva.workflow.curation_state import (
     load_curation_state,
     record_curator_decision,
 )
+from heva.workflow.data_owner_approval import (
+    DataOwnerApprovalError,
+    approve_document_distribution,
+    load_current_data_owner_approval,
+)
+from heva.workflow.people_registry import PersonRecord, add_person, load_people_registry
 from heva.workflow.review_queue import (
     ReviewQueueError,
     list_review_queue,
@@ -221,7 +227,22 @@ def create_review_router(
         """Expose submitted snapshot evidence and decisions for one queue record."""
 
         try:
-            return load_curation_state(root, document_id)
+            state = load_curation_state(root, document_id)
+            payload = state.model_dump(mode="json")
+            payload["data_owners"] = [
+                person.model_dump(mode="json")
+                for person in load_people_registry(root).people
+                if "data_owner" in person.roles
+            ]
+            try:
+                approval, owner = load_current_data_owner_approval(root, document_id)
+                payload["data_owner_approval"] = {
+                    **approval.model_dump(mode="json"),
+                    "owner_name": owner.name,
+                }
+            except DataOwnerApprovalError:
+                payload["data_owner_approval"] = None
+            return payload
         except CurationError as error:
             return JSONResponse(
                 {
@@ -231,6 +252,43 @@ def create_review_router(
                 },
                 status_code=422,
             )
+
+    @router.post("/api/curation/{document_id}/data-owner-approval")
+    def save_data_owner_approval(document_id: str, payload: dict):
+        """Record accountable per-document distribution approval after acceptance."""
+
+        try:
+            result = approve_document_distribution(
+                root,
+                document_id,
+                data_owner_id=str(payload.get("data_owner_id", "")),
+                license_or_waiver=str(payload.get("license_or_waiver", "")),
+                statement=str(payload.get("statement", "")),
+            )
+            return result
+        except DataOwnerApprovalError as error:
+            return JSONResponse(
+                {
+                    "code": "data_owner_approval_not_saved",
+                    "message": "Distribution approval was not saved.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+
+    @router.post("/api/people/data-owners", status_code=201)
+    def create_data_owner(payload: dict):
+        """Add the person accountable for package distribution from the curation UI."""
+
+        try:
+            person = PersonRecord(
+                name=str(payload.get("name", "")),
+                affiliation=str(payload.get("affiliation", "")) or None,
+                roles=["data_owner"],
+            )
+            return add_person(root, person)
+        except (ValueError, ValidationError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
 
     @router.post("/api/curation/{document_id}/decisions")
     def save_curator_decision(document_id: str, payload: dict):

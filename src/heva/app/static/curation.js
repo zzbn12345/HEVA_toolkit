@@ -94,6 +94,104 @@ async function submitDecision(item, form, decision) {
   }
 }
 
+/** Build the data-owner gate shown only after curator acceptance. */
+function dataOwnerPanel(item) {
+  const panel = document.createElement("section");
+  panel.className = "decision-panel";
+  if (item.curation.data_owner_approval) {
+    const approval = item.curation.data_owner_approval;
+    panel.appendChild(textElement(
+      "p",
+      "notice success",
+      `Distribution approved by ${approval.owner_name} under ${approval.license_or_waiver}.`,
+    ));
+    return panel;
+  }
+  if (!item.curation.data_owners?.length) {
+    const form = document.createElement("form");
+    form.className = "decision-form";
+    form.innerHTML = `
+      <h3>Add the responsible data owner</h3>
+      <label>Name <span aria-hidden="true">*</span><input name="name" required></label>
+      <label>Affiliation <small>(optional)</small><input name="affiliation"></label>
+      <button class="button secondary" type="submit">Add data owner</button>
+      <p class="notice warning" data-owner-create-status>Add a data owner before generating a Data Package.</p>
+    `;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const status = form.querySelector("[data-owner-create-status]");
+      const response = await fetch("/api/people/data-owners", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          name: form.elements.name.value,
+          affiliation: form.elements.affiliation.value,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        status.className = "notice error";
+        status.textContent = result.detail || "The data owner was not added.";
+        return;
+      }
+      await loadCuration();
+    });
+    panel.appendChild(form);
+    return panel;
+  }
+  const form = document.createElement("form");
+  form.className = "decision-form";
+  form.innerHTML = `
+    <h3>Data-owner distribution approval</h3>
+    <label>Responsible data owner <span aria-hidden="true">*</span>
+      <select name="data_owner_id" required></select>
+    </label>
+    <label>License or waiver <span aria-hidden="true">*</span>
+      <input name="license_or_waiver" required>
+    </label>
+    <label>Approval statement <span aria-hidden="true">*</span>
+      <textarea name="statement" rows="3" required></textarea>
+    </label>
+    <button class="button" type="submit">Approve annotation-data distribution</button>
+    <p class="notice neutral" data-owner-status aria-live="polite">This approval applies only to this document candidate.</p>
+  `;
+  const ownerSelect = form.elements.data_owner_id;
+  item.curation.data_owners.forEach((owner) => {
+    const option = document.createElement("option");
+    option.value = owner.person_id;
+    option.textContent = owner.name;
+    ownerSelect.appendChild(option);
+  });
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const status = form.querySelector("[data-owner-status]");
+    status.textContent = "Saving data-owner approval…";
+    const response = await fetch(
+      `/api/curation/${encodeURIComponent(item.document_id)}/data-owner-approval`,
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          data_owner_id: form.elements.data_owner_id.value,
+          license_or_waiver: form.elements.license_or_waiver.value,
+          statement: form.elements.statement.value,
+        }),
+      },
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      status.className = "notice error";
+      status.textContent = result.action || "Approval was not saved.";
+      return;
+    }
+    await loadCuration();
+  });
+  panel.appendChild(form);
+  return panel;
+}
+
 /**
  * Build decision controls only for an undecided immutable candidate.
  * @param {object} item
@@ -127,6 +225,9 @@ function decisionPanel(item) {
         `${decision.decision.replace("_", " ")} by ${decision.actor}: ${decision.evidence}`,
       ),
     );
+    if (decision.decision === "accepted") {
+      container.appendChild(dataOwnerPanel(item));
+    }
     return container;
   }
   if (item.status !== "in_review") {

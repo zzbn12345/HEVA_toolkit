@@ -25,3 +25,8 @@ approve_document_distribution(
 Approval is per document. One project-level click cannot silently authorize every source.
 If accepted evidence changes, the old approval becomes stale and package generation is
 blocked until the owner approves the new candidate.
+
+After curator acceptance, the curator queue shows the data-owner gate. If the project has
+no data owner, the responsible person can be added there with an optional affiliation.
+The owner, license/waiver, and statement are then recorded for that document without
+requiring direct JSON editing.
