@@ -20,6 +20,8 @@
   separate dataset repository versions stable IDs, checksums, annotations, and evidence.
 - A guarded raw-to-canonical extraction transition: the app saves raw evidence first and
   promotes it only through the selected complete project color-configuration version.
+- Automatic creation or reuse of the immutable project palette when a curator confirms a
+  document's color decisions in the web interface.
 - Source-folder project roots and collaborative workspace tracking, allowing another
   researcher to clone canonical annotations plus durable extraction, review, and curation
   state while keeping caches, locks, local sessions, binaries, and exports out of Git.

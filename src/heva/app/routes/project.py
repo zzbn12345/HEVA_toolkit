@@ -27,8 +27,14 @@ from heva.workflow.color_mapping import (
     ColorMappingError,
     load_color_configuration,
     review_and_confirm_color_configuration,
+    save_color_configuration,
 )
-from heva.workflow.color_configuration_registry import ProjectColorConfigurationError
+from heva.workflow.color_configuration_registry import (
+    ProjectColorConfigurationError,
+    create_color_configuration_version,
+    load_color_configuration_registry,
+    select_color_configuration,
+)
 from heva.workflow.contract import HEVA_LABELS
 from heva.workflow.document_citation import (
     CitationDraft,
@@ -488,7 +494,35 @@ def create_project_router(
                 [decision.model_dump() for decision in payload.decisions],
                 confirmed_by=active.name if active and active.name else "",
             )
-        except (AnnotatorRegistryError, ColorMappingError) as error:
+            values = {
+                color.hex: color.label
+                for color in configuration.colors
+                if color.status == "approved" and color.label is not None
+            }
+            project_registry = load_color_configuration_registry(root)
+            reusable = next(
+                (item for item in project_registry.configurations if item.values == values),
+                None,
+            )
+            if reusable is None:
+                by_label: dict[str, list[str]] = {}
+                for color, label in values.items():
+                    by_label.setdefault(label, []).append(color)
+                reusable = create_color_configuration_version(
+                    root,
+                    configuration_id="project-palette",
+                    name="Project palette",
+                    description="Created from a curator-confirmed document color configuration.",
+                    mappings=[
+                        {"label": label, "hexes": hexes}
+                        for label, hexes in sorted(by_label.items())
+                    ],
+                )
+            select_color_configuration(root, reusable.configuration_id, reusable.version)
+            configuration.configuration_id = reusable.configuration_id
+            configuration.configuration_version = reusable.version
+            save_color_configuration(root, document_id, configuration)
+        except (AnnotatorRegistryError, ColorMappingError, ProjectColorConfigurationError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return configuration.model_dump(mode="json")
 

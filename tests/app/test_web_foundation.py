@@ -425,6 +425,34 @@ def test_automatic_color_proposal_route_reports_generated_evidence(
     assert proposed.json()["proposed_color_count"] == 1
 
 
+def test_confirmed_document_colors_create_and_select_reusable_project_palette(
+    tmp_path: Path,
+) -> None:
+    """The GUI makes project-level immutable semantics usable without Python editing."""
+
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    save_color_configuration(tmp_path, document_id, propose_color_configuration(["#CCCC00"]))
+    client = TestClient(create_app(tmp_path))
+    client.put("/api/annotator", json={"name": "Project Curator"})
+
+    response = client.post(
+        f"/api/documents/{document_id}/colors/confirm",
+        json={"decisions": [{"hex": "#CCCC00", "label": "political"}]},
+    )
+
+    assert response.status_code == 200
+    project_colors = json.loads((tmp_path / ".heva/color-configurations.json").read_text())
+    assert project_colors["selected"]["configuration_id"] == "project-palette"
+    assert project_colors["configurations"][0]["mappings"] == [
+        {"label": "political", "hexes": ["#CCCC00"]}
+    ]
+
+
 def test_batch_color_candidates_explain_palette_mismatch(tmp_path: Path) -> None:
     sources = tmp_path / "documents"
     sources.mkdir()

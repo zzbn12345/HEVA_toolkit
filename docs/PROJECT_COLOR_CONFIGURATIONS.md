@@ -45,6 +45,11 @@ existing version.
 The registry is stored at `.heva/color-configurations.json` and validated by
 `schemas/heva-color-configurations.schema.json`.
 
+In the web application, confirming a document's color decisions creates the first
+`project-palette` version, or selects an existing version with identical semantics. A new
+immutable version is created only when the confirmed mapping is genuinely different. This
+makes project semantics available to extraction without JSON or Python editing.
+
 ## Python example
 
 ```python
