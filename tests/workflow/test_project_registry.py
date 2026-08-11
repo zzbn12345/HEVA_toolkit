@@ -15,6 +15,8 @@ from heva.workflow.project_registry import (
     load_project_registry,
     relocate_project_root_to_sources,
     sync_registry,
+    scan_project_sources,
+    register_discovered_sources,
 )
 
 
@@ -26,6 +28,48 @@ def add_source(source_dir: Path, name: str, content: bytes) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(content)
     return path
+
+
+def test_source_scan_reports_new_changed_and_missing_without_mutation(tmp_path: Path) -> None:
+    """Opening checks source drift but never silently changes project membership."""
+
+    sources = tmp_path / "sources"
+    sources.mkdir()
+    add_source(sources, "changed.pdf", b"before")
+    add_source(sources, "missing.pdf", b"before")
+    sync_registry(tmp_path, source_dir="sources")
+    before = (tmp_path / ".heva/project.json").read_bytes()
+    (sources / "changed.pdf").write_bytes(b"after")
+    (sources / "missing.pdf").unlink()
+    add_source(sources, "new.pdf", b"new")
+
+    report = scan_project_sources(tmp_path)
+
+    assert report.discovered == ("sources/new.pdf",)
+    assert report.changed == ("sources/changed.pdf",)
+    assert report.missing == ("sources/missing.pdf",)
+    assert (tmp_path / ".heva/project.json").read_bytes() == before
+
+
+def test_only_explicitly_accepted_discovered_sources_are_registered(tmp_path: Path) -> None:
+    """A curator can add one new file without implicitly accepting every discovery."""
+
+    sources = tmp_path / "sources"
+    sources.mkdir()
+    add_source(sources, "original.pdf", b"original")
+    sync_registry(tmp_path, source_dir="sources")
+    add_source(sources, "accept.pdf", b"accept")
+    add_source(sources, "later.pdf", b"later")
+
+    identifiers = register_discovered_sources(tmp_path, ["sources/accept.pdf"])
+    registry = load_project_registry(tmp_path)
+
+    assert len(identifiers) == 1
+    assert {entry.source_path for entry in registry.documents} == {
+        "sources/original.pdf",
+        "sources/accept.pdf",
+    }
+    assert scan_project_sources(tmp_path).discovered == ("sources/later.pdf",)
 
 
 def test_initialization_creates_registry_without_renaming_sources(tmp_path: Path) -> None:

@@ -35,8 +35,63 @@ async function loadProject() {
       item.append(number, label);
       return item;
     }));
+    await loadSourceScan();
   } catch (error) {
     state.textContent = "The local HEVA service is not responding. Reload this page.";
+  }
+}
+
+/** Refresh the session-only list of source files not yet registered. */
+async function loadSourceScan() {
+  const panel = document.getElementById("source-discovery");
+  const list = document.getElementById("source-discovery-list");
+  const response = await fetch("/api/projects/source-scan");
+  if (!response.ok) {
+    panel.hidden = true;
+    return;
+  }
+  const scan = await response.json();
+  panel.hidden = scan.discovered.length === 0;
+  list.replaceChildren(...scan.discovered.map((path) => {
+    const row = document.createElement("div");
+    row.className = "discovered-source-row";
+    const name = document.createElement("span");
+    name.textContent = path;
+    const accept = document.createElement("button");
+    accept.className = "button";
+    accept.type = "button";
+    accept.textContent = "Add to project";
+    const dismiss = document.createElement("button");
+    dismiss.className = "button secondary";
+    dismiss.type = "button";
+    dismiss.textContent = "Not this session";
+    accept.addEventListener("click", () => decideDiscoveredSource("accept", path));
+    dismiss.addEventListener("click", () => decideDiscoveredSource("dismiss", path));
+    row.append(name, accept, dismiss);
+    return row;
+  }));
+}
+
+/**
+ * Apply one explicit membership decision and refresh project counts.
+ * @param {"accept"|"dismiss"} decision
+ * @param {string} sourcePath
+ */
+async function decideDiscoveredSource(decision, sourcePath) {
+  const response = await fetch(`/api/projects/source-scan/${decision}`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({source_paths: [sourcePath]}),
+  });
+  if (!response.ok) {
+    const result = await response.json();
+    window.alert(result.detail || "The source decision could not be saved.");
+    return;
+  }
+  if (decision === "accept") {
+    await loadProject();
+  } else {
+    await loadSourceScan();
   }
 }
 

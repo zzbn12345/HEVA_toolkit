@@ -34,7 +34,7 @@ def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -
     assert "Validate this project" in response.text
     assert "Curator review queue" in response.text
     assert 'href="/static/app.css"' in response.text
-    assert 'src="/static/home.js?v=6"' in response.text
+    assert 'src="/static/home.js?v=7"' in response.text
     assert "Choose folder and open" in response.text
     assert "Choose source folder" in response.text
     assert 'name="path"' not in response.text
@@ -142,6 +142,43 @@ def test_existing_project_can_be_opened_and_closed(tmp_path: Path) -> None:
     assert "project_root" not in status.json()
     assert closed.json() == {"closed": True}
     assert after_close.status_code == 404
+
+
+def test_open_reports_new_sources_and_session_decisions_are_explicit(tmp_path: Path) -> None:
+    """New PDFs are offered on open and dismissal is never persisted to project data."""
+
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+    (project_root / "known.pdf").write_bytes(b"known")
+    sync_registry(project_root, source_dir=".")
+    (project_root / "accept.pdf").write_bytes(b"accept")
+    (project_root / "dismiss.pdf").write_bytes(b"dismiss")
+    client = TestClient(create_app())
+
+    opened = client.post("/api/projects/open", json={"path": str(project_root)})
+    dismissed = client.post(
+        "/api/projects/source-scan/dismiss",
+        json={"source_paths": ["dismiss.pdf"]},
+    )
+    after_dismiss = client.get("/api/projects/source-scan")
+    accepted = client.post(
+        "/api/projects/source-scan/accept",
+        json={"source_paths": ["accept.pdf"]},
+    )
+
+    assert opened.json()["source_scan"]["discovered"] == ["accept.pdf", "dismiss.pdf"]
+    assert dismissed.json()["scope"] == "current_session"
+    assert after_dismiss.json()["discovered"] == ["accept.pdf"]
+    assert len(accepted.json()["registered_document_ids"]) == 1
+    registry = json.loads((project_root / ".heva/project.json").read_text())
+    assert {item["source_path"] for item in registry["documents"]} == {
+        "known.pdf",
+        "accept.pdf",
+    }
+
+    client.post("/api/projects/close")
+    client.post("/api/projects/open", json={"path": str(project_root)})
+    assert client.get("/api/projects/source-scan").json()["discovered"] == ["dismiss.pdf"]
 
 
 def test_existing_parent_root_project_moves_into_selected_source_folder(

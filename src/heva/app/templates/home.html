@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/home.js?v=6" defer></script>
+  <script src="/static/home.js?v=7" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -58,6 +58,12 @@
           </div>
           <button id="close-project" class="button secondary" type="button">Close project</button>
         </div>
+        <section id="source-discovery" class="summary-card" hidden aria-live="polite">
+          <p class="eyebrow">New source documents</p>
+          <h2>PDF or DOCX files were found</h2>
+          <p>Choose which files belong to this project. Dismissed files return the next time you open it.</p>
+          <div id="source-discovery-list"></div>
+        </section>
         <section class="choice-grid" aria-label="Choose a HEVA task">
         <a class="choice" href="/annotator">
           <span class="choice-icon" aria-hidden="true">●</span>

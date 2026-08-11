@@ -15,6 +15,7 @@ class ProjectContext(os.PathLike[str]):
 
     def __init__(self, project_root: str | Path | None = None) -> None:
         self._root = Path(project_root).expanduser().resolve() if project_root else None
+        self._dismissed_sources: set[str] = set()
 
     @property
     def selected(self) -> bool:
@@ -31,10 +32,23 @@ class ProjectContext(os.PathLike[str]):
 
     def select(self, project_root: str | Path) -> Path:
         self._root = Path(project_root).expanduser().resolve()
+        self._dismissed_sources.clear()
         return self._root
+
+    def dismiss_sources(self, source_paths: list[str]) -> None:
+        """Hide discovered sources only until this project session closes."""
+
+        self._dismissed_sources.update(source_paths)
+
+    @property
+    def dismissed_sources(self) -> frozenset[str]:
+        """Return the session-only source paths the user declined to register."""
+
+        return frozenset(self._dismissed_sources)
 
     def close(self) -> None:
         self._root = None
+        self._dismissed_sources.clear()
 
     def __fspath__(self) -> str:
         return os.fspath(self.require())

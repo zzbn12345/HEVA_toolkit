@@ -93,6 +93,72 @@ class SyncReport:
         }
 
 
+@dataclass(frozen=True)
+class SourceScanReport:
+    """Non-mutating comparison between registered documents and source files on disk."""
+
+    discovered: tuple[str, ...]
+    changed: tuple[str, ...]
+    missing: tuple[str, ...]
+
+
+def scan_project_sources(project_root: str | Path) -> SourceScanReport:
+    """Inspect configured sources without registering or rewriting project state."""
+
+    root = Path(project_root).resolve()
+    registry = load_project_registry(root)
+    source_root = root / registry.source_directory
+    discovered = {
+        _relative_posix(path, root): path for path in _discover_sources(source_root)
+    }
+    existing = {entry.source_path: entry for entry in registry.documents}
+    new_paths = sorted(set(discovered) - set(existing))
+    missing = sorted(set(existing) - set(discovered))
+    changed = sorted(
+        path for path in set(existing) & set(discovered)
+        if _checksum(discovered[path]) != existing[path].checksum_sha256
+    )
+    return SourceScanReport(tuple(new_paths), tuple(changed), tuple(missing))
+
+
+def register_discovered_sources(
+    project_root: str | Path,
+    source_paths: Iterable[str],
+) -> tuple[str, ...]:
+    """Register an explicit subset of currently discovered source paths."""
+
+    root = Path(project_root).resolve()
+    registry = load_project_registry(root)
+    requested = tuple(dict.fromkeys(source_paths))
+    scan = scan_project_sources(root)
+    unavailable = sorted(set(requested) - set(scan.discovered))
+    if unavailable:
+        raise RegistryError(
+            "These sources are not currently available for registration: "
+            + ", ".join(unavailable)
+        )
+    occupied = {entry.document_id: entry.source_path for entry in registry.documents}
+    added_ids: list[str] = []
+    for source_path in requested:
+        physical_path = root / source_path
+        document_id = _new_document_id(source_path, occupied)
+        occupied[document_id] = source_path
+        registry.documents.append(
+            DocumentEntry(
+                document_id=document_id,
+                source_path=source_path,
+                package_path=f"{DATA_DOCUMENTS_DIRECTORY.as_posix()}/{document_id}",
+                checksum_sha256=_checksum(physical_path),
+            )
+        )
+        added_ids.append(document_id)
+    registry.documents.sort(key=lambda entry: entry.source_path)
+    registry.summary = _summarize(registry.documents)
+    _create_package_directories(root, registry.documents)
+    _write_registry(root / DEFAULT_REGISTRY_PATH, registry)
+    return tuple(added_ids)
+
+
 class RegistryError(ValueError):
     """Raised when a project registry or source configuration is unusable."""
 

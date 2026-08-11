@@ -12,6 +12,8 @@
   hex colors, then compile only through a complete selected color-configuration version.
 - A strict programmatic citation adapter with a small CSL-compatible profile, exact
   filename matching, CSV support, and machine-validation provenance.
+- A non-mutating source scan whenever a project opens, with explicit per-file registration
+  and session-only dismissal of newly discovered PDF/DOCX sources.
 - Source-folder project roots and collaborative workspace tracking, allowing another
   researcher to clone canonical annotations plus durable extraction, review, and curation
   state while keeping caches, locks, local sessions, binaries, and exports out of Git.

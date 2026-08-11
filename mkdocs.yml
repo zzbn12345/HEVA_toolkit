@@ -45,6 +45,7 @@ nav:
       - Project color configurations: PROJECT_COLOR_CONFIGURATIONS.md
       - Unresolved extraction drafts: EXTRACTION_DRAFTS.md
       - Project registry: PROJECT_REGISTRY.md
+      - Source discovery on open: SOURCE_DISCOVERY.md
       - Extraction sessions: EXTRACTION_SESSIONS.md
       - Quality flags: QUALITY_FLAGS.md
       - Sentence review: SENTENCE_REVIEW.md

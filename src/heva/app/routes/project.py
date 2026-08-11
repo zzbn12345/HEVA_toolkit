@@ -53,6 +53,8 @@ from heva.workflow.project_registry import (
     RegistryError,
     load_project_registry,
     relocate_project_root_to_sources,
+    register_discovered_sources,
+    scan_project_sources,
     sync_registry,
 )
 from heva.workflow.review_queue import (
@@ -88,6 +90,14 @@ class BatchColorApplyInput(BaseModel):
 
     document_ids: list[str]
     confirmed: StrictBool
+
+
+class DiscoveredSourcesInput(BaseModel):
+    """Explicit session decision for source files found while opening a project."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_paths: list[str]
 
 
 def create_project_router(
@@ -184,11 +194,45 @@ def create_project_router(
                 detail=f"The HEVA project registry is invalid: {error}",
             ) from error
         root.select(candidate)
+        scan = scan_project_sources(candidate)
         return {
             "project_name": candidate.name,
             "source_directory": registry.source_directory,
             "document_count": registry.summary.total,
+            "source_scan": {
+                "discovered": list(scan.discovered),
+                "changed": list(scan.changed),
+                "missing": list(scan.missing),
+            },
         }
+
+    @router.get("/api/projects/source-scan")
+    def source_scan():
+        scan = scan_project_sources(root.require())
+        return {
+            "discovered": [
+                path for path in scan.discovered if path not in root.dismissed_sources
+            ],
+            "changed": list(scan.changed),
+            "missing": list(scan.missing),
+        }
+
+    @router.post("/api/projects/source-scan/accept")
+    def accept_discovered_sources(payload: DiscoveredSourcesInput):
+        try:
+            document_ids = register_discovered_sources(root.require(), payload.source_paths)
+        except RegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"registered_document_ids": list(document_ids)}
+
+    @router.post("/api/projects/source-scan/dismiss")
+    def dismiss_discovered_sources(payload: DiscoveredSourcesInput):
+        scan = scan_project_sources(root.require())
+        invalid = sorted(set(payload.source_paths) - set(scan.discovered))
+        if invalid:
+            raise HTTPException(status_code=422, detail="Only newly discovered sources can be dismissed.")
+        root.dismiss_sources(payload.source_paths)
+        return {"dismissed": payload.source_paths, "scope": "current_session"}
 
     @router.post("/api/projects/create")
     def create_project(payload: ProjectFolderInput):
