@@ -21,7 +21,7 @@ from heva.workflow.automatic_color_proposal import (
     AutomaticColorProposalError,
     generate_automatic_color_proposals,
 )
-from heva.workflow.document_metadata import AnnotatorMetadata
+from heva.workflow.document_metadata import AnnotatorMetadata, citation_is_valid
 from heva.workflow.color_mapping import (
     apply_shared_color_mapping,
     ColorMappingError,
@@ -469,7 +469,7 @@ def create_project_router(
             )
         return {
             "source_document_id": document_id,
-            "source_confirmed": source.human_confirmed,
+            "source_confirmed": citation_is_valid(source),
             "candidates": candidates,
         }
 

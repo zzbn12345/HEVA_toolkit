@@ -58,6 +58,7 @@ class CitationRecord(BaseModel):
     confirmed_at: datetime | None
     proposal_method: str | None = None
     proposed_fields: list[str] = Field(default_factory=list)
+    validation_method: str | None = None
 
 
 class CitationError(ValueError):
@@ -186,6 +187,7 @@ def load_document_citation(
         confirmed_at=source.confirmed_at,
         proposal_method=proposal_method if proposed_fields else None,
         proposed_fields=proposed_fields,
+        validation_method=source.validation_method or ("human" if source.human_confirmed else None),
     )
 
 
@@ -202,6 +204,9 @@ def save_document_citation(
         human_confirmed=False,
         confirmed_by=None,
         confirmed_at=None,
+        validation_method=None,
+        validated_by=None,
+        validated_at=None,
     )
     try:
         save_package_metadata(project_root, metadata)
@@ -237,6 +242,9 @@ def confirm_document_citation(
         human_confirmed=True,
         confirmed_by=confirmed_by.strip(),
         confirmed_at=datetime.now(timezone.utc),
+        validation_method="human",
+        validated_by=confirmed_by.strip(),
+        validated_at=datetime.now(timezone.utc),
     )
     try:
         save_package_metadata(project_root, metadata)

@@ -39,6 +39,7 @@ nav:
       - Validation: VALIDATION.md
       - Record contract: HEVA_RECORD_CONTRACT.md
       - Document metadata: DOCUMENT_METADATA.md
+      - Programmatic citation import: CITATION_IMPORT.md
       - People and workflow roles: PEOPLE_AND_ROLES.md
       - Color mapping: COLOR_MAPPING.md
       - Project color configurations: PROJECT_COLOR_CONFIGURATIONS.md

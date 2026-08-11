@@ -43,11 +43,28 @@ class SourceMetadata(BaseModel):
     title: str | None = None
     creators: list[str] = Field(default_factory=list)
     citation: str | None = None
+    item_type: Literal["article", "book", "chapter", "paper-conference", "report", "webpage"] | None = None
+    issued_year: int | None = Field(default=None, ge=1000, le=9999)
+    undated: StrictBool = False
+    source_filename: str | None = None
     reference: str | None = None
     not_findable_reason: str | None = None
     human_confirmed: StrictBool = False
     confirmed_by: str | None = None
     confirmed_at: datetime | None = None
+    validation_method: Literal["human", "programmatic"] | None = None
+    validated_by: str | None = None
+    validated_at: datetime | None = None
+
+
+def citation_is_valid(source: SourceMetadata) -> bool:
+    """Return whether citation evidence passed either supported validation route."""
+
+    return source.human_confirmed or (
+        source.validation_method == "programmatic"
+        and bool(source.validated_by)
+        and source.validated_at is not None
+    )
 
 
 class AnnotatorMetadata(BaseModel):
