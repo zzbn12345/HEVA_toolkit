@@ -15,6 +15,7 @@ project/
 │   ├── color-configurations.json
 │   └── documents/
 │       └── HEVA-…/
+│           ├── extraction-draft.json
 │           ├── extraction-session.json
 │           ├── review-state.json
 │           ├── curation-state.json
@@ -30,6 +31,9 @@ The folder containing the source documents is the project root. `documents/` con
 canonical analytical metadata and annotations. `.heva/` is hidden but durable application
 workspace state used to resume and collaborate on extraction, review, and curation.
 `exports/` contains reproducible, validated HEVA Data Packages.
+
+`extraction-draft.json` is unresolved extractor evidence. It is workspace state, not a
+canonical annotation or training resource.
 
 HEVA does not copy or rename source documents. Opening a former parent-root project by
 selecting its source folder moves the workspace into that folder without changing document

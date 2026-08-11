@@ -8,6 +8,8 @@
   active-curator integrity rules, and compatibility migration for former app operators.
 - Immutable, curator-attributed project color-configuration versions that allow several
   hex values per HEVA category and record the selected version in document metadata.
+- Collaborative unresolved extraction drafts that preserve raw text, offsets, pages, and
+  hex colors, then compile only through a complete selected color-configuration version.
 - Source-folder project roots and collaborative workspace tracking, allowing another
   researcher to clone canonical annotations plus durable extraction, review, and curation
   state while keeping caches, locks, local sessions, binaries, and exports out of Git.

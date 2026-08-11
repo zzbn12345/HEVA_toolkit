@@ -42,6 +42,7 @@ nav:
       - People and workflow roles: PEOPLE_AND_ROLES.md
       - Color mapping: COLOR_MAPPING.md
       - Project color configurations: PROJECT_COLOR_CONFIGURATIONS.md
+      - Unresolved extraction drafts: EXTRACTION_DRAFTS.md
       - Project registry: PROJECT_REGISTRY.md
       - Extraction sessions: EXTRACTION_SESSIONS.md
       - Quality flags: QUALITY_FLAGS.md

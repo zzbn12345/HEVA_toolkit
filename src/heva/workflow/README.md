@@ -22,7 +22,8 @@ python -m pip install -e .
    provenance.
 4. `color_configuration_registry.py` stores immutable project conventions, while
    `color_mapping.py` preserves supervised document evidence and the applied version.
-5. `extraction_session.py` persists extraction checkpoints and mapping provenance.
+5. `extraction_draft.py` preserves unresolved raw color evidence for collaboration;
+   `extraction_session.py` persists canonical extraction checkpoints and provenance.
 6. `quality_flags.py` identifies sentences needing closer attention.
 7. `review_state.py` records explicit sentence decisions and corrections.
 8. `package_validator.py` reports structural, semantic, rights, review, and release issues.
