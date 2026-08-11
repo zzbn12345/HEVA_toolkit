@@ -12,6 +12,7 @@ project/
 ├── .heva/
 │   ├── project.json
 │   ├── people.json
+│   ├── color-configurations.json
 │   └── documents/
 │       └── HEVA-…/
 │           ├── extraction-session.json

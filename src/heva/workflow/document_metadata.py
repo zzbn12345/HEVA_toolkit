@@ -185,6 +185,8 @@ class ColorConfigurationMetadata(BaseModel):
     extraction_authorized_by: str | None = None
     extraction_authorized_at: datetime | None = None
     shared_from_document_id: str | None = None
+    configuration_id: str | None = None
+    configuration_version: StrictInt | None = Field(default=None, ge=1)
     colors: list[ColorMappingMetadata] = Field(default_factory=list)
 
 

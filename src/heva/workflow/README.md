@@ -20,7 +20,8 @@ python -m pip install -e .
    data owners; `annotator_registry.py` remains a compatibility interface during migration.
 3. `document_citation.py` and `document_metadata.py` record citation, rights, and process
    provenance.
-4. `color_mapping.py` stores supervised document-local color decisions.
+4. `color_configuration_registry.py` stores immutable project conventions, while
+   `color_mapping.py` preserves supervised document evidence and the applied version.
 5. `extraction_session.py` persists extraction checkpoints and mapping provenance.
 6. `quality_flags.py` identifies sentences needing closer attention.
 7. `review_state.py` records explicit sentence decisions and corrections.
