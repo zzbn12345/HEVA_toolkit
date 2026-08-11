@@ -487,14 +487,17 @@ def test_color_form_prefills_suggestions_without_presenting_model_reasoning() ->
     assert "No explanation was recorded" not in script
 
 
-def test_extraction_endpoint_passes_deliberate_force_rebuild(
+def test_extraction_endpoint_persists_raw_evidence_before_canonical_promotion(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     calls = []
 
-    def fake_run(root, document_id, *, force):
-        calls.append((document_id, force))
+    def fake_raw(root, document_id):
+        calls.append(("raw", document_id))
+
+    def fake_promote(root, document_id):
+        calls.append(("canonical", document_id))
         package = tmp_path / "package"
         return SimpleNamespace(
             document_id=document_id,
@@ -505,16 +508,14 @@ def test_extraction_endpoint_passes_deliberate_force_rebuild(
             warnings=(),
         )
 
-    monkeypatch.setattr(
-        "heva.app.routes.project.run_registered_extraction",
-        fake_run,
-    )
+    monkeypatch.setattr("heva.app.routes.project.run_registered_raw_extraction", fake_raw)
+    monkeypatch.setattr("heva.app.routes.project.promote_extraction_draft", fake_promote)
     client = TestClient(create_app(tmp_path))
 
     response = client.post("/api/documents/HEVA-TEST/extract?force=true")
 
     assert response.status_code == 200
-    assert calls == [("HEVA-TEST", True)]
+    assert calls == [("raw", "HEVA-TEST"), ("canonical", "HEVA-TEST")]
 
 
 def test_annotator_is_persisted_in_project_collection(tmp_path: Path) -> None:

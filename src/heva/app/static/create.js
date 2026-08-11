@@ -233,7 +233,7 @@ function renderColorConfiguration(result) {
   document.getElementById("propose-colors").disabled =
     !result.automatic_proposal_available;
   document.getElementById("confirm-colors").disabled = !configuration.colors.length;
-  document.getElementById("extract-annotations").disabled = !confirmed;
+  document.getElementById("extract-annotations").disabled = false;
 }
 
 async function loadColors(documentId) {
@@ -436,8 +436,10 @@ async function loadExtractionStatus(documentId) {
     rebuild.hidden = result.state === "not_extracted";
     rebuild.disabled = document.getElementById("extract-annotations").disabled;
     if (result.state === "not_extracted") {
-      status.className = "notice neutral";
-      status.textContent = "No persisted extraction exists for this document.";
+      status.className = result.draft_record_count ? "notice warning" : "notice neutral";
+      status.textContent = result.draft_record_count
+        ? `${result.draft_record_count} raw sentence record${result.draft_record_count === 1 ? " is" : "s are"} saved. Select a complete project color configuration to create canonical annotations.`
+        : "No persisted extraction exists for this document.";
     } else if (result.state === "current") {
       status.className = result.warnings.length ? "notice warning" : "notice success";
       status.textContent = `Current checkpoint contains ${result.record_count} sentence record${result.record_count === 1 ? "" : "s"}.${result.warnings.length ? ` ${result.warnings.join(" ")}` : ""}`;
@@ -474,6 +476,12 @@ async function extractAnnotations(force = false) {
     if (!response.ok) {
       status.className = "notice error";
       status.textContent = `${result.message || "Extraction failed."} ${result.action || ""}`;
+      return;
+    }
+    if (result.status === "draft_saved") {
+      status.className = "notice warning";
+      status.textContent = `${result.message} ${result.action}`;
+      await loadExtractionStatus(documentId);
       return;
     }
     status.className = result.warnings.length ? "notice warning" : "notice success";

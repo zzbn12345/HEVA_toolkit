@@ -18,6 +18,8 @@
   license/waiver provenance and a hard gate before Data Package generation.
 - External PDF/DOCX bindings that keep protected source paths local and ignored while the
   separate dataset repository versions stable IDs, checksums, annotations, and evidence.
+- A guarded raw-to-canonical extraction transition: the app saves raw evidence first and
+  promotes it only through the selected complete project color-configuration version.
 - Source-folder project roots and collaborative workspace tracking, allowing another
   researcher to clone canonical annotations plus durable extraction, review, and curation
   state while keeping caches, locks, local sessions, binaries, and exports out of Git.

@@ -16,9 +16,11 @@ from heva.workflow.extraction_draft import (
     compile_extraction_draft,
     load_extraction_draft,
     persist_extraction_draft,
+    promote_extraction_draft,
     run_registered_raw_extraction,
 )
 from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
+from heva.workflow.color_mapping import propose_color_configuration, save_color_configuration
 from heva.workflow.project_registry import sync_registry
 
 
@@ -170,3 +172,31 @@ def test_registered_raw_run_does_not_require_ollama_or_color_mapping(tmp_path: P
 
     assert received == [tmp_path / "sources/source.pdf"]
     assert load_extraction_draft(tmp_path, document_id).extractor == "deterministic test extractor"
+
+
+def test_promotion_writes_canonical_annotations_only_after_selected_mapping(tmp_path: Path) -> None:
+    """The draft-to-package transition reuses canonical session validation and provenance."""
+
+    document_id, records = _project(tmp_path)
+    persist_extraction_draft(
+        tmp_path, document_id, records, extractor="test", extractor_version="1.0"
+    )
+    save_color_configuration(
+        tmp_path,
+        document_id,
+        propose_color_configuration(["#FFFF00", "#FFF200"]),
+    )
+    configuration = create_color_configuration_version(
+        tmp_path,
+        configuration_id="approved-palette",
+        name="Approved palette",
+        mappings=[{"label": "historic", "hexes": ["#FFFF00", "#FFF200"]}],
+    )
+    select_color_configuration(tmp_path, configuration.configuration_id, 1)
+
+    result = promote_extraction_draft(tmp_path, document_id)
+    saved = json.loads(result.annotations_path.read_text())
+
+    assert result.record_count == 1
+    assert saved[0]["values"] == ["historic"]
+    assert saved[0]["mapping_provenance"]["config_id"] == "approved-palette@1"

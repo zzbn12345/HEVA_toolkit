@@ -28,6 +28,7 @@ from heva.workflow.color_mapping import (
     load_color_configuration,
     review_and_confirm_color_configuration,
 )
+from heva.workflow.color_configuration_registry import ProjectColorConfigurationError
 from heva.workflow.contract import HEVA_LABELS
 from heva.workflow.document_citation import (
     CitationDraft,
@@ -44,6 +45,12 @@ from heva.workflow.extraction_session import (
     ExtractionSessionError,
     load_extraction_checkpoint_status,
     run_registered_extraction,
+)
+from heva.workflow.extraction_draft import (
+    ExtractionDraftError,
+    load_extraction_draft,
+    promote_extraction_draft,
+    run_registered_raw_extraction,
 )
 from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
@@ -562,6 +569,11 @@ def create_project_router(
             status = load_extraction_checkpoint_status(root, document_id)
         except ExtractionSessionError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
+        try:
+            draft = load_extraction_draft(root, document_id)
+            draft_count = len(draft.sentences)
+        except ExtractionDraftError:
+            draft_count = 0
         return {
             "document_id": status.document_id,
             "state": status.state,
@@ -570,13 +582,29 @@ def create_project_router(
             "mapping_status": status.mapping_status,
             "warnings": list(status.warnings),
             "stale_reasons": list(status.stale_reasons),
+            "draft_record_count": draft_count,
         }
 
     @router.post("/api/documents/{document_id}/extract")
     def extract_document(document_id: str, force: bool = False):
         try:
-            result = run_registered_extraction(root, document_id, force=force)
-        except (ColorMappingError, ExtractionSessionError, OSError, ValidationError) as error:
+            run_registered_raw_extraction(root, document_id)
+            try:
+                result = promote_extraction_draft(root, document_id)
+            except (ProjectColorConfigurationError, ExtractionDraftError, ExtractionSessionError) as mapping_error:
+                return JSONResponse(
+                    {
+                        "document_id": document_id,
+                        "status": "draft_saved",
+                        "message": "Raw extraction evidence was saved.",
+                        "action": (
+                            "Select a complete project color configuration to create "
+                            f"canonical annotations. {mapping_error}"
+                        ),
+                    },
+                    status_code=202,
+                )
+        except (ColorMappingError, ExtractionDraftError, ExtractionSessionError, OSError, ValidationError) as error:
             return JSONResponse(
                 {
                     "code": getattr(error, "code", "extraction_failed"),
@@ -590,6 +618,7 @@ def create_project_router(
             "record_count": result.record_count,
             "reused_checkpoint": result.reused_checkpoint,
             "warnings": list(result.warnings),
+            "status": "canonical_saved",
         }
 
     @router.get("/api/annotator")

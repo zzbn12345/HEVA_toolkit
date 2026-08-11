@@ -291,3 +291,24 @@ def run_registered_raw_extraction(
         extractor=name,
         extractor_version=extractor_version,
     )
+
+
+def promote_extraction_draft(project_root: str | Path, document_id: str):
+    """Persist a compiled draft as canonical annotations through existing safeguards."""
+
+    root = Path(project_root).resolve()
+    configuration = selected_color_configuration(root)
+    from heva.workflow.color_configuration_registry import apply_selected_configuration_to_document
+    from heva.workflow.extraction_session import persist_extraction_results
+
+    apply_selected_configuration_to_document(root, document_id)
+    records = compile_extraction_draft(root, document_id)
+    return persist_extraction_results(
+        root,
+        document_id,
+        records,
+        extraction_method="automatic",
+        extractor="HEVA unresolved-draft compiler",
+        extractor_version="0.1.0",
+        mapping_status="approved",
+    )
