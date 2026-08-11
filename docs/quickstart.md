@@ -7,7 +7,7 @@ application, and runs project validation.
 
 - Python 3.12
 - A terminal
-- A local folder containing PDF or DOCX source documents
+- A folder for the curated dataset; source PDF/DOCX files may be elsewhere
 - Ollama only when automatic color-label suggestions are needed
 
 HEVA runs locally. The web application does not upload source documents.
@@ -81,17 +81,22 @@ Open <http://127.0.0.1:8000>. Keep the terminal running while using the app.
 
 From the home page:
 
-1. Choose **Create project** for a folder containing PDF/DOCX files, or **Open existing
-   project** for a folder containing `.heva/project.json`.
-2. Configure the reusable annotator profile.
-3. Open one document and confirm its citation and document-local color mapping.
-4. Extract annotations.
-5. Review every sentence.
-6. Run **Validate this project** at any time.
+1. Create or open the dedicated curated-dataset project.
+2. Configure the active curator and record the original annotator separately.
+3. Add a PDF/DOCX from the project folder or bind an authorized source elsewhere. External
+   paths remain local and the source is not copied into the dataset repository.
+4. Add or import a valid citation. Citation is required for release, not sentence curation.
+5. Confirm the document colors. HEVA creates or reuses the immutable project palette.
+6. Extract annotations. Raw hex evidence is saved first; canonical annotations appear only
+   after the selected palette resolves every observed color.
+7. Review every sentence and submit the document for curator review.
+8. Accept the candidate in the curator queue, add the responsible data owner, and record
+   that document's license or waiver approval.
+9. Run **Validate this project** throughout the process.
 
 ## 6. Run validation from the terminal
 
-Replace `/path/to/project` with the folder containing the HEVA `data/` directory:
+Replace `/path/to/project` with the folder containing `.heva/project.json`:
 
 ```bash
 python -m heva.workflow.package_validator /path/to/project validate
@@ -108,14 +113,16 @@ Create a machine-readable report:
 ```bash
 python -m heva.workflow.package_validator /path/to/project validate \
   --json \
-  --report /path/to/project/data/validation-report.json
+  --report /path/to/project/validation-report.json
 ```
 
 ## What success means
 
 - **Passed:** the package conforms to the current HEVA specification.
 - **Completed:** a curator accepted the submitted candidate.
-- **Release-ready:** the completed package also satisfies release validation.
+- **Release-ready:** the completed package satisfies release validation. Data Package
+  generation additionally verifies intact curator evidence and per-document data-owner
+  approval.
 
 A package can pass while still being incomplete. Validation does not prove scholarly
 correctness or extraction recall against every mark in the source.

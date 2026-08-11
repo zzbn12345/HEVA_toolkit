@@ -7,6 +7,7 @@ Source documents remain local unless their rights explicitly permit distribution
 ## Start
 
 - [Quickstart](quickstart.md) — install HEVA, check the installation, and open the app.
+- [Alpha test protocol](ALPHA_TEST.md) — reproduce the workflow with an authorized dataset.
 - [Guided workflow](GUIDED_REVIEW_WORKFLOW.md) — understand the complete annotation cycle.
 - [Validation](VALIDATION.md) — run the minimum product from the app or command line.
 - [Current evidence and limitations](EVALUATION.md) — understand what HEVA can and cannot
@@ -44,12 +45,12 @@ Source documents remain local unless their rights explicitly permit distribution
 
 ## Roles
 
-- **Annotator:** confirms citation and color configuration, reviews every sentence, and
-  submits a candidate.
-- **Curator:** checks the exact submitted candidate and accepts, requests changes, rejects,
-  or quarantines it.
-- **Data steward or developer:** configures projects, runs validation, prepares releases,
-  and maintains the toolkit.
+- **Annotator:** the person who originally annotated the source PDF or DOCX.
+- **Curator:** processes and reviews annotations in HEVA, then accepts, requests changes,
+  rejects, or quarantines an exact submitted candidate.
+- **Data owner:** the person responsible for the Data Package and its per-document
+  distribution approval; an institution may be recorded as their affiliation.
+- **Reviewer:** an action role, typically exercised by the data owner.
 
 HEVA separates specification conformance from scholarly correctness. A passing validation
 report means the package follows the current contract; it does not prove that every source

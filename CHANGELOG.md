@@ -24,6 +24,8 @@
   document's color decisions in the web interface.
 - A curator-queue data-owner form that creates the responsible project person and records
   per-document license/waiver approval after curator acceptance.
+- An executable end-to-end alpha journey plus a researcher test protocol covering external
+  sources, roles, citation, versioned colors, review, curation, ownership, and release.
 - Source-folder project roots and collaborative workspace tracking, allowing another
   researcher to clone canonical annotations plus durable extraction, review, and curation
   state while keeping caches, locks, local sessions, binaries, and exports out of Git.
