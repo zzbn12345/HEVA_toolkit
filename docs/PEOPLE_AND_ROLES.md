@@ -1,0 +1,60 @@
+# People and workflow roles
+
+HEVA records people independently from the roles they exercise. One person may have more
+than one role:
+
+- **annotator** — originally applied annotations to a source PDF;
+- **curator** — extracts, maps, verifies, and corrects annotations using HEVA; and
+- **data owner** — is accountable for a document's inclusion in a Data Package.
+
+Review is an action performed by an authorized person, usually the data owner. It is not a
+fourth permanent identity type.
+
+## Registry
+
+Project people are stored in `.heva/people.json` and validated by
+`schemas/heva-people.schema.json`:
+
+```json
+{
+  "schema_version": "1.0",
+  "active_curator_id": "PERSON-123ABC",
+  "people": [
+    {
+      "person_id": "PERSON-123ABC",
+      "name": "Alex Researcher",
+      "roles": ["curator", "data_owner"],
+      "affiliation": "Example Heritage Institute",
+      "email": null,
+      "orcid": null
+    }
+  ]
+}
+```
+
+The active curator must reference a person who has the `curator` role. Original PDF
+annotators and data owners are never implicitly authorized to operate the curation session.
+Removing a person from current configuration does not rewrite names or identifiers already
+recorded in historical audit evidence.
+
+## Compatibility migration
+
+Earlier HEVA versions called the person operating the review workflow an "annotator" and
+stored profiles in `.heva/annotators.json`. The first people-registry load imports those
+operators as curators into `.heva/people.json`. The old file is retained as migration
+evidence until the application interface has completed its transition.
+
+The migration does not infer who originally annotated a PDF. Those identities must be
+imported or entered explicitly with the `annotator` role.
+
+## Python use
+
+```python
+from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
+
+person = add_person(
+    project_root,
+    PersonRecord(name="Alex Researcher", roles=["curator", "data_owner"]),
+)
+activate_curator(project_root, person.person_id)
+```

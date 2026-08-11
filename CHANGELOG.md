@@ -4,6 +4,8 @@
 
 ### Added
 
+- A project people registry with explicit annotator, curator, and data-owner roles,
+  active-curator integrity rules, and compatibility migration for former app operators.
 - Source-folder project roots and collaborative workspace tracking, allowing another
   researcher to clone canonical annotations plus durable extraction, review, and curation
   state while keeping caches, locks, local sessions, binaries, and exports out of Git.

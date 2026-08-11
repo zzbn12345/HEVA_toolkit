@@ -16,7 +16,8 @@ python -m pip install -e .
 ## Project lifecycle
 
 1. `project_registry.py` assigns stable document IDs and package paths.
-2. `annotator_registry.py` stores reusable project annotator profiles.
+2. `people_registry.py` distinguishes original annotators, active curators, and accountable
+   data owners; `annotator_registry.py` remains a compatibility interface during migration.
 3. `document_citation.py` and `document_metadata.py` record citation, rights, and process
    provenance.
 4. `color_mapping.py` stores supervised document-local color decisions.

@@ -11,7 +11,7 @@ project/
 │       └── annotations.json
 ├── .heva/
 │   ├── project.json
-│   ├── annotators.json
+│   ├── people.json
 │   └── documents/
 │       └── HEVA-…/
 │           ├── extraction-session.json
@@ -34,6 +34,6 @@ HEVA does not copy or rename source documents. Opening a former parent-root proj
 selecting its source folder moves the workspace into that folder without changing document
 identifiers, annotations, or review history.
 
-For collaboration, commit `documents/`, `.heva/project.json`, `.heva/annotators.json`, and
+For collaboration, commit `documents/`, `.heva/project.json`, `.heva/people.json`, and
 `.heva/documents/`. Ignore `.heva/cache/`, `.heva/locks/`, `.heva/session.json`, and
 reproducible `exports/`.

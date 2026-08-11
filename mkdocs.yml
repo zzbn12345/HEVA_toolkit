@@ -39,6 +39,7 @@ nav:
       - Validation: VALIDATION.md
       - Record contract: HEVA_RECORD_CONTRACT.md
       - Document metadata: DOCUMENT_METADATA.md
+      - People and workflow roles: PEOPLE_AND_ROLES.md
       - Color mapping: COLOR_MAPPING.md
       - Project registry: PROJECT_REGISTRY.md
       - Extraction sessions: EXTRACTION_SESSIONS.md
