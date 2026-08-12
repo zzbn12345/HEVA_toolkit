@@ -6,6 +6,8 @@
 
 - Data Package generation from the validation view, with exact release-gate feedback and
   a deterministic annotation-only ZIP that excludes source documents and workspace state.
+- A schema-validated dataset-details form for citable identity, creators, license, rights,
+  and limitations, persisted as project-level metadata without requiring raw JSON editing.
 
 - A project people registry with explicit annotator, curator, and data-owner roles,
   active-curator integrity rules, and compatibility migration for former app operators.

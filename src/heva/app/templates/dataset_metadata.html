@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dataset details · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/dataset_metadata.css?v=1">
+  <script src="/static/dataset_metadata.js?v=1" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="home-link" href="/">← HEVA home</a><nav class="topbar-links"><a class="guide-link" href="/guide/APPROVED_EXPORT">Release guide</a><a class="button secondary" href="/validate">Validate and generate</a></nav></header>
+  <main class="page-content dataset-page">
+    <p class="eyebrow">Project release details</p>
+    <h1>Describe the dataset</h1>
+    <p class="lead">These project-level details make the generated annotation dataset citable and understandable. They do not describe an individual source document.</p>
+    <div id="dataset-status" class="notice neutral" aria-live="polite">Loading dataset details…</div>
+    <form id="dataset-form" class="dataset-form">
+      <div class="field-grid">
+        <label>Dataset name <span aria-hidden="true">*</span><input name="name" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="heritage-value-annotations"><small>Lowercase words separated by hyphens.</small></label>
+        <label>Human-readable title <span aria-hidden="true">*</span><input name="title" required></label>
+      </div>
+      <label>Description <span aria-hidden="true">*</span><textarea name="description" rows="4" required></textarea></label>
+      <div class="field-grid">
+        <label>Creators <span aria-hidden="true">*</span><textarea name="creators" rows="4" required placeholder="One person or institution per line"></textarea><small>Who created this released dataset.</small></label>
+        <label>Contributors <small>(optional)</small><textarea name="contributors" rows="4" placeholder="One contributor per line"></textarea></label>
+      </div>
+      <div class="field-grid">
+        <label>License or waiver <span aria-hidden="true">*</span><input name="license" required placeholder="CC-BY-4.0"></label>
+        <label>Rights statement <span aria-hidden="true">*</span><textarea name="rights" rows="3" required></textarea></label>
+      </div>
+      <label>Known limitations <span aria-hidden="true">*</span><textarea name="known_limitations" rows="4" required placeholder="One limitation per line"></textarea><small>State at least one boundary so future users do not overinterpret the dataset.</small></label>
+      <div class="form-actions"><button class="button" type="submit">Save dataset details</button><a class="button secondary" href="/validate">Continue to validation</a></div>
+    </form>
+  </main>
+</body>
+</html>

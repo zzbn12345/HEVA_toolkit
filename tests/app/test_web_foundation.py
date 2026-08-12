@@ -970,6 +970,56 @@ def test_app_explains_release_gate_failure(
     assert response.json()["action"]
 
 
+def test_dataset_metadata_page_safely_edits_validated_project_json(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path))
+    payload = {
+        "name": "heritage-value-annotations",
+        "title": "Heritage value annotations",
+        "description": "Reviewed annotations for heritage-value research.",
+        "creators": ["Research team"],
+        "contributors": ["Example annotator"],
+        "license": "CC-BY-4.0",
+        "rights": "Only annotation derivatives are distributed.",
+        "known_limitations": ["Not representative of every heritage context."],
+    }
+
+    page = client.get("/dataset-metadata")
+    empty = client.get("/api/dataset-metadata")
+    saved = client.put("/api/dataset-metadata", json=payload)
+    loaded = client.get("/api/dataset-metadata")
+
+    assert page.status_code == 200
+    assert "Describe the dataset" in page.text
+    assert 'src="/static/dataset_metadata.js?v=1"' in page.text
+    assert empty.json() == {"configured": False, "metadata": None}
+    assert saved.status_code == 200
+    assert loaded.json()["metadata"] == payload
+    assert json.loads((tmp_path / "dataset-metadata.json").read_text()) == payload
+
+
+def test_dataset_metadata_api_rejects_blank_release_requirements(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.put(
+        "/api/dataset-metadata",
+        json={
+            "name": "Not a package name",
+            "title": " ",
+            "description": " ",
+            "creators": [" "],
+            "contributors": [],
+            "license": " ",
+            "rights": " ",
+            "known_limitations": [" "],
+        },
+    )
+
+    assert response.status_code == 422
+    assert not (tmp_path / "dataset-metadata.json").exists()
+
+
 def test_review_queue_opens_only_one_document_at_a_time(tmp_path: Path) -> None:
     sources = tmp_path / "documents"
     sources.mkdir()

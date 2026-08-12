@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Any, Iterable, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from heva.workflow.document_metadata import (
     PackageMetadata,
@@ -39,14 +39,45 @@ class DatasetReleaseMetadata(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: str
-    title: str
-    description: str
+    name: str = Field(min_length=1, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    title: str = Field(min_length=1)
+    description: str = Field(min_length=1)
     creators: list[str] = Field(min_length=1)
     contributors: list[str] = Field(default_factory=list)
-    license: str
-    rights: str
+    license: str = Field(min_length=1)
+    rights: str = Field(min_length=1)
     known_limitations: list[str] = Field(min_length=1)
+
+    @field_validator(
+        "name",
+        "title",
+        "description",
+        "license",
+        "rights",
+        mode="before",
+    )
+    @classmethod
+    def strip_required_text(cls, value: object) -> object:
+        """Reject required values that contain only whitespace."""
+
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("contributors")
+    @classmethod
+    def normalize_optional_text_list(cls, values: list[str]) -> list[str]:
+        """Trim contributor entries, remove blanks, and preserve input order."""
+
+        return list(dict.fromkeys(value.strip() for value in values if value.strip()))
+
+    @field_validator("creators", "known_limitations")
+    @classmethod
+    def normalize_required_text_lists(cls, values: list[str]) -> list[str]:
+        """Require at least one meaningful, unique item in release-critical lists."""
+
+        normalized = list(dict.fromkeys(value.strip() for value in values if value.strip()))
+        if not normalized:
+            raise ValueError("at least one non-empty value is required")
+        return normalized
 
 
 class ValidationIssue(BaseModel):

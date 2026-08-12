@@ -45,7 +45,13 @@ from heva.workflow.document_citation import (
     load_document_citation,
     save_document_citation,
 )
+from heva.workflow.dataset_metadata import (
+    DatasetMetadataError,
+    load_dataset_metadata,
+    save_dataset_metadata,
+)
 from heva.workflow.package_validator import (
+    DatasetReleaseMetadata,
     PackageValidationError,
     build_release,
     validate_project,
@@ -206,6 +212,10 @@ def create_project_router(
     @router.get("/project-colors", response_class=HTMLResponse)
     def project_colors_page() -> str:
         return template("project_colors.html")
+
+    @router.get("/dataset-metadata", response_class=HTMLResponse)
+    def dataset_metadata_page() -> str:
+        return template("dataset_metadata.html")
 
     @router.get("/health")
     def health() -> dict[str, str]:
@@ -929,6 +939,29 @@ def create_project_router(
             )
         payload = report.model_dump(mode="json")
         return JSONResponse(payload, status_code=200)
+
+    @router.get("/api/dataset-metadata")
+    def get_dataset_metadata():
+        """Return validated dataset identity without exposing a raw JSON editor."""
+
+        try:
+            metadata = load_dataset_metadata(root)
+        except DatasetMetadataError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {
+            "configured": metadata is not None,
+            "metadata": metadata.model_dump(mode="json") if metadata else None,
+        }
+
+    @router.put("/api/dataset-metadata")
+    def put_dataset_metadata(metadata: DatasetReleaseMetadata):
+        """Validate and persist dataset-level citation and release guidance."""
+
+        try:
+            saved = save_dataset_metadata(root, metadata)
+        except DatasetMetadataError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {"configured": True, "metadata": saved.model_dump(mode="json")}
 
     @router.post("/api/release")
     def generate_release():

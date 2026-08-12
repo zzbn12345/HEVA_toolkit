@@ -27,10 +27,12 @@ python -m pip install -e .
    `extraction_session.py` persists canonical extraction checkpoints and provenance.
 6. `quality_flags.py` identifies sentences needing closer attention.
 7. `review_state.py` records explicit sentence decisions and corrections.
-8. `package_validator.py` reports structural, semantic, rights, review, and release issues.
-9. `curation_state.py` records curator decisions against immutable candidate evidence.
-10. `data_owner_approval.py` records per-document distribution accountability.
-11. `release_builder.py` creates deterministic approved annotation releases.
+8. `dataset_metadata.py` safely persists the citable identity, rights, and limitations of
+   the project-level release.
+9. `package_validator.py` reports structural, semantic, rights, review, and release issues.
+10. `curation_state.py` records curator decisions against immutable candidate evidence.
+11. `data_owner_approval.py` records per-document distribution accountability.
+12. `release_builder.py` creates deterministic approved annotation releases.
 
 ## Important interfaces
 

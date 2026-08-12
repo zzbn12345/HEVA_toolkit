@@ -1,0 +1,25 @@
+.dataset-page { width: min(980px, 100%); }
+.dataset-form {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+}
+.dataset-form label { display: grid; gap: .45rem; font-weight: 750; }
+.dataset-form label small { color: var(--muted); font-weight: 400; }
+.dataset-form input, .dataset-form textarea {
+  width: 100%;
+  padding: .8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+}
+.dataset-form textarea { resize: vertical; }
+.field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.form-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+@media (max-width: 720px) { .field-grid { grid-template-columns: 1fr; } }

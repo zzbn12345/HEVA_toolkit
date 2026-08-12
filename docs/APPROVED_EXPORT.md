@@ -29,7 +29,9 @@ After an annotator submits a fully decided document, its registry status is `in_
 A curator accepts the exact checksummed candidate in the local `/curation` view. Acceptance
 is the only action that changes the status to `done`.
 
-Before the first build, create `dataset-metadata.json`:
+Before the first build, open **Dataset details** in the app and complete the validated
+form. It writes `dataset-metadata.json` at the project root. Scripts may create the same
+file directly as long as it passes the schema. Its shape is:
 
 ```json
 {
@@ -45,6 +47,11 @@ Before the first build, create `dataset-metadata.json`:
   ]
 }
 ```
+
+`name` is a lowercase, hyphen-separated package identifier. At least one creator and one
+known limitation are required. Contributors are optional; title, description, license,
+and rights must be meaningful non-empty text. These are dataset-level release details,
+not substitutes for each document's citation and data-owner approval.
 
 Build the release candidate with:
 
