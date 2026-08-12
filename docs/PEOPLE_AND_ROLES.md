@@ -70,3 +70,25 @@ person = add_person(
 )
 activate_curator(project_root, person.person_id)
 ```
+
+## Authoritative CSV import
+
+Projects that already maintain people in a spreadsheet can use the strict CSV adapter.
+Copy `tests/fixtures/people.csv` as a starting point. Columns must be exactly:
+
+```text
+person_id,name,roles,affiliation,email,orcid,active_curator
+```
+
+Separate several controlled roles with semicolons. `person_id` remains the stable identity;
+`active_curator` accepts true/false, yes/no, or 1/0 and may be true for at most one person,
+who must have the curator role. Email and ORCID use the same validation as the app.
+
+```bash
+python -m heva.workflow.people_import /path/to/project people.csv
+```
+
+The CSV is treated as the authoritative current configuration and atomically replaces
+`.heva/people.json` only after every row passes. Any invalid row leaves the former registry
+unchanged. Replacement does not rewrite person names or IDs already embedded in historical
+review, curation, or approval evidence.

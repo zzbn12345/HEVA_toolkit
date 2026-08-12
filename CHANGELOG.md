@@ -12,6 +12,8 @@
   acceptance, but validated citation remains mandatory before Data Package generation.
 - A per-document rights and access form that records source authorization and independent
   PDF, extracted-text, and annotation distribution decisions without raw JSON editing.
+- An all-or-nothing people CSV adapter with stable IDs, controlled multi-role values,
+  contact validation, explicit active-curator selection, and command-line interoperability.
 
 - A project people registry with explicit annotator, curator, and data-owner roles,
   active-curator integrity rules, and compatibility migration for former app operators.

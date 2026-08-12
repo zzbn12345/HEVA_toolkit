@@ -1,0 +1,4 @@
+person_id,name,roles,affiliation,email,orcid,active_curator
+PERSON-ANNOTATOR01,Example Original Annotator,annotator,Example University,,,false
+PERSON-CURATOR01,Example Curator,curator,Example University,curator@example.org,0000-0002-1825-0097,true
+PERSON-OWNER01,Example Data Owner,data_owner,Example Archive,,,false
