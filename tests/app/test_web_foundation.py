@@ -627,8 +627,21 @@ def test_people_and_roles_have_a_separate_project_view(tmp_path: Path) -> None:
     assert 'id="people-list"' in response.text
     assert 'id="import-people"' in response.text
     assert 'src="/static/people.js?v=2"' in response.text
+    assert 'href="/static/annotator.css?v=2"' in response.text
     assert "Add person" in response.text
     assert 'href="/">← HEVA home</a>' in response.text
+
+
+def test_shared_record_forms_use_themed_controls_and_respect_hidden_actions() -> None:
+    root = Path(__file__).parents[2] / "src" / "heva" / "app" / "static"
+    form_styles = (root / "annotator.css").read_text(encoding="utf-8")
+    app_styles = (root / "app.css").read_text(encoding="utf-8")
+
+    assert ".json-editor form" in form_styles
+    assert 'input:not([type="checkbox"]):not([type="radio"])' in form_styles
+    assert ".json-editor fieldset > label" in form_styles
+    assert ".json-editor select" in form_styles
+    assert "[hidden] { display: none !important; }" in app_styles
 
 
 def test_people_view_imports_a_validated_local_csv(

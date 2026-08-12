@@ -76,6 +76,8 @@
 
 ### Fixed
 
+- Project people and palette forms now use the shared dark-theme field layout, keep labels
+  and controls in readable rows, and reliably remove hidden actions from the page layout.
 - Batch color compatibility now returns confirmation guidance for pending source palettes
   instead of invoking unrelated citation validation and failing unexpectedly.
 - Registered external PDFs can now be previewed and inspected through their exact
