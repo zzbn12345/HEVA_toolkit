@@ -47,8 +47,9 @@ Submit a completely decided document:
 ```
 
 Submission fails while any sentence is `pending` or `needs_correction`. Once all sentences
-are `approved` or `excluded` and the citation, color configuration, and extraction gates
-also pass, the workspace enables **Submit for curator review**. Submission timestamps the
+are `approved` or `excluded` and the color configuration and extraction gates also pass,
+the workspace enables **Submit for curator review**. Citation remains visible but is a
+Data Package release gate, not a sentence-curation gate. Submission timestamps the
 annotation-process review, moves the registry document to `in_review`, and makes its
 sentence evidence read-only.
 

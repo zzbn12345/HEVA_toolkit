@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import json
 from pathlib import Path
 
@@ -12,7 +13,9 @@ from heva.workflow.curation_state import (
     create_candidate_snapshot,
     load_curation_state,
     record_curator_decision,
+    verify_current_candidate,
 )
+from heva.workflow.document_metadata import PackageMetadata
 from heva.workflow.package_validator import approve_document
 from tests.workflow.test_package_validator import project
 
@@ -99,3 +102,39 @@ def test_done_cannot_be_created_without_curator_acceptance(tmp_path: Path) -> No
             actor="Curator",
             evidence="Second decision is not permitted.",
         )
+
+
+def test_citation_can_be_completed_after_annotation_curation(tmp_path: Path) -> None:
+    document_id, package, registry_path = project(tmp_path)
+    metadata_path = package / "metadata.json"
+    metadata = PackageMetadata.model_validate_json(metadata_path.read_text(encoding="utf-8"))
+    metadata.source.title = None
+    metadata.source.creators = []
+    metadata.source.citation = None
+    metadata.source.reference = None
+    metadata.source.human_confirmed = False
+    metadata_path.write_text(metadata.model_dump_json(indent=2), encoding="utf-8")
+
+    snapshot = create_candidate_snapshot(tmp_path, document_id, submitted_by="Annotator")
+    assert snapshot.validator_report.valid is False
+    assert snapshot.validator_report.curation_ready is True
+    record_curator_decision(
+        tmp_path,
+        document_id,
+        decision="accepted",
+        actor="Curator",
+        evidence="The annotations and source comparison were reviewed.",
+    )
+
+    metadata.source.title = "Harbour report"
+    metadata.source.creators = ["Author"]
+    metadata.source.citation = "Author. Harbour report."
+    metadata.source.reference = "https://example.org/report"
+    metadata.source.human_confirmed = True
+    metadata.source.confirmed_by = "Data owner"
+    metadata.source.confirmed_at = datetime.fromisoformat("2026-08-12T10:00:00+00:00")
+    metadata_path.write_text(metadata.model_dump_json(indent=2), encoding="utf-8")
+
+    assert verify_current_candidate(tmp_path, document_id).candidate_id == snapshot.candidate_id
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    assert registry["documents"][0]["status"] == "done"

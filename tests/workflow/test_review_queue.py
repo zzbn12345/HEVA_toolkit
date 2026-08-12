@@ -98,6 +98,7 @@ def write_ready_metadata(
             reference="https://example.org/source",
             human_confirmed=citation_confirmed,
             confirmed_by="Annotator" if citation_confirmed else None,
+            confirmed_at="2026-07-29T08:30:00Z" if citation_confirmed else None,
         ),
         annotator=AnnotatorMetadata(name="Annotator"),
         rights=RightsMetadata(
@@ -277,7 +278,7 @@ def test_ready_document_submission_updates_metadata_and_locks_review(
         )
 
 
-def test_incomplete_document_explains_failed_gate(tmp_path: Path) -> None:
+def test_unconfirmed_citation_does_not_block_annotation_submission(tmp_path: Path) -> None:
     documents = prepared_project(tmp_path)
     entry = documents[0]
     document_id = str(entry["document_id"])
@@ -292,13 +293,11 @@ def test_incomplete_document_explains_failed_gate(tmp_path: Path) -> None:
 
     item = next(row for row in list_review_queue(tmp_path) if row.document_id == document_id)
 
-    assert item.annotation_complete is False
+    assert item.annotation_complete is True
     assert item.readiness_gates == {
         "citation": False,
         "color_configuration": True,
         "extraction": True,
         "sentence_review": True,
     }
-    assert item.blocking_reasons == [
-        "Review and confirm the document citation details."
-    ]
+    assert item.blocking_reasons == []

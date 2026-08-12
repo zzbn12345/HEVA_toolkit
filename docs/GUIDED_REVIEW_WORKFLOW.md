@@ -72,19 +72,19 @@ terms.
 
 Every row also shows an annotation-readiness result:
 
-- **Incomplete** means at least one citation, color configuration, extraction, or sentence
-  review requirement still needs attention.
-- **Complete** means citation details and the color configuration are confirmed, a
-  persisted sentence inventory exists, and every sentence has an approved or excluded
-  human decision.
+- **Incomplete** means at least one annotation-curation requirement—color configuration,
+  extraction, or sentence review—still needs attention.
+- **Complete** means the color configuration is confirmed, a persisted sentence inventory
+  exists, and every sentence has an approved or excluded human decision.
 
 This completion result describes annotator preparation. It does not mean that a curator
 has accepted the document; curator acceptance is a later workflow decision.
 
-The dashboard displays the four gates separately—Citation, Colors, Extraction, and
-Sentences—and lists corrective actions for every failed gate. Users may filter the list to
-all, incomplete, or complete documents. A 100% sentence-review bar does not make a
-document complete when another gate still requires attention.
+The dashboard displays Citation, Colors, Extraction, and Sentences separately. Citation is
+a release requirement and may remain open during annotation curation; the other three
+determine whether annotations can be submitted. Users may filter the list to all,
+incomplete, or complete documents. A 100% sentence-review bar does not make a document
+complete when another annotation-curation gate still requires attention.
 
 Every row provides an **Edit this annotation** action. If the document is already
 registered, editing reuses its source and persisted package state. **Add document** is a
@@ -240,7 +240,8 @@ incorrect boundaries.
 
 The document workspace shows the same Citation, Colors, Extraction, and Sentences gates as
 the project dashboard. The readiness display refreshes after every sentence decision or
-correction. **Submit for curator review** remains unavailable until all four gates pass.
+correction. **Submit for curator review** requires Colors, Extraction, and Sentences;
+Citation may be completed before or after curator acceptance but must pass before release.
 
 Submitting timestamps completion in the package's annotation-process metadata and changes
 the registry state to `in_review`. The sentence workspace then becomes read-only and
@@ -255,14 +256,16 @@ to the curator; a later correction workflow must explicitly return the document 
 - Editing a registered PDF displays it immediately without another file selection.
 - Document settings persist and keep source authors separate from annotators.
 - The global annotator profile is entered once and reused across document records.
-- Each record shows Complete or Incomplete based on confirmed citation, confirmed color
-  configuration, persisted extraction, and finalized sentence decisions.
+- Each record shows Complete or Incomplete based on confirmed color configuration,
+  persisted extraction, and finalized sentence decisions; citation readiness remains a
+  separate visible release gate.
 - Automatically proposed citation details require explicit human review.
 - Color mappings remain document-local and require an explicit human decision.
 - Every extracted sentence has a precise persisted review state.
 - Batch review affects only visible, selected sentences and creates individual audit events.
 - Flagged sentences remain visible and require human resolution.
 - A document cannot enter In review with pending or needs-correction sentences.
-- A document cannot be submitted until citation, colors, extraction, and sentence review
-  are all complete; submitted evidence becomes read-only.
+- A document cannot be submitted until colors, extraction, and sentence review are
+  complete; submitted annotation evidence becomes read-only while citation may still be
+  completed for release.
 - The PDF and review list remain independently scrollable.

@@ -66,6 +66,12 @@ have curator acceptance and data-owner approval, and the project must have valid
 metadata. A successful workspace validation therefore does not automatically mean that a
 release can be generated.
 
+Citation may be completed programmatically or through the document form after annotation
+curation. Curator evidence is checksummed independently of citation fields, so adding or
+correcting bibliographic details does not erase an accepted annotation decision. Changes
+to annotations, color/process metadata, sentence decisions, or the source file still make
+that evidence stale and require resubmission.
+
 This creates:
 
 ```text

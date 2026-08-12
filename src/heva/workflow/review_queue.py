@@ -93,8 +93,6 @@ def _readiness(
         and source.citation
         and (source.reference or source.not_findable_reason)
     )
-    if not citation_ready:
-        reasons.append("Review and confirm the document citation details.")
 
     colors = metadata.color_configuration if metadata else None
     color_ready = bool(
@@ -204,7 +202,14 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
                 source_state=entry.source_state,
                 review_available=True,
                 completion_percent=completion_percent,
-                annotation_complete=all(gates.values()),
+                annotation_complete=all(
+                    gates[name]
+                    for name in (
+                        "color_configuration",
+                        "extraction",
+                        "sentence_review",
+                    )
+                ),
                 readiness_gates=gates,
                 blocking_reasons=reasons,
                 counts=ReviewCounts(
@@ -302,7 +307,7 @@ def submit_review_document(
     *,
     submitted_by: str,
 ) -> dict[str, Any]:
-    """Finish annotator review only when the shared four-gate projection passes."""
+    """Submit completed annotation curation while leaving citation as a release gate."""
 
     root = Path(project_root).resolve()
     summary = next(

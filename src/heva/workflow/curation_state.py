@@ -14,6 +14,7 @@ from heva.workflow.package_validator import (
     DocumentValidation,
     PackageValidationError,
     approve_document,
+    curation_blocking_issues,
     validate_document_package,
 )
 from heva.workflow.project_registry import (
@@ -25,6 +26,7 @@ from heva.workflow.project_registry import (
 
 
 CURATION_VERSION = "1.0"
+EVIDENCE_VERSION = "1.1"
 CURATION_FILENAME = "curation-state.json"
 SNAPSHOT_FILES = (
     "annotations.json",
@@ -39,6 +41,7 @@ class CandidateSnapshot(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     candidate_id: str
+    evidence_version: Literal["1.0", "1.1"] = "1.0"
     created_at: datetime
     submitted_by: str
     source_checksum_sha256: str
@@ -110,6 +113,19 @@ def _file_checksum(path: Path) -> str:
         raise CurationError(f"Cannot read candidate evidence {path.name}: {error}") from error
 
 
+def _candidate_checksum(path: Path, filename: str, evidence_version: str) -> str:
+    """Hash curation evidence while allowing citation completion after review."""
+
+    if filename != "metadata.json" or evidence_version == "1.0":
+        return _file_checksum(path)
+    try:
+        metadata = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise CurationError(f"Cannot read candidate evidence {path.name}: {error}") from error
+    metadata.pop("source", None)
+    return hashlib.sha256(_canonical_bytes(metadata)).hexdigest()
+
+
 def _write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -164,28 +180,31 @@ def create_candidate_snapshot(
     root = Path(project_root).resolve()
     _, entry = _registry_entry(root, document_id)
     report = validate_document_package(root, document_id)
-    if not report.valid:
-        codes = ", ".join(
-            issue.code for issue in report.issues if issue.severity == "error"
-        )
-        raise CurationError(f"Candidate failed HEVA validation: {codes}")
+    blockers = curation_blocking_issues(report)
+    if blockers:
+        codes = ", ".join(issue.code for issue in blockers)
+        raise CurationError(f"Candidate failed HEVA curation checks: {codes}")
     package = root / entry.package_path
     checksums = {
-        filename: _file_checksum(
+        filename: _candidate_checksum(
             document_workspace_directory(root, document_id) / filename
             if filename == "review-state.json"
-            else package / filename
+            else package / filename,
+            filename,
+            EVIDENCE_VERSION,
         )
         for filename in SNAPSHOT_FILES
     }
     identity = {
         "document_id": document_id,
         "source_checksum_sha256": entry.checksum_sha256,
+        "evidence_version": EVIDENCE_VERSION,
         "file_checksums_sha256": checksums,
         "validator_report": report.model_dump(mode="json"),
     }
     snapshot = CandidateSnapshot(
         candidate_id=hashlib.sha256(_canonical_bytes(identity)).hexdigest(),
+        evidence_version=EVIDENCE_VERSION,
         created_at=datetime.now(timezone.utc),
         submitted_by=submitted_by,
         source_checksum_sha256=entry.checksum_sha256,
@@ -216,10 +235,12 @@ def verify_current_candidate(
         raise CurationError("This document has no submitted candidate snapshot.")
     package = root / entry.package_path
     current = {
-        filename: _file_checksum(
+        filename: _candidate_checksum(
             document_workspace_directory(root, document_id) / filename
             if filename == "review-state.json"
-            else package / filename
+            else package / filename,
+            filename,
+            candidate.evidence_version,
         )
         for filename in SNAPSHOT_FILES
     }

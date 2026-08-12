@@ -60,7 +60,11 @@ class SourceMetadata(BaseModel):
 def citation_is_valid(source: SourceMetadata) -> bool:
     """Return whether citation evidence passed either supported validation route."""
 
-    return source.human_confirmed or (
+    return (
+        source.human_confirmed
+        and bool(source.confirmed_by)
+        and source.confirmed_at is not None
+    ) or (
         source.validation_method == "programmatic"
         and bool(source.validated_by)
         and source.validated_at is not None
@@ -312,6 +316,14 @@ def validate_review_readiness(metadata: PackageMetadata) -> ReadinessReport:
                 "$.source.not_findable_reason",
                 "The source is not publicly findable; the explanation is recorded.",
                 severity="warning",
+            )
+        )
+    if not citation_is_valid(source):
+        issues.append(
+            _issue(
+                "citation_not_validated",
+                "$.source.validation_method",
+                "Citation details require human confirmation or validated programmatic provenance.",
             )
         )
     if not metadata.annotator.name:

@@ -71,6 +71,9 @@ def ready_metadata(document_id: str) -> PackageMetadata:
             creators=["Author"],
             citation="Author (2025), Harbour report.",
             reference="https://example.org/report",
+            human_confirmed=True,
+            confirmed_by="Annotator",
+            confirmed_at="2026-07-24T08:30:00Z",
         ),
         annotator=AnnotatorMetadata(name="Annotator"),
         rights=RightsMetadata(

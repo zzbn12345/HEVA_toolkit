@@ -32,6 +32,15 @@ RELEASE_VERSION = "1.0"
 DEFAULT_RELEASE_DIRECTORY = Path("exports/heva-data-package")
 DEFAULT_DATASET_METADATA_PATH = Path("dataset-metadata.json")
 TOOLKIT_VERSION = "0.1.0"
+CITATION_REQUIREMENT_CODES = frozenset(
+    {
+        "missing_source_title",
+        "missing_source_creator",
+        "missing_citation",
+        "missing_findability",
+        "citation_not_validated",
+    }
+)
 
 
 class DatasetReleaseMetadata(BaseModel):
@@ -104,6 +113,7 @@ class DocumentValidation(BaseModel):
     workflow_status: str
     completed: bool
     valid: bool
+    curation_ready: bool = False
     release_ready: bool
     issues: list[ValidationIssue]
 
@@ -136,6 +146,16 @@ class ProjectValidation(BaseModel):
 
 class PackageValidationError(ValueError):
     """Raised when validation or release creation cannot proceed safely."""
+
+
+def curation_blocking_issues(report: DocumentValidation) -> list[ValidationIssue]:
+    """Return errors that block annotation curation, excluding release-only citation."""
+
+    return [
+        issue
+        for issue in report.issues
+        if issue.severity == "error" and issue.code not in CITATION_REQUIREMENT_CODES
+    ]
 
 
 def _guide_for_issue(code: str, path: str) -> str:
@@ -308,7 +328,11 @@ def validate_document_package(
                         item.code,
                         f"$.package_metadata{item.path[1:]}",
                         item.message,
-                        "Complete or correct this metadata before curator approval.",
+                        (
+                            "Complete and validate the citation before Data Package generation."
+                            if item.code in CITATION_REQUIREMENT_CODES
+                            else "Complete or correct this metadata before curator approval."
+                        ),
                         item.severity,
                     )
                 )
@@ -463,12 +487,17 @@ def validate_document_package(
                 )
 
     blocking = any(item.severity == "error" for item in issues)
+    curation_blocking = any(
+        item.severity == "error" and item.code not in CITATION_REQUIREMENT_CODES
+        for item in issues
+    )
     return DocumentValidation(
         document_id=document_id,
         source_path=entry.source_path,
         workflow_status=entry.status,
         completed=entry.status == "done",
         valid=not blocking,
+        curation_ready=not curation_blocking,
         release_ready=not blocking and entry.status == "done",
         issues=issues,
     )
@@ -559,9 +588,10 @@ def approve_document(project_root: str | Path, document_id: str) -> None:
     if entry.status != "in_review":
         raise PackageValidationError("Only a document in_review can be approved.")
     report = validate_document_package(root, document_id)
-    if not report.valid:
-        codes = ", ".join(item.code for item in report.issues if item.severity == "error")
-        raise PackageValidationError(f"Document failed validation: {codes}")
+    blockers = curation_blocking_issues(report)
+    if blockers:
+        codes = ", ".join(item.code for item in blockers)
+        raise PackageValidationError(f"Document failed curation checks: {codes}")
     entry.status = "done"
     registry.summary = RegistrySummary(
         total=len(registry.documents),

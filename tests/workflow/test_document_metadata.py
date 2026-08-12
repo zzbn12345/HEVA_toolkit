@@ -33,6 +33,9 @@ def complete_metadata(document_id: str = "HEVA-EXAMPLE") -> PackageMetadata:
             creators=["Example Author"],
             citation="Example Author (2011), Galle heritage report.",
             reference="https://example.org/galle-report",
+            human_confirmed=True,
+            confirmed_by="Research Annotator",
+            confirmed_at="2026-07-23T14:00:00Z",
         ),
         annotator=AnnotatorMetadata(
             name="Research Annotator",
