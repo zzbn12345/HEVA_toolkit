@@ -23,7 +23,16 @@ from heva.workflow.automatic_color_proposal import (
     AutomaticColorProposalError,
     generate_automatic_color_proposals,
 )
-from heva.workflow.document_metadata import AnnotatorMetadata, citation_is_valid
+from heva.workflow.document_metadata import (
+    AnnotatorMetadata,
+    RightsMetadata,
+    citation_is_valid,
+)
+from heva.workflow.document_rights import (
+    DocumentRightsError,
+    load_document_rights,
+    save_document_rights,
+)
 from heva.workflow.color_mapping import (
     apply_shared_color_mapping,
     ColorMappingError,
@@ -216,6 +225,13 @@ def create_project_router(
     @router.get("/dataset-metadata", response_class=HTMLResponse)
     def dataset_metadata_page() -> str:
         return template("dataset_metadata.html")
+
+    @router.get("/documents/{document_id}/rights", response_class=HTMLResponse)
+    def document_rights_page(document_id: str) -> str:
+        return template("document_rights.html").replace(
+            "DOCUMENT_ID_PLACEHOLDER",
+            document_id,
+        )
 
     @router.get("/health")
     def health() -> dict[str, str]:
@@ -939,6 +955,26 @@ def create_project_router(
             )
         payload = report.model_dump(mode="json")
         return JSONResponse(payload, status_code=200)
+
+    @router.get("/api/documents/{document_id}/rights")
+    def get_document_rights(document_id: str):
+        """Return one validated rights record for safe form editing."""
+
+        try:
+            rights = load_document_rights(root, document_id)
+        except DocumentRightsError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return rights.model_dump(mode="json")
+
+    @router.put("/api/documents/{document_id}/rights")
+    def put_document_rights(document_id: str, rights: RightsMetadata):
+        """Persist explicit source and derivative distribution decisions."""
+
+        try:
+            saved = save_document_rights(root, document_id, rights)
+        except DocumentRightsError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return saved.model_dump(mode="json")
 
     @router.get("/api/dataset-metadata")
     def get_dataset_metadata():

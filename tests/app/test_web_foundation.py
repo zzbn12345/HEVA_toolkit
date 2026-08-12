@@ -1134,7 +1134,7 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=7"' in response.text
+    assert 'src="/static/review_document.js?v=8"' in response.text
     assert 'href="/static/review.css?v=7"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
@@ -1150,6 +1150,7 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     assert 'id="add-entity"' not in response.text
     assert 'id="edit-page" type="number" readonly' in response.text
     assert 'id="review-citation-link"' in response.text
+    assert 'id="review-rights-link"' in response.text
     assert 'id="review-colors-link"' in response.text
     assert 'href="/people"' in response.text
     assert 'id="review-readiness"' in response.text
@@ -1384,6 +1385,41 @@ def test_registered_document_citation_can_be_confirmed_by_active_annotator(
     assert confirmed.status_code == 200
     assert confirmed.json()["human_confirmed"] is True
     assert confirmed.json()["confirmed_by"] == "Citation Reviewer"
+
+
+def test_document_rights_form_persists_explicit_distribution_boundaries(
+    tmp_path: Path,
+) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"authorized source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    client = TestClient(create_app(tmp_path))
+    client.get(f"/api/documents/{document_id}/citation")
+    payload = {
+        "access_level": "restricted",
+        "authorization_status": "authorized",
+        "authorization_date": "2026-08-12",
+        "authorized_by": "Rights holder",
+        "evidence_reference": "agreements/source-authorization",
+        "source_distribution_allowed": False,
+        "extracted_text_distribution_allowed": True,
+        "annotation_distribution_allowed": True,
+        "license": "CC-BY-4.0",
+        "embargo_until": None,
+    }
+
+    page = client.get(f"/documents/{document_id}/rights")
+    saved = client.put(f"/api/documents/{document_id}/rights", json=payload)
+    loaded = client.get(f"/api/documents/{document_id}/rights")
+
+    assert page.status_code == 200
+    assert "Record rights and access" in page.text
+    assert 'src="/static/document_rights.js?v=1"' in page.text
+    assert saved.status_code == 200
+    assert loaded.json() == payload
 
 
 def test_citation_confirmation_explains_missing_findability(tmp_path: Path) -> None:

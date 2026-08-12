@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Document rights · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/dataset_metadata.css?v=1">
+  <script src="/static/document_rights.js?v=1" defer></script>
+</head>
+<body data-document-id="DOCUMENT_ID_PLACEHOLDER">
+  <header class="topbar"><a class="home-link" href="/">← HEVA home</a><nav class="topbar-links"><a class="guide-link" href="/guide/DOCUMENT_METADATA">Rights guide</a><a id="return-to-review" class="button secondary" href="/review">Return to document review</a></nav></header>
+  <main class="page-content dataset-page">
+    <p class="eyebrow">Document authorization</p>
+    <h1>Record rights and access</h1>
+    <p class="lead">State what is authorized for this source and separately what may be distributed. This does not replace the data owner's final approval of the Data Package.</p>
+    <div id="rights-status" class="notice neutral" aria-live="polite">Loading document rights…</div>
+    <form id="rights-form" class="dataset-form">
+      <div class="field-grid">
+        <label>Source access level <span aria-hidden="true">*</span><select name="access_level" required><option value="">Choose…</option><option value="public">Public</option><option value="restricted">Restricted</option><option value="private">Private</option></select></label>
+        <label>Authorization status <span aria-hidden="true">*</span><select name="authorization_status" required><option value="">Choose…</option><option value="authorized">Authorized</option><option value="pending">Pending</option><option value="unknown">Unknown</option><option value="denied">Denied</option></select></label>
+      </div>
+      <div class="field-grid">
+        <label>Authorization date <span aria-hidden="true">*</span><input name="authorization_date" type="date" required></label>
+        <label>Authorized by <span aria-hidden="true">*</span><input name="authorized_by" required placeholder="Person or rights-holding institution"></label>
+      </div>
+      <label>Authorization evidence reference <span aria-hidden="true">*</span><input name="evidence_reference" required placeholder="Agreement, waiver, email, or repository reference"></label>
+      <fieldset>
+        <legend>Distribution decisions</legend>
+        <div class="field-grid">
+          <label>May the source PDF/DOCX be distributed? <span aria-hidden="true">*</span><select name="source_distribution_allowed" required><option value="">Choose…</option><option value="true">Yes</option><option value="false">No</option></select></label>
+          <label>May extracted source text be distributed? <span aria-hidden="true">*</span><select name="extracted_text_distribution_allowed" required><option value="">Choose…</option><option value="true">Yes</option><option value="false">No</option></select></label>
+          <label>May HEVA annotations be distributed? <span aria-hidden="true">*</span><select name="annotation_distribution_allowed" required><option value="">Choose…</option><option value="true">Yes</option><option value="false">No</option></select></label>
+          <label>Document license or waiver <span aria-hidden="true">*</span><input name="license" required placeholder="CC-BY-4.0 or waiver reference"></label>
+        </div>
+      </fieldset>
+      <label>Embargo until <small>(optional)</small><input name="embargo_until" type="date"></label>
+      <div class="form-actions"><button class="button" type="submit">Save document rights</button><a id="continue-review" class="button secondary" href="/review">Continue document review</a></div>
+    </form>
+  </main>
+</body>
+</html>

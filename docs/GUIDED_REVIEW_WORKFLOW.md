@@ -90,6 +90,10 @@ Every row provides an **Edit this annotation** action. If the document is alread
 registered, editing reuses its source and persisted package state. **Add document** is a
 separate action that asks the user to choose a new PDF or DOCX.
 
+The document review toolbar links directly to **Citation**, **Color configuration**, and
+**Rights and access**. Rights are recorded per document because permission to inspect a
+source is not the same as permission to distribute its extracted text or annotations.
+
 ## 3. Sentence-review progress
 
 Workflow state and completion are related but different:

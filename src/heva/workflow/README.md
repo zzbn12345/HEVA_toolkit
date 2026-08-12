@@ -19,8 +19,9 @@ python -m pip install -e .
    and package paths only to explicitly registered files.
 2. `people_registry.py` distinguishes original annotators, active curators, and accountable
    data owners; `annotator_registry.py` remains a compatibility interface during migration.
-3. `document_citation.py` and `document_metadata.py` record citation, rights, and process
-   provenance; `citation_import.py` validates structured or CSV citation entry.
+3. `document_citation.py`, `document_rights.py`, and `document_metadata.py` record citation,
+   explicit distribution boundaries, and process provenance; `citation_import.py`
+   validates structured or CSV citation entry.
 4. `color_configuration_registry.py` stores immutable project conventions, while
    `color_mapping.py` preserves supervised document evidence and the applied version.
 5. `extraction_draft.py` preserves unresolved raw color evidence for collaboration;

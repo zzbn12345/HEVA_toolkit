@@ -10,6 +10,8 @@
   and limitations, persisted as project-level metadata without requiring raw JSON editing.
 - Separate curation and release readiness: citation may be completed after annotation
   acceptance, but validated citation remains mandatory before Data Package generation.
+- A per-document rights and access form that records source authorization and independent
+  PDF, extracted-text, and annotation distribution decisions without raw JSON editing.
 
 - A project people registry with explicit annotator, curator, and data-owner roles,
   active-curator integrity rules, and compatibility migration for former app operators.

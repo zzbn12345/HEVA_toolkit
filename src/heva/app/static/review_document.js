@@ -420,6 +420,8 @@ async function loadDocument() {
     `/create?document_id=${encodeURIComponent(documentId)}&section=citation`;
   document.getElementById("review-colors-link").href =
     `/create?document_id=${encodeURIComponent(documentId)}&section=colors`;
+  document.getElementById("review-rights-link").href =
+    `/documents/${encodeURIComponent(documentId)}/rights`;
   document.getElementById("review-pdf-frame").src = `/api/review/${encodeURIComponent(documentId)}/source`;
   const navigation = document.getElementById("document-navigation");
   if (result.previous_document_id) navigation.appendChild(navigationLink(result.previous_document_id, "← Previous document"));

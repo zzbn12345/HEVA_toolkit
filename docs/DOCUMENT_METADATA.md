@@ -141,6 +141,17 @@ Distribution permission is recorded separately for:
 This separation matters because permission to publish annotations does not necessarily
 include permission to redistribute the PDF or its extracted text.
 
+In the app, open a document and select **Rights and access**. The constrained form records
+access level, authorization status/date/evidence, three separate distribution decisions,
+and the document license or waiver. Rights remain editable before submission; after the
+document enters curator review they are locked with the rest of the submitted evidence.
+If rights must change, the curator first requests changes and the document returns to
+`in_progress`.
+
+This document authorization is distinct from final data-owner approval. Rights explain
+what is permitted for the source and derivatives; the named data owner separately accepts
+responsibility for distributing the exact curator-approved candidate.
+
 `color_configuration` records the colors observed in this document and their controlled
 HEVA labels. Automatic detection is only a proposal: `human_confirmed` must be true, and
 the responsible person and confirmation time must be recorded before curator review.
