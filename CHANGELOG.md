@@ -72,6 +72,9 @@
 
 ### Fixed
 
+- Registered external PDFs can now be previewed and inspected through their exact
+  machine-local binding without exposing the protected absolute path in project records.
+
 - The document review queue now responds to the width of the list itself and moves its
   action onto a second row before the table becomes too narrow, keeping **Edit this
   annotation** fully visible even inside a constrained page layout.

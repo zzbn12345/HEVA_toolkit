@@ -19,7 +19,7 @@ from heva.workflow.color_mapping import (
     resolve_color,
     save_color_configuration,
 )
-from heva.workflow.project_registry import sync_registry
+from heva.workflow.project_registry import register_external_source, sync_registry
 from heva.workflow.package_validator import PackageValidationError
 from heva.workflow.review_state import initialize_sentence_reviews
 
@@ -1354,6 +1354,29 @@ def test_registered_pdf_can_be_loaded_for_immediate_edit_preview(tmp_path: Path)
     assert source.status_code == 200
     assert source.headers["content-type"] == "application/pdf"
     assert source.headers["content-disposition"].startswith("inline;")
+
+
+def test_registered_external_pdf_can_be_previewed_without_exposing_its_path(
+    tmp_path: Path,
+) -> None:
+    project = tmp_path / "dataset"
+    project.mkdir()
+    seed = project / "seed.pdf"
+    seed.write_bytes(b"seed")
+    sync_registry(project, source_dir=".")
+    external = tmp_path / "protected-source.pdf"
+    external.write_bytes(b"%PDF-1.4\nprotected\n%%EOF")
+    document_id = register_external_source(project, external)
+    client = TestClient(create_app(project))
+
+    descriptor = client.get(f"/api/documents/{document_id}")
+    preview = client.get(f"/api/review/{document_id}/source")
+
+    assert descriptor.status_code == 200
+    assert descriptor.json()["source_path"] == "external/protected-source.pdf"
+    assert str(external) not in descriptor.text
+    assert preview.status_code == 200
+    assert preview.content == external.read_bytes()
 
 
 def test_registered_document_citation_can_be_confirmed_by_active_annotator(

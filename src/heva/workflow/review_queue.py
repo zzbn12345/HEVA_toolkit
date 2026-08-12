@@ -13,6 +13,7 @@ from heva.workflow.document_metadata import PackageMetadata, save_package_metada
 from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
     ProjectRegistry,
+    RegistryError,
     document_workspace_directory,
     resolve_document_source,
 )
@@ -359,7 +360,7 @@ def _package_for_document(root: Path, document_id: str) -> Path:
 
 
 def registered_source_path(project_root: str | Path, document_id: str) -> Path:
-    """Resolve only the exact source path recorded for one document."""
+    """Resolve only the project or machine-local source bound to a registered ID."""
 
     root = Path(project_root).resolve()
     entry = next(
@@ -368,11 +369,10 @@ def registered_source_path(project_root: str | Path, document_id: str) -> Path:
     )
     if entry is None:
         raise ReviewQueueError(f"Document {document_id} is not registered.")
-    source = resolve_document_source(root, entry)
     try:
-        source.relative_to(root)
-    except ValueError as error:
-        raise ReviewQueueError("Registered source path leaves the project directory.") from error
+        source = resolve_document_source(root, entry)
+    except RegistryError as error:
+        raise ReviewQueueError(str(error)) from error
     if not source.is_file():
         raise ReviewQueueError("The registered source file is missing.")
     return source

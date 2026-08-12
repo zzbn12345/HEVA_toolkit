@@ -13,6 +13,11 @@ bind the same authorized source on their own computer before previewing or extra
 HEVA identifies an existing external record by checksum, so rebinding does not create a
 duplicate document.
 
+Once bound, the app can preview the registered external PDF beside sentence review and use
+it for color inspection/extraction exactly like a project-local source. Browser responses
+use only the stable document ID and logical filename; the protected absolute path is never
+included in project APIs or generated Data Packages.
+
 ```python
 from heva.workflow.project_registry import register_external_source
 
