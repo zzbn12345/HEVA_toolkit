@@ -631,6 +631,75 @@ def test_people_form_supports_role_crud_and_active_curator(tmp_path: Path) -> No
     assert updated.json()["roles"] == ["curator", "data_owner"]
 
 
+def test_project_palette_view_appends_and_selects_immutable_versions(tmp_path: Path) -> None:
+    """Researchers can manage reusable semantics without editing registry JSON."""
+
+    client = TestClient(create_app(tmp_path))
+    curator = client.post(
+        "/api/people",
+        json={"name": "Palette Curator", "roles": ["curator"]},
+    ).json()
+    client.post(f"/api/people/{curator['person_id']}/activate-curator")
+
+    page = client.get("/project-colors")
+    first = client.post(
+        "/api/project-colors",
+        json={
+            "configuration_id": "research-palette",
+            "name": "Research palette",
+            "mappings": [{"label": "historic", "hexes": ["#FFFF00", "#FFF200"]}],
+        },
+    )
+    second = client.post(
+        "/api/project-colors",
+        json={
+            "configuration_id": "research-palette",
+            "name": "Research palette",
+            "description": "Revised after protocol review.",
+            "mappings": [{"label": "political", "hexes": ["#FFFF00"]}],
+        },
+    )
+    selected = client.post(
+        "/api/project-colors/select",
+        json={"configuration_id": "research-palette", "version": 1},
+    )
+    registry = client.get("/api/project-colors")
+
+    assert page.status_code == 200
+    assert "Versioned project palettes" in page.text
+    assert first.json()["version"] == 1
+    assert second.json()["version"] == 2
+    assert selected.json()["version"] == 1
+    assert len(registry.json()["configurations"]) == 2
+    assert registry.json()["selected"]["version"] == 1
+
+
+def test_project_palette_form_rejects_ambiguous_hex_meaning(tmp_path: Path) -> None:
+    """The GUI cannot create one version where a color has competing labels."""
+
+    client = TestClient(create_app(tmp_path))
+    curator = client.post(
+        "/api/people",
+        json={"name": "Palette Curator", "roles": ["curator"]},
+    ).json()
+    client.post(f"/api/people/{curator['person_id']}/activate-curator")
+
+    response = client.post(
+        "/api/project-colors",
+        json={
+            "configuration_id": "ambiguous",
+            "name": "Ambiguous",
+            "mappings": [
+                {"label": "historic", "hexes": ["#FFFF00"]},
+                {"label": "political", "hexes": ["#FFFF00"]},
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+    assert "assigned to both" in response.json()["detail"]
+
+
 def test_original_annotator_cannot_be_activated_as_curator_through_app(tmp_path: Path) -> None:
     """The interface enforces the same accountability rule as the domain contract."""
 

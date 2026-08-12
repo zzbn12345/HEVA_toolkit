@@ -50,6 +50,12 @@ In the web application, confirming a document's color decisions creates the firs
 immutable version is created only when the confirmed mapping is genuinely different. This
 makes project semantics available to extraction without JSON or Python editing.
 
+The **Project palettes** screen lists every version and identifies the exact selected one.
+Curators can create a named configuration family, add controlled label rows with one or
+several hex values, append later versions, filter the history, and deliberately select an
+earlier version. Existing fields are read-only because corrections must create a new
+version rather than rewrite the meaning used by earlier extraction.
+
 ## Python example
 
 ```python

@@ -28,6 +28,8 @@
   sources, roles, citation, versioned colors, review, curation, ownership, and release.
 - A role-aware project-people interface for original annotators, curators, and data owners,
   including safe CRUD and explicit active-curator selection for workflow attribution.
+- A project-palette interface that exposes immutable history, validates controlled
+  label/hex rows, appends revisions, and selects exact reusable versions.
 - Source-folder project roots and collaborative workspace tracking, allowing another
   researcher to clone canonical annotations plus durable extraction, review, and curation
   state while keeping caches, locks, local sessions, binaries, and exports out of Git.

@@ -123,6 +123,35 @@ class DiscoveredSourcesInput(BaseModel):
     source_paths: list[str]
 
 
+class ProjectPaletteMappingInput(BaseModel):
+    """One safe form row in a reusable project palette."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    hexes: list[str]
+
+
+class ProjectPaletteInput(BaseModel):
+    """Fields required to append one immutable project palette version."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    configuration_id: str
+    name: str
+    description: str | None = None
+    mappings: list[ProjectPaletteMappingInput]
+
+
+class ProjectPaletteSelectionInput(BaseModel):
+    """Reference to one exact immutable palette version."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    configuration_id: str
+    version: int
+
+
 def create_project_router(
     root: ProjectContext,
     template: Callable[[str], str],
@@ -161,6 +190,10 @@ def create_project_router(
     @router.get("/people", response_class=HTMLResponse)
     def people_page() -> str:
         return template("people.html")
+
+    @router.get("/project-colors", response_class=HTMLResponse)
+    def project_colors_page() -> str:
+        return template("project_colors.html")
 
     @router.get("/health")
     def health() -> dict[str, str]:
@@ -752,6 +785,42 @@ def create_project_router(
         try:
             return remove_person(root, person_id).model_dump(mode="json")
         except PeopleRegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.get("/api/project-colors")
+    def project_color_versions():
+        """List immutable palette versions and the exact active selection."""
+
+        try:
+            return load_color_configuration_registry(root).model_dump(mode="json")
+        except ProjectColorConfigurationError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.post("/api/project-colors", status_code=201)
+    def create_project_color_version(payload: ProjectPaletteInput):
+        """Append a curator-attributed palette version without editing prior versions."""
+
+        try:
+            return create_color_configuration_version(
+                root,
+                configuration_id=payload.configuration_id,
+                name=payload.name,
+                description=payload.description,
+                mappings=[mapping.model_dump() for mapping in payload.mappings],
+            ).model_dump(mode="json")
+        except (ValueError, ProjectColorConfigurationError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.post("/api/project-colors/select")
+    def select_project_color_version(payload: ProjectPaletteSelectionInput):
+        """Select one existing version without changing its semantic content."""
+
+        try:
+            selected = select_color_configuration(
+                root, payload.configuration_id, payload.version
+            )
+            return selected.model_dump(mode="json")
+        except ProjectColorConfigurationError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
 
     @router.put("/api/annotator")

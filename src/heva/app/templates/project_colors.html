@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project palettes · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/annotator.css">
+  <script src="/static/project_colors.js?v=1" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="home-link" href="/">← HEVA home</a><nav class="topbar-links"><a class="guide-link" href="/guide/PROJECT_COLOR_CONFIGURATIONS">Palette guide</a><a class="button secondary" href="/create">Prepare a document</a></nav></header>
+  <main class="annotator-page">
+    <header class="annotator-heading"><div><p class="eyebrow">Project configuration</p><h1>Versioned project palettes</h1><p class="lead">Inspect the semantic color convention used across documents. Changes always append a version; earlier versions remain reproducible.</p></div><button id="new-palette" class="button" type="button">＋ Create version</button></header>
+    <div id="palette-status" class="notice neutral" aria-live="polite">Loading project palettes…</div>
+    <div class="annotator-workspace">
+      <aside class="annotator-list-panel"><label for="palette-filter">Filter versions</label><input id="palette-filter" type="search" placeholder="Name, ID, label…"><div id="palette-list" class="annotator-list"></div></aside>
+      <section class="json-editor">
+        <header class="editor-header"><div><p class="eyebrow">Immutable version</p><h2 id="palette-title">Create palette version</h2></div><span id="selected-palette-badge" class="active-badge" hidden>Selected</span></header>
+        <form id="palette-form" class="editor-panel active">
+          <label>Configuration ID <span aria-hidden="true">*</span><input name="configuration_id" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required></label>
+          <label>Name <span aria-hidden="true">*</span><input name="name" required></label>
+          <label>Description <small>(optional)</small><textarea name="description" rows="2"></textarea></label>
+          <fieldset><legend>Color meanings</legend><div id="palette-mappings"></div><button id="add-palette-mapping" class="button secondary" type="button">＋ Add color meaning</button></fieldset>
+          <div class="form-actions"><button id="save-palette" class="button" type="submit">Create immutable version</button><button id="select-palette" class="button secondary" type="button" hidden>Select this version</button></div>
+          <p class="profile-help">Use comma-separated six-digit hex values when several shades represent the same HEVA label.</p>
+        </form>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
