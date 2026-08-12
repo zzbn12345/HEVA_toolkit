@@ -14,6 +14,8 @@
   PDF, extracted-text, and annotation distribution decisions without raw JSON editing.
 - An all-or-nothing people CSV adapter with stable IDs, controlled multi-role values,
   contact validation, explicit active-curator selection, and command-line interoperability.
+- A native people-CSV import action in the role-management view, reusing the strict adapter
+  and warning before authoritative current configuration is replaced.
 
 - A project people registry with explicit annotator, curator, and data-owner roles,
   active-curator integrity rules, and compatibility migration for former app operators.

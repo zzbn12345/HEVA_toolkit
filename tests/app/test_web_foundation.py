@@ -625,8 +625,26 @@ def test_people_and_roles_have_a_separate_project_view(tmp_path: Path) -> None:
     assert "Data owner" in response.text
     assert 'id="person-form"' in response.text
     assert 'id="people-list"' in response.text
+    assert 'id="import-people"' in response.text
+    assert 'src="/static/people.js?v=2"' in response.text
     assert "Add person" in response.text
     assert 'href="/">← HEVA home</a>' in response.text
+
+
+def test_people_view_imports_a_validated_local_csv(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = Path(__file__).parents[1] / "fixtures" / "people.csv"
+    monkeypatch.setattr(project_routes, "select_local_csv_file", lambda _prompt: str(fixture))
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/people/import-csv")
+
+    assert response.status_code == 200
+    assert response.json()["imported"] == 3
+    assert response.json()["registry"]["active_curator_id"] == "PERSON-CURATOR01"
+    assert (tmp_path / ".heva/people.json").is_file()
 
 
 def test_people_form_supports_role_crud_and_active_curator(tmp_path: Path) -> None:

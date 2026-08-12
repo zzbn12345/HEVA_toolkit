@@ -92,3 +92,7 @@ The CSV is treated as the authoritative current configuration and atomically rep
 `.heva/people.json` only after every row passes. Any invalid row leaves the former registry
 unchanged. Replacement does not rewrite person names or IDs already embedded in historical
 review, curation, or approval evidence.
+
+The same adapter is available through **People and roles → Import people CSV**. The local
+app opens the operating system file chooser, warns before replacement, and shows either
+the imported count or the exact validation error. Cancelling the chooser changes nothing.

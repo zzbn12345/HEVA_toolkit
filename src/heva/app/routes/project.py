@@ -73,6 +73,7 @@ from heva.workflow.people_registry import (
     remove_person,
     update_person,
 )
+from heva.workflow.people_import import PeopleImportError, import_people_csv
 from heva.workflow.extraction_session import (
     ExtractionSessionError,
     load_extraction_checkpoint_status,
@@ -111,7 +112,12 @@ RELEASE_FILENAMES = frozenset(
     }
 )
 from heva.app.project_context import ProjectContext
-from heva.app.folder_picker import FolderPickerUnavailable, select_local_folder, select_local_source_file
+from heva.app.folder_picker import (
+    FolderPickerUnavailable,
+    select_local_csv_file,
+    select_local_folder,
+    select_local_source_file,
+)
 
 
 class ColorDecisionInput(BaseModel):
@@ -801,6 +807,26 @@ def create_project_router(
             return add_person(root, person).model_dump(mode="json")
         except PeopleRegistryError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.post("/api/people/import-csv")
+    def import_people_spreadsheet():
+        """Choose and atomically import one authoritative local people CSV."""
+
+        try:
+            selected = select_local_csv_file("Choose the authoritative HEVA people CSV")
+        except FolderPickerUnavailable as error:
+            raise HTTPException(status_code=501, detail=str(error)) from error
+        if selected is None:
+            return {"selected": False}
+        try:
+            registry = import_people_csv(root, selected)
+        except PeopleImportError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {
+            "selected": True,
+            "imported": len(registry.people),
+            "registry": registry.model_dump(mode="json"),
+        }
 
     @router.put("/api/people/{person_id}")
     def replace_person(person_id: str, person: PersonRecord):

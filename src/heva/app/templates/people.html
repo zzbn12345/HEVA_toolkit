@@ -6,7 +6,7 @@
   <title>Project people · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/annotator.css">
-  <script src="/static/people.js?v=1" defer></script>
+  <script src="/static/people.js?v=2" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -20,7 +20,7 @@
         <h1>People and workflow roles</h1>
         <p class="lead">Record who annotated the source, who curates it in HEVA, and who is accountable for distribution. One person may hold several roles.</p>
       </div>
-      <button id="new-person" class="button" type="button">＋ Add person</button>
+      <div class="form-actions"><button id="import-people" class="button secondary" type="button">Import people CSV</button><button id="new-person" class="button" type="button">＋ Add person</button></div>
     </header>
     <div id="people-status" class="notice neutral" aria-live="polite">Loading project people…</div>
     <div class="annotator-workspace">

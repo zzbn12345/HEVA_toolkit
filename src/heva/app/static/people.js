@@ -142,6 +142,23 @@ document.getElementById("remove-person").addEventListener("click", async () => {
   showStatus("success", `${person.name} was removed from current configuration.`);
 });
 
+document.getElementById("import-people").addEventListener("click", async () => {
+  if (!window.confirm("Importing a CSV replaces current project people after all rows validate. Continue?")) return;
+  const response = await fetch("/api/people/import-csv", {method: "POST"});
+  const result = await response.json();
+  if (!response.ok) {
+    showStatus("error", result.detail || "The people CSV was not imported.");
+    return;
+  }
+  if (!result.selected) {
+    showStatus("neutral", "People CSV selection was cancelled; no project data changed.");
+    return;
+  }
+  selectedId = result.registry.active_curator_id;
+  await loadPeople(selectedId);
+  showStatus("success", `Imported ${result.imported} people from the validated CSV.`);
+});
+
 document.getElementById("new-person").addEventListener("click", () => selectPerson(null));
 filter.addEventListener("input", renderList);
 loadPeople();
