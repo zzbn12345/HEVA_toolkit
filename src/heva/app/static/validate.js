@@ -1,5 +1,8 @@
 const button = document.getElementById("validate-project");
 const downloadButton = document.getElementById("download-validation");
+const releaseButton = document.getElementById("generate-release");
+const releaseLink = document.getElementById("download-release");
+const releaseStatus = document.getElementById("release-status");
 const statusBox = document.getElementById("validation-status");
 const summaryBox = document.getElementById("validation-summary");
 const results = document.getElementById("validation-results");
@@ -225,3 +228,31 @@ document.querySelectorAll("[data-validation-filter]").forEach((filterButton) => 
 
 button.addEventListener("click", runValidation);
 downloadButton.addEventListener("click", downloadReport);
+
+/** Build the release through the same guarded domain boundary used by scripts. */
+async function generateRelease() {
+  releaseButton.disabled = true;
+  releaseLink.hidden = true;
+  releaseStatus.className = "notice neutral";
+  releaseStatus.textContent = "Checking final release gates and generating derivatives…";
+  try {
+    const response = await fetch("/api/release", {method: "POST"});
+    const result = await response.json();
+    if (!response.ok) {
+      releaseStatus.className = "notice error";
+      releaseStatus.textContent = `${result.message || "Data Package generation failed."} ${result.action || ""}`;
+      return;
+    }
+    releaseStatus.className = "notice success";
+    releaseStatus.textContent = `Generated ${result.files.length} release files: ${result.files.join(", ")}.`;
+    releaseLink.href = result.download;
+    releaseLink.hidden = false;
+  } catch (error) {
+    releaseStatus.className = "notice error";
+    releaseStatus.textContent = "The local service could not generate the Data Package.";
+  } finally {
+    releaseButton.disabled = false;
+  }
+}
+
+releaseButton.addEventListener("click", generateRelease);

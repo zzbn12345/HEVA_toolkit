@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
+from zipfile import ZipFile
 
 from fastapi.testclient import TestClient
 import pytest
@@ -18,6 +20,7 @@ from heva.workflow.color_mapping import (
     save_color_configuration,
 )
 from heva.workflow.project_registry import sync_registry
+from heva.workflow.package_validator import PackageValidationError
 from heva.workflow.review_state import initialize_sentence_reviews
 
 
@@ -900,7 +903,9 @@ def test_validation_page_exposes_report_runner_filters_and_download(
     assert 'data-validation-filter="issues"' in response.text
     assert 'data-validation-filter="completed"' in response.text
     assert 'data-validation-filter="incomplete"' in response.text
-    assert 'src="/static/validate.js?v=4"' in response.text
+    assert 'src="/static/validate.js?v=5"' in response.text
+    assert 'id="generate-release"' in response.text
+    assert 'id="download-release"' in response.text
     assert 'href="/static/validation.css?v=2"' in response.text
     script = (
         Path(__file__).parents[2]
@@ -912,6 +917,57 @@ def test_validation_page_exposes_report_runner_filters_and_download(
     ).read_text(encoding="utf-8")
     assert '"Read the relevant guide"' in script
     assert "/guide/${issue.guide" in script
+
+
+def test_app_generates_and_downloads_only_release_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    release = tmp_path / "release"
+    release.mkdir()
+    (release / "datapackage.json").write_text('{"name":"demo"}', encoding="utf-8")
+    (release / "heva-annotations.csv").write_text("sentence_id,text\n1,Demo\n", encoding="utf-8")
+    (release / "source.pdf").write_bytes(b"must not be distributed")
+    included = {"datapackage.json", "heva-annotations.csv"}
+
+    def fake_build_release(_root: Path) -> Path:
+        return release
+
+    monkeypatch.setattr(project_routes, "build_release", fake_build_release)
+    client = TestClient(create_app(tmp_path))
+
+    generated = client.post("/api/release")
+    first = client.get("/api/release/download")
+    second = client.get("/api/release/download")
+
+    assert generated.status_code == 200
+    assert generated.json()["files"] == sorted(included)
+    assert first.status_code == 200
+    assert first.headers["content-type"] == "application/zip"
+    assert first.content == second.content
+    with ZipFile(BytesIO(first.content)) as archive:
+        assert set(archive.namelist()) == {
+            f"heva-data-package/{name}" for name in included
+        }
+        assert all(".pdf" not in name for name in archive.namelist())
+
+
+def test_app_explains_release_gate_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_release(_root: Path) -> Path:
+        raise PackageValidationError("Document lacks data-owner approval.")
+
+    monkeypatch.setattr(project_routes, "build_release", fail_release)
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/release")
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "release_not_generated"
+    assert response.json()["message"] == "Document lacks data-owner approval."
+    assert response.json()["action"]
 
 
 def test_review_queue_opens_only_one_document_at_a_time(tmp_path: Path) -> None:

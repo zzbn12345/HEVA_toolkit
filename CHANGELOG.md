@@ -4,6 +4,9 @@
 
 ### Added
 
+- Data Package generation from the validation view, with exact release-gate feedback and
+  a deterministic annotation-only ZIP that excludes source documents and workspace state.
+
 - A project people registry with explicit annotator, curator, and data-owner roles,
   active-curator integrity rules, and compatibility migration for former app operators.
 - Immutable, curator-attributed project color-configuration versions that allow several

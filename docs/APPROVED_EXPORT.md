@@ -52,6 +52,13 @@ Build the release candidate with:
 ./venv/bin/python -m heva.workflow.package_validator . release
 ```
 
+The same guarded operation is available on the app's **Validate** page. Select
+**Generate Data Package** after fixing the validation report, then download the generated
+ZIP. The app still checks the stricter release requirements: every included document must
+have curator acceptance and data-owner approval, and the project must have valid dataset
+metadata. A successful workspace validation therefore does not automatically mean that a
+release can be generated.
+
 This creates:
 
 ```text
@@ -75,3 +82,6 @@ line endings have stable ordering, so unchanged approved inputs produce identica
 The output is a **FAIR candidate**, not a publication: repository deposit remains an
 explicit human decision. HEVA does not generate an example model prompt until the dataset
 and controlled vocabulary have separately been approved for release.
+
+The downloaded ZIP is only a portable wrapper around these four deterministic files. It
+does not add source PDFs, local paths, review state, or other workspace evidence.

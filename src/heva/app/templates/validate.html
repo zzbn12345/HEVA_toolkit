@@ -6,7 +6,7 @@
   <title>Validate project · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/validation.css?v=2">
-  <script src="/static/validate.js?v=4" defer></script>
+  <script src="/static/validate.js?v=5" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -23,6 +23,11 @@
     <div class="validation-toolbar">
       <button id="validate-project" class="button" type="button">Run validation</button>
       <button id="download-validation" class="button secondary" type="button" disabled>Download JSON report</button>
+      <button id="generate-release" class="button secondary" type="button">Generate Data Package</button>
+      <a id="download-release" class="button secondary" href="/api/release/download" hidden>Download Data Package ZIP</a>
+    </div>
+    <div id="release-status" class="notice neutral" aria-live="polite">
+      Data Package generation separately checks citation, curator evidence, data-owner approval, rights, and dataset metadata.
     </div>
     <div id="validation-status" class="notice neutral" aria-live="polite">
       Select Run validation to begin. No project data will be changed.

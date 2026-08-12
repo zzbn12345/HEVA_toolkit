@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import io
 from pathlib import Path
 from typing import Callable
+from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, StrictBool, ValidationError
 
 from heva.workflow.annotator_registry import (
@@ -45,6 +47,7 @@ from heva.workflow.document_citation import (
 )
 from heva.workflow.package_validator import (
     PackageValidationError,
+    build_release,
     validate_project,
 )
 from heva.workflow.people_registry import (
@@ -83,6 +86,15 @@ from heva.workflow.project_registry import (
 from heva.workflow.review_queue import (
     ReviewQueueError,
     registered_source_path,
+)
+
+RELEASE_FILENAMES = frozenset(
+    {
+        "build-log.json",
+        "datapackage.json",
+        "heva-annotations.csv",
+        "heva-annotations.json",
+    }
 )
 from heva.app.project_context import ProjectContext
 from heva.app.folder_picker import FolderPickerUnavailable, select_local_folder, select_local_source_file
@@ -917,5 +929,55 @@ def create_project_router(
             )
         payload = report.model_dump(mode="json")
         return JSONResponse(payload, status_code=200)
+
+    @router.post("/api/release")
+    def generate_release():
+        """Build the validated annotation-only Data Package for the active project."""
+
+        try:
+            target = build_release(root)
+        except (OSError, ValidationError, PackageValidationError) as error:
+            return JSONResponse(
+                {
+                    "code": "release_not_generated",
+                    "message": str(error),
+                    "action": (
+                        "Resolve this release requirement, then generate the Data Package "
+                        "again."
+                    ),
+                },
+                status_code=422,
+            )
+        files = sorted(
+            path.name
+            for path in target.iterdir()
+            if path.is_file() and path.name in RELEASE_FILENAMES
+        )
+        return {"generated": True, "files": files, "download": "/api/release/download"}
+
+    @router.get("/api/release/download")
+    def download_release():
+        """Rebuild and stream a deterministic ZIP without exposing local paths."""
+
+        try:
+            target = build_release(root)
+        except (OSError, ValidationError, PackageValidationError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        archive = io.BytesIO()
+        with ZipFile(archive, mode="w", compression=ZIP_DEFLATED) as bundle:
+            for path in sorted(target.iterdir(), key=lambda item: item.name):
+                if not path.is_file() or path.name not in RELEASE_FILENAMES:
+                    continue
+                info = ZipInfo(f"heva-data-package/{path.name}")
+                info.date_time = (1980, 1, 1, 0, 0, 0)
+                info.compress_type = ZIP_DEFLATED
+                info.external_attr = 0o644 << 16
+                bundle.writestr(info, path.read_bytes())
+        archive.seek(0)
+        return StreamingResponse(
+            archive,
+            media_type="application/zip",
+            headers={"Content-Disposition": 'attachment; filename="heva-data-package.zip"'},
+        )
 
     return router
