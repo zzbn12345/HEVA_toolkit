@@ -26,7 +26,6 @@ from heva.workflow.automatic_color_proposal import (
 from heva.workflow.document_metadata import (
     AnnotatorMetadata,
     RightsMetadata,
-    citation_is_valid,
 )
 from heva.workflow.document_rights import (
     DocumentRightsError,
@@ -662,7 +661,7 @@ def create_project_router(
             )
         return {
             "source_document_id": document_id,
-            "source_confirmed": citation_is_valid(source),
+            "source_confirmed": source.human_confirmed,
             "candidates": candidates,
         }
 

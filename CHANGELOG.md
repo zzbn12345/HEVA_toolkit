@@ -72,6 +72,8 @@
 
 ### Fixed
 
+- Batch color compatibility now returns confirmation guidance for pending source palettes
+  instead of invoking unrelated citation validation and failing unexpectedly.
 - Registered external PDFs can now be previewed and inspected through their exact
   machine-local binding without exposing the protected absolute path in project records.
 

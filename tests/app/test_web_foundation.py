@@ -511,6 +511,32 @@ def test_batch_color_candidates_explain_palette_mismatch(tmp_path: Path) -> None
     assert "Palette mismatch" in candidate["reason"]
 
 
+def test_batch_color_candidates_return_guidance_for_unconfirmed_source(
+    tmp_path: Path,
+) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    (sources / "target.pdf").write_bytes(b"target")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    document_ids = [item["document_id"] for item in registry["documents"]]
+    for document_id in document_ids:
+        save_color_configuration(
+            tmp_path,
+            document_id,
+            propose_color_configuration(["#CCCC00"]),
+        )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get(f"/api/documents/{document_ids[0]}/colors/batch")
+
+    assert response.status_code == 200
+    assert response.json()["source_confirmed"] is False
+    assert response.json()["candidates"][0]["eligible"] is False
+    assert "Confirm the source mapping" in response.json()["candidates"][0]["reason"]
+
+
 def test_extraction_interface_has_progress_timeout_and_visible_errors() -> None:
     script = (
         Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "create.js"
