@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project people · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/annotator.css">
+  <script src="/static/people.js?v=1" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="home-link" href="/">← HEVA home</a>
+    <nav class="topbar-links"><a class="guide-link" href="/guide/PEOPLE_AND_ROLES">Role guide</a><a class="button secondary" href="/create">Prepare a document</a></nav>
+  </header>
+  <main class="annotator-page">
+    <header class="annotator-heading">
+      <div>
+        <p class="eyebrow">Project configuration</p>
+        <h1>People and workflow roles</h1>
+        <p class="lead">Record who annotated the source, who curates it in HEVA, and who is accountable for distribution. One person may hold several roles.</p>
+      </div>
+      <button id="new-person" class="button" type="button">＋ Add person</button>
+    </header>
+    <div id="people-status" class="notice neutral" aria-live="polite">Loading project people…</div>
+    <div class="annotator-workspace">
+      <aside class="annotator-list-panel" aria-label="Project people">
+        <label for="people-filter">Filter people</label>
+        <input id="people-filter" type="search" placeholder="Name, role, affiliation…">
+        <div id="people-list" class="annotator-list"></div>
+      </aside>
+      <section class="json-editor">
+        <header class="editor-header"><div><p class="eyebrow">Validated record</p><h2 id="person-editor-title">Add person</h2></div><span id="curator-badge" class="active-badge" hidden>Active curator</span></header>
+        <form id="person-form">
+          <label>Name <span aria-hidden="true">*</span><input name="name" required></label>
+          <fieldset><legend>Workflow roles <span aria-hidden="true">*</span></legend>
+            <label><input type="checkbox" name="roles" value="annotator"> Original annotator — annotated the source PDF/DOCX</label>
+            <label><input type="checkbox" name="roles" value="curator"> Curator — processes and reviews annotations in HEVA</label>
+            <label><input type="checkbox" name="roles" value="data_owner"> Data owner — accountable for the Data Package</label>
+          </fieldset>
+          <label>Affiliation <small>(optional)</small><input name="affiliation"></label>
+          <label>Email <small>(optional)</small><input name="email" type="email"></label>
+          <label>ORCID <small>(optional)</small><input name="orcid" pattern="\d{4}-\d{4}-\d{4}-[\dX]{4}"></label>
+          <div class="form-actions">
+            <button class="button" type="submit">Save person</button>
+            <button id="activate-curator" class="button secondary" type="button" hidden>Use as active curator</button>
+            <button id="remove-person" class="button danger" type="button" hidden>Remove from project</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -367,8 +367,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     response = client.get("/create")
 
     assert response.status_code == 200
-    assert "Project annotator" in response.text
-    assert 'href="/annotator">Manage annotator profile</a>' in response.text
+    assert "Active project curator" in response.text
+    assert 'href="/people">Manage people and roles</a>' in response.text
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
@@ -585,24 +585,65 @@ def test_annotator_is_persisted_in_project_collection(tmp_path: Path) -> None:
     assert collection["annotators"][0]["orcid"] == "0000-0002-1825-0097"
 
 
-def test_annotator_profile_has_a_separate_project_view(tmp_path: Path) -> None:
+def test_people_and_roles_have_a_separate_project_view(tmp_path: Path) -> None:
     client = TestClient(create_app(tmp_path))
 
     response = client.get("/annotator")
 
     assert response.status_code == 200
-    assert "Project annotators" in response.text
-    assert 'id="schema-form"' in response.text
-    assert 'id="generated-fields"' in response.text
-    assert 'id="annotator-list"' in response.text
-    assert 'id="schema-json"' in response.text
-    assert 'id="data-json"' in response.text
-    assert 'textarea id="data-json"' not in response.text
-    assert "Apply JSON to form" not in response.text
-    assert "cannot be edited here" in response.text
-    assert "Add annotator" in response.text
-    assert "Source authors, citation details" in response.text
+    assert "People and workflow roles" in response.text
+    assert "Original annotator" in response.text
+    assert "Data owner" in response.text
+    assert 'id="person-form"' in response.text
+    assert 'id="people-list"' in response.text
+    assert "Add person" in response.text
     assert 'href="/">← HEVA home</a>' in response.text
+
+
+def test_people_form_supports_role_crud_and_active_curator(tmp_path: Path) -> None:
+    """The GUI API edits validated people without conflating their responsibilities."""
+
+    client = TestClient(create_app(tmp_path))
+    created = client.post(
+        "/api/people",
+        json={
+            "name": "Researcher",
+            "roles": ["annotator", "curator"],
+            "affiliation": "Heritage Lab",
+        },
+    )
+    person_id = created.json()["person_id"]
+    activated = client.post(f"/api/people/{person_id}/activate-curator")
+    listed = client.get("/api/people")
+    updated = client.put(
+        f"/api/people/{person_id}",
+        json={
+            "person_id": person_id,
+            "name": "Researcher",
+            "roles": ["curator", "data_owner"],
+            "affiliation": "Heritage Lab",
+        },
+    )
+
+    assert created.status_code == 201
+    assert activated.json()["active_curator_id"] == person_id
+    assert listed.json()["active_curator_id"] == person_id
+    assert updated.json()["roles"] == ["curator", "data_owner"]
+
+
+def test_original_annotator_cannot_be_activated_as_curator_through_app(tmp_path: Path) -> None:
+    """The interface enforces the same accountability rule as the domain contract."""
+
+    client = TestClient(create_app(tmp_path))
+    person = client.post(
+        "/api/people",
+        json={"name": "Original Annotator", "roles": ["annotator"]},
+    ).json()
+
+    response = client.post(f"/api/people/{person['person_id']}/activate-curator")
+
+    assert response.status_code == 422
+    assert "curator role" in response.json()["detail"]
 
 
 def test_extended_annotator_profile_is_restored_across_documents(tmp_path: Path) -> None:
@@ -935,7 +976,7 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     assert 'id="edit-page" type="number" readonly' in response.text
     assert 'id="review-citation-link"' in response.text
     assert 'id="review-colors-link"' in response.text
-    assert 'href="/annotator"' in response.text
+    assert 'href="/people"' in response.text
     assert 'id="review-readiness"' in response.text
     assert 'id="submit-document-review"' in response.text
     assert "raw JSON" not in response.text

@@ -47,6 +47,15 @@ from heva.workflow.package_validator import (
     PackageValidationError,
     validate_project,
 )
+from heva.workflow.people_registry import (
+    PeopleRegistryError,
+    PersonRecord,
+    activate_curator,
+    add_person,
+    load_people_registry,
+    remove_person,
+    update_person,
+)
 from heva.workflow.extraction_session import (
     ExtractionSessionError,
     load_extraction_checkpoint_status,
@@ -120,6 +129,15 @@ def create_project_router(
 ) -> APIRouter:
     router = APIRouter()
 
+    def active_curator_name() -> str:
+        """Prefer the explicit people registry while retaining legacy-project fallback."""
+
+        curator = load_people_registry(root).active_curator()
+        if curator is not None:
+            return curator.name
+        legacy = load_annotator_registry(root).active()
+        return legacy.name if legacy and legacy.name else ""
+
     @router.get("/", response_class=HTMLResponse)
     def home() -> str:
         return template("home.html")
@@ -138,7 +156,11 @@ def create_project_router(
 
     @router.get("/annotator", response_class=HTMLResponse)
     def annotator_page() -> str:
-        return template("annotator.html")
+        return template("people.html")
+
+    @router.get("/people", response_class=HTMLResponse)
+    def people_page() -> str:
+        return template("people.html")
 
     @router.get("/health")
     def health() -> dict[str, str]:
@@ -435,14 +457,13 @@ def create_project_router(
     @router.post("/api/documents/{document_id}/citation/confirm")
     def confirm_citation(document_id: str, citation: CitationDraft):
         try:
-            active = load_annotator_registry(root).active()
             return confirm_document_citation(
                 root,
                 document_id,
                 citation,
-                confirmed_by=active.name if active and active.name else "",
+                confirmed_by=active_curator_name(),
             ).model_dump(mode="json")
-        except (AnnotatorRegistryError, CitationError) as error:
+        except (AnnotatorRegistryError, PeopleRegistryError, CitationError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
 
     @router.get("/api/documents/{document_id}/colors")
@@ -487,12 +508,11 @@ def create_project_router(
     @router.post("/api/documents/{document_id}/colors/confirm")
     def confirm_colors(document_id: str, payload: ColorReviewInput):
         try:
-            active = load_annotator_registry(root).active()
             configuration = review_and_confirm_color_configuration(
                 root,
                 document_id,
                 [decision.model_dump() for decision in payload.decisions],
-                confirmed_by=active.name if active and active.name else "",
+                confirmed_by=active_curator_name(),
             )
             values = {
                 color.hex: color.label
@@ -522,7 +542,7 @@ def create_project_router(
             configuration.configuration_id = reusable.configuration_id
             configuration.configuration_version = reusable.version
             save_color_configuration(root, document_id, configuration)
-        except (AnnotatorRegistryError, ColorMappingError, ProjectColorConfigurationError) as error:
+        except (AnnotatorRegistryError, PeopleRegistryError, ColorMappingError, ProjectColorConfigurationError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return configuration.model_dump(mode="json")
 
@@ -583,14 +603,13 @@ def create_project_router(
                 detail="Confirm that the selected documents share the inspected palette.",
             )
         try:
-            active = load_annotator_registry(root).active()
             applied = apply_shared_color_mapping(
                 root,
                 document_id,
                 payload.document_ids,
-                confirmed_by=active.name if active and active.name else "",
+                confirmed_by=active_curator_name(),
             )
-        except (AnnotatorRegistryError, ColorMappingError) as error:
+        except (AnnotatorRegistryError, PeopleRegistryError, ColorMappingError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return {
             "source_document_id": document_id,
@@ -686,6 +705,54 @@ def create_project_router(
             "configured": bool(annotator.name),
             "annotator": annotator.model_dump(mode="json"),
         }
+
+    @router.get("/api/people/schema")
+    def people_schema():
+        """Expose the same person schema used for safe form validation."""
+
+        schema = PersonRecord.model_json_schema()
+        schema["required"] = ["name", "roles"]
+        return {"schema": schema, "role_labels": {
+            "annotator": "Original annotator",
+            "curator": "Curator",
+            "data_owner": "Data owner",
+        }}
+
+    @router.get("/api/people")
+    def list_people():
+        try:
+            return load_people_registry(root).model_dump(mode="json")
+        except PeopleRegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.post("/api/people", status_code=201)
+    def create_person(person: PersonRecord):
+        try:
+            return add_person(root, person).model_dump(mode="json")
+        except PeopleRegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.put("/api/people/{person_id}")
+    def replace_person(person_id: str, person: PersonRecord):
+        try:
+            return update_person(root, person_id, person).model_dump(mode="json")
+        except PeopleRegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.post("/api/people/{person_id}/activate-curator")
+    def select_active_curator(person_id: str):
+        try:
+            person = activate_curator(root, person_id)
+            return {"active_curator_id": person.person_id}
+        except PeopleRegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.delete("/api/people/{person_id}")
+    def delete_person(person_id: str):
+        try:
+            return remove_person(root, person_id).model_dump(mode="json")
+        except PeopleRegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
 
     @router.put("/api/annotator")
     def save_annotator(annotator: AnnotatorMetadata):

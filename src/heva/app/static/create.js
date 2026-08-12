@@ -29,23 +29,24 @@ document.getElementById("toggle-pdf").addEventListener("click", (event) => {
 async function restoreAnnotator() {
   const status = document.getElementById("annotator-status");
   try {
-    const response = await fetch("/api/annotator");
+    const response = await fetch("/api/people");
     const result = await response.json();
     if (!response.ok) {
       status.className = "notice error";
       status.textContent = `${result.message} ${result.action}`;
       return;
     }
-    if (result.configured) {
+    const curator = result.people?.find((person) => person.person_id === result.active_curator_id);
+    if (curator) {
       status.className = "notice success";
-      status.textContent = `Active project annotator: ${result.annotator.name}`;
+      status.textContent = `Active project curator: ${curator.name}`;
     } else {
       status.className = "notice warning";
-      status.textContent = `${result.message} You can register a document now, but the profile is required before submission.`;
+      status.textContent = "No active curator is selected. You can register a document now, but curator identity is required before accountable workflow actions.";
     }
   } catch (error) {
     status.className = "notice error";
-    status.textContent = "The annotator profile could not be loaded.";
+    status.textContent = "Project people and roles could not be loaded.";
   }
 }
 

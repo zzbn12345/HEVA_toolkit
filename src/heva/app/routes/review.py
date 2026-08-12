@@ -23,7 +23,12 @@ from heva.workflow.data_owner_approval import (
     approve_document_distribution,
     load_current_data_owner_approval,
 )
-from heva.workflow.people_registry import PersonRecord, add_person, load_people_registry
+from heva.workflow.people_registry import (
+    PeopleRegistryError,
+    PersonRecord,
+    add_person,
+    load_people_registry,
+)
 from heva.workflow.review_queue import (
     ReviewQueueError,
     list_review_queue,
@@ -135,6 +140,7 @@ def create_review_router(
             ValueError,
             ValidationError,
             AnnotatorRegistryError,
+            PeopleRegistryError,
             ReviewError,
             ReviewQueueError,
         ) as error:
@@ -196,19 +202,22 @@ def create_review_router(
     @router.post("/api/review/{document_id}/submit")
     def submit_document_review(document_id: str):
         try:
-            annotator = load_annotator_registry(root).active()
-            if annotator is None or not annotator.name:
-                raise ValueError("Select an active project annotator before submitting.")
+            curator = load_people_registry(root).active_curator()
+            annotator = load_annotator_registry(root).active() if curator is None else None
+            actor = curator.name if curator is not None else (annotator.name if annotator else "")
+            if not actor:
+                raise ValueError("Select an active project curator before submitting.")
             return submit_review_document(
                 root,
                 document_id,
-                submitted_by=annotator.name,
+                submitted_by=actor,
             )
         except (
             OSError,
             ValueError,
             ValidationError,
             AnnotatorRegistryError,
+            PeopleRegistryError,
             CurationError,
             ReviewError,
             ReviewQueueError,

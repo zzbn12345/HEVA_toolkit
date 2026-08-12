@@ -15,7 +15,7 @@
       <div class="create-brand">HEVA annotation project</div>
       <a class="guide-link" href="/guide/GUIDED_REVIEW_WORKFLOW">Guide</a>
       <nav class="step-navigation" aria-label="Document preparation steps">
-        <button class="step-button active" type="button" data-step-target="1"><b>1</b><span>Annotator check</span></button>
+        <button class="step-button active" type="button" data-step-target="1"><b>1</b><span>Curator check</span></button>
         <button class="step-button" type="button" data-step-target="2"><b>2</b><span>Citation</span></button>
         <button class="step-button" type="button" data-step-target="3"><b>3</b><span>Documents</span></button>
         <button class="step-button" type="button" data-step-target="4"><b>4</b><span>Color review</span></button>
@@ -29,13 +29,13 @@
 
       <section class="create-step active" data-step="1">
         <p class="eyebrow">Step 1 of 4</p>
-        <h1>Project annotator</h1>
+        <h1>Active project curator</h1>
         <p class="lead">The project profile is reused for every document and remains separate from source authorship.</p>
         <div id="annotator-status" class="notice neutral" aria-live="polite">Loading the saved annotator…</div>
         <div id="selected-document-status" class="notice neutral" hidden aria-live="polite"></div>
         <input id="selected-document-id" type="hidden">
         <div class="form-actions">
-          <a class="button secondary" href="/annotator">Manage annotator profile</a>
+          <a class="button secondary" href="/people">Manage people and roles</a>
           <button class="button secondary" type="button" data-next="2">Continue</button>
         </div>
       </section>
@@ -43,7 +43,7 @@
       <section class="create-step" data-step="2">
         <p class="eyebrow">Step 2 of 4</p>
         <h1>Document citation</h1>
-        <p class="lead">HEVA proposes available source metadata. Review and confirm it for this document; it remains separate from the annotator profile.</p>
+        <p class="lead">HEVA proposes available source metadata. Review and confirm it for this document; it remains separate from people and workflow roles.</p>
         <div id="citation-status" class="notice neutral" aria-live="polite">
           Select a registered document to load its citation details.
         </div>

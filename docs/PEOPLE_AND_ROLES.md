@@ -47,6 +47,18 @@ evidence until the application interface has completed its transition.
 The migration does not infer who originally annotated a PDF. Those identities must be
 imported or entered explicitly with the `annotator` role.
 
+## Web application
+
+Open **People and roles** from the project home page. The validated form supports creating,
+editing, filtering, and removing people; assigning one or several controlled roles; and
+selecting a person with the curator role as the active curator. Original annotators and
+data owners cannot be activated implicitly as curators.
+
+Citation confirmation, color decisions, raw extraction, and review submission prefer the
+active curator from `.heva/people.json`. Former projects may continue using their legacy
+active operator during migration, but new project configuration should use this explicit
+people interface.
+
 ## Python use
 
 ```python
