@@ -7,7 +7,7 @@ Typical use:
 3. Check it with :func:`validate_review_readiness`.
 4. Persist it with :func:`save_package_metadata`.
 
-See ``docs/DOCUMENT_METADATA.md`` for complete examples and field guidance.
+See ``docs/DATA_PACKAGE.md`` for the public data design overview.
 """
 
 from __future__ import annotations

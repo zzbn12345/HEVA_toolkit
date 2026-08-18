@@ -109,7 +109,7 @@ def _sidebar(pages: dict[PurePosixPath, str]) -> str:
 
     groups = {"Start": [], "Guides": [], "Reference": [], "Concepts": []}
     for path, slug in pages.items():
-        if path.as_posix() in {"index.md", "quickstart.md"}:
+        if path.as_posix() in {"index.md", "INSTALLATION.md"}:
             group = "Start"
         elif path.parts[0] == "guides":
             group = "Guides"

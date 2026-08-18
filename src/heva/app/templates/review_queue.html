@@ -4,24 +4,29 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Document review · HEVA Toolkit</title>
-  <link rel="stylesheet" href="/static/app.css?v=3">
-  <script src="/static/review_queue.js?v=6" defer></script>
+  <link rel="stylesheet" href="/static/app.css?v=5">
+  <script src="/static/review_queue.js?v=7" defer></script>
 </head>
 <body>
   <header class="topbar">
     <a class="home-link" href="/">← HEVA home</a>
     <nav class="topbar-links">
-      <a class="guide-link" href="/guide/SENTENCE_REVIEW">Guide</a>
+      <a class="guide-link" href="/guide/TUTORIAL">Guide</a>
       <span>Document review</span>
       <button id="open-another-project" class="button secondary compact" type="button">Open another project</button>
       <button id="close-project" class="button secondary compact" type="button">Close project</button>
+      <button id="stop-app" class="button secondary compact" type="button">Stop HEVA</button>
     </nav>
   </header>
   <main class="page-content">
     <p class="eyebrow">Review queue</p>
     <h1>Review one document at a time.</h1>
     <p class="lead">Automatic extraction may prepare a batch, but every document keeps its own color mapping, decisions, and audit history.</p>
-    <a class="button" href="/create">＋ Add document</a>
+    <div class="project-actions">
+      <a class="button" href="/create">＋ Add document</a>
+      <a class="button secondary" href="/validate">Validate project</a>
+      <a class="button secondary" href="/validate#data-package">Export Data Package</a>
+    </div>
     <div id="queue-status" class="notice neutral" aria-live="polite">Loading documents…</div>
     <div class="queue-filters" role="group" aria-label="Filter documents by completion">
       <button class="filter-button active" type="button" data-readiness="all">All</button>

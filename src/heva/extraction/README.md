@@ -54,6 +54,5 @@ Binary fixtures are generated at runtime so source documents are never committed
 python -m pytest tests/extraction
 ```
 
-See the [extraction guide](../../../docs/README_VE.md),
-[color mapping contract](../../../docs/COLOR_MAPPING.md), and
-[evaluation limits](../../../docs/EVALUATION.md).
+See the concise [software design](../../../docs/SOFTWARE_DESIGN.md) and
+[HEVA validation overview](../../../docs/HEVA_AND_VALIDATION.md).

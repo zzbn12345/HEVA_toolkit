@@ -54,17 +54,17 @@ def test_bundled_guide_is_available_without_an_open_project() -> None:
     client = TestClient(create_app())
 
     home = client.get("/guide")
-    quickstart = client.get("/guide/quickstart")
+    installation = client.get("/guide/INSTALLATION")
 
     assert home.status_code == 200
     assert "<h1" in home.text
-    assert "HEVA Toolkit documentation" in home.text
-    assert 'href="/guide/quickstart"' in home.text
+    assert "HEVA Toolkit" in home.text
+    assert 'href="/guide/INSTALLATION"' in home.text
     assert "DOCUMENTATION_CONTENT" not in home.text
-    assert quickstart.status_code == 200
-    assert "HEVA Quickstart" in quickstart.text
-    assert 'href="/guide/GUIDED_REVIEW_WORKFLOW"' in quickstart.text
-    assert 'href="/static/documentation.css?v=1"' in quickstart.text
+    assert installation.status_code == 200
+    assert "Install and run HEVA" in installation.text
+    assert 'href="/guide/TUTORIAL"' in installation.text
+    assert 'href="/static/documentation.css?v=1"' in installation.text
 
 
 def test_guide_rejects_unknown_or_traversing_pages() -> None:
@@ -406,8 +406,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=16"' in response.text
-    assert 'href="/static/create.css?v=7"' in response.text
+    assert 'src="/static/create.js?v=20"' in response.text
+    assert 'href="/static/create.css?v=11"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text
@@ -417,6 +417,11 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="confirm-citation"' in response.text
     assert 'id="extraction-progress"' in response.text
     assert 'id="proposal-progress"' in response.text
+    assert 'id="color-code-list"' in response.text
+    assert "Document color code" in response.text
+    assert "Two shades of yellow may both mean the same label" in response.text
+    assert "HEVA reference color code" in response.text
+    assert 'id="reference-color-list"' in response.text
     assert 'id="discover-colors"' in response.text
     assert 'id="propose-colors"' in response.text
     assert 'id="batch-mapping"' in response.text
@@ -621,6 +626,12 @@ def test_color_form_prefills_suggestions_without_presenting_model_reasoning() ->
     assert "No explanation was recorded" not in script
     assert "result.configuration.colors.length === 0" in script
     assert "/colors/discover" in script
+    assert "function renderDocumentColorCode()" in script
+    assert 'selected || "HEVA label not assigned"' in script
+    assert 'arrow.textContent = "means"' in script
+    assert "groups.entries()" in script
+    assert 'fetch("/static/heva-reference-palette.json")' in script
+    assert "function contrastingTextColor(hex)" in script
 
 
 def test_extraction_endpoint_persists_raw_evidence_before_canonical_promotion(
@@ -1342,6 +1353,8 @@ def test_review_queue_page_exposes_list_columns(tmp_path: Path) -> None:
     assert 'data-readiness="incomplete"' in response.text
     assert "Action" in response.text
     assert 'href="/create">＋ Add document</a>' in response.text
+    assert 'href="/validate">Validate project</a>' in response.text
+    assert 'href="/validate#data-package">Export Data Package</a>' in response.text
 
 
 def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) -> None:
@@ -1567,9 +1580,11 @@ def test_review_queue_can_close_or_switch_project(tmp_path: Path) -> None:
     assert response.status_code == 200
     assert 'id="open-another-project"' in response.text
     assert 'id="close-project"' in response.text
-    assert 'src="/static/review_queue.js?v=6"' in response.text
+    assert 'id="stop-app"' in response.text
+    assert 'src="/static/review_queue.js?v=7"' in response.text
     assert 'badge.textContent = item.annotation_complete ? "Complete" : "Incomplete"' in script
     assert "readiness_gates" in script
+    assert 'fetch("/api/app/shutdown", {method: "POST"})' in script
 
     styles = (
         Path(__file__).parents[2]
@@ -1583,6 +1598,26 @@ def test_review_queue_can_close_or_switch_project(tmp_path: Path) -> None:
     assert "@container (max-width: 1000px)" in styles
     assert "grid-column: 3" in styles
     assert ".project-action .button { display: block; text-align: center; }" in styles
+
+
+def test_local_app_can_request_a_graceful_shutdown(tmp_path: Path) -> None:
+    calls = []
+    client = TestClient(create_app(tmp_path, shutdown_handler=lambda: calls.append("stop")))
+
+    response = client.post("/api/app/shutdown")
+
+    assert response.status_code == 200
+    assert response.json()["stopping"] is True
+    assert calls == ["stop"]
+
+
+def test_app_shutdown_explains_terminal_fallback_when_unavailable(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/app/shutdown")
+
+    assert response.status_code == 501
+    assert "Ctrl+C" in response.json()["detail"]
 
 
 def test_registered_pdf_can_be_loaded_for_immediate_edit_preview(tmp_path: Path) -> None:

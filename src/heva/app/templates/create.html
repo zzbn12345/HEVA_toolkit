@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Prepare annotations · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/create.css?v=7">
-  <script src="/static/create.js?v=16" defer></script>
+  <link rel="stylesheet" href="/static/create.css?v=11">
+  <script src="/static/create.js?v=20" defer></script>
 </head>
 <body class="create-body">
   <div id="create-app" class="create-app">
     <aside class="create-sidebar">
       <a class="home-link" href="/">← HEVA home</a>
       <div class="create-brand">HEVA annotation project</div>
-      <a class="guide-link" href="/guide/GUIDED_REVIEW_WORKFLOW">Guide</a>
+      <a class="guide-link" href="/guide/TUTORIAL">Guide</a>
       <nav class="step-navigation" aria-label="Document readiness checks">
         <button class="step-button active missing" type="button" data-step-target="1" data-readiness-key="curator"><b aria-hidden="true">×</b><span>Curator</span></button>
         <button class="step-button missing" type="button" data-step-target="2" data-readiness-key="citation"><b aria-hidden="true">×</b><span>Citation</span></button>
@@ -75,6 +75,20 @@
         <div id="color-status" class="notice neutral" aria-live="polite">
           Select a registered document to load its observed colors.
         </div>
+        <section class="reference-color-code" aria-labelledby="reference-color-code-title">
+          <h2 id="reference-color-code-title">HEVA reference color code</h2>
+          <p>Use this established palette as guidance when assigning labels. A detected shade may differ slightly, and more than one detected hex may still represent the same label.</p>
+          <div id="reference-color-list" class="reference-color-list">
+            <p class="muted">Loading the HEVA reference palette…</p>
+          </div>
+        </section>
+        <section class="document-color-code" aria-labelledby="document-color-code-title">
+          <h2 id="document-color-code-title">Document color code</h2>
+          <p>Read each row as “this color means this HEVA label” for the current project. Two shades of yellow may both mean the same label. The mapping belongs to this annotation protocol; yellow, red, and other colors have no universal HEVA meaning.</p>
+          <div id="color-code-list" class="color-code-list" aria-live="polite">
+            <p class="muted">Discover document colors to build this code.</p>
+          </div>
+        </section>
         <div id="color-list" class="color-list"></div>
         <div id="proposal-progress" class="extraction-progress" hidden>
           <progress aria-label="Discovering document colors"></progress>

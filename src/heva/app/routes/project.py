@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Callable
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import (
     FileResponse,
     HTMLResponse,
@@ -249,6 +249,22 @@ def create_project_router(
     @router.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @router.post("/api/app/shutdown")
+    def shutdown_app(request: Request, background_tasks: BackgroundTasks):
+        """Gracefully stop only a locally bound HEVA server after sending the response."""
+
+        client_host = request.client.host if request.client else None
+        if client_host not in {"127.0.0.1", "::1", "testclient"}:
+            raise HTTPException(status_code=403, detail="HEVA can only be stopped locally.")
+        handler = getattr(request.app.state, "shutdown_handler", None)
+        if handler is None:
+            raise HTTPException(
+                status_code=501,
+                detail="Use Ctrl+C in the HEVA terminal to stop this server.",
+            )
+        background_tasks.add_task(handler)
+        return {"stopping": True, "message": "HEVA is stopping safely."}
 
     @router.post("/api/folders/select")
     def select_folder() -> dict[str, str | bool]:

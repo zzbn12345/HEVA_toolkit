@@ -1,0 +1,34 @@
+{
+  "name": "dummy-heritage-annotations",
+  "title": "Dummy heritage annotation dataset",
+  "description": "Fictional records demonstrating the HEVA Data Package.",
+  "profile": "data-package",
+  "licenses": [{"name": "CC-BY-4.0"}],
+  "contributors": [
+    {"title": "Example Research Group", "role": "creator"},
+    {"title": "Example Annotator", "role": "contributor"}
+  ],
+  "resources": [
+    {
+      "name": "heva-annotations-json",
+      "path": "heva-annotations.json",
+      "mediatype": "application/json",
+      "bytes": 2740,
+      "hash": "sha256:b7efe6db5c3f4f71a534b1c30b53c0a99393712b47b071af2c5398979ed92ce6"
+    },
+    {
+      "name": "heva-annotations-csv",
+      "path": "heva-annotations.csv",
+      "mediatype": "text/csv",
+      "bytes": 294,
+      "hash": "sha256:a889c286958522428766887d3fded379040cd378ab159e44413fc51f7e971082"
+    },
+    {
+      "name": "build-log",
+      "path": "build-log.json",
+      "mediatype": "application/json",
+      "bytes": 260,
+      "hash": "sha256:c8d4d7f89251810e9077f5448fa83d4fb40992f1a62cbe7a424dde800f27cf42"
+    }
+  ]
+}

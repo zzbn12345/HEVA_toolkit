@@ -321,7 +321,7 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
                     {
                         "code": "unresolved_color_mapping",
                         "severity": "warning",
-                        "message": "Choose a color configuration before reviewing this annotation.",
+                        "message": "This saved extraction is still a draft; confirm its colors and rebuild canonical annotations before sentence review.",
                         "evidence": None,
                     }
                 ] if draft_only else [
@@ -347,15 +347,18 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
     if draft_only:
         readiness_gates = {
             **readiness_gates,
-            "color_configuration": False,
             "extraction": False,
             "sentence_review": False,
         }
         blocking_reasons = [
-            "Review and confirm the document color configuration.",
-            "Convert the unresolved color draft into canonical HEVA annotations.",
-            "Approve or exclude every extracted sentence.",
+            reason
+            for reason in blocking_reasons
+            if reason != "Run extraction and persist a non-empty sentence inventory."
         ]
+        blocking_reasons.insert(
+            0,
+            "Convert the unresolved color draft into canonical HEVA annotations.",
+        )
     return {
         "document_id": document_id,
         "source_path": entry.source_path,

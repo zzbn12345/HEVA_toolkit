@@ -33,6 +33,14 @@
 
 ### Added
 
+- A Conda/Miniforge environment definition that installs the app, spaCy, and PDF/DOCX
+  extraction consistently on Windows, macOS, and Linux.
+- A fictional two-document Data Package plus a concise concept guide and tutorial for
+  reproducing the same validated result with new documents.
+- Direct **Validate project** and **Export Data Package** actions in the project review
+  queue.
+- A localhost-only **Stop HEVA** action that gracefully shuts down the Uvicorn process,
+  with Ctrl+C retained as the documented fallback.
 - Data Package generation from the validation view, with exact release-gate feedback and
   a deterministic annotation-only ZIP that excludes source documents and workspace state.
 - A schema-validated dataset-details form for citable identity, creators, license, rights,
@@ -189,6 +197,10 @@
 
 ### Changed
 
+- Reduced the alpha documentation navigation to installation/running, validation, the Data
+  Package concept, one practical tutorial, and current limitations. Advanced governance
+  documentation remains available to developers but is no longer presented as required
+  alpha reading.
 - Automatic color suggestions now preselect their controlled-label fields while
   model-generated reasoning remains package provenance instead of appearing as a fixed
   color specification; only explicit document-legend mappings show source text.

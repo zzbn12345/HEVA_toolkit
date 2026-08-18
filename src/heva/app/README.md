@@ -48,5 +48,5 @@ decisions remain document-local workflow evidence.
 python -m pytest tests/app
 ```
 
-See the [guided review workflow](../../../docs/GUIDED_REVIEW_WORKFLOW.md) and
-[project boundaries](../../../docs/PROJECT_BOUNDARIES.md).
+See the [tutorial](../../../docs/TUTORIAL.md) and
+[software design](../../../docs/SOFTWARE_DESIGN.md).

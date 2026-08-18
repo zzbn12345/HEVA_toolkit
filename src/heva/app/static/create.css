@@ -154,6 +154,56 @@ fieldset { margin: 1rem 0; padding: 0; border: 0; }
 
 .color-list { display: grid; gap: .9rem; margin: 1rem 0; }
 
+.document-color-code, .reference-color-code {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.document-color-code h2, .reference-color-code h2 { margin: 0; font-size: 1.15rem; }
+.document-color-code > p, .reference-color-code > p { margin: .4rem 0 1rem; color: var(--muted); line-height: 1.5; }
+.reference-color-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; }
+.reference-color-card {
+  min-height: 112px;
+  padding: .75rem;
+  border: 2px solid color-mix(in srgb, var(--reference-color), #000 12%);
+  border-radius: 8px;
+  background: var(--reference-color);
+  color: var(--reference-text, #111111);
+}
+.reference-color-card strong, .reference-color-card code, .reference-color-card small {
+  display: block;
+  color: inherit;
+}
+.reference-color-card strong { font-size: 1.05rem; text-transform: uppercase; }
+.reference-color-card code { margin: .25rem 0 .55rem; font-weight: 700; }
+.reference-color-card small { line-height: 1.35; }
+.color-code-list { display: grid; gap: .6rem; }
+.color-code-entry {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .65rem;
+  padding: .55rem;
+  border-radius: 8px;
+  background: var(--field);
+}
+.color-code-chip {
+  display: grid;
+  place-items: center;
+  min-width: 104px;
+  min-height: 40px;
+  padding: .25rem .5rem;
+  border: 1px solid #8794a5;
+  border-radius: 6px;
+  background: var(--swatch);
+  color: var(--swatch-text);
+}
+.color-code-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.color-code-arrow { color: var(--muted); font-weight: 700; }
+.color-code-entry strong { font-size: 1rem; }
+
 .color-record {
   display: grid;
   grid-template-columns: 100px minmax(0, 1fr);

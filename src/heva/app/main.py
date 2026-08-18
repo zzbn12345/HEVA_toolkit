@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Iterable
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -23,12 +23,17 @@ def _template(name: str) -> str:
     return (WEB_ROOT / "templates" / name).read_text(encoding="utf-8")
 
 
-def create_app(project_root: str | Path | None = None) -> FastAPI:
+def create_app(
+    project_root: str | Path | None = None,
+    *,
+    shutdown_handler: Callable[[], None] | None = None,
+) -> FastAPI:
     """Create an app that can open one persistent HEVA project at a time."""
 
     context = ProjectContext(project_root)
     app = FastAPI(title="HEVA Toolkit", version="0.1.0")
     app.state.project_context = context
+    app.state.shutdown_handler = shutdown_handler
     app.mount("/static", StaticFiles(directory=WEB_ROOT / "static"), name="static")
     app.include_router(create_documentation_router(_template))
     app.include_router(create_project_router(context, _template))
@@ -78,7 +83,11 @@ def main(argv: Iterable[str] | None = None) -> int:
     args = parser.parse_args(list(argv) if argv is not None else None)
     import uvicorn
 
-    uvicorn.run(create_app(args.project_root), host=args.host, port=args.port)
+    application = create_app(args.project_root)
+    config = uvicorn.Config(application, host=args.host, port=args.port)
+    server = uvicorn.Server(config)
+    application.state.shutdown_handler = lambda: setattr(server, "should_exit", True)
+    server.run()
     return 0
 
 

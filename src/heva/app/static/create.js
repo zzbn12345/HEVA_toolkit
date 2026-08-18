@@ -242,6 +242,89 @@ function colorDecisions() {
   });
 }
 
+/** Summarize the supervised document-specific hex-to-label decisions as a live legend. */
+function renderDocumentColorCode() {
+  const code = document.getElementById("color-code-list");
+  const records = [...document.querySelectorAll(".color-record")];
+  if (!records.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "Discover document colors to build this code.";
+    code.replaceChildren(empty);
+    return;
+  }
+  const groups = new Map();
+  records.forEach((record) => {
+    const selected = record.querySelector("select").value;
+    const meaning = selected === "__ignore__"
+      ? "Ignored color"
+      : selected || "HEVA label not assigned";
+    if (!groups.has(meaning)) groups.set(meaning, []);
+    groups.get(meaning).push({
+      hex: record.dataset.hex,
+      textColor: record.querySelector(".color-swatch").style.getPropertyValue("--swatch-text"),
+    });
+  });
+  code.replaceChildren(...[...groups.entries()].map(([meaning, colors]) => {
+    const entry = document.createElement("div");
+    entry.className = "color-code-entry";
+    const chips = document.createElement("span");
+    chips.className = "color-code-chips";
+    colors.forEach((color) => {
+      const chip = document.createElement("span");
+      chip.className = "color-code-chip";
+      chip.style.setProperty("--swatch", color.hex);
+      chip.style.setProperty("--swatch-text", color.textColor);
+      chip.textContent = color.hex;
+      chip.setAttribute("aria-label", `Observed color ${color.hex}`);
+      chips.append(chip);
+    });
+    const arrow = document.createElement("span");
+    arrow.className = "color-code-arrow";
+    arrow.textContent = "means";
+    const label = document.createElement("strong");
+    label.textContent = meaning;
+    entry.append(chips, arrow, label);
+    return entry;
+  }));
+}
+
+/** Return black or white according to WCAG relative luminance contrast. */
+function contrastingTextColor(hex) {
+  const channels = hex.slice(1).match(/.{2}/g).map((value) => parseInt(value, 16) / 255);
+  const [red, green, blue] = channels.map((value) =>
+    value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
+  );
+  const luminance = (0.2126 * red) + (0.7152 * green) + (0.0722 * blue);
+  return luminance > 0.179 ? "#111111" : "#FFFFFF";
+}
+
+/** Render the repository-owned HEVA visual reference without treating it as exact evidence. */
+async function loadReferenceColorCode() {
+  const list = document.getElementById("reference-color-list");
+  try {
+    const response = await fetch("/static/heva-reference-palette.json");
+    if (!response.ok) throw new Error("Reference palette unavailable");
+    const reference = await response.json();
+    list.replaceChildren(...reference.values.map((value) => {
+      const card = document.createElement("article");
+      card.className = "reference-color-card";
+      card.style.setProperty("--reference-color", value.hex);
+      card.style.setProperty("--reference-text", contrastingTextColor(value.hex));
+      const label = document.createElement("strong");
+      label.textContent = value.label;
+      const hex = document.createElement("code");
+      hex.textContent = value.hex;
+      const children = document.createElement("small");
+      children.textContent = value.subcategories.join(" · ");
+      card.append(label, hex, children);
+      return card;
+    }));
+  } catch (error) {
+    list.textContent = "The HEVA reference palette could not be loaded.";
+  }
+}
+
 /**
  * Render persisted color decisions and preselect supervised automatic suggestions.
  * Model reasoning remains provenance data and is not presented as a fixed specification.
@@ -298,6 +381,7 @@ function renderColorConfiguration(result) {
     select.addEventListener("change", () => {
       reason.hidden = select.value !== "__ignore__";
       document.getElementById("mapping-confirmed").checked = false;
+      renderDocumentColorCode();
     });
 
     label.append(select);
@@ -312,6 +396,7 @@ function renderColorConfiguration(result) {
     record.append(swatch, fields);
     return record;
   }));
+  renderDocumentColorCode();
 
   const status = document.getElementById("color-status");
   const confirmed = configuration.human_confirmed;
@@ -757,4 +842,5 @@ document.querySelectorAll("[name='processing-mode']").forEach((radio) => radio.a
     : "The source may remain outside this dataset repository. HEVA stores only a local binding and does not copy it.";
 }));
 restoreAnnotator();
+loadReferenceColorCode();
 loadSelectedDocument();

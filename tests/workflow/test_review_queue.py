@@ -19,6 +19,12 @@ from heva.workflow.document_metadata import (
 )
 from heva.workflow.project_registry import sync_registry
 from heva.workflow.extraction_draft import persist_extraction_draft
+from heva.workflow.color_mapping import (
+    confirm_color_configuration,
+    propose_color_configuration,
+    resolve_color,
+    save_color_configuration,
+)
 from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
 from heva.workflow.review_queue import (
     list_review_queue,
@@ -260,6 +266,62 @@ def test_unresolved_extraction_draft_is_visible_but_not_reviewable(tmp_path: Pat
     }
     assert selected["sentences"][0]["review"]["status"] == "pending"
     assert selected["sentences"][0]["flags"][0]["code"] == "unresolved_color_mapping"
+
+
+def test_confirmed_colors_remain_complete_while_annotations_are_still_a_draft(
+    tmp_path: Path,
+) -> None:
+    """Color confirmation and canonical annotation generation are separate gates."""
+
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    curator = add_person(tmp_path, PersonRecord(name="Researcher", roles=["curator"]))
+    activate_curator(tmp_path, curator.person_id)
+    persist_extraction_draft(
+        tmp_path,
+        document_id,
+        [
+            {
+                "sentence_id": 1,
+                "page": 1,
+                "sentence": "Historic harbour",
+                "tokens": ["Historic", "harbour"],
+                "values": ["#FF40FF"],
+                "entities": [
+                    {
+                        "start": 0,
+                        "end": 16,
+                        "text": "Historic harbour",
+                        "label": "#FF40FF",
+                    }
+                ],
+                "ner_tags": ["B-#FF40FF", "I-#FF40FF"],
+            }
+        ],
+        extractor="test extractor",
+        extractor_version="1.0",
+    )
+    configuration = propose_color_configuration(["#FF40FF"])
+    configuration = resolve_color(configuration, "#FF40FF", label="historic")
+    configuration = confirm_color_configuration(
+        configuration,
+        confirmed_by="Researcher",
+    )
+    save_color_configuration(tmp_path, document_id, configuration)
+
+    selected = load_review_document(tmp_path, document_id)
+
+    assert selected["draft_only"] is True
+    assert selected["readiness_gates"]["color_configuration"] is True
+    assert selected["readiness_gates"]["extraction"] is False
+    assert selected["readiness_gates"]["sentence_review"] is False
+    assert "Review and confirm the document color configuration." not in selected[
+        "blocking_reasons"
+    ]
 
 
 def test_document_is_complete_only_when_all_four_gates_pass(tmp_path: Path) -> None:

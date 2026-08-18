@@ -52,8 +52,6 @@ include = ["heva*"]
 
 [tool.setuptools.data-files]
 "share/heva/docs" = ["docs/*.md"]
-"share/heva/docs/guides" = ["docs/guides/*.md"]
-"share/heva/docs/reference" = ["docs/reference/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -17,37 +17,15 @@ import markdown
 
 _MARKDOWN_LINK = re.compile(r"(\]\()([^)#]+\.md)(#[^)]+)?(\))")
 _NAVIGATION = (
-    ("Start", (("Documentation home", ""), ("Quickstart", "quickstart"))),
     (
-        "Guides",
+        "HEVA Toolkit",
         (
-            ("Create or open a project", "guides/create-project"),
-            ("Review document colors", "guides/review-colors"),
-            ("Validate a project", "guides/validate-project"),
-            ("Edit through CSV", "guides/edit-with-csv"),
-            ("Distribute without sources", "guides/distribute-without-sources"),
-        ),
-    ),
-    (
-        "Concepts",
-        (
-            ("Guided workflow", "GUIDED_REVIEW_WORKFLOW"),
-            ("Document metadata and rights", "DOCUMENT_METADATA"),
-            ("Color mapping", "COLOR_MAPPING"),
-            ("Sentence review", "SENTENCE_REVIEW"),
-            ("Curator decisions", "CURATION"),
-            ("Approved releases", "APPROVED_EXPORT"),
-            ("Evidence and limitations", "EVALUATION"),
-        ),
-    ),
-    (
-        "Reference",
-        (
-            ("Validation", "VALIDATION"),
-            ("Command line", "reference/command-line"),
-            ("Package layout", "reference/package-layout"),
-            ("Record contract", "HEVA_RECORD_CONTRACT"),
-            ("Architecture", "ARCHITECTURE"),
+            ("Start", ""),
+            ("Install and run", "INSTALLATION"),
+            ("HEVA and validation", "HEVA_AND_VALIDATION"),
+            ("What is a Data Package?", "DATA_PACKAGE"),
+            ("Tutorial", "TUTORIAL"),
+            ("Software design", "SOFTWARE_DESIGN"),
         ),
     ),
 )

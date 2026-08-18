@@ -1,0 +1,13 @@
+{
+  "build_version": "1.0",
+  "toolkit_version": "0.1.0",
+  "membership": [
+    {"document_id": "HEVA-DEMO-001"},
+    {"document_id": "HEVA-DEMO-002"}
+  ],
+  "excluded_working_evidence": [
+    "source documents",
+    ".heva workspace",
+    "credentials"
+  ]
+}

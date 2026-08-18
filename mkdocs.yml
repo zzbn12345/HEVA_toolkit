@@ -1,6 +1,6 @@
 site_name: HEVA Toolkit
-site_description: Create, review, validate, and distribute heritage-value annotation packages.
-repo_url: https://github.com/zzbn12345/HEVA_DCC_collab
+site_description: Create and validate heritage-value annotation Data Packages.
+repo_url: https://github.com/jurra/heva-toolkit
 edit_uri: edit/main/docs/
 
 theme:
@@ -24,40 +24,9 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Welcome: index.md
-  - Quickstart: quickstart.md
-  - Alpha test protocol: ALPHA_TEST.md
-  - Guides:
-      - Create a project: guides/create-project.md
-      - Review color meanings: guides/review-colors.md
-      - Validate a project: guides/validate-project.md
-      - Edit with CSV: guides/edit-with-csv.md
-      - Distribute without sources: guides/distribute-without-sources.md
-      - Publish the private Wiki: guides/publish-documentation.md
-  - Concepts:
-      - Guided review workflow: GUIDED_REVIEW_WORKFLOW.md
-      - Project boundaries: PROJECT_BOUNDARIES.md
-      - External sources and dataset repositories: EXTERNAL_SOURCES.md
-      - Validation: VALIDATION.md
-      - Record contract: HEVA_RECORD_CONTRACT.md
-      - Document metadata: DOCUMENT_METADATA.md
-      - Programmatic citation import: CITATION_IMPORT.md
-      - People and workflow roles: PEOPLE_AND_ROLES.md
-      - Data-owner approval: DATA_OWNER_APPROVAL.md
-      - Color mapping: COLOR_MAPPING.md
-      - Project color configurations: PROJECT_COLOR_CONFIGURATIONS.md
-      - Unresolved extraction drafts: EXTRACTION_DRAFTS.md
-      - Project registry: PROJECT_REGISTRY.md
-      - Source discovery on open: SOURCE_DISCOVERY.md
-      - Extraction sessions: EXTRACTION_SESSIONS.md
-      - Quality flags: QUALITY_FLAGS.md
-      - Sentence review: SENTENCE_REVIEW.md
-      - Curation: CURATION.md
-      - Approved export: APPROVED_EXPORT.md
-      - Evaluation and limitations: EVALUATION.md
-  - Reference:
-      - Architecture: ARCHITECTURE.md
-      - Extraction: README_VE.md
-      - Automatic color mapper: AUTO_COLOR_MAPPER_ARCHITECTURE.md
-      - Commands: reference/command-line.md
-      - Package layout: reference/package-layout.md
+  - Start: index.md
+  - Install and run: INSTALLATION.md
+  - HEVA and validation: HEVA_AND_VALIDATION.md
+  - What is a Data Package?: DATA_PACKAGE.md
+  - Tutorial: TUTORIAL.md
+  - Software design: SOFTWARE_DESIGN.md

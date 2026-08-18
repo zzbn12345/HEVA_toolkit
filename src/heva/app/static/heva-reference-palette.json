@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "status": "visual-guidance",
+  "note": "Reference colors guide human mapping. Observed document colors may use nearby shades.",
+  "values": [
+    {"label": "ecological", "hex": "#A8D200", "subcategories": ["spiritual", "essential", "existential"], "reference": "COE, 1975"},
+    {"label": "social", "hex": "#FFD300", "subcategories": ["spiritual", "emotional (individual)", "emotional (collective)", "allegorical"], "reference": "SPAB, 1877"},
+    {"label": "economic", "hex": "#D7AEFF", "subcategories": ["use", "non-use", "entertainment", "allegorical"], "reference": "COE, 1966"},
+    {"label": "age", "hex": "#70AD47", "subcategories": ["spiritual", "essential", "existential"], "reference": "SPAB, 1877"},
+    {"label": "political", "hex": "#FFFC00", "subcategories": ["educational", "management", "entertainment", "symbolic"], "reference": "ICOMOS, 1967"},
+    {"label": "scientific", "hex": "#ED7D31", "subcategories": ["workmanship", "technological", "conceptual"], "reference": "RIBA, 1904"},
+    {"label": "aesthetical", "hex": "#00D5FF", "subcategories": ["artistic", "notable", "conceptual", "evidential"], "reference": "SPAB, 1877"},
+    {"label": "historic", "hex": "#FF40FF", "subcategories": ["educational", "historic-artistic", "historic-conceptual", "symbolic", "archaeological"], "reference": "SPAB, 1877"}
+  ]
+}

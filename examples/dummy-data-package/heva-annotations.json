@@ -1,0 +1,62 @@
+{
+  "release_version": "1.0",
+  "schema_version": "1.0",
+  "toolkit_version": "0.1.0",
+  "dataset": {
+    "name": "dummy-heritage-annotations",
+    "title": "Dummy heritage annotation dataset",
+    "description": "Fictional records demonstrating the HEVA Data Package.",
+    "creators": ["Example Research Group"],
+    "contributors": ["Example Annotator"],
+    "license": "CC-BY-4.0",
+    "rights_statement": "Fictional demonstration content may be redistributed.",
+    "limitations": "For documentation only; not suitable for research conclusions."
+  },
+  "document_count": 2,
+  "record_count": 2,
+  "membership": ["HEVA-DEMO-001", "HEVA-DEMO-002"],
+  "documents": [
+    {
+      "document_id": "HEVA-DEMO-001",
+      "citation": "Example Research Group. Harbour Warehouse Study. 2026.",
+      "source_creators": ["Example Research Group"],
+      "source_reference": "https://example.org/harbour-study",
+      "annotator": {"name": "Example Annotator", "orcid": null},
+      "record_count": 1,
+      "records": [
+        {
+          "sentence_id": 1,
+          "page": 2,
+          "sentence": "The former warehouse records the historic development of the harbour.",
+          "tokens": ["The", "former", "warehouse", "records", "the", "historic", "development", "of", "the", "harbour", "."],
+          "values": ["historic"],
+          "entities": [{"start": 4, "end": 20, "text": "former warehouse", "label": "historic", "color": "#FF40FF"}],
+          "ner_tags": ["O", "B-historic", "I-historic", "O", "O", "O", "O", "O", "O", "O", "O"],
+          "schema_version": "1.0",
+          "mapping_provenance": {"method": "project_configuration", "status": "approved", "config_id": "demo-palette@1"}
+        }
+      ]
+    },
+    {
+      "document_id": "HEVA-DEMO-002",
+      "citation": "Example Research Group. Market Square Study. 2026.",
+      "source_creators": ["Example Research Group"],
+      "source_reference": "https://example.org/market-study",
+      "annotator": {"name": "Example Annotator", "orcid": null},
+      "record_count": 1,
+      "records": [
+        {
+          "sentence_id": 1,
+          "page": 1,
+          "sentence": "The market square remains a place for community gatherings.",
+          "tokens": ["The", "market", "square", "remains", "a", "place", "for", "community", "gatherings", "."],
+          "values": ["social"],
+          "entities": [{"start": 4, "end": 17, "text": "market square", "label": "social", "color": "#FFD300"}],
+          "ner_tags": ["O", "B-social", "I-social", "O", "O", "O", "O", "O", "O", "O"],
+          "schema_version": "1.0",
+          "mapping_provenance": {"method": "project_configuration", "status": "approved", "config_id": "demo-palette@1"}
+        }
+      ]
+    }
+  ]
+}

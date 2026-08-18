@@ -161,19 +161,11 @@ def curation_blocking_issues(report: DocumentValidation) -> list[ValidationIssue
 def _guide_for_issue(code: str, path: str) -> str:
     """Return the most relevant stable documentation slug for a validation issue."""
 
-    if code in {"source_missing", "source_not_current"} or "registry" in path:
-        return "PROJECT_REGISTRY"
-    if code.startswith("source_") or "rights" in path or "citation" in path:
-        return "DOCUMENT_METADATA"
-    if "color" in code or "mapping" in code or "color" in path:
-        return "guides/review-colors"
-    if "review" in code or "review" in path:
-        return "SENTENCE_REVIEW"
-    if "annotation" in code or "record" in code or path.startswith("$.annotations"):
-        return "HEVA_RECORD_CONTRACT"
-    if "metadata" in code or "package_metadata" in path:
-        return "DOCUMENT_METADATA"
-    return "guides/validate-project"
+    if "package" in code or "resource" in code or "citation" in path or "rights" in path:
+        return "DATA_PACKAGE"
+    if code.startswith("source_") or "registry" in path:
+        return "TUTORIAL"
+    return "HEVA_AND_VALIDATION"
 
 
 def _issue(

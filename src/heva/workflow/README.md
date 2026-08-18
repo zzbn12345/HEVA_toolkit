@@ -69,6 +69,5 @@ transitions, review completeness, and distribution rights.
 python -m pytest tests/workflow
 ```
 
-See [package validation](../../../docs/VALIDATION.md),
-[package layout](../../../docs/reference/package-layout.md), and
-[approved export](../../../docs/APPROVED_EXPORT.md).
+See [HEVA and validation](../../../docs/HEVA_AND_VALIDATION.md) and
+[Data Package design](../../../docs/DATA_PACKAGE.md).

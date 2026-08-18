@@ -149,3 +149,25 @@ async function leaveProject() {
 
 document.getElementById("open-another-project").addEventListener("click", leaveProject);
 document.getElementById("close-project").addEventListener("click", leaveProject);
+
+/** Ask the local Uvicorn process to stop gracefully after confirming user intent. */
+async function stopApplication() {
+  if (!window.confirm("Stop the local HEVA application?")) return;
+  const button = document.getElementById("stop-app");
+  button.disabled = true;
+  button.textContent = "Stopping…";
+  try {
+    const response = await fetch("/api/app/shutdown", {method: "POST"});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || "HEVA could not be stopped.");
+    statusBox.className = "notice success";
+    statusBox.textContent = "HEVA has stopped safely. You can close this browser tab.";
+  } catch (error) {
+    statusBox.className = "notice error";
+    statusBox.textContent = `${error.message} Use Ctrl+C in the HEVA terminal if it is still running.`;
+    button.disabled = false;
+    button.textContent = "Stop HEVA";
+  }
+}
+
+document.getElementById("stop-app").addEventListener("click", stopApplication);
