@@ -16,19 +16,6 @@ import markdown
 
 
 _MARKDOWN_LINK = re.compile(r"(\]\()([^)#]+\.md)(#[^)]+)?(\))")
-_NAVIGATION = (
-    (
-        "HEVA Toolkit",
-        (
-            ("Start", ""),
-            ("Install and run", "INSTALLATION"),
-            ("HEVA and validation", "HEVA_AND_VALIDATION"),
-            ("What is a Data Package?", "DATA_PACKAGE"),
-            ("Tutorial", "TUTORIAL"),
-            ("Software design", "SOFTWARE_DESIGN"),
-        ),
-    ),
-)
 _ALLOWED_TAGS = {
     "a",
     "blockquote",
@@ -134,22 +121,6 @@ def render_document(slug: str) -> tuple[str, str]:
     return title, sanitized
 
 
-def _navigation(active_slug: str) -> str:
-    groups = []
-    for heading, links in _NAVIGATION:
-        items = []
-        for label, slug in links:
-            active = ' aria-current="page" class="active"' if slug == active_slug else ""
-            href = "/guide" if not slug else f"/guide/{slug}"
-            items.append(
-                f'<a href="{escape(href)}"{active}>{escape(label)}</a>'
-            )
-        groups.append(
-            f"<section><strong>{escape(heading)}</strong>{''.join(items)}</section>"
-        )
-    return "".join(groups)
-
-
 def create_documentation_router(template: Callable[[str], str]) -> APIRouter:
     """Create public read-only routes for the bundled HEVA guide."""
 
@@ -165,7 +136,6 @@ def create_documentation_router(template: Callable[[str], str]) -> APIRouter:
         return (
             template("documentation.html")
             .replace("DOCUMENTATION_TITLE", escape(title))
-            .replace("DOCUMENTATION_NAVIGATION", _navigation(slug.strip("/")))
             .replace("DOCUMENTATION_CONTENT", content)
         )
 

@@ -1,37 +1,54 @@
 # Software design
 
-HEVA is separated into layers so researchers can use validation and extraction without
-installing or running the web interface.
+HEVA separates the research workflow from the user interface. Validation and extraction can
+therefore run without opening the web app.
+
+## Repository structure
+
+```text
+heva-toolkit/
+├── src/heva/       application source code
+├── schemas/        machine-readable HEVA rules and vocabulary
+├── examples/       finished and incomplete teaching datasets
+├── docs/           the six short documentation pages
+├── tests/          automated checks of expected behaviour
+└── environment.yml Conda installation definition
+```
+
+Most development happens under `src/heva/`:
 
 ```text
 src/heva/
-├── extraction/   PDF/DOCX reading, colors, text, and NLP adapters
-├── workflow/     project records, validation, and Data Package generation
-├── doctor.py     installation and environment check
-└── app/           optional FastAPI web interface
+├── extraction/   reads PDF/DOCX text, highlights, and colors
+├── workflow/     stores project state, validates it, and builds Data Packages
+├── app/          presents the workflow through FastAPI and the browser
+└── doctor.py     checks whether the installation is ready
 ```
 
-## Extraction
+## Extraction layer
 
-The extraction layer reads source documents and returns observations: text, locations, and
-colors. It does not decide that a color has a universal HEVA meaning. A person reviews the
-mapping used by the project.
+Extraction records what the source contains: text, locations, and colors. It does not decide
+that a color has a universal HEVA meaning. A researcher reviews that mapping.
 
-## Workflow and validation
+## Workflow and validation layer
 
-The workflow layer owns durable project records and the rules used to validate them. It also
-builds the distributable Data Package. This is the core of the toolkit.
+This is the core of HEVA. It manages durable project records, validates them against the
+schemas and HEVA relationships, and builds the distributable Data Package.
 
 ## Command-line access
 
-Scripts and automated workflows call the workflow modules directly without the browser. The
-validation module's command-line entry point is the main supported example.
+The workflow modules can be used from a terminal without the browser. For example:
 
-## App
+```bash
+python -m heva.workflow.package_validator /path/to/project validate
+```
 
-The FastAPI app guides a user through the workflow and shows source documents beside the
-records being reviewed. It is an interface over the extraction and workflow layers, not a
-separate data implementation.
+This is currently script interoperability rather than a large standalone CLI utility.
 
-This separation keeps the Data Package specification and validation reusable if the user
-interface changes.
+## App layer
+
+The optional FastAPI app guides a user through the same services and shows source documents
+beside their records. It does not implement a second data model.
+
+In short: **extraction observes, workflow validates and packages, and the app guides the
+user**. This separation keeps the HEVA specification useful even if the interface changes.

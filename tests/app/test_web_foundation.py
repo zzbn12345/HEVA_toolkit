@@ -60,6 +60,12 @@ def test_bundled_guide_is_available_without_an_open_project() -> None:
     assert "<h1" in home.text
     assert "HEVA Toolkit" in home.text
     assert 'href="/guide/INSTALLATION"' in home.text
+    assert 'href="/guide/SOFTWARE_DESIGN"' in home.text
+    assert "Create or open a project" not in home.text
+    assert "Curator decisions" not in home.text
+    assert "Approved releases" not in home.text
+    assert "Essential guide" in home.text
+    assert "DOCUMENTATION_NAVIGATION" not in home.text
     assert "DOCUMENTATION_CONTENT" not in home.text
     assert installation.status_code == 200
     assert "Install and run HEVA" in installation.text
