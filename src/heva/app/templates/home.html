@@ -4,107 +4,47 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HEVA Toolkit</title>
-  <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/home.js?v=7" defer></script>
+  <link rel="stylesheet" href="/static/app.css?v=4">
+  <script src="/static/home.js?v=9" defer></script>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar">
+  <div class="app-shell project-opening-shell">
+    <header class="project-opening-header">
       <a class="brand" href="/" aria-label="HEVA home">
         <span class="brand-mark" aria-hidden="true">H</span>
-        <span><strong>HEVA Toolkit</strong><small>Heritage annotation</small></span>
+        <strong>HEVA Toolkit for annotation</strong>
       </a>
-      <nav class="workflow" aria-label="HEVA workflow">
-        <span class="workflow-step active"><b>1</b>Choose a task</span>
-        <span class="workflow-step"><b>2</b>Prepare documents</span>
-        <span class="workflow-step"><b>3</b>Review annotations</span>
-        <span class="workflow-step"><b>4</b>Submit for curation</span>
+      <nav class="topbar-links">
+        <a class="guide-link" href="/guide">Guide &amp; Quickstart</a>
+        <span id="project-state" class="project-state" aria-live="polite">Checking project…</span>
       </nav>
-      <a class="guide-link" href="/guide">Guide &amp; Quickstart →</a>
-      <div id="project-state" class="project-state" aria-live="polite">Checking for an open project…</div>
-    </aside>
-    <main class="main-content">
+    </header>
+    <main class="main-content project-opening-content">
       <section class="hero">
         <p class="eyebrow">Welcome to HEVA</p>
-        <h1 id="home-title">Open your heritage annotation project.</h1>
-        <p id="home-lead" class="lead">Like opening a working file in a desktop application, HEVA shows documents only after you choose the project they belong to.</p>
+        <h1>Open your heritage annotation project.</h1>
+        <p class="lead">Choose the project folder that contains the documents you want to review.</p>
       </section>
       <section id="project-chooser" class="project-chooser" aria-labelledby="chooser-title">
         <h2 id="chooser-title">Choose a project</h2>
-        <p class="section-help">Choose a folder from your computer. HEVA does not upload, copy, or move your source documents.</p>
+        <p class="section-help">HEVA works locally and does not upload, copy, or move your source documents.</p>
         <div id="project-message" class="notice neutral" aria-live="polite">
           Open a HEVA project, or create one from a folder containing PDF or DOCX files.
         </div>
         <div class="project-choice-grid">
-          <section id="open-project-choice" class="project-choice">
+          <section class="project-choice">
             <span class="choice-icon" aria-hidden="true">↗</span>
             <h3>Open existing project</h3>
             <p>Load a folder that already contains a hidden <code>.heva</code> workspace.</p>
             <button class="button" type="button" data-select-project="open">Choose folder and open</button>
           </section>
-          <section id="create-project-choice" class="project-choice">
+          <section class="project-choice">
             <span class="choice-icon" aria-hidden="true">＋</span>
             <h3>Create from source folder</h3>
             <p>Initialize a HEVA project around the PDFs and DOCX files already in this folder.</p>
             <button class="button" type="button" data-select-project="create">Choose source folder</button>
           </section>
         </div>
-      </section>
-      <section id="active-project" hidden>
-        <div class="active-project-header">
-          <div>
-            <p class="eyebrow">Active HEVA project</p>
-            <h2 id="active-project-name"></h2>
-          </div>
-          <button id="close-project" class="button secondary" type="button">Close project</button>
-        </div>
-        <section id="source-discovery" class="summary-card" hidden aria-live="polite">
-          <p class="eyebrow">New source documents</p>
-          <h2>PDF or DOCX files were found</h2>
-          <p>Choose which files belong to this project. Dismissed files return the next time you open it.</p>
-          <div id="source-discovery-list"></div>
-        </section>
-        <section class="choice-grid" aria-label="Choose a HEVA task">
-        <a class="choice" href="/people">
-          <span class="choice-icon" aria-hidden="true">●</span>
-          <h2>People and roles</h2>
-          <p>Identify original annotators, select the active curator, and record data owners.</p>
-        </a>
-        <a class="choice" href="/project-colors">
-          <span class="choice-icon" aria-hidden="true">◉</span>
-          <h2>Project palettes</h2>
-          <p>Inspect, version, and select the color meanings reused across documents.</p>
-        </a>
-        <a class="choice" href="/dataset-metadata">
-          <span class="choice-icon" aria-hidden="true">◆</span>
-          <h2>Dataset details</h2>
-          <p>Describe the citable dataset, its license, rights, creators, and limitations.</p>
-        </a>
-        <a class="choice primary" href="/create">
-          <span class="choice-icon" aria-hidden="true">＋</span>
-          <h2>Add or prepare documents</h2>
-          <p>Register sources and prepare their analytical metadata and annotations.</p>
-        </a>
-        <a class="choice" href="/validate">
-          <span class="choice-icon" aria-hidden="true">✓</span>
-          <h2>Validate this project</h2>
-          <p>Check annotations, color decisions, reviews, provenance, and rights.</p>
-        </a>
-        <a class="choice" href="/review">
-          <span class="choice-icon" aria-hidden="true">▤</span>
-          <h2>Review documents</h2>
-          <p>Open one extracted document at a time with its PDF, flags, and decisions.</p>
-        </a>
-        <a class="choice" href="/curation">
-          <span class="choice-icon" aria-hidden="true">◇</span>
-          <h2>Curator review queue</h2>
-          <p>Inspect submitted documents and their complete HEVA validation evidence.</p>
-        </a>
-        </section>
-        <section id="summary" class="summary-card">
-          <h2>Project overview</h2>
-          <div id="summary-counts" class="summary-counts"></div>
-        </section>
       </section>
     </main>
   </div>

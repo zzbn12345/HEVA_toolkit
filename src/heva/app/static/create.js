@@ -6,7 +6,38 @@ const stepButtons = [...document.querySelectorAll(".step-button")];
 function showStep(number) {
   steps.forEach((step) => step.classList.toggle("active", step.dataset.step === String(number)));
   stepButtons.forEach((button) => button.classList.toggle("active", button.dataset.stepTarget === String(number)));
+  updateAnnotationsLayout(number);
   content.scrollTop = 0;
+}
+
+/** Expand the existing sentence-review workspace across the document area. */
+function updateAnnotationsLayout(activeStep = null) {
+  const review = document.getElementById("annotations-review");
+  const step = activeStep || document.querySelector(".create-step.active")?.dataset.step;
+  const reviewActive = String(step) === "4" && !review.hidden;
+  app.classList.toggle("annotations-review-active", reviewActive);
+  content.classList.toggle("annotations-review-active", reviewActive);
+}
+
+/** Show extraction setup or the shared document review according to checkpoint state. */
+function showAnnotationsWorkspace(documentId, ready) {
+  const setup = document.getElementById("annotation-setup");
+  const review = document.getElementById("annotations-review");
+  setup.hidden = ready;
+  review.hidden = !ready;
+  if (ready && !review.src) {
+    review.src = `/review/${encodeURIComponent(documentId)}?embedded=1`;
+  }
+  updateAnnotationsLayout();
+}
+
+/** Reload readiness and sentence evidence after document configuration changes. */
+function refreshAnnotationsReview() {
+  const review = document.getElementById("annotations-review");
+  if (!review.src) return;
+  const refreshed = new URL(review.src);
+  refreshed.searchParams.set("refresh", Date.now().toString());
+  review.src = refreshed.toString();
 }
 
 function currentStepIsValid(button) {
@@ -237,7 +268,7 @@ function renderColorConfiguration(result) {
   document.getElementById("extract-annotations").disabled = false;
 }
 
-async function loadColors(documentId) {
+async function loadColors(documentId, discoverIfEmpty = true) {
   const status = document.getElementById("color-status");
   try {
     const response = await fetch(`/api/documents/${encodeURIComponent(documentId)}/colors`);
@@ -248,10 +279,58 @@ async function loadColors(documentId) {
       return;
     }
     renderColorConfiguration(result);
+    if (discoverIfEmpty && result.configuration.colors.length === 0) {
+      await discoverColors();
+      return;
+    }
     await loadBatchCandidates(documentId, result.configuration.human_confirmed);
   } catch (error) {
     status.className = "notice error";
     status.textContent = "The color configuration could not be loaded.";
+  }
+}
+
+/** Extract raw document evidence and expose every observed hex for review. */
+async function discoverColors() {
+  const documentId = document.getElementById("selected-document-id").value;
+  if (!documentId) return;
+  const button = document.getElementById("discover-colors");
+  const progress = document.getElementById("proposal-progress");
+  const progressLabel = document.getElementById("color-progress-label");
+  const status = document.getElementById("color-status");
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 120000);
+  button.disabled = true;
+  button.textContent = "Discovering…";
+  progressLabel.textContent = "Reading highlighted colors from the document…";
+  progress.hidden = false;
+  status.className = "notice neutral";
+  status.textContent = "Discovering highlighted colors and saving raw annotation evidence.";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/colors/discover`,
+      {method: "POST", signal: controller.signal},
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      status.className = "notice error";
+      status.textContent = `${result.message || "Color discovery failed."} ${result.action || ""}`;
+      return;
+    }
+    await loadColors(documentId, false);
+    await loadExtractionStatus(documentId);
+    status.className = "notice warning";
+    status.textContent = `${result.color_count} observed color${result.color_count === 1 ? "" : "s"} found in ${result.sentence_count} extracted sentence${result.sentence_count === 1 ? "" : "s"}. Assign or confirm a HEVA label for every color.`;
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = error.name === "AbortError"
+      ? "Color discovery did not finish within two minutes. Check the source and try again."
+      : "Color discovery could not contact the local extraction service.";
+  } finally {
+    window.clearTimeout(timeout);
+    progress.hidden = true;
+    button.disabled = false;
+    button.textContent = "Discover colors";
   }
 }
 
@@ -280,13 +359,13 @@ async function loadBatchCandidates(documentId, sourceConfirmed) {
       status.textContent = result.detail || "Batch compatibility could not be checked.";
       return;
     }
-    list.replaceChildren(...result.candidates.map((candidate) => {
+    const eligibleCandidates = result.candidates.filter((candidate) => candidate.eligible);
+    list.replaceChildren(...eligibleCandidates.map((candidate) => {
       const row = document.createElement("label");
       row.className = `batch-candidate ${candidate.eligible ? "" : "incompatible"}`;
       const input = document.createElement("input");
       input.type = "checkbox";
       input.value = candidate.document_id;
-      input.disabled = !candidate.eligible;
       input.addEventListener("change", updateBatchAction);
       const details = document.createElement("span");
       const name = document.createElement("strong");
@@ -297,12 +376,14 @@ async function loadBatchCandidates(documentId, sourceConfirmed) {
       row.append(input, details);
       return row;
     }));
-    const eligible = result.candidates.filter((item) => item.eligible).length;
+    const eligible = eligibleCandidates.length;
     status.className = `notice ${eligible ? "success" : "warning"}`;
     status.textContent = eligible
       ? `${eligible} document${eligible === 1 ? "" : "s"} have an exact palette match.`
       : "No other registered document has an eligible matching palette.";
     document.getElementById("batch-confirmed").checked = false;
+    document.getElementById("batch-confirmed").closest("label").hidden = !eligible;
+    document.getElementById("apply-batch-mapping").hidden = !eligible;
     updateBatchAction();
   } catch (error) {
     status.className = "notice error";
@@ -357,6 +438,8 @@ async function proposeColors() {
   let proposalsCreated = false;
   button.disabled = true;
   button.textContent = "Requesting…";
+  document.getElementById("color-progress-label").textContent =
+    "Asking local Ollama for optional label suggestions…";
   progress.hidden = false;
   status.className = "notice neutral";
   status.textContent = "Automatic suggestions are being generated locally. They will still require your review.";
@@ -417,6 +500,7 @@ async function confirmColors() {
     return;
   }
   await loadColors(documentId);
+  refreshAnnotationsReview();
   document.getElementById("extraction-status").textContent =
     "Color configuration confirmed. Extraction is ready.";
 }
@@ -430,6 +514,7 @@ async function loadExtractionStatus(documentId) {
     );
     const result = await response.json();
     if (!response.ok) {
+      showAnnotationsWorkspace(documentId, false);
       status.className = "notice error";
       status.textContent = result.detail || "Extraction status could not be loaded.";
       return;
@@ -448,7 +533,12 @@ async function loadExtractionStatus(documentId) {
       status.className = result.state === "invalid" ? "notice error" : "notice warning";
       status.textContent = `Persisted extraction contains ${result.record_count} record${result.record_count === 1 ? "" : "s"} but must be rebuilt. ${result.stale_reasons.join(" ")}`;
     }
+    showAnnotationsWorkspace(
+      documentId,
+      result.record_count > 0 || result.draft_record_count > 0,
+    );
   } catch (error) {
+    showAnnotationsWorkspace(documentId, false);
     status.className = "notice error";
     status.textContent = "Extraction status could not be loaded.";
   }
@@ -482,6 +572,7 @@ async function extractAnnotations(force = false) {
     if (result.status === "draft_saved") {
       status.className = "notice warning";
       status.textContent = `${result.message} ${result.action}`;
+      await loadColors(documentId);
       await loadExtractionStatus(documentId);
       return;
     }
@@ -528,7 +619,8 @@ async function loadSelectedDocument() {
     await loadExtractionStatus(documentId);
     const requestedSection = parameters.get("section");
     if (requestedSection === "citation") showStep(2);
-    if (requestedSection === "colors") showStep(4);
+    if (requestedSection === "colors") showStep(3);
+    if (requestedSection === "annotations") showStep(4);
     if (result.preview_available) {
       openPreview(
         `/api/documents/${encodeURIComponent(documentId)}/source`,
@@ -570,6 +662,7 @@ document.getElementById("confirm-citation").addEventListener(
   () => persistCitation(true),
 );
 document.getElementById("propose-colors").addEventListener("click", proposeColors);
+document.getElementById("discover-colors").addEventListener("click", discoverColors);
 document.getElementById("confirm-colors").addEventListener("click", confirmColors);
 document.getElementById("choose-external-source").addEventListener("click", chooseExternalSource);
 document.getElementById("batch-confirmed").addEventListener("change", updateBatchAction);

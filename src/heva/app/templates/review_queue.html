@@ -5,12 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Document review · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css?v=3">
-  <script src="/static/review_queue.js?v=3" defer></script>
+  <script src="/static/review_queue.js?v=6" defer></script>
 </head>
 <body>
   <header class="topbar">
     <a class="home-link" href="/">← HEVA home</a>
-    <nav class="topbar-links"><a class="guide-link" href="/guide/SENTENCE_REVIEW">Guide</a><span>Document review</span></nav>
+    <nav class="topbar-links">
+      <a class="guide-link" href="/guide/SENTENCE_REVIEW">Guide</a>
+      <span>Document review</span>
+      <button id="open-another-project" class="button secondary compact" type="button">Open another project</button>
+      <button id="close-project" class="button secondary compact" type="button">Close project</button>
+    </nav>
   </header>
   <main class="page-content">
     <p class="eyebrow">Review queue</p>

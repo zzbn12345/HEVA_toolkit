@@ -18,6 +18,8 @@ from heva.workflow.document_metadata import (
     SourceMetadata,
 )
 from heva.workflow.project_registry import sync_registry
+from heva.workflow.extraction_draft import persist_extraction_draft
+from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
 from heva.workflow.review_queue import (
     list_review_queue,
     load_review_document,
@@ -207,6 +209,57 @@ def test_document_review_contains_only_selected_document_and_navigation(tmp_path
     assert selected["next_document_id"] == documents[1]["document_id"]
     assert [item["record"]["sentence_id"] for item in selected["sentences"]] == [1, 2]
     assert selected["sentences"][1]["flags"]
+
+
+def test_unresolved_extraction_draft_is_visible_but_not_reviewable(tmp_path: Path) -> None:
+    """Raw colored spans remain inspectable before semantic labels are configured."""
+
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    curator = add_person(tmp_path, PersonRecord(name="Curator", roles=["curator"]))
+    activate_curator(tmp_path, curator.person_id)
+    persist_extraction_draft(
+        tmp_path,
+        document_id,
+        [
+            {
+                "sentence_id": 1,
+                "page": 1,
+                "sentence": "Historic harbour",
+                "tokens": ["Historic", "harbour"],
+                "values": ["#FFFF00"],
+                "entities": [
+                    {
+                        "start": 0,
+                        "end": 16,
+                        "text": "Historic harbour",
+                        "label": "#FFFF00",
+                    }
+                ],
+                "ner_tags": ["B-#FFFF00", "I-#FFFF00"],
+            }
+        ],
+        extractor="test extractor",
+        extractor_version="1.0",
+    )
+
+    selected = load_review_document(tmp_path, document_id)
+
+    assert selected["draft_only"] is True
+    assert selected["annotation_complete"] is False
+    assert selected["sentences"][0]["record"]["entities"][0] == {
+        "start": 0,
+        "end": 16,
+        "text": "Historic harbour",
+        "label": "unresolved",
+        "color": "#FFFF00",
+    }
+    assert selected["sentences"][0]["review"]["status"] == "pending"
+    assert selected["sentences"][0]["flags"][0]["code"] == "unresolved_color_mapping"
 
 
 def test_document_is_complete_only_when_all_four_gates_pass(tmp_path: Path) -> None:

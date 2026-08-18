@@ -94,9 +94,7 @@ function renderQueue() {
     action.className = "project-action";
     const link = document.createElement("a");
     link.className = "button";
-    link.href = item.review_available
-      ? `/review/${encodeURIComponent(item.document_id)}`
-      : `/create?document_id=${encodeURIComponent(item.document_id)}`;
+    link.href = `/create?document_id=${encodeURIComponent(item.document_id)}&section=annotations`;
     link.textContent = "Edit this annotation";
     action.appendChild(link);
     row.append(documentCell, workflow, readiness, progressCell, action);
@@ -116,7 +114,9 @@ async function loadQueue() {
     documents = result.documents;
     const complete = documents.filter((item) => item.annotation_complete).length;
     statusBox.className = "notice success";
-    statusBox.textContent = `${complete} of ${documents.length} documents are annotation-complete.`;
+    statusBox.textContent = result.added_document_ids?.length
+      ? `${result.added_document_ids.length} new document${result.added_document_ids.length === 1 ? " was" : "s were"} added from the project folder. ${complete} of ${documents.length} documents are annotation-complete.`
+      : `${complete} of ${documents.length} documents are annotation-complete.`;
     renderQueue();
   } catch (error) {
     statusBox.className = "notice error";
@@ -135,3 +135,17 @@ document.querySelectorAll("[data-readiness]").forEach((button) => {
 });
 
 loadQueue();
+
+/** Close only the active local session; project files remain untouched. */
+async function leaveProject() {
+  const response = await fetch("/api/projects/close", {method: "POST"});
+  if (!response.ok) {
+    statusBox.className = "notice error";
+    statusBox.textContent = "The project could not be closed.";
+    return;
+  }
+  window.location.assign("/");
+}
+
+document.getElementById("open-another-project").addEventListener("click", leaveProject);
+document.getElementById("close-project").addEventListener("click", leaveProject);

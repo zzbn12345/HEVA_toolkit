@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+### Changed
+
+- Simplified the alpha workflow so opening a project leads directly to its document review
+  queue, while document preparation now follows curator, citation, color configuration,
+  and annotation steps.
+- Embedded unresolved and canonical sentence evidence in the document annotation step so
+  researchers can continue from color discovery into review without switching workflows.
+
+### Fixed
+
+- Connected raw PDF/DOCX color discovery to the document Color config: observed hex values
+  are persisted, displayed as readable swatches, and made available for supervised HEVA
+  label decisions before canonical annotations are created.
+- Added visible color-discovery progress, retry controls, timeouts, and actionable errors
+  for missing extraction dependencies or unreadable/empty source evidence.
+- Restored automatic extraction in the unified Python environment with spaCy available.
+  Extraction performance remains unmeasured and is not yet an alpha performance claim.
+
+### Still under alpha review
+
+- Restore direct access to project validation beside **Add document** in the review queue.
+- Measure PDF and DOCX extraction duration and memory use on the agreed alpha corpus.
+- Explain in the Color config interface that hex codes are observed document colors and
+  HEVA labels are supervised semantic decisions rather than universal color meanings.
+
 ### Added
 
 - Data Package generation from the validation view, with exact release-gate feedback and

@@ -8,7 +8,13 @@ from typing import Callable
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    StreamingResponse,
+)
 from pydantic import BaseModel, ConfigDict, StrictBool, ValidationError
 
 from heva.workflow.annotator_registry import (
@@ -200,7 +206,9 @@ def create_project_router(
         return legacy.name if legacy and legacy.name else ""
 
     @router.get("/", response_class=HTMLResponse)
-    def home() -> str:
+    def home():
+        if root.selected:
+            return RedirectResponse("/review", status_code=303)
         return template("home.html")
 
     @router.get("/validate", response_class=HTMLResponse)
@@ -562,6 +570,50 @@ def create_project_router(
             ),
         }
 
+    @router.post("/api/documents/{document_id}/colors/discover")
+    def discover_colors(document_id: str):
+        """Extract raw evidence and populate the document-local color review."""
+
+        try:
+            run_registered_raw_extraction(root, document_id)
+            draft = load_extraction_draft(root, document_id)
+            configuration = load_color_configuration(root, document_id)
+        except ModuleNotFoundError as error:
+            dependency = error.name or "an extraction dependency"
+            return JSONResponse(
+                {
+                    "code": "extraction_dependency_missing",
+                    "message": "Color discovery is not fully installed.",
+                    "action": (
+                        f"The required Python package '{dependency}' is missing. "
+                        "Install HEVA with its extraction dependencies and restart the server."
+                    ),
+                },
+                status_code=503,
+            )
+        except (
+            ColorMappingError,
+            ExtractionDraftError,
+            PeopleRegistryError,
+            RegistryError,
+            OSError,
+            ValidationError,
+        ) as error:
+            return JSONResponse(
+                {
+                    "code": getattr(error, "code", "color_discovery_failed"),
+                    "message": "Colors could not be discovered from this document.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+        return {
+            "document_id": document_id,
+            "color_count": len(configuration.colors),
+            "sentence_count": len(draft.sentences),
+            "message": "Observed colors are ready for human review.",
+        }
+
     @router.post("/api/documents/{document_id}/colors/propose")
     def propose_colors(document_id: str):
         try:
@@ -720,20 +772,46 @@ def create_project_router(
             run_registered_raw_extraction(root, document_id)
             try:
                 result = promote_extraction_draft(root, document_id)
-            except (ProjectColorConfigurationError, ExtractionDraftError, ExtractionSessionError) as mapping_error:
+            except (
+                ColorMappingError,
+                ProjectColorConfigurationError,
+                ExtractionDraftError,
+                ExtractionSessionError,
+            ):
                 return JSONResponse(
                     {
                         "document_id": document_id,
                         "status": "draft_saved",
                         "message": "Raw extraction evidence was saved.",
                         "action": (
-                            "Select a complete project color configuration to create "
-                            f"canonical annotations. {mapping_error}"
+                            "Review and confirm Color config to convert this draft "
+                            "into canonical HEVA annotations."
                         ),
                     },
                     status_code=202,
                 )
-        except (ColorMappingError, ExtractionDraftError, ExtractionSessionError, OSError, ValidationError) as error:
+        except ModuleNotFoundError as error:
+            dependency = error.name or "an extraction dependency"
+            return JSONResponse(
+                {
+                    "code": "extraction_dependency_missing",
+                    "message": "The extraction service is not fully installed.",
+                    "action": (
+                        f"The required Python package '{dependency}' is missing. "
+                        "Install HEVA with its extraction dependencies and restart the server."
+                    ),
+                },
+                status_code=503,
+            )
+        except (
+            ColorMappingError,
+            ExtractionDraftError,
+            ExtractionSessionError,
+            PeopleRegistryError,
+            RegistryError,
+            OSError,
+            ValidationError,
+        ) as error:
             return JSONResponse(
                 {
                     "code": getattr(error, "code", "extraction_failed"),

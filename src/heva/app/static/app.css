@@ -60,6 +60,25 @@ a { color: inherit; }
   font-weight: 900;
 }
 
+.project-opening-shell { display: block; }
+
+.project-opening-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.project-opening-header .project-state {
+  margin: 0;
+  padding: .55rem .75rem;
+}
+
+.project-opening-content { padding-top: 4rem; }
+
 .workflow { display: grid; gap: .85rem; }
 
 .workflow-step {
@@ -251,6 +270,7 @@ h1 {
 }
 
 .button.secondary { border: 1px solid var(--border); background: transparent; }
+.button.compact { margin: 0; padding: .55rem .75rem; }
 .button.danger { border: 1px solid var(--danger); background: transparent; color: var(--danger); }
 .button:disabled { cursor: wait; opacity: .6; }
 

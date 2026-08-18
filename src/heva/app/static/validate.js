@@ -157,7 +157,7 @@ function showReport(report) {
       const actions = document.createElement("div");
       actions.className = "validation-actions";
       const edit = textElement("a", "button secondary", "Open document");
-      edit.href = `/review/${encodeURIComponent(documentReport.document_id)}`;
+      edit.href = `/create?document_id=${encodeURIComponent(documentReport.document_id)}&section=annotations`;
       actions.appendChild(edit);
       card.appendChild(actions);
       return card;

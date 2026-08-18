@@ -10,6 +10,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 from heva.workflow.document_metadata import PackageMetadata, save_package_metadata
+from heva.workflow.extraction_draft import ExtractionDraftError, load_extraction_draft
 from heva.workflow.project_registry import (
     DEFAULT_REGISTRY_PATH,
     ProjectRegistry,
@@ -240,34 +241,90 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
     if entry is None:
         raise ReviewQueueError(f"Document {document_id} is not registered.")
     package = root / entry.package_path
-    records = _load_records(package)
+    draft_only = False
+    try:
+        records = _load_records(package)
+    except ReviewQueueError:
+        records = []
+    if not records:
+        try:
+            draft = load_extraction_draft(root, document_id)
+        except ExtractionDraftError as error:
+            raise ReviewQueueError(
+                "No canonical annotations or unresolved extraction draft are available."
+            ) from error
+        draft_only = True
+        records = [
+            {
+                "sentence_id": sentence.sentence_id,
+                "page": sentence.page,
+                "sentence": sentence.sentence,
+                "tokens": sentence.tokens,
+                "values": [],
+                "entities": [
+                    {
+                        "start": entity.start,
+                        "end": entity.end,
+                        "text": entity.text,
+                        "label": "unresolved",
+                        "color": entity.color,
+                    }
+                    for entity in sentence.entities
+                ],
+                "ner_tags": sentence.ner_tags,
+            }
+            for sentence in draft.sentences
+        ]
     review_path = document_workspace_directory(root, document_id) / "review-state.json"
-    if not review_path.exists():
+    if not draft_only and not review_path.exists():
         from heva.workflow.review_state import initialize_sentence_reviews
 
         initialize_sentence_reviews(root, document_id)
-    try:
-        review = DocumentReview.model_validate_json(
-            review_path.read_text(encoding="utf-8")
-        )
-    except OSError as error:
-        raise ReviewQueueError(
-            "Review state is not available. Run extraction or initialize sentence review first."
-        ) from error
-    decisions = {item.sentence_id: item for item in review.sentences}
+    if draft_only:
+        decisions = {}
+    else:
+        try:
+            review = DocumentReview.model_validate_json(
+                review_path.read_text(encoding="utf-8")
+            )
+        except OSError as error:
+            raise ReviewQueueError(
+                "Review state is not available. Run extraction or initialize sentence review first."
+            ) from error
+        decisions = {item.sentence_id: item for item in review.sentences}
     sentences = []
     for record in sorted(records, key=lambda item: (item["page"], item["sentence_id"])):
         sentence_id = record["sentence_id"]
         decision = decisions.get(sentence_id)
-        if decision is None:
+        if decision is None and not draft_only:
             raise ReviewQueueError(
                 f"Sentence {sentence_id} has no matching persisted review state."
             )
+        review_value = (
+            decision.model_dump(mode="json")
+            if decision is not None
+            else {
+                "sentence_id": sentence_id,
+                "record_sha256": "unresolved-draft",
+                "status": "pending",
+                "reviewer": None,
+                "decided_at": None,
+                "comment": None,
+                "audit": [],
+            }
+        )
         sentences.append(
             {
                 "record": record,
-                "review": decision.model_dump(mode="json"),
-                "flags": [
+                "review": review_value,
+                "flags": ([
+                    {
+                        "code": "unresolved_color_mapping",
+                        "severity": "warning",
+                        "message": "Choose a color configuration before reviewing this annotation.",
+                        "evidence": None,
+                    }
+                ] if draft_only else [
                     {
                         "code": flag.code,
                         "severity": flag.severity,
@@ -275,7 +332,7 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
                         "evidence": flag.evidence,
                     }
                     for flag in assess_record(record)
-                ],
+                ]),
             }
         )
     all_items = list_review_queue(root)
@@ -284,19 +341,36 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
     )
     queue = [item for item in all_items if item.review_available]
     identifiers = [item.document_id for item in queue]
-    position = identifiers.index(document_id)
+    position = identifiers.index(document_id) if document_id in identifiers else -1
+    readiness_gates = selected_summary.readiness_gates
+    blocking_reasons = selected_summary.blocking_reasons
+    if draft_only:
+        readiness_gates = {
+            **readiness_gates,
+            "color_configuration": False,
+            "extraction": False,
+            "sentence_review": False,
+        }
+        blocking_reasons = [
+            "Review and confirm the document color configuration.",
+            "Convert the unresolved color draft into canonical HEVA annotations.",
+            "Approve or exclude every extracted sentence.",
+        ]
     return {
         "document_id": document_id,
         "source_path": entry.source_path,
         "status": entry.status,
         "source_state": entry.source_state,
-        "annotation_complete": selected_summary.annotation_complete,
+        "annotation_complete": selected_summary.annotation_complete and not draft_only,
         "completion_percent": selected_summary.completion_percent,
-        "readiness_gates": selected_summary.readiness_gates,
-        "blocking_reasons": selected_summary.blocking_reasons,
+        "readiness_gates": readiness_gates,
+        "blocking_reasons": blocking_reasons,
+        "draft_only": draft_only,
         "previous_document_id": identifiers[position - 1] if position > 0 else None,
         "next_document_id": (
-            identifiers[position + 1] if position + 1 < len(identifiers) else None
+            identifiers[position + 1]
+            if position >= 0 and position + 1 < len(identifiers)
+            else None
         ),
         "sentences": sentences,
     }

@@ -17,6 +17,10 @@ let visibleSentences = [];
 let editingRecord = null;
 const selectedSentenceIds = new Set();
 
+if (new URLSearchParams(window.location.search).get("embedded") === "1") {
+  document.body.classList.add("embedded-review");
+}
+
 function textElement(tag, className, text) {
   const element = document.createElement(tag);
   element.className = className;
@@ -305,7 +309,7 @@ async function saveCorrection() {
 }
 
 function updateSelectionControls() {
-  const editable = !["in_review", "done"].includes(reviewDocument.status);
+  const editable = !reviewDocument.draft_only && !["in_review", "done"].includes(reviewDocument.status);
   const selectedCount = visibleSentences.filter((item) =>
     selectedSentenceIds.has(item.record.sentence_id)
   ).length;
@@ -333,7 +337,7 @@ function sentenceCard(item) {
   selection.className = "sentence-selection";
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
-  checkbox.disabled = ["in_review", "done"].includes(reviewDocument.status);
+  checkbox.disabled = reviewDocument.draft_only || ["in_review", "done"].includes(reviewDocument.status);
   checkbox.checked = selectedSentenceIds.has(record.sentence_id);
   checkbox.setAttribute("aria-label", `Select sentence ${record.sentence_id}`);
   checkbox.addEventListener("change", () => {
@@ -354,7 +358,7 @@ function sentenceCard(item) {
   }
   const actions = document.createElement("div");
   actions.className = "decision-actions";
-  const editable = !["in_review", "done"].includes(reviewDocument.status);
+  const editable = !reviewDocument.draft_only && !["in_review", "done"].includes(reviewDocument.status);
   const editButton = textElement("button", "button secondary", "Edit sentence");
   editButton.type = "button";
   editButton.disabled = !editable;
@@ -396,13 +400,17 @@ function render() {
   const completed = reviewDocument.sentences.filter((item) =>
     ["approved", "excluded"].includes(item.review.status)
   ).length;
-  statusBox.className = "notice success";
-  statusBox.textContent = `Showing ${visibleSentences.length} of ${reviewDocument.sentences.length} sentences from this document only. ${completed} have final decisions.`;
+  statusBox.className = `notice ${reviewDocument.draft_only ? "warning" : "success"}`;
+  statusBox.textContent = reviewDocument.draft_only
+    ? `Showing ${visibleSentences.length} of ${reviewDocument.sentences.length} raw extracted sentences. Colors are visible, but review decisions remain locked until Color config resolves their HEVA labels.`
+    : `Showing ${visibleSentences.length} of ${reviewDocument.sentences.length} sentences from this document only. ${completed} have final decisions.`;
 }
 
 function navigationLink(documentIdValue, label) {
   const link = textElement("a", "button secondary", label);
-  link.href = `/review/${encodeURIComponent(documentIdValue)}`;
+  link.href = document.body.classList.contains("embedded-review")
+    ? `/create?document_id=${encodeURIComponent(documentIdValue)}&section=annotations`
+    : `/review/${encodeURIComponent(documentIdValue)}`;
   return link;
 }
 

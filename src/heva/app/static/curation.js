@@ -306,7 +306,7 @@ function curatorCard(item) {
   const actions = document.createElement("div");
   actions.className = "curation-actions";
   const evidence = textElement("a", "button secondary", "Open annotation evidence");
-  evidence.href = `/review/${encodeURIComponent(item.document_id)}`;
+  evidence.href = `/create?document_id=${encodeURIComponent(item.document_id)}&section=annotations`;
   actions.appendChild(evidence);
   card.appendChild(actions);
   card.appendChild(decisionPanel(item));

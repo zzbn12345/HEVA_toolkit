@@ -20,7 +20,11 @@ from heva.workflow.extraction_draft import (
     run_registered_raw_extraction,
 )
 from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
-from heva.workflow.color_mapping import propose_color_configuration, save_color_configuration
+from heva.workflow.color_mapping import (
+    load_color_configuration,
+    propose_color_configuration,
+    save_color_configuration,
+)
 from heva.workflow.project_registry import sync_registry
 
 
@@ -172,6 +176,27 @@ def test_registered_raw_run_does_not_require_ollama_or_color_mapping(tmp_path: P
 
     assert received == [tmp_path / "sources/source.pdf"]
     assert load_extraction_draft(tmp_path, document_id).extractor == "deterministic test extractor"
+
+
+def test_registered_raw_run_shows_observed_colors_for_review(tmp_path: Path) -> None:
+    """Extracted hex values immediately become visible pending color decisions."""
+
+    document_id, records = _project(tmp_path)
+
+    run_registered_raw_extraction(
+        tmp_path,
+        document_id,
+        extractor=lambda _source: records,
+        extractor_name="deterministic test extractor",
+    )
+
+    configuration = load_color_configuration(tmp_path, document_id)
+
+    assert [color.hex for color in configuration.colors] == ["#FFF200", "#FFFF00"]
+    assert all(color.status == "pending_review" for color in configuration.colors)
+    assert all(color.text_color in {"#000000", "#FFFFFF"} for color in configuration.colors)
+    assert configuration.human_confirmed is False
+    assert configuration.use_for_extraction is False
 
 
 def test_promotion_writes_canonical_annotations_only_after_selected_mapping(tmp_path: Path) -> None:

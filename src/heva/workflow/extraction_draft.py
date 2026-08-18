@@ -194,6 +194,41 @@ def load_extraction_draft(project_root: str | Path, document_id: str) -> Extract
         raise ExtractionDraftError(f"The extraction draft for {document_id} cannot be read.") from error
 
 
+def synchronize_draft_colors(project_root: str | Path, document_id: str) -> bool:
+    """Add newly observed raw hex values to the document's pending color review."""
+
+    from heva.workflow.color_mapping import (
+        load_color_configuration,
+        propose_color_configuration,
+        save_color_configuration,
+    )
+
+    root = Path(project_root).resolve()
+    draft = load_extraction_draft(root, document_id)
+    observed = {
+        entity.color
+        for sentence in draft.sentences
+        for entity in sentence.entities
+    }
+    configuration = load_color_configuration(root, document_id)
+    known = {color.hex for color in configuration.colors}
+    missing = observed - known
+    if not missing:
+        return False
+    additions = propose_color_configuration(missing)
+    updated = configuration.model_copy(deep=True)
+    updated.colors.extend(additions.colors)
+    updated.colors.sort(key=lambda color: color.hex)
+    updated.human_confirmed = False
+    updated.confirmed_by = None
+    updated.confirmed_at = None
+    updated.use_for_extraction = False
+    updated.extraction_authorized_by = None
+    updated.extraction_authorized_at = None
+    save_color_configuration(root, document_id, updated)
+    return True
+
+
 def compile_extraction_draft(
     project_root: str | Path,
     document_id: str,
@@ -269,28 +304,41 @@ def run_registered_raw_extraction(
     entry = _registered_document(root, document_id)
     source = require_current_document_source(root, entry)
     if extractor is None:
-        if source.suffix.lower() == ".pdf":
-            from heva.extraction.pdf_extractor import extract_colored_highlights
+        try:
+            if source.suffix.lower() == ".pdf":
+                from heva.extraction.pdf_extractor import extract_colored_highlights
 
-            records = extract_colored_highlights(source, color_label_map=None)
-            name = "HEVA PDF extractor"
-        elif source.suffix.lower() == ".docx":
-            from heva.extraction.docx_extractor import extract_docx_highlights
+                records = extract_colored_highlights(source, color_label_map=None)
+                name = "HEVA PDF extractor"
+            elif source.suffix.lower() == ".docx":
+                from heva.extraction.docx_extractor import extract_docx_highlights
 
-            records = extract_docx_highlights(source, color_label_map=None)
-            name = "HEVA DOCX extractor"
-        else:
-            raise ExtractionDraftError(f"Unsupported source format: {source.suffix or '(none)'}")
+                records = extract_docx_highlights(source, color_label_map=None)
+                name = "HEVA DOCX extractor"
+            else:
+                raise ExtractionDraftError(
+                    f"Unsupported source format: {source.suffix or '(none)'}"
+                )
+        except ModuleNotFoundError:
+            raise
+        except ExtractionDraftError:
+            raise
+        except (OSError, RuntimeError, ValueError) as error:
+            raise ExtractionDraftError(
+                f"Raw color evidence could not be read from {source.name}: {error}"
+            ) from error
     else:
         records = extractor(source)
         name = extractor_name or getattr(extractor, "__name__", "custom extractor")
-    return persist_extraction_draft(
+    path = persist_extraction_draft(
         root,
         document_id,
         records,
         extractor=name,
         extractor_version=extractor_version,
     )
+    synchronize_draft_colors(root, document_id)
+    return path
 
 
 def promote_extraction_draft(project_root: str | Path, document_id: str):

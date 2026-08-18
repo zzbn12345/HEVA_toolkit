@@ -14,6 +14,7 @@ import pytest
 from heva.app.main import create_app
 from heva.app.routes import project as project_routes
 from heva.workflow.color_mapping import (
+    ColorMappingError,
     confirm_color_configuration,
     propose_color_configuration,
     resolve_color,
@@ -24,8 +25,8 @@ from heva.workflow.package_validator import PackageValidationError
 from heva.workflow.review_state import initialize_sentence_reviews
 
 
-def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -> None:
-    client = TestClient(create_app(tmp_path))
+def test_home_only_offers_project_selection_without_inline_assets() -> None:
+    client = TestClient(create_app())
 
     response = client.get("/")
 
@@ -33,13 +34,16 @@ def test_home_offers_create_and_validate_without_inline_assets(tmp_path: Path) -
     assert "Welcome to HEVA" in response.text
     assert "Open existing project" in response.text
     assert "Create from source folder" in response.text
-    assert "Add or prepare documents" in response.text
-    assert "Validate this project" in response.text
-    assert "Curator review queue" in response.text
-    assert 'href="/static/app.css"' in response.text
-    assert 'src="/static/home.js?v=7"' in response.text
+    assert "Add or prepare documents" not in response.text
+    assert "Validate this project" not in response.text
+    assert "HEVA project workspace" not in response.text
+    assert 'href="/static/app.css?v=4"' in response.text
+    assert 'src="/static/home.js?v=9"' in response.text
     assert "Choose folder and open" in response.text
     assert "Choose source folder" in response.text
+    assert "HEVA Toolkit for annotation" in response.text
+    assert 'class="sidebar"' not in response.text
+    assert 'class="workflow"' not in response.text
     assert 'name="path"' not in response.text
     assert "<style>" not in response.text
     assert 'href="/"' in response.text
@@ -82,7 +86,7 @@ def test_curator_page_exposes_local_decision_queue_and_validation_filters(
 
     assert response.status_code == 200
     assert "Local curator queue" in response.text
-    assert 'src="/static/curation.js?v=2"' in response.text
+    assert 'src="/static/curation.js?v=3"' in response.text
     assert 'href="/static/curation.css?v=2"' in response.text
     assert 'data-curation-filter="in_review"' in response.text
     assert 'data-curation-filter="attention"' in response.text
@@ -157,12 +161,17 @@ def test_existing_project_can_be_opened_and_closed(tmp_path: Path) -> None:
         "/api/projects/open",
         json={"path": str(project_root)},
     )
+    home = client.get("/", follow_redirects=False)
+    main_page = client.get("/")
     status = client.get("/api/project")
     closed = client.post("/api/projects/close")
     after_close = client.get("/api/project")
 
     assert opened.status_code == 200
     assert opened.json()["document_count"] == 1
+    assert home.status_code == 303
+    assert home.headers["location"] == "/review"
+    assert "Review one document at a time" in main_page.text
     assert status.json()["project_name"] == "existing-project"
     assert "project_root" not in status.json()
     assert closed.json() == {"closed": True}
@@ -204,6 +213,28 @@ def test_open_reports_new_sources_and_session_decisions_are_explicit(tmp_path: P
     client.post("/api/projects/close")
     client.post("/api/projects/open", json={"path": str(project_root)})
     assert client.get("/api/projects/source-scan").json()["discovered"] == ["dismiss.pdf"]
+
+
+def test_review_queue_registers_new_project_documents_automatically(tmp_path: Path) -> None:
+    """Opening the main project view immediately includes unseen supported sources."""
+
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+    (project_root / "known.pdf").write_bytes(b"known")
+    sync_registry(project_root, source_dir=".")
+    (project_root / "new-document.docx").write_bytes(b"new")
+    client = TestClient(create_app(project_root))
+
+    response = client.get("/api/review-queue")
+
+    assert response.status_code == 200
+    result = response.json()
+    assert len(result["added_document_ids"]) == 1
+    assert {item["source_path"] for item in result["documents"]} == {
+        "known.pdf",
+        "new-document.docx",
+    }
+    assert client.get("/api/projects/source-scan").json()["discovered"] == []
 
 
 def test_existing_parent_root_project_moves_into_selected_source_folder(
@@ -375,8 +406,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=9"' in response.text
-    assert 'href="/static/create.css?v=4"' in response.text
+    assert 'src="/static/create.js?v=15"' in response.text
+    assert 'href="/static/create.css?v=6"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text
@@ -386,10 +417,20 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="confirm-citation"' in response.text
     assert 'id="extraction-progress"' in response.text
     assert 'id="proposal-progress"' in response.text
+    assert 'id="discover-colors"' in response.text
     assert 'id="propose-colors"' in response.text
     assert 'id="batch-mapping"' in response.text
     assert 'id="apply-batch-mapping"' in response.text
     assert 'id="rebuild-annotations"' in response.text
+    assert 'id="annotations-review"' in response.text
+    assert "<span>Documents</span>" not in response.text
+    assert "<span>Color review</span>" not in response.text
+    assert '<span>Color config</span>' in response.text
+    assert '<span>Annotations</span>' in response.text
+    assert response.text.index('data-step="3"') < response.text.index('data-step="4"')
+    assert response.text.index("<h1>Color configuration</h1>") < response.text.index(
+        "<h1>Annotations</h1>"
+    )
     assert "#FFFF00" not in response.text
     assert "Label not decided" not in response.text
 
@@ -476,6 +517,13 @@ def test_confirmed_document_colors_create_and_select_reusable_project_palette(
     assert project_colors["configurations"][0]["mappings"] == [
         {"label": "political", "hexes": ["#CCCC00"]}
     ]
+    metadata = json.loads(
+        (tmp_path / registry["documents"][0]["metadata_path"]).read_text()
+    )
+    assert metadata["color_configuration"]["human_confirmed"] is True
+    queue = client.get("/api/review-queue").json()["documents"]
+    selected = next(item for item in queue if item["document_id"] == document_id)
+    assert selected["readiness_gates"]["color_configuration"] is True
 
 
 def test_batch_color_candidates_explain_palette_mismatch(tmp_path: Path) -> None:
@@ -552,6 +600,7 @@ def test_extraction_interface_has_progress_timeout_and_visible_errors() -> None:
     assert "/extraction" in script
     assert "?force=true" in script
     assert "must be rebuilt" in script
+    assert "await loadColors(documentId)" in script
 
 
 def test_color_form_prefills_suggestions_without_presenting_model_reasoning() -> None:
@@ -564,6 +613,8 @@ def test_color_form_prefills_suggestions_without_presenting_model_reasoning() ->
     assert "Document legend mapping:" in script
     assert "color.reasoning" not in script
     assert "No explanation was recorded" not in script
+    assert "result.configuration.colors.length === 0" in script
+    assert "/colors/discover" in script
 
 
 def test_extraction_endpoint_persists_raw_evidence_before_canonical_promotion(
@@ -595,6 +646,108 @@ def test_extraction_endpoint_persists_raw_evidence_before_canonical_promotion(
 
     assert response.status_code == 200
     assert calls == [("raw", "HEVA-TEST"), ("canonical", "HEVA-TEST")]
+
+
+def test_pending_color_map_keeps_successful_raw_extraction_as_draft(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The web app must not report saved raw evidence as a failed extraction."""
+
+    calls = []
+
+    def fake_raw(root, document_id):
+        calls.append(("raw", document_id))
+
+    def pending_map(root, document_id):
+        raise ColorMappingError("Pending mapping requires CLI authorization.")
+
+    monkeypatch.setattr("heva.app.routes.project.run_registered_raw_extraction", fake_raw)
+    monkeypatch.setattr("heva.app.routes.project.promote_extraction_draft", pending_map)
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/documents/HEVA-TEST/extract")
+
+    assert response.status_code == 202
+    assert calls == [("raw", "HEVA-TEST")]
+    assert response.json()["status"] == "draft_saved"
+    assert response.json()["message"] == "Raw extraction evidence was saved."
+    assert "Color config" in response.json()["action"]
+    assert "--authorize-pending-map-by" not in response.json()["action"]
+
+
+def test_missing_extraction_dependency_is_reported_clearly(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A missing optional extractor package must become a useful UI error."""
+
+    def missing_dependency(root, document_id):
+        raise ModuleNotFoundError("No module named 'spacy'", name="spacy")
+
+    monkeypatch.setattr(
+        "heva.app.routes.project.run_registered_raw_extraction",
+        missing_dependency,
+    )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/documents/HEVA-TEST/extract")
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "extraction_dependency_missing"
+    assert "spacy" in response.json()["action"]
+    assert "restart the server" in response.json()["action"]
+
+
+def test_color_discovery_reports_missing_extraction_dependency(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Color discovery must expose dependency failures instead of returning server errors."""
+
+    def missing_dependency(root, document_id):
+        raise ModuleNotFoundError("No module named 'spacy'", name="spacy")
+
+    monkeypatch.setattr(
+        "heva.app.routes.project.run_registered_raw_extraction",
+        missing_dependency,
+    )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/documents/HEVA-TEST/colors/discover")
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "extraction_dependency_missing"
+    assert "spacy" in response.json()["action"]
+
+
+def test_color_discovery_exposes_raw_hex_evidence_to_the_interface(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The dedicated action connects raw extraction to the Color config step."""
+
+    calls = []
+    monkeypatch.setattr(
+        "heva.app.routes.project.run_registered_raw_extraction",
+        lambda root, document_id: calls.append(document_id),
+    )
+    monkeypatch.setattr(
+        "heva.app.routes.project.load_extraction_draft",
+        lambda root, document_id: SimpleNamespace(sentences=[object(), object()]),
+    )
+    monkeypatch.setattr(
+        "heva.app.routes.project.load_color_configuration",
+        lambda root, document_id: SimpleNamespace(colors=[object(), object(), object()]),
+    )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/documents/HEVA-TEST/colors/discover")
+
+    assert response.status_code == 200
+    assert calls == ["HEVA-TEST"]
+    assert response.json()["color_count"] == 3
+    assert response.json()["sentence_count"] == 2
 
 
 def test_annotator_is_persisted_in_project_collection(tmp_path: Path) -> None:
@@ -960,7 +1113,7 @@ def test_validation_page_exposes_report_runner_filters_and_download(
     assert 'data-validation-filter="issues"' in response.text
     assert 'data-validation-filter="completed"' in response.text
     assert 'data-validation-filter="incomplete"' in response.text
-    assert 'src="/static/validate.js?v=5"' in response.text
+    assert 'src="/static/validate.js?v=6"' in response.text
     assert 'id="generate-release"' in response.text
     assert 'id="download-release"' in response.text
     assert 'href="/static/validation.css?v=2"' in response.text
@@ -1191,8 +1344,8 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=8"' in response.text
-    assert 'href="/static/review.css?v=7"' in response.text
+    assert 'src="/static/review_document.js?v=9"' in response.text
+    assert 'href="/static/review.css?v=8"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text
@@ -1267,6 +1420,12 @@ def test_document_setup_asset_opens_requested_review_section() -> None:
     assert 'parameters.get("section")' in script
     assert 'requestedSection === "citation"' in script
     assert 'requestedSection === "colors"' in script
+    assert 'requestedSection === "colors") showStep(3)' in script
+    assert 'requestedSection === "annotations") showStep(4)' in script
+    assert "result.draft_record_count > 0" in script
+    assert "?embedded=1" in script
+    assert "result.candidates.filter((candidate) => candidate.eligible)" in script
+    assert "refreshAnnotationsReview()" in script
 
 
 def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path) -> None:
@@ -1374,7 +1533,27 @@ def test_review_queue_asset_always_offers_edit_annotation_action() -> None:
 
     assert 'link.textContent = "Edit this annotation"' in script
     assert "/create?document_id=" in script
-    assert "/review/" in script
+    assert "&section=annotations" in script
+    assert 'fetch("/api/projects/close", {method: "POST"})' in script
+
+
+def test_review_queue_can_close_or_switch_project(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+    script = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "review_queue.js"
+    ).read_text(encoding="utf-8")
+
+    response = client.get("/review")
+
+    assert response.status_code == 200
+    assert 'id="open-another-project"' in response.text
+    assert 'id="close-project"' in response.text
+    assert 'src="/static/review_queue.js?v=6"' in response.text
     assert 'badge.textContent = item.annotation_complete ? "Complete" : "Incomplete"' in script
     assert "readiness_gates" in script
 

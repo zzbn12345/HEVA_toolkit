@@ -29,6 +29,11 @@ from heva.workflow.people_registry import (
     add_person,
     load_people_registry,
 )
+from heva.workflow.project_registry import (
+    RegistryError,
+    register_discovered_sources,
+    scan_project_sources,
+)
 from heva.workflow.review_queue import (
     ReviewQueueError,
     list_review_queue,
@@ -63,8 +68,14 @@ def create_review_router(
     @router.get("/api/review-queue")
     def review_queue():
         try:
+            scan = scan_project_sources(root.require())
+            added_document_ids = (
+                register_discovered_sources(root.require(), scan.discovered)
+                if scan.discovered
+                else ()
+            )
             items = list_review_queue(root)
-        except (ReviewQueueError, ValidationError) as error:
+        except (RegistryError, ReviewQueueError, ValidationError) as error:
             return JSONResponse(
                 {
                     "code": "review_queue_unavailable",
@@ -73,7 +84,10 @@ def create_review_router(
                 },
                 status_code=422,
             )
-        return {"documents": [item.model_dump(mode="json") for item in items]}
+        return {
+            "documents": [item.model_dump(mode="json") for item in items],
+            "added_document_ids": list(added_document_ids),
+        }
 
     @router.get("/api/review/{document_id}")
     def review_document(document_id: str):
