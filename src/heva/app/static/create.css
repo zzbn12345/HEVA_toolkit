@@ -43,10 +43,22 @@
   height: 30px;
   border: 1px solid var(--border);
   border-radius: 50%;
+  font-size: 1.25rem;
+  line-height: 1;
 }
 
 .step-button.active { background: var(--field); color: var(--ink); }
-.step-button.active b { border-color: var(--accent); background: var(--accent); color: var(--background); }
+.step-button.missing b {
+  border-color: #ff8795;
+  background: rgba(255, 110, 128, .13);
+  color: #ff8795;
+}
+.step-button.complete b {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--background);
+}
+.step-button.active b { box-shadow: 0 0 0 3px rgba(96, 215, 190, .14); }
 
 .create-content {
   min-height: 0;

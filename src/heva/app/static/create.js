@@ -3,6 +3,20 @@ const content = document.getElementById("create-content");
 const steps = [...document.querySelectorAll(".create-step")];
 const stepButtons = [...document.querySelectorAll(".step-button")];
 
+/** Reflect persisted readiness without implying that merely visiting a section completes it. */
+function setReadiness(key, complete, missingMessage) {
+  const button = document.querySelector(`[data-readiness-key="${key}"]`);
+  if (!button) return;
+  button.classList.toggle("complete", complete);
+  button.classList.toggle("missing", !complete);
+  button.querySelector("b").textContent = complete ? "✓" : "×";
+  button.setAttribute(
+    "aria-label",
+    `${button.querySelector("span").textContent}: ${complete ? "complete" : "missing"}`,
+  );
+  button.title = complete ? "Complete" : missingMessage;
+}
+
 function showStep(number) {
   steps.forEach((step) => step.classList.toggle("active", step.dataset.step === String(number)));
   stepButtons.forEach((button) => button.classList.toggle("active", button.dataset.stepTarget === String(number)));
@@ -40,6 +54,47 @@ function refreshAnnotationsReview() {
   review.src = refreshed.toString();
 }
 
+/** Load sentence-curation and validator outcomes for the selected document. */
+async function loadDocumentReadiness(documentId) {
+  try {
+    const response = await fetch("/api/review-queue");
+    const result = await response.json();
+    const document = response.ok
+      ? result.documents.find((item) => item.document_id === documentId)
+      : null;
+    setReadiness(
+      "curated",
+      Boolean(document?.readiness_gates?.sentence_review),
+      "Approve or exclude every extracted sentence.",
+    );
+  } catch (error) {
+    setReadiness("curated", false, "Sentence curation status could not be loaded.");
+  }
+  try {
+    const response = await fetch("/api/validate", {method: "POST"});
+    const result = await response.json();
+    const document = response.ok
+      ? result.documents.find((item) => item.document_id === documentId)
+      : null;
+    setReadiness(
+      "validated",
+      Boolean(document?.valid),
+      "Resolve this document's validation findings.",
+    );
+  } catch (error) {
+    setReadiness("validated", false, "Document validation could not be run.");
+  }
+}
+
+window.addEventListener("message", (event) => {
+  if (event.origin !== window.location.origin) return;
+  if (event.data?.type !== "heva-review-updated") return;
+  const documentId = document.getElementById("selected-document-id").value;
+  if (documentId && event.data.documentId === documentId) {
+    loadDocumentReadiness(documentId);
+  }
+});
+
 function currentStepIsValid(button) {
   const step = button.closest(".create-step");
   return [...step.querySelectorAll("[required]")].every((input) => input.reportValidity());
@@ -71,13 +126,16 @@ async function restoreAnnotator() {
     if (curator) {
       status.className = "notice success";
       status.textContent = `Active project curator: ${curator.name}`;
+      setReadiness("curator", true, "Select an active curator.");
     } else {
       status.className = "notice warning";
       status.textContent = "No active curator is selected. You can register a document now, but curator identity is required before accountable workflow actions.";
+      setReadiness("curator", false, "Select an active curator.");
     }
   } catch (error) {
     status.className = "notice error";
     status.textContent = "Project people and roles could not be loaded.";
+    setReadiness("curator", false, "Project people and roles could not be loaded.");
   }
 }
 
@@ -121,6 +179,7 @@ function displayCitation(result) {
     status.className = "notice warning";
     status.textContent = "Citation details are saved but not confirmed.";
   }
+  setReadiness("citation", result.human_confirmed, "Confirm the document citation.");
 }
 
 async function loadCitation(documentId) {
@@ -256,6 +315,7 @@ function renderColorConfiguration(result) {
 
   const status = document.getElementById("color-status");
   const confirmed = configuration.human_confirmed;
+  setReadiness("colors", confirmed, "Resolve and confirm every observed color.");
   status.className = `notice ${confirmed ? "success" : "warning"}`;
   status.textContent = confirmed
     ? `Color configuration confirmed by ${configuration.confirmed_by}.`
@@ -274,6 +334,7 @@ async function loadColors(documentId, discoverIfEmpty = true) {
     const response = await fetch(`/api/documents/${encodeURIComponent(documentId)}/colors`);
     const result = await response.json();
     if (!response.ok) {
+      setReadiness("colors", false, "The color configuration could not be loaded.");
       status.className = "notice error";
       status.textContent = result.detail || "The color configuration could not be loaded.";
       return;
@@ -285,6 +346,7 @@ async function loadColors(documentId, discoverIfEmpty = true) {
     }
     await loadBatchCandidates(documentId, result.configuration.human_confirmed);
   } catch (error) {
+    setReadiness("colors", false, "The color configuration could not be loaded.");
     status.className = "notice error";
     status.textContent = "The color configuration could not be loaded.";
   }
@@ -313,6 +375,7 @@ async function discoverColors() {
     );
     const result = await response.json();
     if (!response.ok) {
+      setReadiness("extracted", false, "Extract annotation evidence from this document.");
       status.className = "notice error";
       status.textContent = `${result.message || "Color discovery failed."} ${result.action || ""}`;
       return;
@@ -514,6 +577,7 @@ async function loadExtractionStatus(documentId) {
     );
     const result = await response.json();
     if (!response.ok) {
+      setReadiness(4, false, "Extract annotation evidence from this document.");
       showAnnotationsWorkspace(documentId, false);
       status.className = "notice error";
       status.textContent = result.detail || "Extraction status could not be loaded.";
@@ -537,7 +601,14 @@ async function loadExtractionStatus(documentId) {
       documentId,
       result.record_count > 0 || result.draft_record_count > 0,
     );
+    setReadiness(
+      "extracted",
+      result.record_count > 0 || result.draft_record_count > 0,
+      "Extract annotation evidence from this document.",
+    );
+    await loadDocumentReadiness(documentId);
   } catch (error) {
+    setReadiness("extracted", false, "Extraction status could not be loaded.");
     showAnnotationsWorkspace(documentId, false);
     status.className = "notice error";
     status.textContent = "Extraction status could not be loaded.";

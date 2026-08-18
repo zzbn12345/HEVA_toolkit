@@ -406,8 +406,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=15"' in response.text
-    assert 'href="/static/create.css?v=6"' in response.text
+    assert 'src="/static/create.js?v=16"' in response.text
+    assert 'href="/static/create.css?v=7"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text
@@ -426,7 +426,13 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert "<span>Documents</span>" not in response.text
     assert "<span>Color review</span>" not in response.text
     assert '<span>Color config</span>' in response.text
-    assert '<span>Annotations</span>' in response.text
+    assert '<span>Annotations extracted</span>' in response.text
+    assert '<span>Curated sentences</span>' in response.text
+    assert '<span>Validated document</span>' in response.text
+    assert "Step 1 of 4" not in response.text
+    assert "Step 2 of 4" not in response.text
+    assert 'data-readiness-key="curator"><b aria-hidden="true">×</b>' in response.text
+    assert response.text.count('data-step-target="4"') == 3
     assert response.text.index('data-step="3"') < response.text.index('data-step="4"')
     assert response.text.index("<h1>Color configuration</h1>") < response.text.index(
         "<h1>Annotations</h1>"
@@ -1344,7 +1350,7 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=9"' in response.text
+    assert 'src="/static/review_document.js?v=10"' in response.text
     assert 'href="/static/review.css?v=8"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
@@ -1426,6 +1432,14 @@ def test_document_setup_asset_opens_requested_review_section() -> None:
     assert "?embedded=1" in script
     assert "result.candidates.filter((candidate) => candidate.eligible)" in script
     assert "refreshAnnotationsReview()" in script
+    assert 'button.querySelector("b").textContent = complete ? "✓" : "×"' in script
+    assert 'setReadiness("curator", true' in script
+    assert 'setReadiness("citation", result.human_confirmed' in script
+    assert 'setReadiness("colors", confirmed' in script
+    assert 'setReadiness("curated"' in script
+    assert 'setReadiness("validated"' in script
+    assert 'fetch("/api/validate", {method: "POST"})' in script
+    assert "result.record_count > 0 || result.draft_record_count > 0" in script
 
 
 def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path) -> None:

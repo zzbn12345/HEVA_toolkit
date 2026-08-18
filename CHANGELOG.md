@@ -4,6 +4,10 @@
 
 ### Changed
 
+- Replaced numbered document steps with live green-check/missing-cross indicators for
+  curator identity, citation, color configuration, extracted annotations, curated
+  sentences, and document validation. The three annotation checks open the same sentence
+  queue but remain independent so extracted work is never presented as curated or valid.
 - Simplified the alpha workflow so opening a project leads directly to its document review
   queue, while document preparation now follows curator, citation, color configuration,
   and annotation steps.

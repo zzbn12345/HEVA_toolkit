@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Prepare annotations · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/create.css?v=6">
-  <script src="/static/create.js?v=15" defer></script>
+  <link rel="stylesheet" href="/static/create.css?v=7">
+  <script src="/static/create.js?v=16" defer></script>
 </head>
 <body class="create-body">
   <div id="create-app" class="create-app">
@@ -14,11 +14,13 @@
       <a class="home-link" href="/">← HEVA home</a>
       <div class="create-brand">HEVA annotation project</div>
       <a class="guide-link" href="/guide/GUIDED_REVIEW_WORKFLOW">Guide</a>
-      <nav class="step-navigation" aria-label="Document preparation steps">
-        <button class="step-button active" type="button" data-step-target="1"><b>1</b><span>Curator check</span></button>
-        <button class="step-button" type="button" data-step-target="2"><b>2</b><span>Citation</span></button>
-        <button class="step-button" type="button" data-step-target="3"><b>3</b><span>Color config</span></button>
-        <button class="step-button" type="button" data-step-target="4"><b>4</b><span>Annotations</span></button>
+      <nav class="step-navigation" aria-label="Document readiness checks">
+        <button class="step-button active missing" type="button" data-step-target="1" data-readiness-key="curator"><b aria-hidden="true">×</b><span>Curator</span></button>
+        <button class="step-button missing" type="button" data-step-target="2" data-readiness-key="citation"><b aria-hidden="true">×</b><span>Citation</span></button>
+        <button class="step-button missing" type="button" data-step-target="3" data-readiness-key="colors"><b aria-hidden="true">×</b><span>Color config</span></button>
+        <button class="step-button missing" type="button" data-step-target="4" data-readiness-key="extracted"><b aria-hidden="true">×</b><span>Annotations extracted</span></button>
+        <button class="step-button missing" type="button" data-step-target="4" data-readiness-key="curated"><b aria-hidden="true">×</b><span>Curated sentences</span></button>
+        <button class="step-button missing" type="button" data-step-target="4" data-readiness-key="validated"><b aria-hidden="true">×</b><span>Validated document</span></button>
       </nav>
     </aside>
 
@@ -28,7 +30,7 @@
       </div>
 
       <section class="create-step active" data-step="1">
-        <p class="eyebrow">Step 1 of 4</p>
+        <p class="eyebrow">Project readiness</p>
         <h1>Active project curator</h1>
         <p class="lead">The project profile is reused for every document and remains separate from source authorship.</p>
         <div id="annotator-status" class="notice neutral" aria-live="polite">Loading the saved annotator…</div>
@@ -41,7 +43,7 @@
       </section>
 
       <section class="create-step" data-step="2">
-        <p class="eyebrow">Step 2 of 4</p>
+        <p class="eyebrow">Document readiness</p>
         <h1>Document citation</h1>
         <p class="lead">HEVA proposes available source metadata. Review and confirm it for this document; it remains separate from people and workflow roles.</p>
         <div id="citation-status" class="notice neutral" aria-live="polite">
@@ -66,7 +68,7 @@
       </section>
 
       <section class="create-step" data-step="3">
-        <p class="eyebrow">Step 3 of 4</p>
+        <p class="eyebrow">Document readiness</p>
         <h1>Color configuration</h1>
         <p><a class="button secondary" href="/project-colors">Manage project palette versions</a></p>
         <p class="lead">Review the color meanings used by this document before extracting its annotations.</p>
@@ -104,7 +106,7 @@
 
       <section class="create-step" data-step="4">
         <div id="annotation-setup">
-          <p class="eyebrow">Step 4 of 4</p>
+          <p class="eyebrow">Document readiness</p>
           <h1>Annotations</h1>
           <p class="lead">Extract annotations from the selected document or process a compatible group as a batch.</p>
           <fieldset>

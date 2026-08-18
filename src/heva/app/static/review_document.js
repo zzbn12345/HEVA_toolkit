@@ -404,6 +404,12 @@ function render() {
   statusBox.textContent = reviewDocument.draft_only
     ? `Showing ${visibleSentences.length} of ${reviewDocument.sentences.length} raw extracted sentences. Colors are visible, but review decisions remain locked until Color config resolves their HEVA labels.`
     : `Showing ${visibleSentences.length} of ${reviewDocument.sentences.length} sentences from this document only. ${completed} have final decisions.`;
+  if (window.parent !== window) {
+    window.parent.postMessage(
+      {type: "heva-review-updated", documentId},
+      window.location.origin,
+    );
+  }
 }
 
 function navigationLink(documentIdValue, label) {
