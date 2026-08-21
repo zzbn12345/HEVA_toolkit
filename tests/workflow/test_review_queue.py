@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from heva.workflow.document_metadata import (
     AnnotationProcessMetadata,
     AnnotatorMetadata,
@@ -31,11 +29,7 @@ from heva.workflow.review_queue import (
     load_review_document,
     submit_review_document,
 )
-from heva.workflow.review_state import (
-    ReviewError,
-    initialize_sentence_reviews,
-    record_decisions,
-)
+from heva.workflow.review_state import initialize_sentence_reviews, record_decisions
 
 
 def record(sentence_id: int, sentence: str) -> dict[str, object]:
@@ -266,6 +260,10 @@ def test_unresolved_extraction_draft_is_visible_but_not_reviewable(tmp_path: Pat
     }
     assert selected["sentences"][0]["review"]["status"] == "pending"
     assert selected["sentences"][0]["flags"][0]["code"] == "unresolved_color_mapping"
+    assert "confirmed color configuration" in selected["sentences"][0]["flags"][0][
+        "message"
+    ]
+    assert "confirm its colors" not in selected["sentences"][0]["flags"][0]["message"]
 
 
 def test_confirmed_colors_remain_complete_while_annotations_are_still_a_draft(
@@ -352,7 +350,7 @@ def test_document_is_complete_only_when_all_four_gates_pass(tmp_path: Path) -> N
     assert item.blocking_reasons == []
 
 
-def test_ready_document_submission_updates_metadata_and_locks_review(
+def test_legacy_submission_state_does_not_lock_sentence_review(
     tmp_path: Path,
 ) -> None:
     documents = prepared_project(tmp_path)
@@ -383,14 +381,15 @@ def test_ready_document_submission_updates_metadata_and_locks_review(
     assert curation["candidates"][0]["submitted_by"] == "Annotator"
     assert curation["candidates"][0]["validator_report"]["valid"] is True
     assert len(curation["candidates"][0]["candidate_id"]) == 64
-    with pytest.raises(ReviewError, match="read-only after submission"):
-        record_decisions(
-            tmp_path,
-            document_id,
-            [1],
-            status="excluded",
-            reviewer="Annotator",
-        )
+    record_decisions(
+        tmp_path,
+        document_id,
+        [1],
+        status="excluded",
+        reviewer="Annotator",
+    )
+    reopened = load_review_document(tmp_path, document_id)
+    assert reopened["sentences"][0]["review"]["status"] == "excluded"
 
 
 def test_unconfirmed_citation_does_not_block_annotation_submission(tmp_path: Path) -> None:

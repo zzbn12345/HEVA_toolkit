@@ -80,6 +80,8 @@ def _package(root: Path, document_id: str) -> Path:
 
 
 def _require_editable(root: Path, document_id: str) -> None:
+    """Require a registered document; legacy submission states no longer lock editing."""
+
     registry = load_project_registry(root)
     entry = next(
         (item for item in registry.documents if item.document_id == document_id),
@@ -87,10 +89,6 @@ def _require_editable(root: Path, document_id: str) -> None:
     )
     if entry is None:
         raise ReviewError(f"Document {document_id} is not registered.")
-    if entry.status in {"in_review", "done"}:
-        raise ReviewError(
-            "This document is read-only after submission. Return it to in progress before editing."
-        )
 
 
 def initialize_sentence_reviews(

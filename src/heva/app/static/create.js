@@ -2,6 +2,7 @@ const app = document.getElementById("create-app");
 const content = document.getElementById("create-content");
 const steps = [...document.querySelectorAll(".create-step")];
 const stepButtons = [...document.querySelectorAll(".step-button")];
+const automaticCompilationAttempts = new Set();
 
 /** Reflect persisted readiness without implying that merely visiting a section completes it. */
 function setReadiness(key, complete, missingMessage) {
@@ -33,13 +34,21 @@ function updateAnnotationsLayout(activeStep = null) {
   content.classList.toggle("annotations-review-active", reviewActive);
 }
 
-/** Show extraction setup or the shared document review according to checkpoint state. */
-function showAnnotationsWorkspace(documentId, ready) {
+/** Show extraction, compilation, or review controls according to persisted evidence. */
+function showAnnotationsWorkspace(
+  documentId,
+  canonicalReady,
+  draftAvailable = false,
+  compilationReady = false,
+) {
   const setup = document.getElementById("annotation-setup");
   const review = document.getElementById("annotations-review");
-  setup.hidden = ready;
-  review.hidden = !ready;
-  if (ready && !review.src) {
+  const compilation = document.getElementById("draft-compilation");
+  const reviewAvailable = canonicalReady || draftAvailable;
+  setup.hidden = reviewAvailable;
+  review.hidden = !reviewAvailable;
+  compilation.hidden = !(draftAvailable && !canonicalReady && compilationReady);
+  if (reviewAvailable && !review.src) {
     review.src = `/review/${encodeURIComponent(documentId)}?embedded=1`;
   }
   updateAnnotationsLayout();
@@ -161,6 +170,18 @@ function citationDraft() {
   };
 }
 
+/** Apply the same citation release gate used by the backend review projection. */
+function citationIsReady(result) {
+  const data = result.data || {};
+  return Boolean(
+    result.human_confirmed
+    && data.title
+    && data.creators?.length
+    && data.citation
+    && (data.reference || data.not_findable_reason)
+  );
+}
+
 function displayCitation(result) {
   const data = result.data;
   document.getElementById("source-title").value = data.title || "";
@@ -169,9 +190,13 @@ function displayCitation(result) {
   document.getElementById("source-reference").value = data.reference || "";
   document.getElementById("source-not-findable").value = data.not_findable_reason || "";
   const status = document.getElementById("citation-status");
-  if (result.human_confirmed) {
+  const ready = citationIsReady(result);
+  if (ready) {
     status.className = "notice success";
     status.textContent = `Citation confirmed by ${result.confirmed_by}. Editing and saving will require confirmation again.`;
+  } else if (result.human_confirmed) {
+    status.className = "notice warning";
+    status.textContent = "Citation confirmed, but it still needs a DOI/public URL or an explanation of why the source is not publicly findable.";
   } else if (result.proposed_fields.length) {
     status.className = "notice warning";
     status.textContent = `HEVA proposed ${result.proposed_fields.join(", ")} from ${result.proposal_method}. Review every value before confirming.`;
@@ -179,7 +204,7 @@ function displayCitation(result) {
     status.className = "notice warning";
     status.textContent = "Citation details are saved but not confirmed.";
   }
-  setReadiness("citation", result.human_confirmed, "Confirm the document citation.");
+  setReadiness("citation", ready, "Complete and confirm the document citation.");
 }
 
 async function loadCitation(documentId) {
@@ -227,6 +252,8 @@ async function persistCitation(confirm) {
     return;
   }
   displayCitation(result);
+  await loadDocumentReadiness(documentId);
+  refreshAnnotationsReview();
 }
 
 function colorDecisions() {
@@ -648,9 +675,12 @@ async function confirmColors() {
     return;
   }
   await loadColors(documentId);
+  await loadExtractionStatus(documentId);
   refreshAnnotationsReview();
-  document.getElementById("extraction-status").textContent =
-    "Color configuration confirmed. Extraction is ready.";
+  if (result.canonical_annotations?.status === "failed") {
+    status.className = "notice error";
+    status.textContent = `The color configuration was confirmed, but canonical annotations could not be built. ${result.canonical_annotations.warnings.join(" ")}`;
+  }
 }
 
 async function loadExtractionStatus(documentId) {
@@ -662,7 +692,7 @@ async function loadExtractionStatus(documentId) {
     );
     const result = await response.json();
     if (!response.ok) {
-      setReadiness(4, false, "Extract annotation evidence from this document.");
+      setReadiness("extracted", false, "Extract annotation evidence from this document.");
       showAnnotationsWorkspace(documentId, false);
       status.className = "notice error";
       status.textContent = result.detail || "Extraction status could not be loaded.";
@@ -682,13 +712,28 @@ async function loadExtractionStatus(documentId) {
       status.className = result.state === "invalid" ? "notice error" : "notice warning";
       status.textContent = `Persisted extraction contains ${result.record_count} record${result.record_count === 1 ? "" : "s"} but must be rebuilt. ${result.stale_reasons.join(" ")}`;
     }
+    const canonicalReady = result.record_count > 0;
+    const draftAvailable = result.draft_record_count > 0;
+    const mappingConfirmed = document.getElementById("mapping-confirmed").checked;
+    if (
+      draftAvailable
+      && !canonicalReady
+      && mappingConfirmed
+      && !automaticCompilationAttempts.has(documentId)
+    ) {
+      automaticCompilationAttempts.add(documentId);
+      await compileAnnotations();
+      return;
+    }
     showAnnotationsWorkspace(
       documentId,
-      result.record_count > 0 || result.draft_record_count > 0,
+      canonicalReady,
+      draftAvailable,
+      mappingConfirmed,
     );
     setReadiness(
       "extracted",
-      result.record_count > 0 || result.draft_record_count > 0,
+      result.record_count > 0,
       "Extract annotation evidence from this document.",
     );
     await loadDocumentReadiness(documentId);
@@ -697,6 +742,39 @@ async function loadExtractionStatus(documentId) {
     showAnnotationsWorkspace(documentId, false);
     status.className = "notice error";
     status.textContent = "Extraction status could not be loaded.";
+  }
+}
+
+/** Compile persisted raw evidence after the researcher confirms its color semantics. */
+async function compileAnnotations() {
+  const documentId = document.getElementById("selected-document-id").value;
+  const button = document.getElementById("compile-annotations");
+  const status = document.getElementById("extraction-status");
+  button.disabled = true;
+  button.textContent = "Building…";
+  status.className = "notice neutral";
+  status.textContent = "Building canonical annotations from the saved raw evidence…";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/annotations/compile`,
+      {method: "POST"},
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      status.className = "notice error";
+      status.textContent = `${result.message || "Canonical annotations were not created."} ${result.action || ""}`;
+      return;
+    }
+    status.className = result.warnings.length ? "notice warning" : "notice success";
+    status.textContent = `Created ${result.record_count} canonical annotation record${result.record_count === 1 ? "" : "s"}.`;
+    await loadExtractionStatus(documentId);
+    refreshAnnotationsReview();
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = "Canonical annotations could not be created. The saved raw evidence was preserved.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Build canonical annotations";
   }
 }
 
@@ -833,6 +911,10 @@ document.getElementById("extract-annotations").addEventListener(
 document.getElementById("rebuild-annotations").addEventListener(
   "click",
   () => extractAnnotations(true),
+);
+document.getElementById("compile-annotations").addEventListener(
+  "click",
+  compileAnnotations,
 );
 
 document.querySelectorAll("[name='processing-mode']").forEach((radio) => radio.addEventListener("change", () => {

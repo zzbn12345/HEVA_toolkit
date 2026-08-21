@@ -86,13 +86,21 @@ def test_invalid_csv_is_rejected_before_existing_annotations_change(
     assert (package / "annotations.json").read_bytes() == before
 
 
-def test_submitted_package_cannot_be_overwritten_from_csv(tmp_path: Path) -> None:
-    document_id, _, _ = project(tmp_path)
+def test_legacy_submission_status_does_not_lock_csv_interoperability(tmp_path: Path) -> None:
+    document_id, package, _ = project(tmp_path)
     csv_path = tmp_path / "edited.csv"
-    write_csv(csv_path, document_id, record())
+    changed = record()
+    changed["sentence"] = "Editable legacy project."
+    changed["tokens"] = ["Editable", "legacy", "project", "."]
+    changed["entities"] = []
+    changed["values"] = []
+    changed["ner_tags"] = ["O", "O", "O", "O"]
+    write_csv(csv_path, document_id, changed)
 
-    with pytest.raises(PackageCompileError, match="read-only"):
-        compile_csv_packages(tmp_path, csv_path)
+    compile_csv_packages(tmp_path, csv_path)
+
+    annotations = json.loads((package / "annotations.json").read_text())
+    assert annotations[0]["sentence"] == "Editable legacy project."
 
 
 def test_runtime_failure_rolls_back_package_files(

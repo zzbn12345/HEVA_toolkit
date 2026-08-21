@@ -33,7 +33,8 @@ python -m pip install -e .
    the project-level release.
 9. `package_validator.py` reports structural, semantic, rights, review, and release issues.
 10. `curation_state.py` records curator decisions against immutable candidate evidence.
-11. `data_owner_approval.py` records per-document distribution accountability.
+11. `curation_state.py` and `data_owner_approval.py` are legacy compatibility modules;
+    they are not part of the Alpha application, validation, or export workflow.
 12. `release_builder.py` creates deterministic approved annotation releases.
 
 ## Important interfaces

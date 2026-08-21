@@ -12,8 +12,6 @@ from heva.workflow.color_configuration_registry import (
     select_color_configuration,
 )
 from heva.workflow.color_mapping import propose_color_configuration, save_color_configuration
-from heva.workflow.curation_state import create_candidate_snapshot, record_curator_decision
-from heva.workflow.data_owner_approval import approve_document_distribution
 from heva.workflow.document_metadata import (
     AnnotatorMetadata,
     PackageMetadata,
@@ -32,7 +30,7 @@ from heva.workflow.review_state import record_decisions
 
 
 def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: Path) -> None:
-    """Exercise the complete offline alpha path and every agreed accountability gate."""
+    """Exercise validation and export without internal submission or approval gates."""
 
     dataset = tmp_path / "curated-dataset"
     dataset.mkdir()
@@ -42,6 +40,13 @@ def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: 
     external.parent.mkdir()
     external.write_bytes(b"authorized source remains outside the dataset")
     document_id = register_external_source(dataset, external)
+    registry_path = dataset / ".heva/project.json"
+    registry = json.loads(registry_path.read_text())
+    registry["documents"] = [
+        item for item in registry["documents"] if item["document_id"] == document_id
+    ]
+    registry["summary"].update({"total": 1, "backlog": 1, "in_progress": 0, "in_review": 0, "done": 0})
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
 
     annotator = add_person(dataset, PersonRecord(name="Original Annotator", roles=["annotator"]))
     curator = add_person(dataset, PersonRecord(name="Alpha Curator", roles=["curator"]))
@@ -108,7 +113,6 @@ def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: 
     metadata.annotation_process.review.completed = True
     metadata.annotation_process.review.reviewed_at = datetime(2026, 8, 11, 12, tzinfo=timezone.utc)
     save_package_metadata(dataset, metadata)
-    registry_path = dataset / ".heva/project.json"
     registry = json.loads(registry_path.read_text())
     selected = next(item for item in registry["documents"] if item["document_id"] == document_id)
     selected["status"] = "in_review"
@@ -128,22 +132,6 @@ def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: 
         encoding="utf-8",
     )
 
-    create_candidate_snapshot(dataset, document_id, submitted_by=curator.name)
-    record_curator_decision(
-        dataset,
-        document_id,
-        decision="accepted",
-        actor=curator.name,
-        evidence="All extracted evidence and sentence decisions reviewed.",
-    )
-    approve_document_distribution(
-        dataset,
-        document_id,
-        data_owner_id=owner.person_id,
-        license_or_waiver="CC-BY-4.0",
-        statement="I approve distribution of this document's annotation data.",
-    )
-
     report = validate_project(dataset)
     release = build_release(dataset)
     payload = json.loads((release / "heva-annotations.json").read_text())
@@ -151,7 +139,9 @@ def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: 
     target_report = next(item for item in report.documents if item.document_id == document_id)
     assert target_report.release_ready
     assert payload["membership"] == [document_id]
-    assert payload["documents"][0]["data_owner"]["name"] == owner.name
+    assert "data_owner" not in payload["documents"][0]
+    assert "curator" not in payload["documents"][0]
+    assert payload["documents"][0]["rights"]["authorized_by"] == owner.name
     assert payload["documents"][0]["records"][0]["values"] == ["historic"]
     assert str(external) not in (dataset / ".heva/project.json").read_text()
     assert not any(path.suffix == ".pdf" for path in release.iterdir())

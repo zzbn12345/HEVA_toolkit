@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Prepare annotations · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/create.css?v=11">
-  <script src="/static/create.js?v=20" defer></script>
+  <link rel="stylesheet" href="/static/create.css?v=13">
+  <script src="/static/create.js?v=24" defer></script>
 </head>
 <body class="create-body">
   <div id="create-app" class="create-app">
@@ -154,6 +154,13 @@
             <button id="extract-annotations" class="button" type="button" disabled>Extract annotations</button>
             <button id="rebuild-annotations" class="button secondary" type="button" hidden>Rebuild extraction</button>
           </div>
+        </div>
+        <div id="draft-compilation" class="notice warning" hidden>
+          <div>
+            <strong>Raw annotation evidence is saved.</strong>
+            <span>The confirmed color configuration can now convert it into canonical HEVA annotations.</span>
+          </div>
+          <button id="compile-annotations" class="button" type="button">Build canonical annotations</button>
         </div>
         <iframe id="annotations-review" class="annotations-review" title="Document annotation review" hidden></iframe>
       </section>

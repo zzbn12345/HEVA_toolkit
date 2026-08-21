@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Removed
+
+- Removed the internal **Submit for curator review** workflow, curator decision page,
+  approval APIs, edit locks, and approval-only export gate. HEVA now ends at validated
+  Data Package export; repository platforms own review, acceptance, and publication.
+
 ### Changed
 
 - Replaced numbered document steps with live green-check/missing-cross indicators for
@@ -33,6 +39,9 @@
 
 ### Added
 
+- Added read-only **Validate document** checks directly in sentence review, with timestamped
+  valid/invalid outcomes, grouped actionable findings, corrective links, and immediate
+  synchronization with document readiness.
 - A Conda/Miniforge environment definition that installs the app, spaCy, and PDF/DOCX
   extraction consistently on Windows, macOS, and Linux.
 - A fictional two-document Data Package plus a concise concept guide and tutorial for

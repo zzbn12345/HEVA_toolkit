@@ -294,6 +294,14 @@ def confirm_color_configuration(
         if entry.status == "ignored" and not entry.ignore_reason:
             raise ColorMappingError(f"Ignored color {entry.hex} requires an ignore reason.")
     updated = configuration.model_copy(deep=True)
+    if updated.detection_method is None:
+        methods = {color.method for color in updated.colors}
+        if "document_legend" in methods:
+            updated.detection_method = "document_legend"
+        elif methods & {"ollama", "generic_convention"}:
+            updated.detection_method = "automatic"
+        else:
+            updated.detection_method = "manual"
     updated.human_confirmed = True
     updated.confirmed_by = confirmed_by.strip()
     updated.confirmed_at = confirmed_at or datetime.now(timezone.utc)

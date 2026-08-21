@@ -215,10 +215,6 @@ def create_project_router(
     def validation_page() -> str:
         return template("validate.html")
 
-    @router.get("/curation", response_class=HTMLResponse)
-    def curation_page() -> str:
-        return template("curation.html")
-
     @router.get("/create", response_class=HTMLResponse)
     def creation_page() -> str:
         return template("create.html")
@@ -651,6 +647,8 @@ def create_project_router(
 
     @router.post("/api/documents/{document_id}/colors/confirm")
     def confirm_colors(document_id: str, payload: ColorReviewInput):
+        """Confirm color semantics and immediately promote any saved raw evidence."""
+
         try:
             configuration = review_and_confirm_color_configuration(
                 root,
@@ -688,7 +686,41 @@ def create_project_router(
             save_color_configuration(root, document_id, configuration)
         except (AnnotatorRegistryError, PeopleRegistryError, ColorMappingError, ProjectColorConfigurationError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
-        return configuration.model_dump(mode="json")
+        response = configuration.model_dump(mode="json")
+        try:
+            draft = load_extraction_draft(root, document_id)
+        except ExtractionDraftError:
+            draft = None
+        if draft is not None and draft.sentences:
+            try:
+                compiled = promote_extraction_draft(root, document_id)
+                response["canonical_annotations"] = {
+                    "status": "canonical_saved",
+                    "record_count": compiled.record_count,
+                    "warnings": list(compiled.warnings),
+                }
+            except (
+                ColorMappingError,
+                ProjectColorConfigurationError,
+                ExtractionDraftError,
+                ExtractionSessionError,
+                PeopleRegistryError,
+                RegistryError,
+                OSError,
+                ValidationError,
+            ) as error:
+                response["canonical_annotations"] = {
+                    "status": "failed",
+                    "record_count": 0,
+                    "warnings": [str(error)],
+                }
+        else:
+            response["canonical_annotations"] = {
+                "status": "not_available",
+                "record_count": 0,
+                "warnings": [],
+            }
+        return response
 
     @router.get("/api/documents/{document_id}/colors/batch")
     def batch_color_candidates(document_id: str):
@@ -780,6 +812,37 @@ def create_project_router(
             "warnings": list(status.warnings),
             "stale_reasons": list(status.stale_reasons),
             "draft_record_count": draft_count,
+        }
+
+    @router.post("/api/documents/{document_id}/annotations/compile")
+    def compile_document_annotations(document_id: str):
+        """Promote saved raw evidence without rerunning the source extractor."""
+
+        try:
+            result = promote_extraction_draft(root, document_id)
+        except (
+            ColorMappingError,
+            ProjectColorConfigurationError,
+            ExtractionDraftError,
+            ExtractionSessionError,
+            PeopleRegistryError,
+            RegistryError,
+            OSError,
+            ValidationError,
+        ) as error:
+            return JSONResponse(
+                {
+                    "code": "annotation_compilation_failed",
+                    "message": "Canonical annotations were not created.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+        return {
+            "document_id": result.document_id,
+            "record_count": result.record_count,
+            "warnings": list(result.warnings),
+            "status": "canonical_saved",
         }
 
     @router.post("/api/documents/{document_id}/extract")

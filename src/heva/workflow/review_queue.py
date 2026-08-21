@@ -321,7 +321,7 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
                     {
                         "code": "unresolved_color_mapping",
                         "severity": "warning",
-                        "message": "This saved extraction is still a draft; confirm its colors and rebuild canonical annotations before sentence review.",
+                        "message": "This saved extraction is a raw draft; build canonical annotations with the confirmed color configuration before sentence review.",
                         "evidence": None,
                     }
                 ] if draft_only else [

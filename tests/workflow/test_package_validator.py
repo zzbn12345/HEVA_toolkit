@@ -23,18 +23,11 @@ from heva.workflow.document_metadata import (
 )
 from heva.workflow.package_validator import (
     PackageValidationError,
-    approve_document,
     build_release,
     format_validation_report,
     validate_document_package,
     validate_project,
 )
-from heva.workflow.curation_state import (
-    create_candidate_snapshot,
-    record_curator_decision,
-)
-from heva.workflow.data_owner_approval import approve_document_distribution
-from heva.workflow.people_registry import PersonRecord, add_person
 from heva.workflow.project_registry import sync_registry
 from heva.workflow.review_state import (
     initialize_sentence_reviews,
@@ -191,7 +184,7 @@ def test_layered_report_has_actionable_stable_fields(tmp_path: Path) -> None:
     assert report.completed is False
 
 
-def test_project_report_separates_validation_from_workflow_completion(
+def test_project_report_uses_validation_as_alpha_completion(
     tmp_path: Path,
 ) -> None:
     document_id, _, _ = project(tmp_path)
@@ -201,20 +194,20 @@ def test_project_report_separates_validation_from_workflow_completion(
 
     assert report.valid is True
     assert report.summary.passed == 1
-    assert report.summary.completed == 0
-    assert report.summary.not_completed == 1
-    assert f"PASS documents/source.pdf ({document_id}, not completed, in_review)" in rendered
+    assert report.summary.completed == 1
+    assert report.summary.not_completed == 0
+    assert f"PASS documents/source.pdf ({document_id}, completed, in_review)" in rendered
     assert "1 passed, 0 failed" in rendered
 
 
-def test_incomplete_review_blocks_approval(tmp_path: Path) -> None:
+def test_incomplete_review_blocks_export(tmp_path: Path) -> None:
     document_id, package, _ = project(tmp_path)
     review = json.loads((tmp_path / ".heva/documents" / document_id / "review-state.json").read_text())
     review["sentences"][0]["status"] = "pending"
     (tmp_path / ".heva/documents" / document_id / "review-state.json").write_text(json.dumps(review), encoding="utf-8")
 
     with pytest.raises(PackageValidationError, match="sentence_review_incomplete"):
-        approve_document(tmp_path, document_id)
+        build_release(tmp_path)
 
 
 def test_changed_sentence_invalidates_its_existing_review(tmp_path: Path) -> None:
@@ -279,27 +272,8 @@ def test_cli_human_report_has_test_runner_summary_and_action(tmp_path: Path) -> 
     assert "0 passed, 1 failed" in completed.stdout
 
 
-def test_approved_release_is_deterministic_and_excludes_working_files(tmp_path: Path) -> None:
+def test_validated_release_is_deterministic_and_excludes_working_files(tmp_path: Path) -> None:
     document_id, _, registry_path = project(tmp_path)
-    create_candidate_snapshot(tmp_path, document_id, submitted_by="Annotator")
-    record_curator_decision(
-        tmp_path,
-        document_id,
-        decision="accepted",
-        actor="Curator",
-        evidence="Validated candidate and source comparison reviewed.",
-    )
-    owner = add_person(
-        tmp_path,
-        PersonRecord(name="Responsible Owner", roles=["data_owner"], affiliation="Archive"),
-    )
-    approve_document_distribution(
-        tmp_path,
-        document_id,
-        data_owner_id=owner.person_id,
-        license_or_waiver="CC-BY-4.0",
-        statement="I approve distribution of this document's annotation data.",
-    )
 
     first = build_release(tmp_path)
     first_files = {path.name: path.read_bytes() for path in first.iterdir()}
@@ -320,17 +294,19 @@ def test_approved_release_is_deterministic_and_excludes_working_files(tmp_path: 
     assert rows[0]["document_id"] == document_id
     assert rows[0]["sentence_id"] == "1"
     registry = json.loads(registry_path.read_text())
-    assert registry["documents"][0]["status"] == "done"
+    assert registry["documents"][0]["status"] == "in_review"
     payload = json.loads(first_files["heva-annotations.json"])
     assert payload["membership"] == [document_id]
     assert payload["documents"][0]["citation"]
     assert payload["documents"][0]["rights"]["source_distribution_allowed"] is False
-    assert payload["documents"][0]["data_owner"]["name"] == "Responsible Owner"
+    assert "data_owner" not in payload["documents"][0]
+    assert "curator" not in payload["documents"][0]
+    assert len(payload["documents"][0]["annotations_checksum_sha256"]) == 64
     descriptor = json.loads(first_files["datapackage.json"])
     assert all(resource["hash"].startswith("sha256:") for resource in descriptor["resources"])
 
 
-def test_done_registry_flag_without_curator_acceptance_cannot_be_released(
+def test_legacy_done_status_does_not_require_curator_acceptance(
     tmp_path: Path,
 ) -> None:
     document_id, _, registry_path = project(tmp_path)
@@ -340,12 +316,10 @@ def test_done_registry_flag_without_curator_acceptance_cannot_be_released(
     registry["summary"]["done"] = 1
     registry_path.write_text(json.dumps(registry), encoding="utf-8")
 
-    with pytest.raises(PackageValidationError, match="curator evidence"):
-        build_release(tmp_path)
+    assert build_release(tmp_path).is_dir()
 
 
-def test_release_rejects_documents_not_approved(tmp_path: Path) -> None:
+def test_release_accepts_valid_document_without_submission(tmp_path: Path) -> None:
     project(tmp_path)
 
-    with pytest.raises(PackageValidationError, match="No approved documents"):
-        build_release(tmp_path)
+    assert build_release(tmp_path).is_dir()

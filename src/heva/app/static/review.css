@@ -84,6 +84,36 @@
 .review-blockers { grid-column: 1 / -1; margin: 0; color: var(--muted); }
 .review-blockers:empty { display: none; }
 .review-readiness.submitted { border-color: var(--accent); }
+.review-readiness > .button { margin: 0; }
+.document-validation-result {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.document-validation-result[hidden] { display: none; }
+.document-validation-result.valid { border-color: var(--accent); }
+.document-validation-result.invalid { border-color: var(--warning); }
+.document-validation-result.error { border-color: #ff8795; }
+.document-validation-result h2,
+.document-validation-result p { margin: 0 0 .5rem; }
+.validation-groups { display: grid; gap: .75rem; margin-top: .8rem; }
+.validation-group {
+  padding: .75rem;
+  border-radius: 9px;
+  background: var(--field);
+}
+.validation-group h3 { margin: 0 0 .5rem; }
+.validation-findings { display: grid; gap: .6rem; margin: 0; padding-left: 1.2rem; }
+.validation-findings strong,
+.validation-findings span,
+.validation-findings small { display: block; }
+.validation-findings small { margin-top: .2rem; color: var(--muted); }
+.validation-severity { text-transform: uppercase; }
+.validation-severity.warning { color: var(--warning); }
+.validation-severity.error { color: #ff8795; }
+.validation-fix-link { display: inline-block; margin-top: .3rem; }
 .sentence-list { display: grid; gap: 1rem; }
 .sentence-card { padding: 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
 .sentence-card.selected { border-color: var(--accent); }

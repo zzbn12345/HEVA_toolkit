@@ -5,15 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from heva.workflow.document_citation import load_document_citation
 from heva.workflow.document_metadata import RightsMetadata
-from heva.workflow.document_rights import (
-    DocumentRightsError,
-    load_document_rights,
-    save_document_rights,
-)
+from heva.workflow.document_rights import load_document_rights, save_document_rights
 from heva.workflow.project_registry import sync_registry
 
 
@@ -60,12 +54,13 @@ def test_document_rights_round_trip_without_replacing_other_metadata(tmp_path: P
     assert metadata["rights"]["source_distribution_allowed"] is False
 
 
-def test_document_rights_are_locked_after_submission(tmp_path: Path) -> None:
+def test_legacy_submission_status_does_not_lock_document_rights(tmp_path: Path) -> None:
     document_id = initialized_document(tmp_path)
     registry_path = tmp_path / ".heva/project.json"
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
     registry["documents"][0]["status"] = "in_review"
     registry_path.write_text(json.dumps(registry), encoding="utf-8")
 
-    with pytest.raises(DocumentRightsError, match="locked after submission"):
-        save_document_rights(tmp_path, document_id, explicit_rights())
+    saved = save_document_rights(tmp_path, document_id, explicit_rights())
+
+    assert load_document_rights(tmp_path, document_id) == saved

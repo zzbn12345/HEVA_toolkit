@@ -96,7 +96,6 @@ function renderReadiness() {
   const panel = document.getElementById("review-readiness");
   const gates = document.getElementById("review-gates");
   const blockers = document.getElementById("review-blockers");
-  const submit = document.getElementById("submit-document-review");
   gates.replaceChildren(...Object.entries(reviewDocument.readiness_gates).map(
     ([key, passed]) => textElement(
       "span",
@@ -107,43 +106,120 @@ function renderReadiness() {
   blockers.replaceChildren(...reviewDocument.blocking_reasons.map(
     (reason) => textElement("li", "", reason),
   ));
-  const submitted = ["in_review", "done"].includes(reviewDocument.status);
-  panel.classList.toggle("submitted", submitted);
-  submit.disabled = !reviewDocument.annotation_complete || submitted;
-  submit.textContent = submitted
-    ? "Submitted for curator review"
-    : "Submit for curator review";
-  document.getElementById("review-readiness-title").textContent = submitted
-    ? "Annotation submitted"
-    : reviewDocument.annotation_complete
-      ? "Ready for curator review"
+  panel.classList.remove("submitted");
+  document.getElementById("review-readiness-title").textContent =
+    reviewDocument.annotation_complete
+      ? "Ready for validation"
       : "Complete the annotation gates";
 }
 
-async function submitDocumentReview() {
-  const submit = document.getElementById("submit-document-review");
-  submit.disabled = true;
-  submit.textContent = "Submitting…";
+/** Group validator findings by the researcher-facing document configuration area. */
+function validationCategory(issue) {
+  const evidence = `${issue.code} ${issue.path}`.toLowerCase();
+  if (evidence.includes("annotator")) return "People and roles";
+  if (evidence.includes("citation") || evidence.includes("source_title") || evidence.includes("source_creator") || evidence.includes("findability")) return "Citation";
+  if (evidence.includes("color")) return "Color configuration";
+  if (evidence.includes("right") || evidence.includes("license") || evidence.includes("authoriz") || evidence.includes("access")) return "Rights and access";
+  if (evidence.includes("review")) return "Sentence review";
+  if (evidence.includes("annotation") || evidence.includes("extraction")) return "Annotations";
+  return "Document metadata";
+}
+
+/** Return the safest corrective view for one validation category. */
+function validationFixLink(category) {
+  if (category === "Citation") return `/create?document_id=${encodeURIComponent(documentId)}&section=citation`;
+  if (category === "Color configuration") return `/create?document_id=${encodeURIComponent(documentId)}&section=colors`;
+  if (category === "Rights and access") return `/documents/${encodeURIComponent(documentId)}/rights`;
+  if (category === "People and roles") return "/people";
+  if (["Annotations", "Sentence review"].includes(category)) return `/create?document_id=${encodeURIComponent(documentId)}&section=annotations`;
+  return null;
+}
+
+/** Render a timestamped, actionable result without modifying project data. */
+function renderDocumentValidation(payload) {
+  const panel = document.getElementById("document-validation-result");
+  const report = payload.document;
+  panel.hidden = false;
+  panel.className = `document-validation-result ${report.valid ? "valid" : "invalid"}`;
+  const heading = textElement("h2", "", report.valid ? "Document is valid" : "Document needs attention");
+  const checked = textElement(
+    "p",
+    "muted",
+    `Checked ${new Date(payload.checked_at).toLocaleString()}`,
+  );
+  panel.replaceChildren(heading, checked);
+  if (report.valid) {
+    panel.appendChild(textElement("p", "", "This document passes the current HEVA structural and semantic checks."));
+    if (!report.issues.length) return;
+  }
+  const grouped = new Map();
+  report.issues.forEach((issue) => {
+    const category = validationCategory(issue);
+    if (!grouped.has(category)) grouped.set(category, []);
+    grouped.get(category).push(issue);
+  });
+  const groups = document.createElement("div");
+  groups.className = "validation-groups";
+  [...grouped.entries()].forEach(([category, issues]) => {
+    const section = document.createElement("section");
+    section.className = "validation-group";
+    section.appendChild(textElement("h3", "", category));
+    const findings = document.createElement("ul");
+    findings.className = "validation-findings";
+    issues.forEach((issue) => {
+      const item = document.createElement("li");
+      item.append(
+        textElement("strong", `validation-severity ${issue.severity}`, `${issue.severity}: ${issue.code}`),
+        textElement("span", "", issue.message),
+        textElement("small", "", `Fix: ${issue.action}`),
+      );
+      findings.appendChild(item);
+    });
+    section.appendChild(findings);
+    const href = validationFixLink(category);
+    if (href) {
+      const link = textElement("a", "validation-fix-link", `Open ${category.toLowerCase()}`);
+      link.href = href;
+      section.appendChild(link);
+    }
+    groups.appendChild(section);
+  });
+  panel.appendChild(groups);
+}
+
+/** Run document validation with an explicit finite loading and failure state. */
+async function validateDocument() {
+  const button = document.getElementById("validate-document");
+  const panel = document.getElementById("document-validation-result");
+  button.disabled = true;
+  button.textContent = "Validating…";
+  panel.hidden = false;
+  panel.className = "document-validation-result";
+  panel.textContent = "Running structural and semantic checks…";
   try {
     const response = await fetch(
-      `/api/review/${encodeURIComponent(documentId)}/submit`,
+      `/api/review/${encodeURIComponent(documentId)}/validate`,
       {method: "POST"},
     );
     const result = await response.json();
     if (!response.ok) {
-      statusBox.className = "notice error";
-      statusBox.textContent = `${result.message} ${result.action}`;
-      renderReadiness();
+      panel.className = "document-validation-result error";
+      panel.textContent = `${result.message} ${result.action}`;
       return;
     }
-    reviewDocument = result;
-    render();
-    statusBox.className = "notice success";
-    statusBox.textContent = "This document is now read-only and awaiting curator review.";
+    renderDocumentValidation(result);
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        {type: "heva-review-updated", documentId},
+        window.location.origin,
+      );
+    }
   } catch (error) {
-    statusBox.className = "notice error";
-    statusBox.textContent = `The document could not be submitted: ${error.message}`;
-    renderReadiness();
+    panel.className = "document-validation-result error";
+    panel.textContent = `Document validation failed: ${error.message}`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Validate document";
   }
 }
 
@@ -309,7 +385,7 @@ async function saveCorrection() {
 }
 
 function updateSelectionControls() {
-  const editable = !reviewDocument.draft_only && !["in_review", "done"].includes(reviewDocument.status);
+  const editable = !reviewDocument.draft_only;
   const selectedCount = visibleSentences.filter((item) =>
     selectedSentenceIds.has(item.record.sentence_id)
   ).length;
@@ -337,7 +413,7 @@ function sentenceCard(item) {
   selection.className = "sentence-selection";
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
-  checkbox.disabled = reviewDocument.draft_only || ["in_review", "done"].includes(reviewDocument.status);
+  checkbox.disabled = reviewDocument.draft_only;
   checkbox.checked = selectedSentenceIds.has(record.sentence_id);
   checkbox.setAttribute("aria-label", `Select sentence ${record.sentence_id}`);
   checkbox.addEventListener("change", () => {
@@ -358,7 +434,7 @@ function sentenceCard(item) {
   }
   const actions = document.createElement("div");
   actions.className = "decision-actions";
-  const editable = !reviewDocument.draft_only && !["in_review", "done"].includes(reviewDocument.status);
+  const editable = !reviewDocument.draft_only;
   const editButton = textElement("button", "button secondary", "Edit sentence");
   editButton.type = "button";
   editButton.disabled = !editable;
@@ -468,10 +544,7 @@ document.querySelectorAll("[data-batch-status]").forEach((button) => {
     decide(visibleIds, button.dataset.batchStatus, comment);
   });
 });
-document.getElementById("submit-document-review").addEventListener(
-  "click",
-  submitDocumentReview,
-);
+document.getElementById("validate-document").addEventListener("click", validateDocument);
 document.getElementById("close-sentence-editor").addEventListener("click", closeEditor);
 document.getElementById("cancel-sentence-editor").addEventListener("click", closeEditor);
 editorForm.addEventListener("submit", (event) => {

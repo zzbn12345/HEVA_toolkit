@@ -108,6 +108,18 @@ def test_confirmation_rejects_pending_or_unexplained_ignored_colors() -> None:
         confirm_color_configuration(configuration, confirmed_by="Annotator")
 
 
+def test_confirmation_repairs_missing_detection_provenance() -> None:
+    """Older mappings gain an explicit conservative method when reconfirmed."""
+
+    configuration = propose_color_configuration(["#FFFF00"])
+    configuration.detection_method = None
+    configuration = resolve_color(configuration, "#FFFF00", label="political")
+
+    confirmed = confirm_color_configuration(configuration, confirmed_by="Annotator")
+
+    assert confirmed.detection_method == "manual"
+
+
 def test_batch_shared_mapping_requires_same_palette_and_each_document_confirmation() -> None:
     first = propose_color_configuration(
         ["#FFFF00"], legend_mapping={"#FFFF00": "historic"}

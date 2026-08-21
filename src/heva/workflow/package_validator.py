@@ -321,9 +321,12 @@ def validate_document_package(
                         f"$.package_metadata{item.path[1:]}",
                         item.message,
                         (
+                            "No correction is required; the recorded findability explanation will be included in the Data Package."
+                            if item.code == "source_not_findable"
+                            else
                             "Complete and validate the citation before Data Package generation."
                             if item.code in CITATION_REQUIREMENT_CODES
-                            else "Complete or correct this metadata before curator approval."
+                            else "Complete or correct this metadata before Data Package export."
                         ),
                         item.severity,
                     )
@@ -487,10 +490,10 @@ def validate_document_package(
         document_id=document_id,
         source_path=entry.source_path,
         workflow_status=entry.status,
-        completed=entry.status == "done",
+        completed=not blocking,
         valid=not blocking,
         curation_ready=not curation_blocking,
-        release_ready=not blocking and entry.status == "done",
+        release_ready=not blocking,
         issues=issues,
     )
 
@@ -566,7 +569,7 @@ def format_validation_report(report: ProjectValidation) -> str:
 
 
 def approve_document(project_root: str | Path, document_id: str) -> None:
-    """Mark an in-review document done only after all package gates pass."""
+    """Retain the former approval transition for legacy curation-state compatibility."""
 
     root = Path(project_root).resolve()
     registry_path = root / DEFAULT_REGISTRY_PATH
@@ -641,7 +644,7 @@ def build_release(
     *,
     output_directory: str | Path = DEFAULT_RELEASE_DIRECTORY,
 ) -> Path:
-    """Build a deterministic FAIR candidate from curator-accepted packages only."""
+    """Build a deterministic Data Package from HEVA-valid registered documents."""
 
     root = Path(project_root).resolve()
     try:
@@ -656,55 +659,20 @@ def build_release(
     registry = ProjectRegistry.model_validate_json(
         (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
     )
-    done = sorted(
-        (entry for entry in registry.documents if entry.status == "done"),
+    documents_to_export = sorted(
+        registry.documents,
         key=lambda item: (item.source_path, item.document_id),
     )
-    if not done:
-        raise PackageValidationError("No approved documents are available for release.")
+    if not documents_to_export:
+        raise PackageValidationError("No registered documents are available for export.")
     rows: list[dict[str, Any]] = []
     documents: list[dict[str, Any]] = []
-    for entry in done:
-        from heva.workflow.curation_state import (
-            CurationError,
-            load_curation_state,
-            verify_current_candidate,
-        )
-
-        try:
-            curation = load_curation_state(root, entry.document_id)
-            candidate = verify_current_candidate(root, entry.document_id)
-        except CurationError as error:
-            raise PackageValidationError(
-                f"Approved document {entry.document_id} lacks intact curator evidence: {error}"
-            ) from error
-        decision = curation.current_decision()
-        if (
-            decision is None
-            or decision.candidate_id != candidate.candidate_id
-            or decision.decision != "accepted"
-        ):
-            raise PackageValidationError(
-                f"Approved document {entry.document_id} has no curator acceptance."
-            )
-        from heva.workflow.data_owner_approval import (
-            DataOwnerApprovalError,
-            load_current_data_owner_approval,
-        )
-
-        try:
-            owner_approval, data_owner = load_current_data_owner_approval(
-                root, entry.document_id
-            )
-        except DataOwnerApprovalError as error:
-            raise PackageValidationError(
-                f"Approved document {entry.document_id} lacks data-owner approval: {error}"
-            ) from error
+    for entry in documents_to_export:
         report = validate_document_package(root, entry.document_id)
         if not report.release_ready:
             codes = ", ".join(item.code for item in report.issues if item.severity == "error")
             raise PackageValidationError(
-                f"Approved document {entry.document_id} failed validation: {codes}"
+                f"Document {entry.document_id} failed validation: {codes}"
             )
         annotations = json.loads(
             (root / entry.package_path / "annotations.json").read_text(encoding="utf-8")
@@ -728,11 +696,19 @@ def build_release(
             if item["sentence_id"] in included
         ]
         canonical.sort(key=lambda item: (item["page"], item["sentence_id"]))
+        annotations_checksum = hashlib.sha256(
+            json.dumps(
+                canonical,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
         documents.append(
             {
                 "document_id": entry.document_id,
                 "source_checksum_sha256": entry.checksum_sha256,
-                "candidate_checksum_sha256": candidate.candidate_id,
+                "annotations_checksum_sha256": annotations_checksum,
                 "citation": package_metadata.source.citation,
                 "source_creators": package_metadata.source.creators,
                 "source_reference": package_metadata.source.reference,
@@ -741,21 +717,6 @@ def build_release(
                 ),
                 "rights": package_metadata.rights.model_dump(mode="json"),
                 "annotator": package_metadata.annotator.model_dump(mode="json"),
-                "data_owner": {
-                    "person_id": data_owner.person_id,
-                    "name": data_owner.name,
-                    "affiliation": data_owner.affiliation,
-                    "orcid": data_owner.orcid,
-                    "approved_at": owner_approval.approved_at.isoformat(),
-                    "license_or_waiver": owner_approval.license_or_waiver,
-                    "statement": owner_approval.statement,
-                },
-                "curator": {
-                    "actor": decision.actor,
-                    "decision": decision.decision,
-                    "evidence": decision.evidence,
-                    "decided_at": decision.decided_at.isoformat(),
-                },
                 "record_count": len(canonical),
                 "records": canonical,
             }
@@ -786,7 +747,7 @@ def build_release(
             {
                 "document_id": document["document_id"],
                 "source_checksum_sha256": document["source_checksum_sha256"],
-                "candidate_checksum_sha256": document["candidate_checksum_sha256"],
+                "annotations_checksum_sha256": document["annotations_checksum_sha256"],
             }
             for document in documents
         ],
@@ -850,8 +811,6 @@ def main(argv: Iterable[str] | None = None) -> int:
         action="store_true",
         help="Print the stable machine-readable report instead of the terminal summary.",
     )
-    approve = commands.add_parser("approve")
-    approve.add_argument("--document-id", required=True)
     release = commands.add_parser("release")
     release.add_argument("--output", default=DEFAULT_RELEASE_DIRECTORY.as_posix())
     args = parser.parse_args(list(argv) if argv is not None else None)
@@ -874,10 +833,6 @@ def main(argv: Iterable[str] | None = None) -> int:
                 report_path.write_text(rendered + "\n", encoding="utf-8")
             print(rendered if args.json else format_validation_report(report))
             return 0 if report.valid else 1
-        if args.command == "approve":
-            approve_document(args.project_root, args.document_id)
-            print(f"{args.document_id} approved for release")
-            return 0
         target = build_release(args.project_root, output_directory=args.output)
         print(f"HEVA release written to {target}")
         return 0

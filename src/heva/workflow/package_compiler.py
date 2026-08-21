@@ -130,11 +130,6 @@ def compile_csv_packages(
         entry = entries.get(document_id)
         if entry is None:
             raise PackageCompileError(f"Document {document_id} is not registered.")
-        if entry.status in {"in_review", "done"}:
-            raise PackageCompileError(
-                f"Document {document_id} is read-only in state {entry.status}. "
-                "Request changes before compiling edited rows."
-            )
         if entry.source_state != "present":
             raise PackageCompileError(
                 f"Document {document_id} source is {entry.source_state}; synchronize first."

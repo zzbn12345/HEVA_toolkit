@@ -288,7 +288,7 @@ def _issue(
 
 
 def validate_review_readiness(metadata: PackageMetadata) -> ReadinessReport:
-    """Check whether provenance and rights are explicit enough for curator review."""
+    """Check whether provenance and rights are explicit enough for export."""
 
     issues: list[ReadinessIssue] = []
     source = metadata.source
@@ -339,7 +339,7 @@ def validate_review_readiness(metadata: PackageMetadata) -> ReadinessReport:
             _issue(
                 "source_not_authorized",
                 "$.rights.authorization_status",
-                "Document authorization must be confirmed before review.",
+                "Document authorization must be confirmed before Data Package export.",
             )
         )
     if rights.authorization_date is None:
@@ -412,7 +412,7 @@ def validate_review_readiness(metadata: PackageMetadata) -> ReadinessReport:
             _issue(
                 "annotation_review_incomplete",
                 "$.annotation_process.review.completed",
-                "Sentence review must be completed before curator review.",
+                "Sentence review must be completed before Data Package export.",
             )
         )
     if process.review.completed and process.review.reviewed_at is None:

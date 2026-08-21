@@ -68,13 +68,9 @@ def save_document_rights(
     document_id: str,
     rights: RightsMetadata,
 ) -> RightsMetadata:
-    """Persist rights before submission without rewriting other document metadata."""
+    """Persist rights without rewriting other document metadata."""
 
-    root, entry, metadata = _metadata_entry(project_root, document_id)
-    if entry.status in {"in_review", "done"}:
-        raise DocumentRightsError(
-            "Document rights are locked after submission. Request changes before editing."
-        )
+    root, _, metadata = _metadata_entry(project_root, document_id)
     metadata.rights = rights
     try:
         save_package_metadata(root, metadata)

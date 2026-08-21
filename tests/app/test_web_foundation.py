@@ -22,6 +22,11 @@ from heva.workflow.color_mapping import (
 )
 from heva.workflow.project_registry import register_external_source, sync_registry
 from heva.workflow.package_validator import PackageValidationError
+from heva.workflow.extraction_draft import (
+    ExtractionDraftError,
+    persist_extraction_draft,
+)
+from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
 from heva.workflow.review_state import initialize_sentence_reviews
 
 
@@ -83,64 +88,16 @@ def test_guide_rejects_unknown_or_traversing_pages() -> None:
     assert traversal.status_code in {303, 307, 404}
 
 
-def test_curator_page_exposes_local_decision_queue_and_validation_filters(
-    tmp_path: Path,
-) -> None:
+def test_internal_curator_submission_surfaces_are_not_exposed(tmp_path: Path) -> None:
+    """Repository governance is not a reachable Alpha application workflow."""
+
     client = TestClient(create_app(tmp_path))
 
-    response = client.get("/curation")
-
-    assert response.status_code == 200
-    assert "Local curator queue" in response.text
-    assert 'src="/static/curation.js?v=3"' in response.text
-    assert 'href="/static/curation.css?v=2"' in response.text
-    assert 'data-curation-filter="in_review"' in response.text
-    assert 'data-curation-filter="attention"' in response.text
-    assert 'data-curation-filter="valid"' in response.text
-    assert "exact validated candidate" in response.text
-
-
-def test_curation_interface_can_add_project_data_owner(tmp_path: Path) -> None:
-    """Researchers can satisfy ownership setup without editing people.json."""
-
-    sources = tmp_path / "documents"
-    sources.mkdir()
-    (sources / "source.pdf").write_bytes(b"source")
-    sync_registry(tmp_path, source_dir="documents")
-    document_id = json.loads((tmp_path / ".heva/project.json").read_text())["documents"][0]["document_id"]
-    client = TestClient(create_app(tmp_path))
-
-    created = client.post(
-        "/api/people/data-owners",
-        json={"name": "Responsible Owner", "affiliation": "Archive"},
-    )
-    state = client.get(f"/api/curation/{document_id}")
-
-    assert created.status_code == 201
-    assert created.json()["roles"] == ["data_owner"]
-    assert state.json()["data_owners"][0]["name"] == "Responsible Owner"
-
-
-def test_curator_asset_combines_evidence_and_audited_decisions() -> None:
-    script = (
-        Path(__file__).parents[2]
-        / "src"
-        / "heva"
-        / "app"
-        / "static"
-        / "curation.js"
-    ).read_text(encoding="utf-8")
-
-    assert 'fetch("/api/project")' in script
-    assert 'fetch("/api/validate", {method: "POST"})' in script
-    assert 'item.status === "in_review"' in script
-    assert '"Open annotation evidence"' in script
-    assert "issue.action" in script
-    assert "/api/curation/" in script
-    assert '"accepted"' in script
-    assert '"changes_requested"' in script
-    assert '"quarantined"' in script
-    assert "data-owner-approval" in script
+    assert client.get("/curation").status_code == 404
+    assert client.get("/api/curation/HEVA-TEST").status_code == 404
+    assert client.post("/api/review/HEVA-TEST/submit").status_code == 404
+    assert client.post("/api/curation/HEVA-TEST/decisions").status_code == 404
+    assert client.post("/api/curation/HEVA-TEST/data-owner-approval").status_code == 404
 
 
 def test_app_starts_without_exposing_repository_documents() -> None:
@@ -412,8 +369,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=20"' in response.text
-    assert 'href="/static/create.css?v=11"' in response.text
+    assert 'src="/static/create.js?v=24"' in response.text
+    assert 'href="/static/create.css?v=13"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text
@@ -541,6 +498,99 @@ def test_confirmed_document_colors_create_and_select_reusable_project_palette(
     queue = client.get("/api/review-queue").json()["documents"]
     selected = next(item for item in queue if item["document_id"] == document_id)
     assert selected["readiness_gates"]["color_configuration"] is True
+
+
+def test_confirmed_colors_compile_saved_draft_without_rerunning_extraction(
+    tmp_path: Path,
+) -> None:
+    """Color confirmation immediately promotes saved evidence for sentence review."""
+
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    curator = add_person(tmp_path, PersonRecord(name="Researcher", roles=["curator"]))
+    activate_curator(tmp_path, curator.person_id)
+    persist_extraction_draft(
+        tmp_path,
+        document_id,
+        [
+            {
+                "sentence_id": 1,
+                "page": 1,
+                "sentence": "Historic harbour",
+                "tokens": ["Historic", "harbour"],
+                "values": ["#CCCC00"],
+                "entities": [
+                    {
+                        "start": 0,
+                        "end": 16,
+                        "text": "Historic harbour",
+                        "label": "#CCCC00",
+                    }
+                ],
+                "ner_tags": ["B-#CCCC00", "I-#CCCC00"],
+            }
+        ],
+        extractor="test extractor",
+        extractor_version="1.0",
+    )
+    save_color_configuration(
+        tmp_path,
+        document_id,
+        propose_color_configuration(["#CCCC00"]),
+    )
+    client = TestClient(create_app(tmp_path))
+
+    confirmed = client.post(
+        f"/api/documents/{document_id}/colors/confirm",
+        json={"decisions": [{"hex": "#CCCC00", "label": "historic"}]},
+    )
+    after = client.get(f"/api/documents/{document_id}/extraction").json()
+    review = client.get(f"/api/review/{document_id}").json()
+
+    assert confirmed.status_code == 200
+    assert confirmed.json()["canonical_annotations"]["status"] == "canonical_saved"
+    assert confirmed.json()["canonical_annotations"]["record_count"] == 1
+    assert after["state"] == "current"
+    assert after["record_count"] == 1
+    assert review["draft_only"] is False
+    assert review["sentences"][0]["record"]["values"] == ["historic"]
+
+
+def test_failed_draft_compilation_preserves_raw_evidence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A compilation failure remains actionable and never destroys collaborative evidence."""
+
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    draft = tmp_path / ".heva" / "documents" / document_id / "extraction-draft.json"
+    draft.parent.mkdir(parents=True, exist_ok=True)
+    draft.write_text('{"preserved": true}\n', encoding="utf-8")
+    original = draft.read_bytes()
+    monkeypatch.setattr(
+        project_routes,
+        "promote_extraction_draft",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            ExtractionDraftError("The selected palette does not resolve #CCCC00.")
+        ),
+    )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post(f"/api/documents/{document_id}/annotations/compile")
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "annotation_compilation_failed"
+    assert "#CCCC00" in response.json()["action"]
+    assert draft.read_bytes() == original
 
 
 def test_batch_color_candidates_explain_palette_mismatch(tmp_path: Path) -> None:
@@ -1123,6 +1173,54 @@ def test_validation_endpoint_uses_package_validator(tmp_path: Path) -> None:
     assert all(issue["guide"] for issue in report["documents"][0]["issues"])
 
 
+def test_active_document_validation_returns_timestamped_shared_report(
+    tmp_path: Path,
+) -> None:
+    """The document action uses the same validator contract as project and CLI checks."""
+
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    document_id = json.loads((tmp_path / ".heva/project.json").read_text())["documents"][0]["document_id"]
+    client = TestClient(create_app(tmp_path))
+    registry_before = (tmp_path / ".heva/project.json").read_bytes()
+
+    response = client.post(f"/api/review/{document_id}/validate")
+    project_response = client.post("/api/validate")
+
+    assert response.status_code == 200
+    assert response.json()["checked_at"].endswith("+00:00")
+    assert response.json()["document"]["document_id"] == document_id
+    assert response.json()["document"]["valid"] is False
+    assert response.json()["document"]["issues"]
+    assert {
+        issue["code"] for issue in response.json()["document"]["issues"]
+    } == {
+        issue["code"] for issue in project_response.json()["documents"][0]["issues"]
+    }
+    assert (tmp_path / ".heva/project.json").read_bytes() == registry_before
+
+
+def test_active_document_validation_reports_server_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A validator exception becomes a finite, actionable HTTP response."""
+
+    monkeypatch.setattr(
+        "heva.app.routes.review.validate_document_package",
+        lambda root, document_id: (_ for _ in ()).throw(PackageValidationError("broken metadata")),
+    )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/review/HEVA-TEST/validate")
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "document_validation_unavailable"
+    assert "broken metadata" in response.json()["action"]
+
+
 def test_validation_page_exposes_report_runner_filters_and_download(
     tmp_path: Path,
 ) -> None:
@@ -1369,8 +1467,8 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=10"' in response.text
-    assert 'href="/static/review.css?v=8"' in response.text
+    assert 'src="/static/review_document.js?v=13"' in response.text
+    assert 'href="/static/review.css?v=10"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text
@@ -1389,7 +1487,10 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     assert 'id="review-colors-link"' in response.text
     assert 'href="/people"' in response.text
     assert 'id="review-readiness"' in response.text
-    assert 'id="submit-document-review"' in response.text
+    assert 'id="validate-document"' in response.text
+    assert 'id="document-validation-result"' in response.text
+    assert 'id="submit-document-review"' not in response.text
+    assert "Submit for curator review" not in response.text
     assert "raw JSON" not in response.text
 
 
@@ -1428,8 +1529,15 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert '"aria-label"' in script
     assert "entity-list" not in script
     assert "renderReadiness" in script
-    assert "/submit" in script
-    assert '"Submitted for curator review"' in script
+    assert "/submit" not in script
+    assert '"Submitted for curator review"' not in script
+    assert '"Ready for validation"' in script
+    assert "/validate" in script
+    assert "renderDocumentValidation" in script
+    assert "validationCategory" in script
+    assert 'return "People and roles"' in script
+    assert "issue.severity" in script
+    assert 'button.textContent = "Validate document"' in script
 
 
 def test_document_setup_asset_opens_requested_review_section() -> None:
@@ -1451,14 +1559,38 @@ def test_document_setup_asset_opens_requested_review_section() -> None:
     assert "?embedded=1" in script
     assert "result.candidates.filter((candidate) => candidate.eligible)" in script
     assert "refreshAnnotationsReview()" in script
+    assert "/annotations/compile" in script
+    assert "compile-annotations" in script
+    assert "automaticCompilationAttempts" in script
     assert 'button.querySelector("b").textContent = complete ? "✓" : "×"' in script
     assert 'setReadiness("curator", true' in script
-    assert 'setReadiness("citation", result.human_confirmed' in script
+    assert "citationIsReady" in script
+    assert 'setReadiness("citation", ready' in script
+    assert "refreshAnnotationsReview();" in script
     assert 'setReadiness("colors", confirmed' in script
     assert 'setReadiness("curated"' in script
     assert 'setReadiness("validated"' in script
     assert 'fetch("/api/validate", {method: "POST"})' in script
-    assert "result.record_count > 0 || result.draft_record_count > 0" in script
+    assert "result.record_count > 0" in script
+    template = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "templates"
+        / "create.html"
+    ).read_text(encoding="utf-8")
+    styles = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "create.css"
+    ).read_text(encoding="utf-8")
+    assert "Build canonical annotations" in template
+    assert "#draft-compilation" in styles
+    assert "grid-template-columns: minmax(0, 1fr) max-content" in styles
 
 
 def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path) -> None:

@@ -14,7 +14,7 @@ from heva.workflow.data_owner_approval import (
 from heva.workflow.people_registry import PersonRecord, add_person
 from tests.workflow.test_package_validator import project
 from heva.workflow.curation_state import create_candidate_snapshot, record_curator_decision
-from heva.workflow.package_validator import PackageValidationError, build_release
+from heva.workflow.package_validator import build_release
 
 
 def _accepted(tmp_path: Path) -> str:
@@ -69,10 +69,9 @@ def test_approval_is_bound_to_one_exact_document_candidate(tmp_path: Path) -> No
     assert restored_owner.affiliation == "Museum"
 
 
-def test_release_is_blocked_until_each_accepted_document_has_an_owner(tmp_path: Path) -> None:
-    """Curator acceptance alone cannot authorize a distributable Data Package."""
+def test_legacy_data_owner_approval_is_not_an_alpha_export_gate(tmp_path: Path) -> None:
+    """Repository governance evidence remains optional compatibility data."""
 
     _accepted(tmp_path)
 
-    with pytest.raises(PackageValidationError, match="lacks data-owner approval"):
-        build_release(tmp_path)
+    assert build_release(tmp_path).is_dir()
