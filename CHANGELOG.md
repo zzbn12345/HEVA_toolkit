@@ -10,6 +10,9 @@
 
 ### Changed
 
+- Reduced Alpha validation to annotation Data Package requirements. Detailed per-document
+  source authorization/access fields and color-detection method remain optional workspace
+  provenance; dataset-level license and rights remain mandatory for export.
 - Replaced numbered document steps with live green-check/missing-cross indicators for
   curator identity, citation, color configuration, extracted annotations, curated
   sentences, and document validation. The three annotation checks open the same sentence

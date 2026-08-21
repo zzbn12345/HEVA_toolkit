@@ -17,6 +17,13 @@ heva-data-package/
 The source PDFs/DOCXs and the hidden `.heva/` application workspace are not part of the
 Data Package.
 
+## Rights boundary
+
+The exported dataset must have a dataset-level license and rights statement. Detailed
+source authorization, access level, embargo, and evidence references may still be recorded
+per document as optional workspace context, but they do not block an annotation-only export
+and are not included in the standard Data Package. HEVA does not export source PDFs/DOCXs.
+
 ## Why both JSON and CSV?
 
 - **JSON is canonical.** It preserves document identity, citations, annotator information,
@@ -42,6 +49,9 @@ Hex colors are evidence from the source document. They do not have universal sem
 meaning. The Data Package records the human-reviewed mapping from each observed color to a
 HEVA label. Several hex colors may map to the same label—for example, two yellow shades may
 both represent `social` in one annotation protocol.
+
+How a color was detected is optional process provenance. Validation requires the reviewed
+color-to-label decision, not a manually completed detection-method field.
 
 The controlled label vocabulary is stored in `schemas/heritage-values.csv`. The current alpha
 interface uses its eight top-level labels. Color-to-label decisions are stored with the project
