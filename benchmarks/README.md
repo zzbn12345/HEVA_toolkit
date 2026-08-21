@@ -73,3 +73,14 @@ Second optimization result on the same environment:
 The optimized sorter calculates bands and columns once per page. The former
 implementation rebuilt those same structures inside the key function for every
 block being sorted.
+
+## Highlight matching microbenchmark
+
+The drawing matcher can be measured independently with:
+
+```bash
+python benchmarks/benchmark_highlight_matching.py
+```
+
+It models a long page containing 1,000 words and 100 colored drawing rectangles.
+The checksum records the selected color for every word.
