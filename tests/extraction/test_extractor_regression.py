@@ -14,6 +14,7 @@ from heva.extraction.pdf_extractor import (
     extract_colored_highlights,
     find_highlight_color,
     find_text_span_color,
+    group_words_by_block,
     iter_sentence_word_spans,
     sort_page_blocks,
 )
@@ -178,3 +179,17 @@ def test_pdf_span_index_preserves_first_containing_span_behavior() -> None:
 
     assert find_text_span_color(word, spans) is None
     assert find_text_span_color(word, spans, index) is None
+
+
+def test_pdf_words_group_by_block_without_changing_order() -> None:
+    """A single grouping pass must preserve words as extracted from the page."""
+    words = [
+        {"text": "left", "block_no": 2},
+        {"text": "heading", "block_no": 1},
+        {"text": "column", "block_no": 2},
+    ]
+
+    grouped = group_words_by_block(words)
+
+    assert [word["text"] for word in grouped[2]] == ["left", "column"]
+    assert [word["text"] for word in grouped[1]] == ["heading"]

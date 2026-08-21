@@ -225,6 +225,14 @@ def find_text_span_color(word_rect, spans, span_index=None):
             return span["color"] if is_colorful(span["color"]) else None
     return None
 
+
+def group_words_by_block(words):
+    """Group page words by block number while preserving source order."""
+    grouped = {}
+    for word in words:
+        grouped.setdefault(word["block_no"], []).append(word)
+    return grouped
+
 def is_header_footer(b, page_rect, rotation):
     """Checks if a block is in the page margins (header or footer)."""
     x0, y0, x1, y1 = b[0], b[1], b[2], b[3]
@@ -367,6 +375,7 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
         blocks = page.get_text("blocks")
         blocks = [b for b in blocks if not is_margin_block(b[4]) and not is_header_footer(b, page_rect, page.rotation)]
         blocks, block_metadata = sort_page_blocks(blocks, page_rect, page.rotation)
+        words_by_block = group_words_by_block(words)
 
         # Reconstruct page text block by block
         page_reconstructed_text = ""
@@ -374,7 +383,7 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
         
         for b_idx, block in enumerate(blocks):
             block_no = block[5]
-            block_words = [w for w in words if w["block_no"] == block_no]
+            block_words = words_by_block.get(block_no, [])
             if not block_words:
                 continue
                 

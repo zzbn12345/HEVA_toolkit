@@ -8,6 +8,8 @@ import json
 import statistics
 import time
 
+from heva.extraction.pdf_extractor import group_words_by_block
+
 
 def build_fixture(block_count: int, words_per_block: int):
     """Create deterministic words ordered by block, line, and word number."""
@@ -33,6 +35,15 @@ def group_repeatedly(words, block_numbers):
     }
 
 
+def group_once(words, block_numbers):
+    """Use the production single-pass grouping implementation."""
+    grouped = group_words_by_block(words)
+    return {
+        block_number: [word["text"] for word in grouped.get(block_number, [])]
+        for block_number in block_numbers
+    }
+
+
 def main() -> None:
     """Measure repeated grouping and checksum word order within every block."""
     parser = argparse.ArgumentParser()
@@ -43,21 +54,29 @@ def main() -> None:
 
     words = build_fixture(args.blocks, args.words_per_block)
     block_numbers = list(range(args.blocks))
-    durations = []
-    checksums = set()
-    for _ in range(args.repeats):
-        started = time.perf_counter()
-        grouped = group_repeatedly(words, block_numbers)
-        durations.append(time.perf_counter() - started)
-        checksums.add(
-            hashlib.sha256(json.dumps(grouped, sort_keys=True).encode()).hexdigest()
-        )
-    if len(checksums) != 1:
-        raise RuntimeError("Word grouping changed between repetitions")
+    results = {}
+    for name, grouper in (("repeated", group_repeatedly), ("single_pass", group_once)):
+        durations = []
+        checksums = set()
+        for _ in range(args.repeats):
+            started = time.perf_counter()
+            grouped = grouper(words, block_numbers)
+            durations.append(time.perf_counter() - started)
+            checksums.add(
+                hashlib.sha256(json.dumps(grouped, sort_keys=True).encode()).hexdigest()
+            )
+        if len(checksums) != 1:
+            raise RuntimeError(f"{name} word grouping is not deterministic")
+        results[name] = (statistics.median(durations), checksums.pop(), grouped)
+
+    if results["repeated"][2] != results["single_pass"][2]:
+        raise RuntimeError("Single-pass grouping changed block word order")
 
     print(f"blocks={args.blocks} words={len(words)} repeats={args.repeats}")
-    print(f"median_seconds={statistics.median(durations):.6f}")
-    print(f"output_sha256={checksums.pop()}")
+    print(f"repeated_median_seconds={results['repeated'][0]:.6f}")
+    print(f"single_pass_median_seconds={results['single_pass'][0]:.6f}")
+    print(f"speedup={results['repeated'][0] / results['single_pass'][0]:.2f}x")
+    print(f"output_sha256={results['single_pass'][1]}")
 
 
 if __name__ == "__main__":

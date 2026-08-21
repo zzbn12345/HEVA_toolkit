@@ -125,3 +125,14 @@ python benchmarks/benchmark_word_grouping.py
 ```
 
 The checksum covers the order of every word within every block.
+
+Fifth optimization result on the same environment:
+
+| Scope | Before | After | Result |
+|---|---:|---:|---:|
+| End-to-end sample PDF | 0.1235 s | 0.1241 s | No measurable change |
+| 500 blocks, 10,000 words | 0.0770 s | 0.00075 s | 102.54x |
+
+The page now groups each word once and retrieves a block's list directly. The
+small sample contains too few blocks for this operation to affect total runtime;
+its slight median increase is benchmark noise, not evidence of a regression.
