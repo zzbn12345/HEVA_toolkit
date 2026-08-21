@@ -317,7 +317,6 @@ def validate_review_readiness(metadata: PackageMetadata) -> ReadinessReport:
 
     issues: list[ReadinessIssue] = []
     source = metadata.source
-    rights = metadata.rights
     if not source.title:
         issues.append(_issue("missing_source_title", "$.source.title", "Source title is required."))
     if not source.creators:
@@ -359,61 +358,6 @@ def validate_review_readiness(metadata: PackageMetadata) -> ReadinessReport:
                 "Assign at least one original annotator from the project people directory.",
             )
         )
-    if rights.access_level is None:
-        issues.append(
-            _issue("missing_access_level", "$.rights.access_level", "Access level is required.")
-        )
-    if rights.authorization_status != "authorized":
-        issues.append(
-            _issue(
-                "source_not_authorized",
-                "$.rights.authorization_status",
-                "Document authorization must be confirmed before Data Package export.",
-            )
-        )
-    if rights.authorization_date is None:
-        issues.append(
-            _issue(
-                "missing_authorization_date",
-                "$.rights.authorization_date",
-                "Authorization date is required.",
-            )
-        )
-    if not rights.authorized_by:
-        issues.append(
-            _issue("missing_authorized_by", "$.rights.authorized_by", "Authorizing party is required.")
-        )
-    if not rights.evidence_reference:
-        issues.append(
-            _issue(
-                "missing_authorization_evidence",
-                "$.rights.evidence_reference",
-                "A reference to authorization evidence is required.",
-            )
-        )
-    distribution_fields = (
-        (
-            "source_distribution_allowed",
-            "missing_source_distribution_right",
-            "Source-document distribution permission must be explicit.",
-        ),
-        (
-            "extracted_text_distribution_allowed",
-            "missing_extracted_text_distribution_right",
-            "Extracted-text distribution permission must be explicit.",
-        ),
-        (
-            "annotation_distribution_allowed",
-            "missing_annotation_distribution_right",
-            "Annotation distribution permission must be explicit.",
-        ),
-    )
-    for field_name, code, message in distribution_fields:
-        if getattr(rights, field_name) is None:
-            issues.append(_issue(code, f"$.rights.{field_name}", message))
-    if not rights.license:
-        issues.append(_issue("missing_license", "$.rights.license", "License is required."))
-
     process = metadata.annotation_process
     process_fields = (
         ("method", "missing_extraction_method", "Extraction method is required."),
@@ -454,14 +398,6 @@ def validate_review_readiness(metadata: PackageMetadata) -> ReadinessReport:
         )
 
     colors = metadata.color_configuration
-    if colors.detection_method is None:
-        issues.append(
-            _issue(
-                "missing_color_detection_method",
-                "$.color_configuration.detection_method",
-                "Color detection method is required.",
-            )
-        )
     if not colors.colors:
         issues.append(
             _issue(

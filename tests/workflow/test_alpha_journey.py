@@ -141,7 +141,7 @@ def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: 
     assert payload["membership"] == [document_id]
     assert "data_owner" not in payload["documents"][0]
     assert "curator" not in payload["documents"][0]
-    assert payload["documents"][0]["rights"]["authorized_by"] == owner.name
+    assert "rights" not in payload["documents"][0]
     assert payload["documents"][0]["records"][0]["values"] == ["historic"]
     assert str(external) not in (dataset / ".heva/project.json").read_text()
     assert not any(path.suffix == ".pdf" for path in release.iterdir())

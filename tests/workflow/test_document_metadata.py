@@ -143,36 +143,22 @@ def test_missing_provenance_and_unexplained_findability_block_review() -> None:
     assert codes == {"missing_source_creator", "missing_citation", "missing_findability"}
 
 
-@pytest.mark.parametrize(
-    ("field", "value", "expected_code"),
-    [
-        ("access_level", None, "missing_access_level"),
-        ("authorization_status", "pending", "source_not_authorized"),
-        ("authorization_date", None, "missing_authorization_date"),
-        ("authorized_by", None, "missing_authorized_by"),
-        ("evidence_reference", None, "missing_authorization_evidence"),
-        ("source_distribution_allowed", None, "missing_source_distribution_right"),
-        (
-            "extracted_text_distribution_allowed",
-            None,
-            "missing_extracted_text_distribution_right",
-        ),
-        (
-            "annotation_distribution_allowed",
-            None,
-            "missing_annotation_distribution_right",
-        ),
-        ("license", None, "missing_license"),
-    ],
-)
-def test_unclear_document_rights_block_review(field: str, value, expected_code: str) -> None:
+def test_optional_document_rights_do_not_block_annotation_package() -> None:
     metadata = complete_metadata()
-    setattr(metadata.rights, field, value)
+    metadata.rights = RightsMetadata()
 
     report = validate_review_readiness(metadata)
 
-    assert not report.ready
-    assert expected_code in {issue.code for issue in report.blocking_issues}
+    assert report.ready
+
+
+def test_color_detection_method_is_optional_provenance() -> None:
+    metadata = complete_metadata()
+    metadata.color_configuration.detection_method = None
+
+    report = validate_review_readiness(metadata)
+
+    assert report.ready
 
 
 @pytest.mark.parametrize(

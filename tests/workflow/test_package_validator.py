@@ -171,16 +171,16 @@ def project(tmp_path: Path) -> tuple[str, Path, Path]:
 def test_layered_report_has_actionable_stable_fields(tmp_path: Path) -> None:
     document_id, package, _ = project(tmp_path)
     metadata = json.loads((package / "metadata.json").read_text())
-    metadata["rights"]["authorization_status"] = "pending"
+    metadata["source"]["citation"] = None
     (package / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
 
     report = validate_document_package(tmp_path, document_id)
-    issue = next(item for item in report.issues if item.code == "source_not_authorized")
+    issue = next(item for item in report.issues if item.code == "missing_citation")
 
     assert not report.valid
     assert issue.severity == "error"
     assert issue.document_id == document_id
-    assert issue.path == "$.package_metadata.rights.authorization_status"
+    assert issue.path == "$.package_metadata.source.citation"
     assert issue.action
     assert issue.guide == "DATA_PACKAGE"
     assert "Guide: docs/DATA_PACKAGE.md" in format_validation_report(
@@ -305,7 +305,7 @@ def test_validated_release_is_deterministic_and_excludes_working_files(tmp_path:
     payload = json.loads(first_files["heva-annotations.json"])
     assert payload["membership"] == [document_id]
     assert payload["documents"][0]["citation"]
-    assert payload["documents"][0]["rights"]["source_distribution_allowed"] is False
+    assert "rights" not in payload["documents"][0]
     assert "data_owner" not in payload["documents"][0]
     assert "curator" not in payload["documents"][0]
     assert len(payload["documents"][0]["annotations_checksum_sha256"]) == 64
@@ -330,3 +330,14 @@ def test_release_accepts_valid_document_without_submission(tmp_path: Path) -> No
     project(tmp_path)
 
     assert build_release(tmp_path).is_dir()
+
+
+def test_dataset_license_and_rights_remain_required_for_export(tmp_path: Path) -> None:
+    project(tmp_path)
+    metadata_path = tmp_path / "dataset-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["license"] = ""
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    with pytest.raises(PackageValidationError, match="dataset-metadata.json"):
+        build_release(tmp_path)

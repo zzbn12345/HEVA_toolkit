@@ -722,7 +722,6 @@ def build_release(
                 "source_not_findable_reason": (
                     package_metadata.source.not_findable_reason
                 ),
-                "rights": package_metadata.rights.model_dump(mode="json"),
                 "original_annotators": [
                     item.model_dump(mode="json")
                     for item in package_metadata.original_annotators
