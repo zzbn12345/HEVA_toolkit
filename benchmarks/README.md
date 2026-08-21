@@ -136,3 +136,14 @@ Fifth optimization result on the same environment:
 The page now groups each word once and retrieves a block's list directly. The
 small sample contains too few blocks for this operation to affect total runtime;
 its slight median increase is benchmark noise, not evidence of a regression.
+
+## PyMuPDF text-page microbenchmark
+
+The extractor requests dictionary, word, and block views for every PDF page.
+Measure independent text-page construction with:
+
+```bash
+python benchmarks/benchmark_textpage_reuse.py
+```
+
+The checksum covers the span text and the complete word/block view payloads.
