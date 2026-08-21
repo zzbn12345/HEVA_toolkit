@@ -25,6 +25,8 @@
 
 ### Fixed
 
+- Added independent previous/next sentence pagination with a visible page indicator, so
+  researchers can inspect later batches without approving the current batch first.
 - Connected raw PDF/DOCX color discovery to the document Color config: observed hex values
   are persisted, displayed as readable swatches, and made available for supervised HEVA
   label decisions before canonical annotations are created.

@@ -1508,7 +1508,9 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
 
     assert "visibleSentences" in script
     assert "selectedSentenceIds" in script
-    assert '.slice(0, limit)' in script
+    assert "filteredSentences.slice(pageStart, pageStart + limit)" in script
+    assert "currentSentencePage += 1" in script
+    assert "currentSentencePage -= 1" in script
     assert "Select this visible batch" not in script
     assert "sentence_ids: sentenceIds" in script
     assert 'filter === "checked"' in script
@@ -1540,6 +1542,17 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert 'return "People and roles"' in script
     assert "issue.severity" in script
     assert 'button.textContent = "Validate document"' in script
+
+
+def test_sentence_review_exposes_independent_pagination_controls(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.get("/review/HEVA-EXAMPLE")
+
+    assert response.status_code == 200
+    assert 'id="previous-sentence-page"' in response.text
+    assert 'id="sentence-page-status"' in response.text
+    assert 'id="next-sentence-page"' in response.text
 
 
 def test_document_setup_asset_opens_requested_review_section() -> None:

@@ -22,7 +22,7 @@
 .document-tools { display: flex; align-items: center; gap: .45rem; }
 .document-tools .button { margin: 0; padding: .5rem .7rem; }
 .sentence-pane { min-height: 0; padding: 1rem 1.4rem 2rem; overflow-y: auto; }
-.review-controls { display: flex; gap: 1rem; }
+.review-controls { display: flex; gap: 1rem; align-items: end; flex-wrap: wrap; }
 .review-controls label { color: var(--muted); }
 .review-controls select {
   margin-left: .35rem;
@@ -32,6 +32,9 @@
   background: var(--field);
   color: var(--ink);
 }
+.sentence-pagination { display: flex; align-items: center; gap: .65rem; margin-left: auto; }
+.sentence-pagination .button { padding: .55rem .8rem; }
+.sentence-pagination span { color: var(--muted); min-width: 6.5rem; text-align: center; }
 .batch-review {
   display: grid;
   grid-template-columns: auto auto minmax(180px, 1fr);

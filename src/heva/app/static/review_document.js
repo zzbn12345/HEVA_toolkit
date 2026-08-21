@@ -16,6 +16,7 @@ const gateLabels = {
 };
 let reviewDocument = null;
 let visibleSentences = [];
+let currentSentencePage = 1;
 let editingRecord = null;
 const selectedSentenceIds = new Set();
 
@@ -456,7 +457,7 @@ function sentenceCard(item) {
 function render() {
   const filter = document.getElementById("review-filter").value;
   const limit = Number(document.getElementById("page-size").value);
-  visibleSentences = reviewDocument.sentences.filter((item) => {
+  const filteredSentences = reviewDocument.sentences.filter((item) => {
     if (filter === "to_check") {
       return ["pending", "needs_correction"].includes(item.review.status);
     }
@@ -465,7 +466,16 @@ function render() {
       return ["approved", "excluded"].includes(item.review.status);
     }
     return true;
-  }).slice(0, limit);
+  });
+  const pageCount = Math.max(1, Math.ceil(filteredSentences.length / limit));
+  currentSentencePage = Math.min(Math.max(currentSentencePage, 1), pageCount);
+  const pageStart = (currentSentencePage - 1) * limit;
+  visibleSentences = filteredSentences.slice(pageStart, pageStart + limit);
+  document.getElementById("sentence-page-status").textContent =
+    `Page ${currentSentencePage} of ${pageCount}`;
+  document.getElementById("previous-sentence-page").disabled = currentSentencePage === 1;
+  document.getElementById("next-sentence-page").disabled =
+    currentSentencePage === pageCount || filteredSentences.length === 0;
   const visibleIds = new Set(
     visibleSentences.map((item) => item.record.sentence_id),
   );
@@ -480,8 +490,8 @@ function render() {
   ).length;
   statusBox.className = `notice ${reviewDocument.draft_only ? "warning" : "success"}`;
   statusBox.textContent = reviewDocument.draft_only
-    ? `Showing ${visibleSentences.length} of ${reviewDocument.sentences.length} raw extracted sentences. Colors are visible, but review decisions remain locked until Color config resolves their HEVA labels.`
-    : `Showing ${visibleSentences.length} of ${reviewDocument.sentences.length} sentences from this document only. ${completed} have final decisions.`;
+    ? `Showing ${visibleSentences.length} of ${filteredSentences.length} matching raw extracted sentences. Colors are visible, but review decisions remain locked until Color config resolves their HEVA labels.`
+    : `Showing ${visibleSentences.length} of ${filteredSentences.length} matching sentences from this document. ${completed} of ${reviewDocument.sentences.length} have final decisions.`;
   if (window.parent !== window) {
     window.parent.postMessage(
       {type: "heva-review-updated", documentId},
@@ -527,8 +537,24 @@ document.getElementById("toggle-review-pdf").addEventListener("click", (event) =
   event.currentTarget.textContent = hidden ? "Show PDF" : "Hide PDF";
   event.currentTarget.setAttribute("aria-expanded", String(!hidden));
 });
-document.getElementById("review-filter").addEventListener("change", render);
-document.getElementById("page-size").addEventListener("change", render);
+document.getElementById("review-filter").addEventListener("change", () => {
+  currentSentencePage = 1;
+  render();
+});
+document.getElementById("page-size").addEventListener("change", () => {
+  currentSentencePage = 1;
+  render();
+});
+document.getElementById("previous-sentence-page").addEventListener("click", () => {
+  currentSentencePage -= 1;
+  render();
+  list.scrollIntoView({block: "start"});
+});
+document.getElementById("next-sentence-page").addEventListener("click", () => {
+  currentSentencePage += 1;
+  render();
+  list.scrollIntoView({block: "start"});
+});
 document.getElementById("select-visible").addEventListener("change", (event) => {
   visibleSentences.forEach((item) => {
     const sentenceId = item.record.sentence_id;
