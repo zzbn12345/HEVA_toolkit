@@ -10,6 +10,8 @@ import time
 
 import fitz
 
+from heva.extraction.pdf_extractor import VerticalRectIndex, find_highlight_color
+
 
 def build_fixture(word_count: int, drawing_count: int):
     """Build deterministic word and drawing rectangles across a long page."""
@@ -48,6 +50,12 @@ def match_naively(words, drawings):
     return matches
 
 
+def match_with_index(words, drawings):
+    """Match using the production vertical rectangle index."""
+    index = VerticalRectIndex(drawings)
+    return [find_highlight_color(word, drawings, index) for word in words]
+
+
 def main() -> None:
     """Measure the baseline matcher and checksum its selected colors."""
     parser = argparse.ArgumentParser()
@@ -57,20 +65,27 @@ def main() -> None:
     args = parser.parse_args()
 
     words, drawings = build_fixture(args.words, args.drawings)
-    durations = []
-    checksums = set()
-    for _ in range(args.repeats):
-        started = time.perf_counter()
-        matches = match_naively(words, drawings)
-        durations.append(time.perf_counter() - started)
-        checksums.add(hashlib.sha256(json.dumps(matches).encode()).hexdigest())
+    results = {}
+    for name, matcher in (("naive", match_naively), ("indexed", match_with_index)):
+        durations = []
+        checksums = set()
+        for _ in range(args.repeats):
+            started = time.perf_counter()
+            matches = matcher(words, drawings)
+            durations.append(time.perf_counter() - started)
+            checksums.add(hashlib.sha256(json.dumps(matches).encode()).hexdigest())
+        if len(checksums) != 1:
+            raise RuntimeError(f"{name} highlight matching is not deterministic")
+        results[name] = (statistics.median(durations), checksums.pop(), matches)
 
-    if len(checksums) != 1:
-        raise RuntimeError("Highlight matching changed between repetitions")
+    if results["naive"][2] != results["indexed"][2]:
+        raise RuntimeError("Indexed highlight matching changed selected colors")
 
     print(f"words={len(words)} drawings={len(drawings)} repeats={args.repeats}")
-    print(f"median_seconds={statistics.median(durations):.6f}")
-    print(f"output_sha256={checksums.pop()}")
+    print(f"naive_median_seconds={results['naive'][0]:.6f}")
+    print(f"indexed_median_seconds={results['indexed'][0]:.6f}")
+    print(f"speedup={results['naive'][0] / results['indexed'][0]:.2f}x")
+    print(f"output_sha256={results['indexed'][1]}")
 
 
 if __name__ == "__main__":

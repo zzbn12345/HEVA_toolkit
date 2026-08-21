@@ -10,7 +10,9 @@ from docx.shared import RGBColor
 
 from heva.extraction.docx_extractor import extract_docx_highlights
 from heva.extraction.pdf_extractor import (
+    VerticalRectIndex,
     extract_colored_highlights,
+    find_highlight_color,
     iter_sentence_word_spans,
     sort_page_blocks,
 )
@@ -147,3 +149,17 @@ def test_pdf_block_sort_preserves_band_and_column_reading_order() -> None:
     assert [block[5] for block in ordered] == [0, 1, 3, 2, 4, 5]
     assert metadata[1][1] == metadata[3][1] == 0
     assert metadata[2][1] == metadata[4][1] == 1
+
+
+def test_pdf_highlight_index_preserves_overlap_and_drawing_order() -> None:
+    """Spatial candidates must retain the original maximum-overlap behavior."""
+    drawings = [
+        {"rect": fitz.Rect(0, 100, 10, 110), "color": "#RED000"},
+        {"rect": fitz.Rect(0, 0, 10, 10), "color": "#FIRST0"},
+        {"rect": fitz.Rect(0, 0, 10, 10), "color": "#SECOND"},
+    ]
+    word = fitz.Rect(0, 0, 10, 10)
+    index = VerticalRectIndex(drawings, bucket_height=20.0)
+
+    assert find_highlight_color(word, drawings) == "#FIRST0"
+    assert find_highlight_color(word, drawings, index) == "#FIRST0"

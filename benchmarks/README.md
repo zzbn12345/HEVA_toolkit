@@ -84,3 +84,14 @@ python benchmarks/benchmark_highlight_matching.py
 
 It models a long page containing 1,000 words and 100 colored drawing rectangles.
 The checksum records the selected color for every word.
+
+Third optimization result on the same environment:
+
+| Scope | Before | After | Result |
+|---|---:|---:|---:|
+| End-to-end sample PDF | 0.1269 s | 0.1252 s | 1.01x |
+| 1,000 words, 100 drawings | 0.5523 s | 0.0287 s | 19.25x |
+
+The vertical rectangle index limits geometric intersection checks to drawings
+near each word. Candidate drawings retain source order so equal-overlap behavior
+does not change.

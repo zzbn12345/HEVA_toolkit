@@ -1,4 +1,5 @@
 import fitz  # PyMuPDF
+import math
 import re
 import spacy
 
@@ -157,6 +158,56 @@ def rgb_to_hex(rgb_list):
         return "#FFFF00"  # Fallback to standard Yellow if undefined
     return '#' + ''.join(f'{int(round(c * 255)):02X}' for c in rgb_list)
 
+
+class VerticalRectIndex:
+    """Index rectangular page items by horizontal strips.
+
+    PDF text and highlight drawings are commonly spread vertically across a
+    page. Indexing every rectangle in the strips it touches lets a word query
+    only nearby candidates while returning them in their original order.
+    """
+
+    def __init__(self, items, bucket_height=50.0):
+        """Build an immutable strip index for items containing a ``rect`` key."""
+        self.items = items
+        self.bucket_height = bucket_height
+        self.buckets = {}
+        for item_index, item in enumerate(items):
+            for bucket in self._buckets_for_rect(item["rect"]):
+                self.buckets.setdefault(bucket, []).append(item_index)
+
+    def _buckets_for_rect(self, rect):
+        """Return every vertical bucket touched by a rectangle."""
+        first = math.floor(rect.y0 / self.bucket_height)
+        last = math.floor(rect.y1 / self.bucket_height)
+        return range(first, last + 1)
+
+    def candidates(self, rect):
+        """Return nearby indexed items in their original sequence."""
+        candidate_indices = set()
+        for bucket in self._buckets_for_rect(rect):
+            candidate_indices.update(self.buckets.get(bucket, ()))
+        return [self.items[index] for index in sorted(candidate_indices)]
+
+
+def find_highlight_color(word_rect, highlight_drawings, drawing_index=None):
+    """Return the color with the greatest meaningful overlap with a word."""
+    candidates = (
+        drawing_index.candidates(word_rect)
+        if drawing_index is not None
+        else highlight_drawings
+    )
+    highlight_color = None
+    max_overlap = 0.0
+    for drawing in candidates:
+        overlap = (word_rect & drawing["rect"]).get_area()
+        if overlap > max_overlap:
+            max_overlap = overlap
+            highlight_color = drawing["color"]
+    if max_overlap < 0.1 * word_rect.get_area():
+        return None
+    return highlight_color
+
 def is_header_footer(b, page_rect, rotation):
     """Checks if a block is in the page margins (header or footer)."""
     x0, y0, x1, y1 = b[0], b[1], b[2], b[3]
@@ -254,6 +305,7 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
                     "rect": d["rect"],
                     "color": rgb_to_hex(d["fill"])
                 })
+        highlight_index = VerticalRectIndex(highlight_drawings)
 
         # Extract spans with their coordinates and colors
         text_dict = page.get_text("dict")
@@ -274,16 +326,9 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
         for w in raw_words:
             w_text = normalize_ligatures(w[4])
             w_rect = fitz.Rect(w[0], w[1], w[2], w[3])
-            highlight_color = None
-            max_overlap = 0
-            for hd in highlight_drawings:
-                intersect = w_rect & hd["rect"]
-                area = intersect.get_area()
-                if area > max_overlap:
-                    max_overlap = area
-                    highlight_color = hd["color"]
-            if max_overlap < 0.1 * w_rect.get_area():
-                highlight_color = None
+            highlight_color = find_highlight_color(
+                w_rect, highlight_drawings, highlight_index
+            )
 
             # Fallback to text color if no drawing highlight overlaps
             if highlight_color is None:
