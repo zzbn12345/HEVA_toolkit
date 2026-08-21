@@ -13,6 +13,7 @@ from heva.extraction.pdf_extractor import (
     VerticalRectIndex,
     extract_colored_highlights,
     find_highlight_color,
+    find_text_span_color,
     iter_sentence_word_spans,
     sort_page_blocks,
 )
@@ -163,3 +164,17 @@ def test_pdf_highlight_index_preserves_overlap_and_drawing_order() -> None:
 
     assert find_highlight_color(word, drawings) == "#FIRST0"
     assert find_highlight_color(word, drawings, index) == "#FIRST0"
+
+
+def test_pdf_span_index_preserves_first_containing_span_behavior() -> None:
+    """A neutral first containing span must still suppress later colors."""
+    spans = [
+        {"rect": fitz.Rect(0, 100, 10, 110), "color": "#7030A0"},
+        {"rect": fitz.Rect(0, 0, 10, 10), "color": "#000000"},
+        {"rect": fitz.Rect(0, 0, 10, 10), "color": "#7030A0"},
+    ]
+    word = fitz.Rect(0, 0, 10, 10)
+    index = VerticalRectIndex(spans, bucket_height=20.0)
+
+    assert find_text_span_color(word, spans) is None
+    assert find_text_span_color(word, spans, index) is None

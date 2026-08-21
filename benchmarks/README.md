@@ -104,3 +104,13 @@ spans. Measure that fallback independently with:
 ```bash
 python benchmarks/benchmark_span_matching.py
 ```
+
+Fourth optimization result on the same environment:
+
+| Scope | Before | After | Result |
+|---|---:|---:|---:|
+| End-to-end sample PDF | 0.1252 s | 0.1235 s | 1.01x |
+| 1,000 words, 1,000 spans | 0.7317 s | 0.0398 s | 18.38x |
+
+This reuses the same immutable spatial index while preserving the historical
+rule that the first containing span is authoritative, even when it is neutral.

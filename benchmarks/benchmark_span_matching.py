@@ -10,6 +10,7 @@ import time
 
 import fitz
 
+from heva.extraction.pdf_extractor import VerticalRectIndex, find_text_span_color
 from heva.extraction.tokenization import is_colorful
 
 
@@ -48,6 +49,12 @@ def match_naively(words, spans):
     return matches
 
 
+def match_with_index(words, spans):
+    """Match using the production vertical rectangle index."""
+    index = VerticalRectIndex(spans)
+    return [find_text_span_color(word, spans, index) for word in words]
+
+
 def main() -> None:
     """Measure sequential span lookup and checksum selected colors."""
     parser = argparse.ArgumentParser()
@@ -56,19 +63,27 @@ def main() -> None:
     args = parser.parse_args()
 
     words, spans = build_fixture(args.items)
-    durations = []
-    checksums = set()
-    for _ in range(args.repeats):
-        started = time.perf_counter()
-        matches = match_naively(words, spans)
-        durations.append(time.perf_counter() - started)
-        checksums.add(hashlib.sha256(json.dumps(matches).encode()).hexdigest())
-    if len(checksums) != 1:
-        raise RuntimeError("Text-span matching changed between repetitions")
+    results = {}
+    for name, matcher in (("naive", match_naively), ("indexed", match_with_index)):
+        durations = []
+        checksums = set()
+        for _ in range(args.repeats):
+            started = time.perf_counter()
+            matches = matcher(words, spans)
+            durations.append(time.perf_counter() - started)
+            checksums.add(hashlib.sha256(json.dumps(matches).encode()).hexdigest())
+        if len(checksums) != 1:
+            raise RuntimeError(f"{name} text-span matching is not deterministic")
+        results[name] = (statistics.median(durations), checksums.pop(), matches)
+
+    if results["naive"][2] != results["indexed"][2]:
+        raise RuntimeError("Indexed text-span matching changed selected colors")
 
     print(f"words={len(words)} spans={len(spans)} repeats={args.repeats}")
-    print(f"median_seconds={statistics.median(durations):.6f}")
-    print(f"output_sha256={checksums.pop()}")
+    print(f"naive_median_seconds={results['naive'][0]:.6f}")
+    print(f"indexed_median_seconds={results['indexed'][0]:.6f}")
+    print(f"speedup={results['naive'][0] / results['indexed'][0]:.2f}x")
+    print(f"output_sha256={results['indexed'][1]}")
 
 
 if __name__ == "__main__":

@@ -208,6 +208,23 @@ def find_highlight_color(word_rect, highlight_drawings, drawing_index=None):
         return None
     return highlight_color
 
+
+def find_text_span_color(word_rect, spans, span_index=None):
+    """Return the colorful first text span containing a word's center.
+
+    The first containing span remains authoritative even when it is neutral,
+    matching the extractor's established fallback behavior.
+    """
+    word_center = fitz.Point(
+        (word_rect.x0 + word_rect.x1) / 2,
+        (word_rect.y0 + word_rect.y1) / 2,
+    )
+    candidates = span_index.candidates(word_rect) if span_index else spans
+    for span in candidates:
+        if word_center in span["rect"]:
+            return span["color"] if is_colorful(span["color"]) else None
+    return None
+
 def is_header_footer(b, page_rect, rotation):
     """Checks if a block is in the page margins (header or footer)."""
     x0, y0, x1, y1 = b[0], b[1], b[2], b[3]
@@ -319,6 +336,7 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
                             "color": int_to_hex(span["color"]),
                             "text": span["text"]
                         })
+        span_index = VerticalRectIndex(spans)
 
         # 2. Extract words with coordinates and check highlight overlap
         raw_words = page.get_text("words")
@@ -332,13 +350,7 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
 
             # Fallback to text color if no drawing highlight overlaps
             if highlight_color is None:
-                w_center = fitz.Point((w_rect.x0 + w_rect.x1) / 2, (w_rect.y0 + w_rect.y1) / 2)
-                for span in spans:
-                    if w_center in span["rect"]:
-                        span_color = span["color"]
-                        if is_colorful(span_color):
-                            highlight_color = span_color
-                        break
+                highlight_color = find_text_span_color(w_rect, spans, span_index)
 
             if highlight_color:
                 detected_colors.add(highlight_color)
