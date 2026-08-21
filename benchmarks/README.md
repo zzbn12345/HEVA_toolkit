@@ -114,3 +114,14 @@ Fourth optimization result on the same environment:
 
 This reuses the same immutable spatial index while preserving the historical
 rule that the first containing span is authoritative, even when it is neutral.
+
+## Word grouping microbenchmark
+
+PDF reconstruction associates words with their text blocks. Measure the former
+repeated-filter approach with:
+
+```bash
+python benchmarks/benchmark_word_grouping.py
+```
+
+The checksum covers the order of every word within every block.
