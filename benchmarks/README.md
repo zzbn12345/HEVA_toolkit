@@ -158,3 +158,14 @@ Sixth optimization result on the same environment:
 One text page is now parsed per source page using the dictionary flag superset.
 Using PyMuPDF's default text-page flags changed block output, and was rejected by
 the checksum before the compatible flag configuration was selected.
+
+## DOCX color-alignment microbenchmark
+
+The Word extractor currently expands each run color to one entry per character
+before aligning tokens. Measure its runtime and peak traced memory with:
+
+```bash
+python benchmarks/benchmark_docx_color_alignment.py
+```
+
+The checksum covers the dominant color selected for every token.
