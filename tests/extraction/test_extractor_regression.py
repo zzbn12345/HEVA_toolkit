@@ -12,6 +12,7 @@ from heva.extraction.docx_extractor import extract_docx_highlights
 from heva.extraction.pdf_extractor import (
     extract_colored_highlights,
     iter_sentence_word_spans,
+    sort_page_blocks,
 )
 
 
@@ -126,3 +127,23 @@ def test_pdf_sentence_alignment_preserves_order_and_prefix_offsets() -> None:
     assert [(item["start"], item["end"]) for item in aligned[0][3]] == [(0, 5), (6, 15)]
     assert [item["word"]["text"] for item in aligned[1][3]] == ["Second", "sentence."]
     assert aligned[1][4] == [2, 2]
+
+
+def test_pdf_block_sort_preserves_band_and_column_reading_order() -> None:
+    """Read a heading, then each column, then the following full-width block."""
+    blocks = [
+        (20.0, 10.0, 580.0, 30.0, "Heading", 0, 0),
+        (20.0, 40.0, 180.0, 50.0, "Left one", 1, 0),
+        (220.0, 40.0, 380.0, 50.0, "Right one", 2, 0),
+        (20.0, 60.0, 180.0, 70.0, "Left two", 3, 0),
+        (220.0, 60.0, 380.0, 70.0, "Right two", 4, 0),
+        (20.0, 100.0, 580.0, 120.0, "Footer heading", 5, 0),
+    ]
+
+    ordered, metadata = sort_page_blocks(
+        blocks, fitz.Rect(0.0, 0.0, 600.0, 200.0), rotation=0
+    )
+
+    assert [block[5] for block in ordered] == [0, 1, 3, 2, 4, 5]
+    assert metadata[1][1] == metadata[3][1] == 0
+    assert metadata[2][1] == metadata[4][1] == 1

@@ -62,3 +62,14 @@ python benchmarks/benchmark_block_sort.py
 
 The checksum covers both the ordered block IDs and their assigned band/column
 metadata, preventing a faster implementation from silently changing layout.
+
+Second optimization result on the same environment:
+
+| Scope | Before | After | Result |
+|---|---:|---:|---:|
+| End-to-end sample PDF | 0.1343 s | 0.1269 s | 1.06x |
+| Dense page layout, 600 blocks | 0.1429 s | 0.0019 s | 75.39x |
+
+The optimized sorter calculates bands and columns once per page. The former
+implementation rebuilt those same structures inside the key function for every
+block being sorted.

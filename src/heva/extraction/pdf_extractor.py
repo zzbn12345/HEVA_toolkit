@@ -43,7 +43,13 @@ def get_block_sort_key(b, rotation):
         return (line_bin, x0)
 
 def sort_page_blocks(blocks, page_rect, rotation):
-    """Sorts page blocks by dividing the page into bands and clustering blocks horizontally into columns."""
+    """Sort blocks after calculating each page's layout model once.
+
+    Full-width blocks divide a page into horizontal bands. Non-full-width
+    blocks are then clustered into columns within each band. Layout metadata is
+    precomputed before sorting because a sort key must only retrieve a result,
+    not rebuild the full layout for every block.
+    """
     if not blocks:
         return [], {}
     if rotation == 90:
@@ -56,74 +62,93 @@ def sort_page_blocks(blocks, page_rect, rotation):
         block_meta = {b[5]: (0, 0) for b in blocks}
         return sorted(blocks, key=lambda b: (-b[1], -b[0])), block_meta
         
-    full_width_blocks = []
-    for b in blocks:
-        x0, y0, x1, y1 = b[0], b[1], b[2], b[3]
-        if x0 < page_rect.width * 0.45 and x1 > page_rect.width * 0.55 and (x1 - x0) > page_rect.width * 0.6:
-            full_width_blocks.append(b)
+    def is_full_width(block):
+        """Return whether a block crosses the page center at heading width."""
+        x0, _, x1, _ = block[:4]
+        return (
+            x0 < page_rect.width * 0.45
+            and x1 > page_rect.width * 0.55
+            and (x1 - x0) > page_rect.width * 0.6
+        )
+
+    full_width_blocks = [block for block in blocks if is_full_width(block)]
             
     y_boundaries = [0.0, page_rect.height]
     for b in full_width_blocks:
         y_boundaries.extend([b[1], b[3]])
     y_boundaries = sorted(list(set(y_boundaries)))
     
-    block_meta = {}
-    
-    def get_sort_key(b):
-        x0, y0, x1, y1 = b[0], b[1], b[2], b[3]
-        cy = (y0 + y1) / 2.0
-        
-        band_idx = 0
+    def band_index(block):
+        """Locate a block center in the first matching inclusive band."""
+        center_y = (block[1] + block[3]) / 2.0
         for idx in range(len(y_boundaries) - 1):
-            if y_boundaries[idx] <= cy <= y_boundaries[idx + 1]:
-                band_idx = idx
-                break
-                
-        y_start, y_end = y_boundaries[band_idx], y_boundaries[band_idx + 1]
-        band_blocks = [x for x in blocks if y_start <= (x[1] + x[3])/2.0 <= y_end]
-        
-        # Filter out full width blocks from column clustering within the band
-        band_cols_blocks = [x for x in band_blocks if x not in full_width_blocks]
-        
-        # Sort band blocks by x0 to identify columns from left to right
-        band_cols_blocks = sorted(band_cols_blocks, key=lambda x: x[0])
-        
+            if y_boundaries[idx] <= center_y <= y_boundaries[idx + 1]:
+                return idx
+        return 0
+
+    column_by_band_and_signature = {}
+    for current_band in range(len(y_boundaries) - 1):
+        y_start = y_boundaries[current_band]
+        y_end = y_boundaries[current_band + 1]
+        band_blocks = [
+            block
+            for block in blocks
+            if y_start <= (block[1] + block[3]) / 2.0 <= y_end
+            and not is_full_width(block)
+        ]
+        band_blocks.sort(key=lambda block: block[0])
+
+        # Store column bounds incrementally rather than repeatedly scanning all
+        # existing members to calculate their minimum and maximum coordinates.
         columns = []
-        for x_block in band_cols_blocks:
+        for block in band_blocks:
             placed = False
             for col in columns:
-                col_x0 = min(member[0] for member in col)
-                col_x1 = max(member[2] for member in col)
-                
-                overlap_x0 = max(x_block[0], col_x0)
-                overlap_x1 = min(x_block[2], col_x1)
+                overlap_x0 = max(block[0], col["x0"])
+                overlap_x1 = min(block[2], col["x1"])
                 overlap_width = overlap_x1 - overlap_x0
-                
-                b_width = x_block[2] - x_block[0]
-                col_width = col_x1 - col_x0
-                min_w = min(b_width, col_width)
-                
+
+                block_width = block[2] - block[0]
+                col_width = col["x1"] - col["x0"]
+                min_w = min(block_width, col_width)
+
                 # 30% horizontal overlap is a safe threshold for column membership
-                if overlap_width > 0.3 * min_w or (overlap_width > 0 and (x_block[0] >= col_x0 - 5 and x_block[2] <= col_x1 + 5)):
-                    col.append(x_block)
+                if overlap_width > 0.3 * min_w or (
+                    overlap_width > 0
+                    and block[0] >= col["x0"] - 5
+                    and block[2] <= col["x1"] + 5
+                ):
+                    col["members"].append(block)
+                    col["x0"] = min(col["x0"], block[0])
+                    col["x1"] = max(col["x1"], block[2])
                     placed = True
                     break
             if not placed:
-                columns.append([x_block])
-                
-        # Find which column this block belongs to
-        col_idx = 0
-        if b not in full_width_blocks:
-            for idx, col in enumerate(columns):
-                if any(x[4] == b[4] and x[:4] == b[:4] for x in col):
-                    col_idx = idx
-                    break
-                    
-        block_meta[b[5]] = (band_idx, col_idx)
-        line_bin = round(y0 / 3.0) * 3.0
-        return (band_idx, col_idx, line_bin, x0)
-        
-    sorted_blocks = sorted(blocks, key=get_sort_key)
+                columns.append({"members": [block], "x0": block[0], "x1": block[2]})
+
+        for column_index, column in enumerate(columns):
+            for member in column["members"]:
+                signature = (member[4], *member[:4])
+                column_by_band_and_signature.setdefault(
+                    (current_band, signature), column_index
+                )
+
+    block_meta = {}
+    sort_keys = []
+    for block in blocks:
+        current_band = band_index(block)
+        column_index = 0
+        if not is_full_width(block):
+            signature = (block[4], *block[:4])
+            column_index = column_by_band_and_signature.get(
+                (current_band, signature), 0
+            )
+        block_meta[block[5]] = (current_band, column_index)
+        line_bin = round(block[1] / 3.0) * 3.0
+        sort_keys.append((current_band, column_index, line_bin, block[0]))
+
+    sorted_indices = sorted(range(len(blocks)), key=sort_keys.__getitem__)
+    sorted_blocks = [blocks[index] for index in sorted_indices]
     return sorted_blocks, block_meta
 
 def rgb_to_hex(rgb_list):
