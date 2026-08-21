@@ -147,3 +147,14 @@ python benchmarks/benchmark_textpage_reuse.py
 ```
 
 The checksum covers the span text and the complete word/block view payloads.
+
+Sixth optimization result on the same environment:
+
+| Scope | Before | After | Result |
+|---|---:|---:|---:|
+| End-to-end sample PDF | 0.1241 s | 0.1191 s | 1.04x |
+| Dictionary, word, and block views | 0.0775 s | 0.0710 s | 1.09x |
+
+One text page is now parsed per source page using the dictionary flag superset.
+Using PyMuPDF's default text-page flags changed block output, and was rejected by
+the checksum before the compatible flag configuration was selected.

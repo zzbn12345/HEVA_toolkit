@@ -317,6 +317,9 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
     for page_num in range(len(doc)):
         page = doc[page_num]
         page_rect = page.rect
+        # DICT uses the superset of flags required by all three derived views,
+        # including image blocks returned by the established blocks request.
+        text_page = page.get_textpage(flags=fitz.TEXTFLAGS_DICT)
         
         # 1. Extract non-white fill drawings as highlights
         drawings = page.get_drawings()
@@ -333,7 +336,7 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
         highlight_index = VerticalRectIndex(highlight_drawings)
 
         # Extract spans with their coordinates and colors
-        text_dict = page.get_text("dict")
+        text_dict = page.get_text("dict", textpage=text_page)
         spans = []
         for block in text_dict["blocks"]:
             if "lines" in block:
@@ -347,7 +350,7 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
         span_index = VerticalRectIndex(spans)
 
         # 2. Extract words with coordinates and check highlight overlap
-        raw_words = page.get_text("words")
+        raw_words = page.get_text("words", textpage=text_page)
         words = []
         for w in raw_words:
             w_text = normalize_ligatures(w[4])
@@ -372,7 +375,7 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
             })
 
         # 3. Sort blocks
-        blocks = page.get_text("blocks")
+        blocks = page.get_text("blocks", textpage=text_page)
         blocks = [b for b in blocks if not is_margin_block(b[4]) and not is_header_footer(b, page_rect, page.rotation)]
         blocks, block_metadata = sort_page_blocks(blocks, page_rect, page.rotation)
         words_by_block = group_words_by_block(words)

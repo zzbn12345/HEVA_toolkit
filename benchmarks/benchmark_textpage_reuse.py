@@ -40,6 +40,21 @@ def extract_with_fresh_textpages(document):
     ]
 
 
+def extract_with_shared_textpage(document):
+    """Derive all three text views from one parsed representation per page."""
+    result = []
+    for page in document:
+        text_page = page.get_textpage(flags=fitz.TEXTFLAGS_DICT)
+        result.append(
+            summarize_views(
+                page.get_text("dict", textpage=text_page),
+                page.get_text("words", textpage=text_page),
+                page.get_text("blocks", textpage=text_page),
+            )
+        )
+    return result
+
+
 def main() -> None:
     """Measure independent text-page creation and checksum all derived views."""
     parser = argparse.ArgumentParser()
@@ -48,25 +63,37 @@ def main() -> None:
     args = parser.parse_args()
 
     document = fitz.open(args.source)
-    durations = []
-    checksums = set()
+    results = {}
     try:
-        for _ in range(args.repeats):
-            started = time.perf_counter()
-            result = extract_with_fresh_textpages(document)
-            durations.append(time.perf_counter() - started)
-            checksums.add(
-                hashlib.sha256(json.dumps(result, sort_keys=True).encode()).hexdigest()
-            )
+        for name, extractor in (
+            ("fresh", extract_with_fresh_textpages),
+            ("shared", extract_with_shared_textpage),
+        ):
+            durations = []
+            checksums = set()
+            for _ in range(args.repeats):
+                started = time.perf_counter()
+                result = extractor(document)
+                durations.append(time.perf_counter() - started)
+                checksums.add(
+                    hashlib.sha256(
+                        json.dumps(result, sort_keys=True).encode()
+                    ).hexdigest()
+                )
+            if len(checksums) != 1:
+                raise RuntimeError(f"{name} PDF text views are not deterministic")
+            results[name] = (statistics.median(durations), checksums.pop(), result)
     finally:
         document.close()
 
-    if len(checksums) != 1:
-        raise RuntimeError("PDF text views changed between repetitions")
+    if results["fresh"][2] != results["shared"][2]:
+        raise RuntimeError("Shared text pages changed the derived PDF views")
 
     print(f"source={args.source} repeats={args.repeats}")
-    print(f"median_seconds={statistics.median(durations):.6f}")
-    print(f"output_sha256={checksums.pop()}")
+    print(f"fresh_median_seconds={results['fresh'][0]:.6f}")
+    print(f"shared_median_seconds={results['shared'][0]:.6f}")
+    print(f"speedup={results['fresh'][0] / results['shared'][0]:.2f}x")
+    print(f"output_sha256={results['shared'][1]}")
 
 
 if __name__ == "__main__":
