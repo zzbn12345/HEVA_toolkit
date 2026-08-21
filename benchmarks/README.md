@@ -95,3 +95,12 @@ Third optimization result on the same environment:
 The vertical rectangle index limits geometric intersection checks to drawings
 near each word. Candidate drawings retain source order so equal-overlap behavior
 does not change.
+
+## Text-span matching microbenchmark
+
+When drawing highlights are absent, colored text is located through PDF text
+spans. Measure that fallback independently with:
+
+```bash
+python benchmarks/benchmark_span_matching.py
+```
