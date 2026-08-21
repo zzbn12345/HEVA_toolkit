@@ -198,8 +198,20 @@ def update_person(
             raise PeopleRegistryError(
                 "Select another active curator before removing this curator role."
             )
+        if "annotator" in existing.roles and "annotator" not in replacement.roles:
+            from heva.workflow.document_contributors import assigned_document_ids
+
+            assigned = assigned_document_ids(project_root, person_id)
+            if assigned:
+                raise PeopleRegistryError(
+                    "Reassign this original annotator before removing their annotator role: "
+                    + ", ".join(assigned)
+                )
         registry.people[index] = replacement
         save_people_registry(project_root, registry)
+        from heva.workflow.document_contributors import refresh_person_snapshots
+
+        refresh_person_snapshots(project_root, replacement)
         return replacement
     raise PeopleRegistryError(f"Person {person_id} does not exist.")
 
@@ -223,6 +235,15 @@ def activate_curator(project_root: str | Path, person_id: str) -> PersonRecord:
 
 def remove_person(project_root: str | Path, person_id: str) -> PeopleRegistry:
     """Remove current configuration while leaving historical event evidence untouched."""
+
+    from heva.workflow.document_contributors import assigned_document_ids
+
+    assigned = assigned_document_ids(project_root, person_id)
+    if assigned:
+        raise PeopleRegistryError(
+            "Reassign this original annotator before removing them from the project: "
+            + ", ".join(assigned)
+        )
 
     registry = load_people_registry(project_root)
     retained = [person for person in registry.people if person.person_id != person_id]

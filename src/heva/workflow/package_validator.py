@@ -277,6 +277,13 @@ def validate_document_package(
             )
         )
 
+    # Migrate an unambiguous legacy singular annotator before evaluating the public record.
+    try:
+        from heva.workflow.document_contributors import load_document_annotators
+
+        load_document_annotators(root, document_id)
+    except ValueError:
+        pass
     metadata_value = _read_json(
         root / entry.metadata_path if entry.metadata_path else package / "metadata.json",
         document_id,
@@ -716,7 +723,10 @@ def build_release(
                     package_metadata.source.not_findable_reason
                 ),
                 "rights": package_metadata.rights.model_dump(mode="json"),
-                "annotator": package_metadata.annotator.model_dump(mode="json"),
+                "original_annotators": [
+                    item.model_dump(mode="json")
+                    for item in package_metadata.original_annotators
+                ],
                 "record_count": len(canonical),
                 "records": canonical,
             }

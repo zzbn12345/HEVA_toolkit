@@ -33,6 +33,11 @@ from heva.workflow.document_metadata import (
     AnnotatorMetadata,
     RightsMetadata,
 )
+from heva.workflow.document_contributors import (
+    DocumentContributorError,
+    assign_document_annotators,
+    load_document_annotators,
+)
 from heva.workflow.document_rights import (
     DocumentRightsError,
     load_document_rights,
@@ -138,6 +143,14 @@ class ColorReviewInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     decisions: list[ColorDecisionInput]
+
+
+class DocumentAnnotatorAssignment(BaseModel):
+    """Explicit project-person references assigned to one source document."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    person_ids: list[str]
 
 
 class ProjectFolderInput(BaseModel):
@@ -524,6 +537,44 @@ def create_project_router(
             filename=source.name,
             content_disposition_type="inline",
         )
+
+    @router.get("/api/documents/{document_id}/annotators")
+    def document_annotators(document_id: str):
+        """Return eligible project people and explicit assignments for a document."""
+
+        try:
+            people = load_people_registry(root)
+            assigned = load_document_annotators(root, document_id)
+        except (PeopleRegistryError, DocumentContributorError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {
+            "assigned_person_ids": [item.person_id for item in assigned],
+            "annotators": [
+                person.model_dump(mode="json")
+                for person in people.people
+                if "annotator" in person.roles
+            ],
+        }
+
+    @router.put("/api/documents/{document_id}/annotators")
+    def replace_document_annotators(
+        document_id: str,
+        assignment: DocumentAnnotatorAssignment,
+    ):
+        """Persist explicit original-annotator references and public snapshots."""
+
+        try:
+            assigned = assign_document_annotators(
+                root,
+                document_id,
+                assignment.person_ids,
+            )
+        except (PeopleRegistryError, DocumentContributorError) as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {
+            "assigned_person_ids": [item.person_id for item in assigned],
+            "original_annotators": [item.model_dump(mode="json") for item in assigned],
+        }
 
     @router.get("/api/documents/{document_id}/citation/schema")
     def citation_schema(document_id: str):

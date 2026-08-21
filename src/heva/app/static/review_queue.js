@@ -4,6 +4,8 @@ let documents = [];
 let readinessFilter = "all";
 
 const gateLabels = {
+  curator: "Curator",
+  original_annotator: "Original annotator",
   citation: "Citation",
   color_configuration: "Colors",
   extraction: "Extraction",

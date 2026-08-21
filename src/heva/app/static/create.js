@@ -148,6 +148,60 @@ async function restoreAnnotator() {
   }
 }
 
+/** Load eligible project people and explicit original annotators for one document. */
+async function loadDocumentAnnotators(documentId) {
+  const options = document.getElementById("document-annotator-options");
+  const status = document.getElementById("document-annotator-status");
+  const save = document.getElementById("save-document-annotators");
+  try {
+    const response = await fetch(`/api/documents/${encodeURIComponent(documentId)}/annotators`);
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || "Original annotators could not be loaded.");
+    const selected = new Set(result.assigned_person_ids);
+    options.replaceChildren(...result.annotators.map((person) => {
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = person.person_id;
+      input.checked = selected.has(person.person_id);
+      label.append(input, document.createTextNode(` ${person.name}${person.affiliation ? ` — ${person.affiliation}` : ""}`));
+      return label;
+    }));
+    status.className = `notice ${selected.size ? "success" : "warning"}`;
+    status.textContent = result.annotators.length
+      ? (selected.size ? `${selected.size} original annotator${selected.size === 1 ? " is" : "s are"} assigned.` : "No original annotator is assigned to this document.")
+      : "No project person has the original annotator role. Add one under People and roles.";
+    save.disabled = !result.annotators.length;
+    setReadiness("original-annotator", selected.size > 0, "Assign at least one original annotator.");
+  } catch (error) {
+    options.replaceChildren();
+    status.className = "notice error";
+    status.textContent = error.message;
+    save.disabled = true;
+    setReadiness("original-annotator", false, "Original annotators could not be loaded.");
+  }
+}
+
+document.getElementById("save-document-annotators").addEventListener("click", async () => {
+  const documentId = document.getElementById("selected-document-id").value;
+  const personIds = [...document.querySelectorAll("#document-annotator-options input:checked")]
+    .map((input) => input.value);
+  const response = await fetch(`/api/documents/${encodeURIComponent(documentId)}/annotators`, {
+    method: "PUT",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({person_ids: personIds}),
+  });
+  const result = await response.json();
+  if (!response.ok) {
+    const status = document.getElementById("document-annotator-status");
+    status.className = "notice error";
+    status.textContent = result.detail || "Original annotators could not be saved.";
+    return;
+  }
+  await loadDocumentAnnotators(documentId);
+  await loadDocumentReadiness(documentId);
+});
+
 function openPreview(url, name) {
   const frame = document.getElementById("pdf-preview");
   frame.src = url;
@@ -848,6 +902,7 @@ async function loadSelectedDocument() {
     if (!title.value) title.value = result.filename.replace(/\.[^.]+$/, "");
     status.className = "notice success";
     status.textContent = `Editing ${result.filename}. Its existing project state will be reused.`;
+    await loadDocumentAnnotators(documentId);
     await loadCitation(documentId);
     await loadColors(documentId);
     await loadExtractionStatus(documentId);

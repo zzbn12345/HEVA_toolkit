@@ -39,6 +39,9 @@
 
 ### Added
 
+- Explicit original-annotator assignment per document, backed by stable project-person
+  references and distributable identity snapshots that omit private email. The checklist,
+  validation, and export now distinguish source authors, original annotators, and curators.
 - Added read-only **Validate document** checks directly in sentence review, with timestamped
   valid/invalid outcomes, grouped actionable findings, corrective links, and immediate
   synchronization with document readiness.

@@ -11,6 +11,7 @@ from heva.workflow.document_metadata import (
     ColorConfigurationMetadata,
     ColorMappingMetadata,
     PackageMetadata,
+    OriginalAnnotatorMetadata,
     ResourceMetadata,
     RightsMetadata,
     SourceMetadata,
@@ -91,6 +92,11 @@ def write_ready_metadata(
     *,
     citation_confirmed: bool = True,
 ) -> None:
+    curator = add_person(
+        tmp_path,
+        PersonRecord(name=f"Curator {entry['document_id']}", roles=["curator"]),
+    )
+    activate_curator(tmp_path, curator.person_id)
     metadata = PackageMetadata(
         document_id=str(entry["document_id"]),
         source=SourceMetadata(
@@ -103,6 +109,12 @@ def write_ready_metadata(
             confirmed_at="2026-07-29T08:30:00Z" if citation_confirmed else None,
         ),
         annotator=AnnotatorMetadata(name="Annotator"),
+        original_annotators=[
+            OriginalAnnotatorMetadata(
+                person_id="PERSON-ANNOTATOR01",
+                name="Annotator",
+            )
+        ],
         rights=RightsMetadata(
             access_level="restricted",
             authorization_status="authorized",
@@ -409,6 +421,8 @@ def test_unconfirmed_citation_does_not_block_annotation_submission(tmp_path: Pat
 
     assert item.annotation_complete is True
     assert item.readiness_gates == {
+        "curator": True,
+        "original_annotator": True,
         "citation": False,
         "color_configuration": True,
         "extraction": True,

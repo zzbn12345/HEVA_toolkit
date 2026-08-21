@@ -7,6 +7,8 @@ const editorForm = document.getElementById("sentence-editor-form");
 const editorError = document.getElementById("sentence-editor-error");
 const entityRows = document.getElementById("edit-entities");
 const gateLabels = {
+  curator: "Curator",
+  original_annotator: "Original annotator",
   citation: "Citation",
   color_configuration: "Colors",
   extraction: "Extraction",

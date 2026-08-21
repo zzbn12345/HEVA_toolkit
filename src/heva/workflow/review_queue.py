@@ -18,6 +18,7 @@ from heva.workflow.project_registry import (
     document_workspace_directory,
     resolve_document_source,
 )
+from heva.workflow.people_registry import PeopleRegistryError, load_people_registry
 from heva.workflow.quality_flags import assess_record
 from heva.workflow.review_state import DocumentReview
 
@@ -75,10 +76,13 @@ def _readiness(
     package: Path,
     records: list[dict[str, Any]],
     review: DocumentReview | None,
+    curator_ready: bool,
 ) -> tuple[dict[str, bool], list[str]]:
-    """Project four researcher-facing gates from persisted package evidence."""
+    """Project researcher-facing gates from persisted package evidence."""
 
     reasons: list[str] = []
+    if not curator_ready:
+        reasons.append("Select an active project curator.")
     try:
         metadata = PackageMetadata.model_validate_json(
             (package / "metadata.json").read_text(encoding="utf-8")
@@ -87,6 +91,9 @@ def _readiness(
         metadata = None
 
     source = metadata.source if metadata else None
+    original_annotator_ready = bool(metadata and metadata.original_annotators)
+    if not original_annotator_ready:
+        reasons.append("Assign at least one original annotator to this document.")
     citation_ready = bool(
         source
         and source.human_confirmed
@@ -138,6 +145,8 @@ def _readiness(
 
     return (
         {
+            "curator": curator_ready,
+            "original_annotator": original_annotator_ready,
             "citation": citation_ready,
             "color_configuration": color_ready,
             "extraction": extraction_ready,
@@ -152,6 +161,10 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
 
     root = Path(project_root).resolve()
     items: list[ReviewQueueItem] = []
+    try:
+        curator_ready = load_people_registry(root).active_curator() is not None
+    except PeopleRegistryError:
+        curator_ready = False
     for entry in sorted(_registry(root).documents, key=lambda item: item.source_path):
         package = root / entry.package_path
         annotations_path = package / "annotations.json"
@@ -162,7 +175,7 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
             initialize_sentence_reviews(root, entry.document_id)
         if not annotations_path.exists() or not review_path.exists():
             records = _load_records(package) if annotations_path.exists() else []
-            gates, reasons = _readiness(package, records, None)
+            gates, reasons = _readiness(package, records, None, curator_ready)
             items.append(
                 ReviewQueueItem(
                     document_id=entry.document_id,
@@ -187,7 +200,7 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
             continue
         records = _load_records(package)
         review = DocumentReview.model_validate_json(review_path.read_text(encoding="utf-8"))
-        gates, reasons = _readiness(package, records, review)
+        gates, reasons = _readiness(package, records, review, curator_ready)
         states = {item.sentence_id: item.status for item in review.sentences}
         flagged = sum(bool(assess_record(record)) for record in records)
         completed = sum(
@@ -207,6 +220,8 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
                 annotation_complete=all(
                     gates[name]
                     for name in (
+                        "curator",
+                        "original_annotator",
                         "color_configuration",
                         "extraction",
                         "sentence_review",

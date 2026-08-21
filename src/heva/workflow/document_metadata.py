@@ -112,6 +112,29 @@ class AnnotatorMetadata(BaseModel):
         return value
 
 
+class OriginalAnnotatorMetadata(BaseModel):
+    """Public snapshot of a project person assigned to the source annotations."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    person_id: str = Field(pattern=r"^PERSON-[A-Z0-9]+$")
+    name: str = Field(min_length=1)
+    affiliation: str | None = None
+    orcid: str | None = Field(
+        default=None,
+        pattern=r"^\d{4}-\d{4}-\d{4}-[\dX]{4}$",
+    )
+
+    @field_validator("name", "affiliation", "orcid", mode="before")
+    @classmethod
+    def normalize_public_text(cls, value: object) -> object:
+        """Normalize public identity fields without including private email."""
+
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
+
+
 class RightsMetadata(BaseModel):
     """Per-document access, authorization, and distribution decisions."""
 
@@ -238,6 +261,8 @@ class PackageMetadata(BaseModel):
     metadata_version: str = METADATA_VERSION
     document_id: str
     source: SourceMetadata = Field(default_factory=SourceMetadata)
+    original_annotators: list[OriginalAnnotatorMetadata] = Field(default_factory=list)
+    # Retained while old document packages are migrated to stable person references.
     annotator: AnnotatorMetadata = Field(default_factory=AnnotatorMetadata)
     rights: RightsMetadata = Field(default_factory=RightsMetadata)
     annotation_process: AnnotationProcessMetadata = Field(
@@ -326,9 +351,13 @@ def validate_review_readiness(metadata: PackageMetadata) -> ReadinessReport:
                 "Citation details require human confirmation or validated programmatic provenance.",
             )
         )
-    if not metadata.annotator.name:
+    if not metadata.original_annotators:
         issues.append(
-            _issue("missing_annotator", "$.annotator.name", "Annotator name is required.")
+            _issue(
+                "missing_original_annotator",
+                "$.original_annotators",
+                "Assign at least one original annotator from the project people directory.",
+            )
         )
     if rights.access_level is None:
         issues.append(

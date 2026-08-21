@@ -13,6 +13,7 @@ from heva.workflow.document_metadata import (
     ColorConfigurationMetadata,
     ColorMappingMetadata,
     MetadataError,
+    OriginalAnnotatorMetadata,
     PackageMetadata,
     ResourceMetadata,
     ReviewMetadata,
@@ -41,6 +42,13 @@ def complete_metadata(document_id: str = "HEVA-EXAMPLE") -> PackageMetadata:
             name="Research Annotator",
             orcid="0000-0002-1825-0097",
         ),
+        original_annotators=[
+            OriginalAnnotatorMetadata(
+                person_id="PERSON-ANNOTATOR01",
+                name="Research Annotator",
+                orcid="0000-0002-1825-0097",
+            )
+        ],
         rights=RightsMetadata(
             access_level="restricted",
             authorization_status="authorized",
@@ -103,6 +111,7 @@ def test_complete_metadata_is_review_ready_and_separates_creators_from_annotator
     assert report.issues == ()
     assert metadata.source.creators == ["Example Author"]
     assert metadata.annotator.name == "Research Annotator"
+    assert metadata.original_annotators[0].person_id == "PERSON-ANNOTATOR01"
     assert metadata.color_configuration.colors[0].hex == "#FFFF00"
     assert metadata.resources[0].path == "annotations.json"
 

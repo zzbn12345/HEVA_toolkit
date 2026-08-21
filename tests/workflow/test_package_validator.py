@@ -16,6 +16,7 @@ from heva.workflow.document_metadata import (
     ColorConfigurationMetadata,
     ColorMappingMetadata,
     PackageMetadata,
+    OriginalAnnotatorMetadata,
     ResourceMetadata,
     ReviewMetadata,
     RightsMetadata,
@@ -69,6 +70,12 @@ def ready_metadata(document_id: str) -> PackageMetadata:
             confirmed_at="2026-07-24T08:30:00Z",
         ),
         annotator=AnnotatorMetadata(name="Annotator"),
+        original_annotators=[
+            OriginalAnnotatorMetadata(
+                person_id="PERSON-ANNOTATOR01",
+                name="Annotator",
+            )
+        ],
         rights=RightsMetadata(
             access_level="restricted",
             authorization_status="authorized",

@@ -16,6 +16,7 @@
       <a class="guide-link" href="/guide/TUTORIAL">Guide</a>
       <nav class="step-navigation" aria-label="Document readiness checks">
         <button class="step-button active missing" type="button" data-step-target="1" data-readiness-key="curator"><b aria-hidden="true">×</b><span>Curator</span></button>
+        <button class="step-button missing" type="button" data-step-target="1" data-readiness-key="original-annotator"><b aria-hidden="true">×</b><span>Original annotator</span></button>
         <button class="step-button missing" type="button" data-step-target="2" data-readiness-key="citation"><b aria-hidden="true">×</b><span>Citation</span></button>
         <button class="step-button missing" type="button" data-step-target="3" data-readiness-key="colors"><b aria-hidden="true">×</b><span>Color config</span></button>
         <button class="step-button missing" type="button" data-step-target="4" data-readiness-key="extracted"><b aria-hidden="true">×</b><span>Annotations extracted</span></button>
@@ -34,6 +35,13 @@
         <h1>Active project curator</h1>
         <p class="lead">The project profile is reused for every document and remains separate from source authorship.</p>
         <div id="annotator-status" class="notice neutral" aria-live="polite">Loading the saved annotator…</div>
+        <fieldset class="document-annotators">
+          <legend>Original annotator(s) for this document</legend>
+          <p class="field-help">Select the people who added highlights or colors to the source. The active curator is not assigned automatically.</p>
+          <div id="document-annotator-options" class="checkbox-list"></div>
+          <div id="document-annotator-status" class="notice neutral" aria-live="polite">Select a document to load its original annotators.</div>
+          <button id="save-document-annotators" class="button secondary" type="button" disabled>Save original annotators</button>
+        </fieldset>
         <div id="selected-document-status" class="notice neutral" hidden aria-live="polite"></div>
         <input id="selected-document-id" type="hidden">
         <div class="form-actions">

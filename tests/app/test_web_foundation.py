@@ -1388,6 +1388,8 @@ def test_review_queue_opens_only_one_document_at_a_time(tmp_path: Path) -> None:
     assert len(queue.json()["documents"]) == 2
     assert queue.json()["documents"][0]["annotation_complete"] is False
     assert set(queue.json()["documents"][0]["readiness_gates"]) == {
+        "curator",
+        "original_annotator",
         "citation",
         "color_configuration",
         "extraction",
