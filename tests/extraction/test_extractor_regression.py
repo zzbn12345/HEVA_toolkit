@@ -9,7 +9,10 @@ import fitz
 from docx.shared import RGBColor
 
 from heva.extraction.docx_extractor import extract_docx_highlights
-from heva.extraction.pdf_extractor import extract_colored_highlights
+from heva.extraction.pdf_extractor import (
+    extract_colored_highlights,
+    iter_sentence_word_spans,
+)
 
 
 def create_highlighted_pdf(path: Path) -> None:
@@ -93,3 +96,33 @@ def test_docx_extractor_maps_each_generated_color(tmp_path: Path) -> None:
         "B-social",
         "O",
     ]
+
+
+def test_pdf_sentence_alignment_preserves_order_and_prefix_offsets() -> None:
+    """Align ordered word spans without scanning unrelated later sentences."""
+
+    class Sentence:
+        def __init__(self, text: str, start: int, end: int) -> None:
+            self.text = text
+            self.start_char = start
+            self.end_char = end
+
+    sentences = [
+        Sentence("Label: First sentence.", 0, 22),
+        Sentence("Second sentence.", 23, 39),
+    ]
+    spans = [
+        {"word": {"text": "Label:", "color": None}, "start": 0, "end": 6, "page": 1},
+        {"word": {"text": "First", "color": "#FFFF00"}, "start": 7, "end": 12, "page": 1},
+        {"word": {"text": "sentence.", "color": None}, "start": 13, "end": 22, "page": 1},
+        {"word": {"text": "Second", "color": None}, "start": 23, "end": 29, "page": 2},
+        {"word": {"text": "sentence.", "color": None}, "start": 30, "end": 39, "page": 2},
+    ]
+
+    aligned = list(iter_sentence_word_spans(sentences, spans))
+
+    assert aligned[0][1] == "First sentence."
+    assert [item["word"]["text"] for item in aligned[0][3]] == ["First", "sentence."]
+    assert [(item["start"], item["end"]) for item in aligned[0][3]] == [(0, 5), (6, 15)]
+    assert [item["word"]["text"] for item in aligned[1][3]] == ["Second", "sentence."]
+    assert aligned[1][4] == [2, 2]

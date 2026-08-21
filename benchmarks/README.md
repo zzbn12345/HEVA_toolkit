@@ -28,3 +28,26 @@ Environment: macOS ARM64, Python 3.12.7, PyMuPDF 1.27.2.3, spaCy 3.7.4.
 
 The first run above included cold-start effects. The committed benchmark uses an explicit
 warm-up so subsequent before/after comparisons are less sensitive to that effect.
+
+## Sentence alignment microbenchmark
+
+The PDF extractor formerly scanned every reconstructed word for every sentence.
+The focused benchmark compares that implementation with the ordered moving
+cursor used in production:
+
+```bash
+python benchmarks/benchmark_sentence_alignment.py
+```
+
+This isolates algorithmic scaling. It complements, but does not replace, the
+end-to-end extraction benchmark above.
+
+First optimization result on the same environment:
+
+| Scope | Before | After | Result |
+|---|---:|---:|---:|
+| End-to-end sample PDF | 0.1371 s | 0.1343 s | 1.02x |
+| 2,000-sentence alignment, 24,000 words | 1.2700 s | 0.0091 s | 139.46x |
+
+The end-to-end result is the meaningful user-facing measure. The microbenchmark
+shows that the targeted loop no longer becomes quadratic as documents grow.

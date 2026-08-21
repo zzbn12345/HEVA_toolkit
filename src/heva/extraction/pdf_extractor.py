@@ -143,6 +143,61 @@ def is_header_footer(b, page_rect, rotation):
     else:
         return cy < margin or cy > page_rect.height - margin
 
+
+def iter_sentence_word_spans(sentences, global_word_spans):
+    """Yield each non-empty sentence with only its contained word spans.
+
+    Both spaCy sentences and reconstructed PDF word spans are ordered by their
+    document offsets. A moving cursor therefore avoids rescanning every word in
+    the document for every sentence while preserving the original containment
+    rule.
+    """
+    word_cursor = 0
+    prefix_pattern = r"^(\w+(?:\s+\w+){0,2})\s*:\s*"
+
+    for sent in sentences:
+        sent_text = sent.text.strip()
+        if not sent_text:
+            continue
+
+        prefix_match = re.match(prefix_pattern, sent_text)
+        sent_start_offset = 0
+        if prefix_match:
+            prefix_len = len(prefix_match.group(0))
+            sent_text = sent_text[prefix_len:].strip()
+            sent_start_offset = prefix_len
+
+        sent_start_in_doc = sent.start_char + sent_start_offset
+        sent_end_in_doc = sent.end_char
+
+        while (
+            word_cursor < len(global_word_spans)
+            and global_word_spans[word_cursor]["end"] <= sent_start_in_doc
+        ):
+            word_cursor += 1
+
+        sent_words = []
+        sent_pages = []
+        span_index = word_cursor
+        while (
+            span_index < len(global_word_spans)
+            and global_word_spans[span_index]["start"] < sent_end_in_doc
+        ):
+            word_span = global_word_spans[span_index]
+            if (
+                word_span["start"] >= sent_start_in_doc
+                and word_span["end"] <= sent_end_in_doc
+            ):
+                sent_words.append({
+                    "word": word_span["word"],
+                    "start": word_span["start"] - sent_start_in_doc,
+                    "end": word_span["end"] - sent_start_in_doc,
+                })
+                sent_pages.append(word_span["page"])
+            span_index += 1
+
+        yield sent, sent_text, sent_start_offset, sent_words, sent_pages
+
 def extract_colored_highlights(pdf_path, color_label_map=None):
     """
     Extracts highlights along with their exact hex color codes or mapped labels.
@@ -337,34 +392,9 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
     # Segment the entire document text into sentences using spaCy
     doc_global = nlp(global_reconstructed_text)
     
-    # Generalized prefix matcher
-    prefix_pattern = r"^(\w+(?:\s+\w+){0,2})\s*:\s*"
-
-    for sent in doc_global.sents:
-        sent_text = sent.text.strip()
-        if not sent_text:
-            continue
-        
-        prefix_match = re.match(prefix_pattern, sent_text)
-        sent_start_offset = 0
-        if prefix_match:
-            prefix_len = len(prefix_match.group(0))
-            sent_text = sent_text[prefix_len:].strip()
-            sent_start_offset = prefix_len
-
-        sent_start_in_doc = sent.start_char + sent_start_offset
-        sent_end_in_doc = sent.end_char
-
-        sent_words = []
-        sent_pages = []
-        for ws in global_word_spans:
-            if ws["start"] >= sent_start_in_doc and ws["end"] <= sent_end_in_doc:
-                sent_words.append({
-                    "word": ws["word"],
-                    "start": ws["start"] - sent_start_in_doc,
-                    "end": ws["end"] - sent_start_in_doc
-                })
-                sent_pages.append(ws["page"])
+    for sent, sent_text, sent_start_offset, sent_words, sent_pages in (
+        iter_sentence_word_spans(doc_global.sents, global_word_spans)
+    ):
 
         # Extract entities based on color highlighting
         entities = []
