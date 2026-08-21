@@ -1,4 +1,5 @@
 import docx
+import bisect
 import re
 import spacy
 
@@ -13,6 +14,56 @@ except ImportError:  # Preserve a clear error if optional local NLP support is u
         is_colorful,
         normalize_ligatures,
     )
+
+
+class RunColorIndex:
+    """Compactly align ordered DOCX run colors with token intervals."""
+
+    def __init__(self, intervals):
+        """Store ordered ``(start, end, color)`` run intervals."""
+        self.intervals = intervals
+        self.ends = [interval[1] for interval in intervals]
+
+    def dominant_colors(self, token_intervals):
+        """Return the dominant non-neutral run color for each token."""
+        if not token_intervals:
+            return []
+
+        interval_cursor = bisect.bisect_right(self.ends, token_intervals[0][0])
+        token_colors = []
+        for token_start, token_end in token_intervals:
+            while (
+                interval_cursor < len(self.intervals)
+                and self.intervals[interval_cursor][1] <= token_start
+            ):
+                interval_cursor += 1
+
+            if interval_cursor >= len(self.intervals):
+                token_colors.append(None)
+                continue
+
+            run_start, run_end, color = self.intervals[interval_cursor]
+            if run_start <= token_start and token_end <= run_end:
+                token_colors.append(color)
+                continue
+
+            color_counts = {}
+            interval_index = interval_cursor
+            while (
+                interval_index < len(self.intervals)
+                and self.intervals[interval_index][0] < token_end
+            ):
+                run_start, run_end, color = self.intervals[interval_index]
+                if color is not None:
+                    overlap = min(token_end, run_end) - max(token_start, run_start)
+                    if overlap > 0:
+                        color_counts[color] = color_counts.get(color, 0) + overlap
+                interval_index += 1
+
+            token_colors.append(
+                max(set(color_counts), key=color_counts.get) if color_counts else None
+            )
+        return token_colors
 
 def extract_docx_highlights(docx_path, color_label_map=None):
     """
@@ -36,9 +87,8 @@ def extract_docx_highlights(docx_path, color_label_map=None):
         if not para_text.strip():
             continue
 
-        # 1. Map each character in the paragraph to its highlight color / text color
-        # Build paragraph text and character-level colors from runs
-        char_colors = []
+        # 1. Record compact run intervals instead of copying color per character.
+        color_intervals = []
         reconstructed_text = ""
         
         for run in para.runs:
@@ -69,12 +119,16 @@ def extract_docx_highlights(docx_path, color_label_map=None):
                 detected_colors.add(highlight)
                 
             # Append run text and track char-level colors
+            run_start = len(reconstructed_text)
             reconstructed_text += run_text
-            char_colors.extend([highlight] * len(run_text))
+            color_intervals.append(
+                (run_start, len(reconstructed_text), highlight)
+            )
 
         reconstructed_text = reconstructed_text.strip()
         if not reconstructed_text:
             continue
+        color_index = RunColorIndex(color_intervals)
 
         # 2. Segment the paragraph into sentences using spaCy
         lang_code = detect_language(reconstructed_text)
@@ -113,19 +167,14 @@ def extract_docx_highlights(docx_path, color_label_map=None):
             entities = []
             current_entity = None
             
-            # Map tokens to their dominant color
-            token_colors = []
-            for t_idx, (t_start, t_end) in enumerate(token_indices):
-                # Map back to paragraph offsets
-                p_start = sent.start_char + sent_start_offset + t_start
-                p_end = sent.start_char + sent_start_offset + t_end
-                
-                # Check colors of characters inside the token
-                tok_colors = [c for c in char_colors[p_start:p_end] if c is not None]
-                tok_color = None
-                if tok_colors:
-                    tok_color = max(set(tok_colors), key=tok_colors.count)
-                token_colors.append(tok_color)
+            paragraph_token_indices = [
+                (
+                    sent.start_char + sent_start_offset + token_start,
+                    sent.start_char + sent_start_offset + token_end,
+                )
+                for token_start, token_end in token_indices
+            ]
+            token_colors = color_index.dominant_colors(paragraph_token_indices)
             
             # Group consecutive tokens with the same color
             for t_idx, (t_start, t_end) in enumerate(token_indices):

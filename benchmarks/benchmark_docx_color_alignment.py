@@ -9,6 +9,8 @@ import statistics
 import time
 import tracemalloc
 
+from heva.extraction.docx_extractor import RunColorIndex
+
 
 COLORS = (None, "#7030A0", "#92D050")
 
@@ -40,6 +42,16 @@ def align_with_characters(runs, tokens):
         ]
         token_colors.append(max(set(colors), key=colors.count) if colors else None)
     return token_colors
+
+
+def align_with_intervals(runs, tokens):
+    """Align through the production compact run representation."""
+    intervals = []
+    cursor = 0
+    for text, color in runs:
+        intervals.append((cursor, cursor + len(text), color))
+        cursor += len(text)
+    return RunColorIndex(intervals).dominant_colors(tokens)
 
 
 def measure(function, runs, tokens, repeats: int):
@@ -74,17 +86,28 @@ def main() -> None:
     runs, tokens = build_fixture(
         args.runs, args.characters_per_run, args.token_width
     )
-    seconds, peak_bytes, checksum, _ = measure(
+    character_seconds, character_peak, character_checksum, character_output = measure(
         align_with_characters, runs, tokens, args.repeats
     )
+    interval_seconds, interval_peak, interval_checksum, interval_output = measure(
+        align_with_intervals, runs, tokens, args.repeats
+    )
+    if character_output != interval_output:
+        raise RuntimeError("Run intervals changed dominant token colors")
 
     print(
         f"runs={len(runs)} characters={args.runs * args.characters_per_run} "
         f"tokens={len(tokens)} repeats={args.repeats}"
     )
-    print(f"median_seconds={seconds:.6f}")
-    print(f"peak_bytes={peak_bytes}")
-    print(f"output_sha256={checksum}")
+    print(f"character_median_seconds={character_seconds:.6f}")
+    print(f"interval_median_seconds={interval_seconds:.6f}")
+    print(f"speedup={character_seconds / interval_seconds:.2f}x")
+    print(f"character_peak_bytes={character_peak}")
+    print(f"interval_peak_bytes={interval_peak}")
+    print(f"memory_reduction={character_peak / interval_peak:.2f}x")
+    print(f"output_sha256={interval_checksum}")
+    if character_checksum != interval_checksum:
+        raise RuntimeError("Run intervals changed the output checksum")
 
 
 if __name__ == "__main__":

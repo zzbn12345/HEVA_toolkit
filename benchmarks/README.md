@@ -169,3 +169,15 @@ python benchmarks/benchmark_docx_color_alignment.py
 ```
 
 The checksum covers the dominant color selected for every token.
+
+Seventh optimization result on the same environment:
+
+| Scope | Before | After | Result |
+|---|---:|---:|---:|
+| 2,000 runs, 200,000 characters, 20,000 tokens | 0.0513 s | 0.0183 s | 2.81x |
+| Peak traced temporary memory | 1,857,424 B | 461,448 B | 4.03x lower |
+
+Run colors are now stored as compact offset intervals. Tokens contained in one
+run use a direct fast path; only tokens crossing a run boundary calculate color
+overlap. The repository has no representative DOCX research fixture yet, so an
+end-to-end DOCX performance claim is intentionally deferred.

@@ -8,7 +8,7 @@ import docx
 import fitz
 from docx.shared import RGBColor
 
-from heva.extraction.docx_extractor import extract_docx_highlights
+from heva.extraction.docx_extractor import RunColorIndex, extract_docx_highlights
 from heva.extraction.pdf_extractor import (
     VerticalRectIndex,
     extract_colored_highlights,
@@ -101,6 +101,17 @@ def test_docx_extractor_maps_each_generated_color(tmp_path: Path) -> None:
         "B-social",
         "O",
     ]
+
+
+def test_docx_run_color_index_uses_character_overlap_for_dominance() -> None:
+    """Tokens crossing run boundaries use the color covering most characters."""
+    index = RunColorIndex([
+        (0, 3, "#7030A0"),
+        (3, 10, "#92D050"),
+        (10, 15, None),
+    ])
+
+    assert index.dominant_colors([(1, 8), (10, 15)]) == ["#92D050", None]
 
 
 def test_pdf_sentence_alignment_preserves_order_and_prefix_offsets() -> None:
