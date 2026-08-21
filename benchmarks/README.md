@@ -51,3 +51,14 @@ First optimization result on the same environment:
 
 The end-to-end result is the meaningful user-facing measure. The microbenchmark
 shows that the targeted loop no longer becomes quadratic as documents grow.
+
+## Page-block sorting microbenchmark
+
+Dense multi-column pages exercise the layout sorter independently:
+
+```bash
+python benchmarks/benchmark_block_sort.py
+```
+
+The checksum covers both the ordered block IDs and their assigned band/column
+metadata, preventing a faster implementation from silently changing layout.
