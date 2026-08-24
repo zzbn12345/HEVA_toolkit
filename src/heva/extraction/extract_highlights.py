@@ -1,65 +1,139 @@
-import os
-import glob
-import json
-import re
+"""Command-line interoperability adapter for raw HEVA extraction."""
 
-from heva.extraction.pdf_extractor import extract_colored_highlights
+from __future__ import annotations
+
+import argparse
+import json
+from collections.abc import Iterable
+from pathlib import Path
+
 from heva.extraction.docx_extractor import extract_docx_highlights
+from heva.extraction.pdf_extractor import extract_colored_highlights
+
+
+SUPPORTED_SUFFIXES = {".pdf", ".docx"}
+
+
+def discover_sources(inputs: Iterable[Path]) -> list[Path]:
+    """Return supported files from explicit files or immediate directories."""
+    discovered: dict[Path, None] = {}
+    for supplied in inputs:
+        path = supplied.expanduser().resolve()
+        candidates = path.iterdir() if path.is_dir() else (path,)
+        for candidate in candidates:
+            if (
+                candidate.is_file()
+                and candidate.suffix.lower() in SUPPORTED_SUFFIXES
+                and not candidate.name.startswith("~$")
+            ):
+                discovered[candidate.resolve()] = None
+    return sorted(discovered, key=lambda path: str(path).lower())
+
+
+def load_color_map(path: Path | None) -> dict[str, str] | None:
+    """Load a flat hexadecimal-color-to-label JSON object."""
+    if path is None:
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or not all(
+        isinstance(color, str) and isinstance(label, str)
+        for color, label in payload.items()
+    ):
+        raise ValueError("Color map must be a JSON object of string colors and labels.")
+    return payload
+
+
+def extract_source(source: Path, color_map: dict[str, str] | None):
+    """Run the shared optimized extractor selected by source suffix."""
+    if source.suffix.lower() == ".pdf":
+        return extract_colored_highlights(source, color_label_map=color_map)
+    if source.suffix.lower() == ".docx":
+        return extract_docx_highlights(source, color_label_map=color_map)
+    raise ValueError(f"Unsupported source format: {source.suffix or '(none)'}")
+
+
+def output_path_for(
+    source: Path,
+    *,
+    explicit_output: Path | None,
+    output_directory: Path | None,
+) -> Path:
+    """Resolve a deterministic JSON output path for one source."""
+    if explicit_output is not None:
+        return explicit_output.expanduser().resolve()
+    filename = f"{source.stem}_extracted.json"
+    if output_directory is not None:
+        return output_directory.expanduser().resolve() / filename
+    return source.with_name(filename)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Build the raw extraction command-line parser."""
+    parser = argparse.ArgumentParser(
+        description=(
+            "Extract colored HEVA evidence from PDF or DOCX files using the same "
+            "optimized adapters as the web application."
+        )
+    )
+    parser.add_argument(
+        "inputs",
+        nargs="+",
+        type=Path,
+        help="One or more PDF/DOCX files or folders containing them.",
+    )
+    destination = parser.add_mutually_exclusive_group()
+    destination.add_argument(
+        "-o", "--output", type=Path, help="Output JSON path for one input file."
+    )
+    destination.add_argument(
+        "--output-dir", type=Path, help="Directory for one or more JSON outputs."
+    )
+    parser.add_argument(
+        "--color-map",
+        type=Path,
+        help='Flat JSON mapping such as {"#FFFF00": "political"}.',
+    )
+    return parser
+
+
+def main(argv: Iterable[str] | None = None) -> int:
+    """Extract every selected source and return a process-style status code."""
+    parser = build_parser()
+    args = parser.parse_args(list(argv) if argv is not None else None)
+    sources = discover_sources(args.inputs)
+    if not sources:
+        parser.error("No supported PDF or DOCX files were found.")
+    if args.output is not None and len(sources) != 1:
+        parser.error("--output can only be used when exactly one source is selected.")
+
+    try:
+        color_map = load_color_map(args.color_map)
+    except (OSError, json.JSONDecodeError, ValueError) as error:
+        parser.error(str(error))
+
+    if args.output_dir is not None:
+        args.output_dir.expanduser().resolve().mkdir(parents=True, exist_ok=True)
+
+    failed = False
+    for source in sources:
+        try:
+            records = extract_source(source, color_map)
+            destination = output_path_for(
+                source,
+                explicit_output=args.output,
+                output_directory=args.output_dir,
+            )
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text(
+                json.dumps(records, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+            print(f"{source.name}: {len(records)} records -> {destination}")
+        except Exception as error:
+            failed = True
+            print(f"{source.name}: ERROR {error}")
+    return 1 if failed else 0
+
 
 if __name__ == "__main__":
-    # 1. Define folder paths relative to the script's parent directory (repository root)
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    DATA_DIR = os.path.join(os.path.dirname(script_dir), "data")
-    
-    # Auto-create the 'data' directory if it doesn't exist yet
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
-        print(f"Created a missing '{DATA_DIR}' folder. Drop your PDFs/DOCXs in it and rerun!")
-        exit()
-
-    # Find and loop through all PDF and DOCX files inside the /data directory
-    pdf_files = [f for f in glob.glob(os.path.join(DATA_DIR, "*.pdf")) if not os.path.basename(f).startswith("~$")]
-    docx_files = [f for f in glob.glob(os.path.join(DATA_DIR, "*.docx")) if not os.path.basename(f).startswith("~$")]
-    all_files = sorted(pdf_files + docx_files)
-    
-    if not all_files:
-        print(f"No PDF or DOCX files discovered inside the '{DATA_DIR}' directory. Please add files.")
-    else:
-        print(f"--- Batch Processing Started: Found {len(all_files)} target file(s) ---\n")
-        
-        for file_path in all_files:
-            filename = os.path.basename(file_path)
-            print(f"Processing target document: {filename}...")
-            
-            # Extract data based on file extension
-            if file_path.lower().endswith(".pdf"):
-                extracted_data = extract_colored_highlights(file_path)
-            elif file_path.lower().endswith(".docx"):
-                extracted_data = extract_docx_highlights(file_path)
-            else:
-                continue
-            
-            # Generate output JSON filename
-            output_json_path = os.path.splitext(file_path)[0] + "_extracted.json"
-            
-            # Format JSON string with direct UTF-8 curly apostrophes and other characters
-            json_str = json.dumps(extracted_data, indent=4, ensure_ascii=False)
-            
-            # Collapse list fields horizontally onto a single line
-            for key in ["tokens", "values", "ner_tags"]:
-                pattern = rf'("{key}":\s*\[)([^\]]*?)(\])'
-                def replacer(match):
-                    prefix = match.group(1)
-                    content = match.group(2)
-                    suffix = match.group(3)
-                    cleaned_content = re.sub(r'\s*\n\s*', ' ', content)
-                    cleaned_content = re.sub(r'\s+', ' ', cleaned_content).strip()
-                    return f"{prefix}{cleaned_content}{suffix}"
-                json_str = re.sub(pattern, replacer, json_str, flags=re.DOTALL)
-                
-            with open(output_json_path, "w", encoding="utf-8") as f:
-                f.write(json_str + "\n")
-                
-            print(f"   ↳ Progress Saved: {output_json_path}\n")
-            
-        print("--- All Documents Successfully Processed ---")
+    raise SystemExit(main())

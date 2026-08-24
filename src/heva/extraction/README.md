@@ -27,6 +27,36 @@ records = extract_colored_highlights(
 For Word documents, use `extract_docx_highlights` from `docx_extractor` with the same
 mapping shape.
 
+## Command-line usage
+
+Raw interoperability writes extracted records without creating or changing a
+HEVA project:
+
+```bash
+python -m heva.extraction.extract_highlights annotated.pdf \
+  --color-map color-map.json \
+  --output annotations.json
+```
+
+A folder can be processed as a batch:
+
+```bash
+python -m heva.extraction.extract_highlights source-folder --output-dir extracted
+```
+
+To extract registered documents and persist their package metadata, checkpoints,
+and canonical annotations, use the project workflow instead:
+
+```bash
+python -m heva.workflow.extraction_session /path/to/project \
+  --document-id HEVA-EXAMPLE \
+  --force
+```
+
+Use `--all` instead of `--document-id` to process every registered document. Both
+commands call the same optimized PDF and DOCX extraction adapters used by the web
+application.
+
 ## Responsibilities
 
 - `pdf_extractor.py` aligns PDF text with colored drawings and font evidence.

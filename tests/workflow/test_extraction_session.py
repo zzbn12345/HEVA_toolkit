@@ -19,6 +19,7 @@ from heva.workflow.extraction_session import (
     ExtractionSessionError,
     ExtractionValidationError,
     load_extraction_checkpoint_status,
+    main,
     persist_extraction_results,
     run_registered_batch,
     run_registered_extraction,
@@ -199,6 +200,44 @@ def test_registered_runner_reports_scanned_pdf_without_claiming_ocr(
 
     with pytest.raises(ExtractionSessionError, match="does not currently provide OCR"):
         run_registered_extraction(tmp_path, document_id)
+
+
+def test_registered_project_command_uses_shared_pdf_extractor(
+    tmp_path: Path,
+) -> None:
+    """The project command persists optimized extraction into its document package."""
+    documents = tmp_path / "documents"
+    documents.mkdir()
+    source = documents / "highlighted.pdf"
+    pdf = fitz.open()
+    page = pdf.new_page()
+    page.insert_text((100, 100), "Historic harbour remains visible.", fontsize=12)
+    highlighted = page.search_for("Historic harbour")[0]
+    page.draw_rect(highlighted, fill=(1, 1, 0), color=None, overlay=False)
+    pdf.save(source)
+    pdf.close()
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    config = propose_color_configuration(
+        ["#FFFF00"], legend_mapping={"#FFFF00": "historic"}
+    )
+    config = resolve_color(config, "#FFFF00", label="historic")
+    config = confirm_color_configuration(config, confirmed_by="Annotator")
+    save_color_configuration(tmp_path, document_id, config)
+
+    exit_code = main([
+        str(tmp_path),
+        "--document-id",
+        document_id,
+        "--force",
+        "--json",
+    ])
+
+    assert exit_code == 0
+    package = tmp_path / "documents" / document_id
+    records = json.loads((package / "annotations.json").read_text(encoding="utf-8"))
+    assert records[0]["entities"][0]["label"] == "historic"
 
 
 def test_batch_runs_independent_packages_in_stable_order_and_isolates_failures(
