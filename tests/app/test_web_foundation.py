@@ -652,15 +652,16 @@ def test_batch_color_candidates_return_guidance_for_unconfirmed_source(
     assert "Confirm the source mapping" in response.json()["candidates"][0]["reason"]
 
 
-def test_extraction_interface_has_progress_timeout_and_visible_errors() -> None:
+def test_extraction_interface_polls_background_stages_and_shows_errors() -> None:
     script = (
         Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "create.js"
     ).read_text(encoding="utf-8")
 
-    assert "new AbortController()" in script
     assert "progress.hidden = false" in script
     assert "progress.hidden = true" in script
-    assert "Extraction did not finish within two minutes" in script
+    assert "/extraction/progress" in script
+    assert "Stage ${Math.min(job.completed_steps + 1, job.total_steps)}" in script
+    assert "still running after ten minutes" in script
     assert "result.message" in script
     assert "/colors/propose" in script
     assert "Automatic proposals did not finish in time" in script
@@ -717,8 +718,12 @@ def test_extraction_endpoint_persists_raw_evidence_before_canonical_promotion(
 
     response = client.post("/api/documents/HEVA-TEST/extract?force=true")
 
-    assert response.status_code == 200
+    assert response.status_code == 202
     assert calls == [("raw", "HEVA-TEST"), ("canonical", "HEVA-TEST")]
+    progress = client.get("/api/documents/HEVA-TEST/extraction/progress").json()
+    assert progress["state"] == "completed"
+    assert progress["completed_steps"] == 3
+    assert progress["result"]["record_count"] == 3
 
 
 def test_pending_color_map_keeps_successful_raw_extraction_as_draft(
@@ -743,10 +748,11 @@ def test_pending_color_map_keeps_successful_raw_extraction_as_draft(
 
     assert response.status_code == 202
     assert calls == [("raw", "HEVA-TEST")]
-    assert response.json()["status"] == "draft_saved"
-    assert response.json()["message"] == "Raw extraction evidence was saved."
-    assert "Color config" in response.json()["action"]
-    assert "--authorize-pending-map-by" not in response.json()["action"]
+    progress = client.get("/api/documents/HEVA-TEST/extraction/progress").json()
+    assert progress["state"] == "draft_saved"
+    assert "Raw extraction evidence was saved" in progress["message"]
+    assert "Color config" in progress["message"]
+    assert "--authorize-pending-map-by" not in progress["message"]
 
 
 def test_missing_extraction_dependency_is_reported_clearly(
@@ -766,10 +772,12 @@ def test_missing_extraction_dependency_is_reported_clearly(
 
     response = client.post("/api/documents/HEVA-TEST/extract")
 
-    assert response.status_code == 503
-    assert response.json()["code"] == "extraction_dependency_missing"
-    assert "spacy" in response.json()["action"]
-    assert "restart the server" in response.json()["action"]
+    assert response.status_code == 202
+    progress = client.get("/api/documents/HEVA-TEST/extraction/progress").json()
+    assert progress["state"] == "failed"
+    assert progress["error"]["code"] == "extraction_dependency_missing"
+    assert "spacy" in progress["error"]["action"]
+    assert "restart the server" in progress["error"]["action"]
 
 
 def test_color_discovery_reports_missing_extraction_dependency(

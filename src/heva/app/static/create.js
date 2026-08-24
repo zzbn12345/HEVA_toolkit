@@ -832,6 +832,34 @@ async function compileAnnotations() {
   }
 }
 
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+/** Poll the background extraction job and render its current, non-invented stage. */
+async function waitForExtraction(documentId) {
+  const progress = document.getElementById("extraction-progress");
+  const progressBar = document.getElementById("extraction-progress-bar");
+  const progressMessage = document.getElementById("extraction-progress-message");
+  const status = document.getElementById("extraction-status");
+  const deadline = Date.now() + 10 * 60 * 1000;
+  while (Date.now() < deadline) {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/extraction/progress`,
+    );
+    const job = await response.json();
+    if (!response.ok) throw new Error(job.detail || "Extraction progress could not be loaded.");
+    progressBar.max = job.total_steps;
+    progressBar.value = job.completed_steps;
+    progressMessage.textContent = `${job.message} Stage ${Math.min(job.completed_steps + 1, job.total_steps)} of ${job.total_steps}.`;
+    status.className = "notice neutral";
+    status.textContent = job.message;
+    if (["completed", "draft_saved", "failed"].includes(job.state)) return job;
+    await wait(750);
+  }
+  throw new Error("Extraction is still running after ten minutes. Its work was not cancelled; reopen this document to check its status.");
+}
+
 async function extractAnnotations(force = false) {
   const documentId = document.getElementById("selected-document-id").value;
   const button = document.getElementById(
@@ -839,8 +867,6 @@ async function extractAnnotations(force = false) {
   );
   const progress = document.getElementById("extraction-progress");
   const status = document.getElementById("extraction-status");
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 120000);
   button.disabled = true;
   button.textContent = force ? "Rebuilding…" : "Extracting…";
   progress.hidden = false;
@@ -849,7 +875,7 @@ async function extractAnnotations(force = false) {
   try {
     const response = await fetch(
       `/api/documents/${encodeURIComponent(documentId)}/extract${force ? "?force=true" : ""}`,
-      { method: "POST", signal: controller.signal },
+      { method: "POST" },
     );
     const result = await response.json();
     if (!response.ok) {
@@ -857,23 +883,27 @@ async function extractAnnotations(force = false) {
       status.textContent = `${result.message || "Extraction failed."} ${result.action || ""}`;
       return;
     }
-    if (result.status === "draft_saved") {
+    const job = await waitForExtraction(documentId);
+    if (job.state === "failed") {
+      status.className = "notice error";
+      status.textContent = `${job.message} ${job.error?.action || ""}`;
+      return;
+    }
+    if (job.state === "draft_saved") {
       status.className = "notice warning";
-      status.textContent = `${result.message} ${result.action}`;
+      status.textContent = job.message;
       await loadColors(documentId);
       await loadExtractionStatus(documentId);
       return;
     }
-    status.className = result.warnings.length ? "notice warning" : "notice success";
-    status.textContent = `${result.reused_checkpoint ? "Reused" : "Created"} ${result.record_count} extracted sentence records.${result.warnings.length ? ` ${result.warnings.join(" ")}` : ""}`;
+    const extraction = job.result;
+    status.className = extraction.warnings.length ? "notice warning" : "notice success";
+    status.textContent = `${extraction.reused_checkpoint ? "Reused" : "Created"} ${extraction.record_count} extracted sentence records.${extraction.warnings.length ? ` ${extraction.warnings.join(" ")}` : ""}`;
     await loadExtractionStatus(documentId);
   } catch (error) {
     status.className = "notice error";
-    status.textContent = error.name === "AbortError"
-      ? "Extraction did not finish within two minutes. Check the source and try again."
-      : "Extraction could not be completed. Check the local service and try again.";
+    status.textContent = error.message || "Extraction could not be completed. Check the local service and try again.";
   } finally {
-    window.clearTimeout(timeout);
     progress.hidden = true;
     button.textContent = force ? "Rebuild extraction" : "Extract annotations";
     button.disabled = false;

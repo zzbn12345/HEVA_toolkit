@@ -154,8 +154,8 @@
             Confirm the document color configuration before extraction.
           </div>
           <div id="extraction-progress" class="extraction-progress" hidden>
-            <progress aria-label="Extracting annotations"></progress>
-            <span>Extracting and validating annotations…</span>
+            <progress id="extraction-progress-bar" aria-label="Extraction stages completed" max="3" value="0"></progress>
+            <span id="extraction-progress-message">Preparing extraction…</span>
           </div>
           <div class="form-actions">
             <button class="button secondary" type="button" data-back="3">Back</button>

@@ -123,6 +123,7 @@ RELEASE_FILENAMES = frozenset(
     }
 )
 from heva.app.project_context import ProjectContext
+from heva.app.extraction_jobs import ExtractionJobRegistry
 from heva.app.folder_picker import (
     FolderPickerUnavailable,
     select_local_csv_file,
@@ -208,6 +209,7 @@ def create_project_router(
     template: Callable[[str], str],
 ) -> APIRouter:
     router = APIRouter()
+    extraction_jobs = ExtractionJobRegistry()
 
     def active_curator_name() -> str:
         """Prefer the explicit people registry while retaining legacy-project fallback."""
@@ -865,6 +867,24 @@ def create_project_router(
             "draft_record_count": draft_count,
         }
 
+    @router.get("/api/documents/{document_id}/extraction/progress")
+    def extraction_progress(document_id: str):
+        """Report live stages for extraction started by this application process."""
+
+        job = extraction_jobs.get(document_id)
+        if job is None:
+            return {
+                "document_id": document_id,
+                "state": "idle",
+                "stage": "idle",
+                "message": "No extraction is currently running.",
+                "completed_steps": 0,
+                "total_steps": 3,
+                "result": None,
+                "error": None,
+            }
+        return job
+
     @router.post("/api/documents/{document_id}/annotations/compile")
     def compile_document_annotations(document_id: str):
         """Promote saved raw evidence without rerunning the source extractor."""
@@ -896,10 +916,24 @@ def create_project_router(
             "status": "canonical_saved",
         }
 
-    @router.post("/api/documents/{document_id}/extract")
-    def extract_document(document_id: str, force: bool = False):
+    def run_extraction_job(document_id: str) -> None:
+        """Run extraction off the request path while publishing honest stage changes."""
+
         try:
+            extraction_jobs.update(
+                document_id,
+                state="running",
+                stage="extracting",
+                message="Reading the source and extracting colored text.",
+                completed_steps=0,
+            )
             run_registered_raw_extraction(root, document_id)
+            extraction_jobs.update(
+                document_id,
+                stage="compiling",
+                message="Raw evidence is saved. Building canonical HEVA annotations.",
+                completed_steps=1,
+            )
             try:
                 result = promote_extraction_draft(root, document_id)
             except (
@@ -908,31 +942,38 @@ def create_project_router(
                 ExtractionDraftError,
                 ExtractionSessionError,
             ):
-                return JSONResponse(
-                    {
+                extraction_jobs.update(
+                    document_id,
+                    state="draft_saved",
+                    stage="waiting_for_color_configuration",
+                    message=(
+                        "Raw extraction evidence was saved. Confirm Color config to "
+                        "build canonical HEVA annotations and unlock sentence editing."
+                    ),
+                    completed_steps=2,
+                    result={
                         "document_id": document_id,
                         "status": "draft_saved",
-                        "message": "Raw extraction evidence was saved.",
-                        "action": (
-                            "Review and confirm Color config to convert this draft "
-                            "into canonical HEVA annotations."
-                        ),
+                        "record_count": None,
                     },
-                    status_code=202,
                 )
+                return
         except ModuleNotFoundError as error:
             dependency = error.name or "an extraction dependency"
-            return JSONResponse(
-                {
+            extraction_jobs.update(
+                document_id,
+                state="failed",
+                stage="failed",
+                message="The extraction service is not fully installed.",
+                error={
                     "code": "extraction_dependency_missing",
-                    "message": "The extraction service is not fully installed.",
                     "action": (
                         f"The required Python package '{dependency}' is missing. "
                         "Install HEVA with its extraction dependencies and restart the server."
                     ),
                 },
-                status_code=503,
             )
+            return
         except (
             ColorMappingError,
             ExtractionDraftError,
@@ -942,21 +983,52 @@ def create_project_router(
             OSError,
             ValidationError,
         ) as error:
-            return JSONResponse(
-                {
+            extraction_jobs.update(
+                document_id,
+                state="failed",
+                stage="failed",
+                message="Annotations were not extracted.",
+                error={
                     "code": getattr(error, "code", "extraction_failed"),
-                    "message": "Annotations were not extracted.",
                     "action": str(error),
                 },
-                status_code=422,
             )
-        return {
-            "document_id": result.document_id,
-            "record_count": result.record_count,
-            "reused_checkpoint": result.reused_checkpoint,
-            "warnings": list(result.warnings),
-            "status": "canonical_saved",
-        }
+            return
+        extraction_jobs.update(
+            document_id,
+            state="completed",
+            stage="completed",
+            message=f"Created {result.record_count} canonical annotation records.",
+            completed_steps=3,
+            result={
+                "document_id": result.document_id,
+                "record_count": result.record_count,
+                "reused_checkpoint": result.reused_checkpoint,
+                "warnings": list(result.warnings),
+                "status": "canonical_saved",
+            },
+        )
+
+    @router.post("/api/documents/{document_id}/extract", status_code=202)
+    def extract_document(
+        document_id: str,
+        background_tasks: BackgroundTasks,
+        force: bool = False,
+    ):
+        """Queue extraction and return immediately so clients can observe progress."""
+
+        job = extraction_jobs.start(document_id)
+        if job is None:
+            return JSONResponse(
+                {
+                    "code": "extraction_already_running",
+                    "message": "Extraction is already running for this document.",
+                    "action": "Keep this page open to follow its current status.",
+                },
+                status_code=409,
+            )
+        background_tasks.add_task(run_extraction_job, document_id)
+        return job
 
     @router.get("/api/annotator")
     def annotator_status():
