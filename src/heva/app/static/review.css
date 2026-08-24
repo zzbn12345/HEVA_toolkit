@@ -212,3 +212,24 @@
   .document-tools { order: 2; width: 100%; flex-wrap: wrap; }
   .editor-grid, .entity-row { grid-template-columns: 1fr; }
 }
+.review-edit-lock {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.review-edit-lock p {
+  margin: 0.35rem 0 0;
+}
+
+.review-edit-lock .button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 760px) {
+  .review-edit-lock {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

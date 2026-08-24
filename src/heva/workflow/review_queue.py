@@ -374,6 +374,27 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
             0,
             "Convert the unresolved color draft into canonical HEVA annotations.",
         )
+    editability = {
+        "editable": not draft_only,
+        "code": None,
+        "message": None,
+        "action": None,
+        "href": None,
+    }
+    if draft_only:
+        editability = {
+            "editable": False,
+            "code": "color_configuration_required",
+            "message": (
+                "These sentences are raw extraction drafts. Extracted text can be "
+                "edited after every observed color has a confirmed HEVA label."
+            ),
+            "action": (
+                "Open Color config, assign and confirm the labels, then build the "
+                "canonical annotations. Citation and annotator metadata do not lock editing."
+            ),
+            "href": f"/create?document_id={document_id}&section=colors",
+        }
     return {
         "document_id": document_id,
         "source_path": entry.source_path,
@@ -384,6 +405,7 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
         "readiness_gates": readiness_gates,
         "blocking_reasons": blocking_reasons,
         "draft_only": draft_only,
+        "editability": editability,
         "previous_document_id": identifiers[position - 1] if position > 0 else None,
         "next_document_id": (
             identifiers[position + 1]

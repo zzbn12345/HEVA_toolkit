@@ -388,7 +388,7 @@ async function saveCorrection() {
 }
 
 function updateSelectionControls() {
-  const editable = !reviewDocument.draft_only;
+  const editable = reviewDocument.editability?.editable ?? !reviewDocument.draft_only;
   const selectedCount = visibleSentences.filter((item) =>
     selectedSentenceIds.has(item.record.sentence_id)
   ).length;
@@ -416,7 +416,9 @@ function sentenceCard(item) {
   selection.className = "sentence-selection";
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
-  checkbox.disabled = reviewDocument.draft_only;
+  const editability = reviewDocument.editability || {editable: !reviewDocument.draft_only};
+  checkbox.disabled = !editability.editable;
+  if (!editability.editable) checkbox.title = editability.message || "Sentence review is locked.";
   checkbox.checked = selectedSentenceIds.has(record.sentence_id);
   checkbox.setAttribute("aria-label", `Select sentence ${record.sentence_id}`);
   checkbox.addEventListener("change", () => {
@@ -437,16 +439,18 @@ function sentenceCard(item) {
   }
   const actions = document.createElement("div");
   actions.className = "decision-actions";
-  const editable = !reviewDocument.draft_only;
+  const editable = editability.editable;
   const editButton = textElement("button", "button secondary", "Edit sentence");
   editButton.type = "button";
   editButton.disabled = !editable;
+  if (!editable) editButton.title = editability.message || "Sentence editing is locked.";
   editButton.addEventListener("click", () => openEditor(record));
   actions.appendChild(editButton);
   [["Approve", "approved"], ["Needs correction", "needs_correction"], ["Exclude", "excluded"]].forEach(([label, status]) => {
     const button = textElement("button", `button${status === "approved" ? "" : " secondary"}`, label);
     button.type = "button";
     button.disabled = !editable;
+    if (!editable) button.title = editability.message || "Sentence review is locked.";
     button.addEventListener("click", () => decide([record.sentence_id], status));
     actions.appendChild(button);
   });
@@ -455,6 +459,15 @@ function sentenceCard(item) {
 }
 
 function render() {
+  const editability = reviewDocument.editability || {editable: !reviewDocument.draft_only};
+  const lock = document.getElementById("review-edit-lock");
+  lock.hidden = editability.editable;
+  if (!editability.editable) {
+    document.getElementById("review-edit-lock-message").textContent = editability.message;
+    document.getElementById("review-edit-lock-action").textContent = editability.action;
+    const link = document.getElementById("review-edit-lock-link");
+    link.href = editability.href;
+  }
   const filter = document.getElementById("review-filter").value;
   const limit = Number(document.getElementById("page-size").value);
   const filteredSentences = reviewDocument.sentences.filter((item) => {

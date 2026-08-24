@@ -262,6 +262,19 @@ def test_unresolved_extraction_draft_is_visible_but_not_reviewable(tmp_path: Pat
     selected = load_review_document(tmp_path, document_id)
 
     assert selected["draft_only"] is True
+    assert selected["editability"] == {
+        "editable": False,
+        "code": "color_configuration_required",
+        "message": (
+            "These sentences are raw extraction drafts. Extracted text can be edited "
+            "after every observed color has a confirmed HEVA label."
+        ),
+        "action": (
+            "Open Color config, assign and confirm the labels, then build the canonical "
+            "annotations. Citation and annotator metadata do not lock editing."
+        ),
+        "href": f"/create?document_id={document_id}&section=colors",
+    }
     assert selected["annotation_complete"] is False
     assert selected["sentences"][0]["record"]["entities"][0] == {
         "start": 0,
