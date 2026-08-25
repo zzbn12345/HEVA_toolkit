@@ -18,6 +18,7 @@ let reviewDocument = null;
 let visibleSentences = [];
 let currentSentencePage = 1;
 let editingRecord = null;
+const excludedEntityIndices = new Set();
 const selectedSentenceIds = new Set();
 
 function textElement(tag, className, text) {
@@ -271,12 +272,13 @@ async function validateDocument() {
   }
 }
 
-function entityRow(entity = {}) {
+function entityRow(entity = {}, originalIndex = -1) {
   const row = document.createElement("div");
   row.className = "entity-row";
   row.dataset.originalStart = entity.start ?? "-1";
   row.dataset.label = entity.label ?? "";
   row.dataset.color = entity.color ?? "";
+  row.dataset.originalIndex = originalIndex;
   const textWrapper = textElement("label", "", "Extracted text");
   const extractedText = document.createElement("textarea");
   extractedText.rows = 2;
@@ -304,23 +306,34 @@ function entityRow(entity = {}) {
   }
   colorWrapper.appendChild(colorValue);
   row.appendChild(colorWrapper);
+  const excludeButton = textElement("button", "button danger", "Exclude annotation");
+  excludeButton.type = "button";
+  excludeButton.addEventListener("click", () => {
+    excludedEntityIndices.add(Number(row.dataset.originalIndex));
+    row.remove();
+  });
+  row.appendChild(excludeButton);
   return row;
 }
 
 function closeEditor() {
   editor.close();
   editingRecord = null;
+  excludedEntityIndices.clear();
 }
 
 function openEditor(record) {
   editingRecord = structuredClone(record);
+  excludedEntityIndices.clear();
   editorError.hidden = true;
   document.getElementById("edit-sentence-id").value = record.sentence_id;
   document.getElementById("edit-page").value = record.page;
   document.getElementById("edit-source-sentence").textContent = record.sentence;
   document.getElementById("edit-curated-sentence").value =
     record.curated_sentence || record.sentence;
-  entityRows.replaceChildren(...record.entities.map(entityRow));
+  entityRows.replaceChildren(
+    ...record.entities.map((entity, index) => entityRow(entity, index)),
+  );
   editor.showModal();
 }
 
@@ -427,7 +440,10 @@ async function saveCorrection() {
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ record }),
+        body: JSON.stringify({
+          record,
+          excluded_entity_indices: [...excludedEntityIndices].sort((left, right) => left - right),
+        }),
       },
     );
     const result = await response.json();

@@ -10,6 +10,8 @@
 
 ### Changed
 
+- Allowed researchers to exclude one incorrect extracted annotation while retaining the
+  sentence and its other annotations. The excluded evidence remains in the review audit.
 - Added an optional curated sentence alongside immutable extracted source text. Annotation
   offsets, tokens, BIO tags, quality checks, JSON, and CSV now use or expose the curated
   sentence when a researcher corrects a transcription or OCR error.

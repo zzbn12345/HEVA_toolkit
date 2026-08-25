@@ -194,7 +194,7 @@
 .source-sentence-evidence p { margin: .5rem 0 0; line-height: 1.6; }
 .entity-row {
   display: grid;
-  grid-template-columns: minmax(240px, 3fr) minmax(130px, 1fr) 130px;
+  grid-template-columns: minmax(240px, 3fr) minmax(130px, 1fr) 130px max-content;
   align-items: end;
   gap: .55rem;
   margin-bottom: .75rem;

@@ -153,6 +153,66 @@ def test_edit_persists_curated_sentence_without_replacing_source(tmp_path: Path)
     assert review["sentences"][0]["audit"][-1]["actor"] == "Research Curator"
 
 
+def test_edit_excludes_one_annotation_and_audits_exact_original(tmp_path: Path) -> None:
+    document_id, package = project(tmp_path)
+    original = record(1)
+    original.update(
+        sentence="Historic port and old harbour.",
+        tokens=["Historic", "port", "and", "old", "harbour", "."],
+        entities=[
+            {
+                "start": 0, "end": 13, "text": "Historic port",
+                "label": "historic", "color": "#FF40FF",
+            },
+            {
+                "start": 18, "end": 29, "text": "old harbour",
+                "label": "historic", "color": "#FF40FF",
+            },
+        ],
+        ner_tags=["B-historic", "I-historic", "O", "B-historic", "I-historic", "O"],
+    )
+    (package / "annotations.json").write_text(json.dumps([original]), encoding="utf-8")
+    initialize_sentence_reviews(tmp_path, document_id)
+    replacement = {
+        **original,
+        "entities": [original["entities"][1]],
+        "ner_tags": ["O", "O", "O", "B-historic", "I-historic", "O"],
+    }
+
+    replace_sentence_record(
+        tmp_path,
+        document_id,
+        1,
+        replacement,
+        editor="Research Curator",
+        excluded_entity_indices=[0],
+    )
+
+    persisted = json.loads((package / "annotations.json").read_text())[0]
+    assert persisted["entities"] == [original["entities"][1]]
+    review = json.loads(
+        (tmp_path / ".heva/documents" / document_id / "review-state.json").read_text()
+    )
+    audit = review["sentences"][0]["audit"][-1]
+    assert audit["details"]["excluded_entities"] == [original["entities"][0]]
+
+
+def test_edit_rejects_unidentified_annotation_removal(tmp_path: Path) -> None:
+    document_id, package = project(tmp_path)
+    initialize_sentence_reviews(tmp_path, document_id)
+    replacement = record(1)
+    replacement["entities"] = []
+    replacement["values"] = []
+    replacement["ner_tags"] = ["O", "O", "O", "O", "O", "O"]
+
+    with pytest.raises(ReviewError, match="identified explicitly"):
+        replace_sentence_record(
+            tmp_path, document_id, 1, replacement, editor="Research Curator"
+        )
+
+    assert json.loads((package / "annotations.json").read_text())[0] == record(1)
+
+
 def test_invalid_edit_names_contract_field_and_does_not_write(tmp_path: Path) -> None:
     document_id, package = project(tmp_path)
     initialize_sentence_reviews(tmp_path, document_id)

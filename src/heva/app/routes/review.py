@@ -216,6 +216,7 @@ def create_review_router(
                 sentence_id,
                 replacement,
                 editor=reviewer,
+                excluded_entity_indices=payload.get("excluded_entity_indices", ()),
             )
             return load_review_document(root, document_id)
         except (

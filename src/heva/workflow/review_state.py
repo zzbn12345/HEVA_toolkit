@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -247,6 +248,7 @@ def replace_sentence_record(
     replacement: dict[str, Any],
     *,
     editor: str,
+    excluded_entity_indices: Sequence[int] = (),
 ) -> None:
     """Persist curated text and annotation corrections while retaining source evidence."""
 
@@ -290,20 +292,38 @@ def replace_sentence_record(
             )
     before_entities = before.get("entities", [])
     after_entities = after.get("entities", [])
-    if len(before_entities) != len(after_entities):
-        raise ReviewError(
-            "This editor cannot add or remove annotations yet; correct each existing "
-            "annotation independently."
-        )
-    for position, (previous, corrected) in enumerate(
-        zip(before_entities, after_entities, strict=True)
+    if not isinstance(excluded_entity_indices, (list, tuple)) or not all(
+        isinstance(index, int) and not isinstance(index, bool)
+        for index in excluded_entity_indices
     ):
-        for field in ("label", "color"):
-            if previous.get(field) != corrected.get(field):
-                raise ReviewError(
-                    f"Annotation {position + 1} {field} is read-only. "
-                    "Change document Color config instead."
-                )
+        raise ReviewError("Excluded annotation indices must be integers.")
+    excluded_indices = sorted(set(excluded_entity_indices))
+    if any(index < 0 or index >= len(before_entities) for index in excluded_indices):
+        raise ReviewError("An excluded annotation index is out of range.")
+    if len(after_entities) > len(before_entities):
+        raise ReviewError(
+            "This editor cannot create new annotations yet."
+        )
+    if len(after_entities) != len(before_entities) - len(excluded_indices):
+        raise ReviewError(
+            "Every removed annotation must be identified explicitly for the review audit."
+        )
+    retained_before = [
+        entity
+        for index, entity in enumerate(before_entities)
+        if index not in excluded_indices
+    ]
+    before_evidence = Counter(
+        (entity.get("label"), entity.get("color")) for entity in retained_before
+    )
+    after_evidence = Counter(
+        (entity.get("label"), entity.get("color")) for entity in after_entities
+    )
+    if after_evidence - before_evidence:
+        raise ReviewError(
+            "Annotation label and color are read-only. Change document Color config instead."
+        )
+    excluded_entities = [before_entities[index] for index in excluded_indices]
     records[index] = after
     _write_json(annotations_path, records)
     if json.loads(annotations_path.read_text(encoding="utf-8"))[index] != after:
@@ -318,7 +338,11 @@ def replace_sentence_record(
             event="edit",
             actor=editor,
             occurred_at=now,
-            details={"before": before, "after": after},
+            details={
+                "before": before,
+                "after": after,
+                "excluded_entities": excluded_entities,
+            },
         )
     )
     _write_json(review_path, review.model_dump(mode="json"))

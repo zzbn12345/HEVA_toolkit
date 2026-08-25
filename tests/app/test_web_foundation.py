@@ -1864,6 +1864,20 @@ def test_review_queue_asset_always_offers_edit_annotation_action() -> None:
     assert 'fetch("/api/projects/close", {method: "POST"})' in script
 
 
+def test_sentence_editor_offers_individual_annotation_exclusion() -> None:
+    script = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "review_document.js"
+    ).read_text(encoding="utf-8")
+
+    assert '"Exclude annotation"' in script
+    assert "excluded_entity_indices" in script
+
+
 def test_review_queue_can_close_or_switch_project(tmp_path: Path) -> None:
     client = TestClient(create_app(tmp_path))
     script = (
