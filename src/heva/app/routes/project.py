@@ -924,7 +924,10 @@ def create_project_router(
             "status": "canonical_saved",
         }
 
-    def run_extraction_job(document_id: str) -> None:
+    def run_extraction_job(
+        document_id: str,
+        selected_pages: tuple[int, ...] | None = None,
+    ) -> None:
         """Run extraction off the request path while publishing honest stage changes."""
 
         def publish_page_progress(completed: int, total: int) -> None:
@@ -952,6 +955,7 @@ def create_project_router(
                 cancellation_callback=lambda: extraction_jobs.cancellation_requested(
                     document_id
                 ),
+                selected_pages=selected_pages,
             )
             if extraction_jobs.cancellation_requested(document_id):
                 raise ExtractionCancelled(
@@ -1047,6 +1051,7 @@ def create_project_router(
                 "reused_checkpoint": result.reused_checkpoint,
                 "warnings": list(result.warnings),
                 "status": "canonical_saved",
+                "selected_pages": list(selected_pages) if selected_pages else None,
             },
         )
 
@@ -1055,8 +1060,26 @@ def create_project_router(
         document_id: str,
         background_tasks: BackgroundTasks,
         force: bool = False,
+        page_start: int | None = Query(default=None, ge=1),
+        page_end: int | None = Query(default=None, ge=1),
     ):
         """Queue extraction and return immediately so clients can observe progress."""
+
+        if (page_start is None) != (page_end is None):
+            raise HTTPException(
+                status_code=422,
+                detail="Provide both the first and last page, or leave both blank.",
+            )
+        if page_start is not None and page_end is not None and page_end < page_start:
+            raise HTTPException(
+                status_code=422,
+                detail="The last page must be greater than or equal to the first page.",
+            )
+        selected_pages = (
+            tuple(range(page_start, page_end + 1))
+            if page_start is not None and page_end is not None
+            else None
+        )
 
         job = extraction_jobs.start(document_id)
         if job is None:
@@ -1068,7 +1091,11 @@ def create_project_router(
                 },
                 status_code=409,
             )
-        background_tasks.add_task(run_extraction_job, document_id)
+        job = extraction_jobs.update(
+            document_id,
+            selected_pages=list(selected_pages) if selected_pages else None,
+        )
+        background_tasks.add_task(run_extraction_job, document_id, selected_pages)
         return job
 
     @router.post("/api/documents/{document_id}/extraction/cancel", status_code=202)

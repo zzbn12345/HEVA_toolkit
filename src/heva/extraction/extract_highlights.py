@@ -48,6 +48,7 @@ def extract_source(
     source: Path,
     color_map: dict[str, str] | None,
     progress_callback: Callable[[int, int], None] | None = None,
+    page_numbers: list[int] | None = None,
 ):
     """Run the shared adapter and optionally report completed source units."""
     if source.suffix.lower() == ".pdf":
@@ -55,8 +56,11 @@ def extract_source(
             source,
             color_label_map=color_map,
             progress_callback=progress_callback,
+            page_numbers=page_numbers,
         )
     if source.suffix.lower() == ".docx":
+        if page_numbers is not None:
+            raise ValueError("--pages is supported for PDF sources only.")
         return extract_docx_highlights(source, color_label_map=color_map)
     raise ValueError(f"Unsupported source format: {source.suffix or '(none)'}")
 
@@ -102,7 +106,42 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help='Flat JSON mapping such as {"#FFFF00": "political"}.',
     )
+    parser.add_argument(
+        "--pages",
+        help="PDF pages such as 1-10 or 1,3,7-9. Omit to analyze the full source.",
+    )
     return parser
+
+
+def parse_page_numbers(value: str | None) -> list[int] | None:
+    """Parse inclusive one-based PDF pages from comma-separated values and ranges."""
+
+    if value is None:
+        return None
+    pages: set[int] = set()
+    try:
+        for part in value.split(","):
+            item = part.strip()
+            if not item:
+                raise ValueError
+            if "-" in item:
+                start_text, end_text = item.split("-", 1)
+                start, end = int(start_text), int(end_text)
+                if start < 1 or end < start:
+                    raise ValueError
+                pages.update(range(start, end + 1))
+            else:
+                page = int(item)
+                if page < 1:
+                    raise ValueError
+                pages.add(page)
+    except ValueError as error:
+        raise ValueError(
+            "Pages must use positive one-based values such as 1-10 or 1,3,7-9."
+        ) from error
+    if not pages:
+        raise ValueError("Select at least one PDF page.")
+    return sorted(pages)
 
 
 def main(argv: Iterable[str] | None = None) -> int:
@@ -117,6 +156,7 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     try:
         color_map = load_color_map(args.color_map)
+        page_numbers = parse_page_numbers(args.pages)
     except (OSError, json.JSONDecodeError, ValueError) as error:
         parser.error(str(error))
 
@@ -129,6 +169,7 @@ def main(argv: Iterable[str] | None = None) -> int:
             records = extract_source(
                 source,
                 color_map,
+                page_numbers=page_numbers,
                 progress_callback=lambda completed, total: print(
                     f"{source.name}: page {completed}/{total}",
                     file=sys.stderr,

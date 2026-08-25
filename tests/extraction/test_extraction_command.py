@@ -11,6 +11,7 @@ from pathlib import Path
 import fitz
 
 from heva.extraction.pdf_extractor import extract_colored_highlights
+from heva.extraction.extract_highlights import parse_page_numbers
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -67,3 +68,8 @@ def test_raw_extraction_runs_through_python_module_command(tmp_path: Path) -> No
     assert records[0]["entities"][0]["color"] == "#FFFF00"
     assert "1 records" in completed.stdout
     assert "source.pdf: page 1/1" in completed.stderr
+
+
+def test_cli_page_selection_parser_supports_ranges_and_lists() -> None:
+    assert parse_page_numbers("1,3,7-9") == [1, 3, 7, 8, 9]
+    assert parse_page_numbers(None) is None

@@ -225,12 +225,33 @@ def test_cancelled_raw_run_preserves_previous_draft(tmp_path: Path) -> None:
     assert path.read_bytes() == before
 
 
+def test_selected_page_scope_is_persisted_with_raw_evidence(tmp_path: Path) -> None:
+    document_id, records = _project(tmp_path)
+
+    run_registered_raw_extraction(
+        tmp_path,
+        document_id,
+        extractor=lambda _source: records,
+        extractor_name="scoped test extractor",
+        selected_pages=[2, 4, 5],
+    )
+
+    scope = load_extraction_draft(tmp_path, document_id).extraction_scope
+    assert scope.mode == "selected_pages"
+    assert scope.selected_pages == [2, 4, 5]
+
+
 def test_promotion_writes_canonical_annotations_only_after_selected_mapping(tmp_path: Path) -> None:
     """The draft-to-package transition reuses canonical session validation and provenance."""
 
     document_id, records = _project(tmp_path)
     persist_extraction_draft(
-        tmp_path, document_id, records, extractor="test", extractor_version="1.0"
+        tmp_path,
+        document_id,
+        records,
+        extractor="test",
+        extractor_version="1.0",
+        selected_pages=[2],
     )
     save_color_configuration(
         tmp_path,
@@ -251,3 +272,8 @@ def test_promotion_writes_canonical_annotations_only_after_selected_mapping(tmp_
     assert result.record_count == 1
     assert saved[0]["values"] == ["historic"]
     assert saved[0]["mapping_provenance"]["config_id"] == "approved-palette@1"
+    metadata = json.loads((result.annotations_path.parent / "metadata.json").read_text())
+    session = json.loads(result.session_path.read_text())
+    assert metadata["annotation_process"]["source_scope"] == "selected_pages"
+    assert metadata["annotation_process"]["selected_pages"] == [2]
+    assert session["selected_pages"] == [2]

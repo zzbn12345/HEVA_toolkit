@@ -2,7 +2,7 @@ import fitz  # PyMuPDF
 import math
 import re
 import spacy
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 try:
     from .utils import (
@@ -330,6 +330,7 @@ def extract_colored_highlights(
     color_label_map=None,
     progress_callback: Callable[[int, int], None] | None = None,
     cancellation_callback: Callable[[], bool] | None = None,
+    page_numbers: Sequence[int] | None = None,
 ):
     """
     Extracts highlights along with their exact hex color codes or mapped labels.
@@ -338,6 +339,26 @@ def extract_colored_highlights(
     """
     doc = fitz.open(pdf_path)
 
+    if page_numbers is None:
+        selected_page_indices = list(range(len(doc)))
+    else:
+        if not page_numbers:
+            doc.close()
+            raise ValueError("Select at least one PDF page for extraction.")
+        if any(
+            not isinstance(page, int)
+            or isinstance(page, bool)
+            or page < 1
+            or page > len(doc)
+            for page in page_numbers
+        ):
+            doc.close()
+            raise ValueError(f"PDF pages must be between 1 and {len(doc)}.")
+        if len(set(page_numbers)) != len(page_numbers):
+            doc.close()
+            raise ValueError("PDF page selection cannot contain duplicates.")
+        selected_page_indices = [page - 1 for page in sorted(page_numbers)]
+
     final_output = []
     sentence_id = 1
     detected_colors = set()
@@ -345,7 +366,7 @@ def extract_colored_highlights(
     global_reconstructed_text = ""
     global_word_spans = []
 
-    for page_num in range(len(doc)):
+    for completed_pages, page_num in enumerate(selected_page_indices, start=1):
         if cancellation_callback is not None and cancellation_callback():
             from heva.extraction.errors import ExtractionCancelled
 
@@ -500,7 +521,7 @@ def extract_colored_highlights(
         page_reconstructed_text = page_reconstructed_text.strip()
         if not page_reconstructed_text:
             if progress_callback is not None:
-                progress_callback(page_num + 1, len(doc))
+                progress_callback(completed_pages, len(selected_page_indices))
             continue
 
         # Append page text to global text with a space boundary to prevent splitting sentences on page join
@@ -519,7 +540,7 @@ def extract_colored_highlights(
             
         global_reconstructed_text += page_reconstructed_text
         if progress_callback is not None:
-            progress_callback(page_num + 1, len(doc))
+            progress_callback(completed_pages, len(selected_page_indices))
 
     if cancellation_callback is not None and cancellation_callback():
         from heva.extraction.errors import ExtractionCancelled

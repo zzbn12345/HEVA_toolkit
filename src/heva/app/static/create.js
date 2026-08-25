@@ -876,6 +876,16 @@ async function extractAnnotations(force = false) {
   const progress = document.getElementById("extraction-progress");
   const status = document.getElementById("extraction-status");
   const cancelButton = document.getElementById("cancel-extraction");
+  const pageStart = document.getElementById("extraction-page-start").value.trim();
+  const pageEnd = document.getElementById("extraction-page-end").value.trim();
+  if ((pageStart && !pageEnd) || (!pageStart && pageEnd)) {
+    status.className = "notice error";
+    status.textContent = "Provide both the first and last PDF page, or leave both blank.";
+    return;
+  }
+  const scope = pageStart && pageEnd
+    ? `&page_start=${encodeURIComponent(pageStart)}&page_end=${encodeURIComponent(pageEnd)}`
+    : "";
   button.disabled = true;
   button.textContent = force ? "Rebuilding…" : "Extracting…";
   progress.hidden = false;
@@ -886,7 +896,7 @@ async function extractAnnotations(force = false) {
   status.textContent = "Extraction is running. Keep this page open.";
   try {
     const response = await fetch(
-      `/api/documents/${encodeURIComponent(documentId)}/extract${force ? "?force=true" : ""}`,
+      `/api/documents/${encodeURIComponent(documentId)}/extract?force=${force}${scope}`,
       { method: "POST" },
     );
     const result = await response.json();

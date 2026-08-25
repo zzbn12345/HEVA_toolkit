@@ -118,6 +118,29 @@ def test_pdf_extractor_cancels_at_page_boundary(tmp_path: Path) -> None:
     assert progress == [(1, 2)]
 
 
+def test_pdf_extractor_reads_only_selected_source_pages(tmp_path: Path) -> None:
+    source = tmp_path / "three-pages.pdf"
+    document = fitz.open()
+    for text in ("Historic first.", "Political second.", "Economic third."):
+        page = document.new_page()
+        page.insert_text((100, 100), text, fontsize=12)
+        highlighted = page.search_for(text.split()[0])[0]
+        page.draw_rect(highlighted, fill=(1, 1, 0), color=None, overlay=False)
+    document.save(source)
+    document.close()
+    progress: list[tuple[int, int]] = []
+
+    records = extract_colored_highlights(
+        source,
+        page_numbers=[2, 3],
+        progress_callback=lambda completed, total: progress.append((completed, total)),
+    )
+
+    assert [record["page"] for record in records] == [2, 3]
+    assert all("first" not in record["sentence"] for record in records)
+    assert progress == [(1, 2), (2, 2)]
+
+
 def test_table_pdf_with_broken_font_encoding_fails_before_persisting_gibberish() -> None:
     """The authorized Alpha table fixture must fail honestly instead of yielding cipher text."""
 

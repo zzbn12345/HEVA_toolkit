@@ -26,6 +26,7 @@ from pydantic import (
     StrictInt,
     ValidationError,
     field_validator,
+    model_validator,
 )
 
 from heva.workflow.contract import HEX_COLOR, HEVA_LABELS
@@ -171,7 +172,23 @@ class AnnotationProcessMetadata(BaseModel):
     extractor: str | None = None
     extractor_version: str | None = None
     performed_at: datetime | None = None
+    source_scope: Literal["full_source", "selected_pages"] = "full_source"
+    selected_pages: list[int] = Field(default_factory=list)
     review: ReviewMetadata = Field(default_factory=ReviewMetadata)
+
+    @model_validator(mode="after")
+    def validate_source_scope(self) -> "AnnotationProcessMetadata":
+        """Keep selected-page provenance explicit and internally consistent."""
+
+        if self.source_scope == "full_source" and self.selected_pages:
+            raise ValueError("Full-source extraction cannot list selected pages.")
+        if self.source_scope == "selected_pages" and (
+            not self.selected_pages
+            or self.selected_pages != sorted(set(self.selected_pages))
+            or any(page < 1 for page in self.selected_pages)
+        ):
+            raise ValueError("Selected pages must be sorted, unique, positive integers.")
+        return self
 
 
 class ColorMappingMetadata(BaseModel):

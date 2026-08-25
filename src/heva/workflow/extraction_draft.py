@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Literal, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
@@ -68,6 +68,29 @@ class RawSentence(BaseModel):
         return self
 
 
+class ExtractionScope(BaseModel):
+    """Record whether extraction covered the full source or selected PDF pages."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["full_source", "selected_pages"] = "full_source"
+    selected_pages: list[int] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_scope(self) -> "ExtractionScope":
+        """Require a sorted, unique, positive page list only for scoped runs."""
+
+        if self.mode == "full_source" and self.selected_pages:
+            raise ValueError("Full-source extraction cannot list selected pages.")
+        if self.mode == "selected_pages" and (
+            not self.selected_pages
+            or self.selected_pages != sorted(set(self.selected_pages))
+            or any(page < 1 for page in self.selected_pages)
+        ):
+            raise ValueError("Selected pages must be sorted, unique, positive integers.")
+        return self
+
+
 class ExtractionDraft(BaseModel):
     """Versionable workspace artifact containing extractor evidence, not HEVA labels."""
 
@@ -80,6 +103,7 @@ class ExtractionDraft(BaseModel):
     extractor_version: str
     generated_by: str
     generated_at: datetime
+    extraction_scope: ExtractionScope = Field(default_factory=ExtractionScope)
     sentences: list[RawSentence] = Field(min_length=1)
 
 
@@ -153,6 +177,7 @@ def persist_extraction_draft(
     *,
     extractor: str,
     extractor_version: str,
+    selected_pages: Sequence[int] | None = None,
 ) -> Path:
     """Atomically save unresolved evidence without touching canonical annotations."""
 
@@ -172,6 +197,10 @@ def persist_extraction_draft(
         extractor_version=extractor_version,
         generated_by=curator.person_id,
         generated_at=datetime.now(timezone.utc),
+        extraction_scope=ExtractionScope(
+            mode="selected_pages" if selected_pages is not None else "full_source",
+            selected_pages=sorted(selected_pages) if selected_pages is not None else [],
+        ),
         sentences=[_normalize_record(record) for record in records],
     )
     path = document_workspace_directory(root, document_id) / DRAFT_FILENAME
@@ -300,6 +329,7 @@ def run_registered_raw_extraction(
     extractor_version: str = "0.1.0",
     progress_callback: Callable[[int, int], None] | None = None,
     cancellation_callback: Callable[[], bool] | None = None,
+    selected_pages: Sequence[int] | None = None,
 ) -> Path:
     """Extract raw colors for a registered PDF or DOCX and persist the draft."""
 
@@ -316,9 +346,14 @@ def run_registered_raw_extraction(
                     color_label_map=None,
                     progress_callback=progress_callback,
                     cancellation_callback=cancellation_callback,
+                    page_numbers=selected_pages,
                 )
                 name = "HEVA PDF extractor"
             elif source.suffix.lower() == ".docx":
+                if selected_pages is not None:
+                    raise ExtractionDraftError(
+                        "Page-scoped extraction is supported for PDF sources only."
+                    )
                 from heva.extraction.docx_extractor import extract_docx_highlights
 
                 if cancellation_callback is not None and cancellation_callback():
@@ -356,6 +391,7 @@ def run_registered_raw_extraction(
         records,
         extractor=name,
         extractor_version=extractor_version,
+        selected_pages=selected_pages,
     )
     synchronize_draft_colors(root, document_id)
     return path
@@ -370,6 +406,7 @@ def promote_extraction_draft(project_root: str | Path, document_id: str):
     from heva.workflow.extraction_session import persist_extraction_results
 
     apply_selected_configuration_to_document(root, document_id)
+    draft = load_extraction_draft(root, document_id)
     records = compile_extraction_draft(root, document_id)
     return persist_extraction_results(
         root,
@@ -379,4 +416,9 @@ def promote_extraction_draft(project_root: str | Path, document_id: str):
         extractor="HEVA unresolved-draft compiler",
         extractor_version="0.1.0",
         mapping_status="approved",
+        selected_pages=(
+            draft.extraction_scope.selected_pages
+            if draft.extraction_scope.mode == "selected_pages"
+            else None
+        ),
     )

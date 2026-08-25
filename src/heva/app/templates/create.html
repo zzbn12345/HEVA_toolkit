@@ -6,7 +6,7 @@
   <title>Prepare annotations · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/create.css?v=13">
-  <script src="/static/create.js?v=26" defer></script>
+  <script src="/static/create.js?v=27" defer></script>
 </head>
 <body class="create-body">
   <div id="create-app" class="create-app">
@@ -150,6 +150,18 @@
           <div class="notice warning">
             Automatic extraction must discover a color map or use an existing approved document map. Every suggestion still requires human confirmation.
           </div>
+          <fieldset class="page-scope">
+            <legend>PDF page scope <span class="muted">(optional)</span></legend>
+            <p class="field-help">Leave both fields blank to analyze the complete document. A selected range is stored with the extraction evidence.</p>
+            <div class="editor-grid">
+              <label>First page
+                <input id="extraction-page-start" type="number" min="1" inputmode="numeric">
+              </label>
+              <label>Last page
+                <input id="extraction-page-end" type="number" min="1" inputmode="numeric">
+              </label>
+            </div>
+          </fieldset>
           <div id="extraction-status" class="notice neutral" aria-live="polite">
             Confirm the document color configuration before extraction.
           </div>

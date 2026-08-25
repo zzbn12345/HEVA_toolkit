@@ -157,6 +157,7 @@ def persist_extraction_results(
     extractor: str,
     extractor_version: str,
     mapping_status: Literal["approved", "pending_review"] = "approved",
+    selected_pages: Sequence[int] | None = None,
     registry_path: str | Path = DEFAULT_REGISTRY_PATH,
 ) -> SessionResult:
     """Validate all records, then atomically persist annotations and provenance."""
@@ -221,6 +222,12 @@ def persist_extraction_results(
     metadata.annotation_process.extractor = extractor
     metadata.annotation_process.extractor_version = extractor_version
     metadata.annotation_process.performed_at = now
+    metadata.annotation_process.source_scope = (
+        "selected_pages" if selected_pages is not None else "full_source"
+    )
+    metadata.annotation_process.selected_pages = (
+        sorted(selected_pages) if selected_pages is not None else []
+    )
     metadata.annotation_process.review.completed = False
     metadata.annotation_process.review.reviewed_at = None
     metadata.resources = [
@@ -253,6 +260,8 @@ def persist_extraction_results(
             "source_checksum_sha256": entry.checksum_sha256,
             "annotations_path": "annotations.json",
             "record_count": len(canonical),
+            "source_scope": metadata.annotation_process.source_scope,
+            "selected_pages": metadata.annotation_process.selected_pages,
             "completed_at": now.isoformat(),
         },
     )
