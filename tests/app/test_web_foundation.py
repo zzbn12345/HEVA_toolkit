@@ -1516,10 +1516,10 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=14"' in response.text
+    assert 'src="/static/review_document.js?v=15"' in response.text
     assert 'id="edit-source-sentence"' in response.text
     assert "Source sentence — read only" in response.text
-    assert 'href="/static/review.css?v=11"' in response.text
+    assert 'href="/static/review.css?v=12"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text
@@ -1611,6 +1611,29 @@ def test_sentence_review_exposes_independent_pagination_controls(tmp_path: Path)
     assert 'id="previous-sentence-page"' in response.text
     assert 'id="sentence-page-status"' in response.text
     assert 'id="next-sentence-page"' in response.text
+
+
+def test_embedded_sentence_review_uses_parent_workflow_shell(tmp_path: Path) -> None:
+    """Embedded review keeps its content but suppresses duplicate navigation and gates."""
+
+    client = TestClient(create_app(tmp_path))
+
+    embedded = client.get("/review/HEVA-EXAMPLE?embedded=1")
+    standalone = client.get("/review/HEVA-EXAMPLE")
+    styles = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "review.css"
+    ).read_text(encoding="utf-8")
+
+    assert 'class="review-body embedded-review"' in embedded.text
+    assert 'class="review-body "' in standalone.text
+    assert ".review-body.embedded-review .review-toolbar { display: none; }" in styles
+    assert ".review-body.embedded-review .review-readiness > div" in styles
+    assert 'id="validate-document"' in embedded.text
 
 
 def test_document_setup_asset_opens_requested_review_section() -> None:

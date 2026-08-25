@@ -20,10 +20,6 @@ let currentSentencePage = 1;
 let editingRecord = null;
 const selectedSentenceIds = new Set();
 
-if (new URLSearchParams(window.location.search).get("embedded") === "1") {
-  document.body.classList.add("embedded-review");
-}
-
 function textElement(tag, className, text) {
   const element = document.createElement(tag);
   element.className = className;

@@ -25,6 +25,10 @@
 
 ### Fixed
 
+- Removed the duplicated navigation and readiness shell from the sentence queue embedded in
+  document preparation. Embedded mode is now rendered by the server without a visible flash,
+  while the sentence controls and compact document-validation action remain available;
+  standalone review retains its full toolbar and checklist.
 - Aligned the Alpha journey across persisted working state, domain validation, the web API,
   command-line validation, and selected Data Package export. A valid `in_progress` document
   now exports without source-rights or internal submission/approval evidence, and every

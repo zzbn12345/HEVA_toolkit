@@ -9,6 +9,17 @@
 .review-app.pdf-hidden .review-pdf { display: none; }
 .review-body.embedded-review .review-app { grid-template-rows: minmax(0, 1fr); }
 .review-body.embedded-review .review-toolbar { display: none; }
+.review-body.embedded-review .review-readiness {
+  display: block;
+  margin: .75rem 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.review-body.embedded-review .review-readiness > div,
+.review-body.embedded-review .review-readiness .workspace-gates,
+.review-body.embedded-review .review-readiness .review-blockers { display: none; }
+.review-body.embedded-review .review-readiness > .button { margin: 0; }
 .review-toolbar {
   grid-column: 1 / -1;
   display: flex;

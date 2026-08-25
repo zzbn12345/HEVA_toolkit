@@ -59,6 +59,7 @@ implementation_evidence:
   awaiting_human_review:
     - "F14.16 explicit warning acceptance with retained audit evidence"
     - "F14.17 persisted annotation-substring correction slice"
+    - "F14.18 single embedded document workflow shell"
     - "F14.20 selected valid-subset Data Package export"
   partial:
     - feature: "F14.4 observable and resilient large-document extraction"
@@ -72,7 +73,6 @@ implementation_evidence:
     - "F14.5 PDF evidence navigation"
     - "F14.7-F14.10 remaining intake and usability features"
     - "F14.15 annotation context"
-    - "F14.18 single workflow shell"
     - "F14.19 documentation delivery and special paths"
     - "F14.21 collaborative workspace identity"
 

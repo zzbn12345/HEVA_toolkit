@@ -62,10 +62,13 @@ def create_review_router(
         return template("review_queue.html")
 
     @router.get("/review/{document_id}", response_class=HTMLResponse)
-    def review_document_page(document_id: str) -> str:
-        return template("review_document.html").replace(
-            "DOCUMENT_ID_PLACEHOLDER",
-            document_id,
+    def review_document_page(document_id: str, embedded: bool = False) -> str:
+        """Render standalone navigation or only review content for the document workflow."""
+
+        return (
+            template("review_document.html")
+            .replace("DOCUMENT_ID_PLACEHOLDER", document_id)
+            .replace("EMBEDDED_CLASS_PLACEHOLDER", "embedded-review" if embedded else "")
         )
 
     @router.get("/api/review-queue")
