@@ -202,7 +202,17 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
         review = DocumentReview.model_validate_json(review_path.read_text(encoding="utf-8"))
         gates, reasons = _readiness(package, records, review, curator_ready)
         states = {item.sentence_id: item.status for item in review.sentences}
-        flagged = sum(bool(assess_record(record)) for record in records)
+        accepted = {
+            item.sentence_id: set(item.accepted_warning_codes)
+            for item in review.sentences
+        }
+        flagged = sum(
+            any(
+                flag.code not in accepted.get(record["sentence_id"], set())
+                for flag in assess_record(record)
+            )
+            for record in records
+        )
         completed = sum(
             state in {"approved", "excluded"} for state in states.values()
         )
@@ -328,26 +338,34 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
                 "audit": [],
             }
         )
+        active_flags = []
+        accepted_flags = []
+        if draft_only:
+            active_flags = [{
+                "code": "unresolved_color_mapping",
+                "severity": "warning",
+                "message": "This saved extraction is a raw draft; build canonical annotations with the confirmed color configuration before sentence review.",
+                "evidence": None,
+            }]
+        else:
+            accepted_codes = set(decision.accepted_warning_codes)
+            for flag in assess_record(record):
+                serialized = {
+                    "code": flag.code,
+                    "severity": flag.severity,
+                    "message": flag.message,
+                    "evidence": flag.evidence,
+                }
+                if flag.code in accepted_codes:
+                    accepted_flags.append(serialized)
+                else:
+                    active_flags.append(serialized)
         sentences.append(
             {
                 "record": record,
                 "review": review_value,
-                "flags": ([
-                    {
-                        "code": "unresolved_color_mapping",
-                        "severity": "warning",
-                        "message": "This saved extraction is a raw draft; build canonical annotations with the confirmed color configuration before sentence review.",
-                        "evidence": None,
-                    }
-                ] if draft_only else [
-                    {
-                        "code": flag.code,
-                        "severity": flag.severity,
-                        "message": flag.message,
-                        "evidence": flag.evidence,
-                    }
-                    for flag in assess_record(record)
-                ]),
+                "flags": active_flags,
+                "accepted_flags": accepted_flags,
             }
         )
     all_items = list_review_queue(root)

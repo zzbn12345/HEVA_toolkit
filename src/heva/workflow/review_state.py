@@ -31,7 +31,7 @@ class ReviewError(ValueError):
 class AuditEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    event: Literal["decision", "edit", "source_record_changed"]
+    event: Literal["decision", "edit", "source_record_changed", "warning_accepted"]
     actor: str
     occurred_at: datetime
     details: dict[str, Any] = Field(default_factory=dict)
@@ -47,6 +47,7 @@ class SentenceReview(BaseModel):
     decided_at: datetime | None = None
     comment: str | None = None
     audit: list[AuditEvent] = Field(default_factory=list)
+    accepted_warning_codes: list[str] = Field(default_factory=list)
 
 
 class DocumentReview(BaseModel):
@@ -175,6 +176,67 @@ def record_decisions(
             )
         )
     _write_json(target, review.model_dump(mode="json"))
+    return target
+
+
+def accept_quality_warning(
+    project_root: str | Path,
+    document_id: str,
+    sentence_id: int,
+    code: str,
+    *,
+    reviewer: str,
+    comment: str | None = None,
+) -> Path:
+    """Accept one current non-blocking warning while retaining auditable evidence."""
+
+    if not reviewer.strip():
+        raise ReviewError("Reviewer identity is required.")
+    root = Path(project_root).resolve()
+    _require_editable(root, document_id)
+    package = _package(root, document_id)
+    records = json.loads((package / "annotations.json").read_text(encoding="utf-8"))
+    record = next(
+        (item for item in records if item.get("sentence_id") == sentence_id),
+        None,
+    )
+    if record is None:
+        raise ReviewError(f"Unknown sentence ID: {sentence_id}")
+    from heva.workflow.quality_flags import assess_record
+
+    warning = next(
+        (flag for flag in assess_record(record) if flag.code == code),
+        None,
+    )
+    if warning is None:
+        raise ReviewError(f"Warning {code!r} is not active for sentence {sentence_id}.")
+    if warning.severity != "warning":
+        raise ReviewError("Errors must be corrected and cannot be accepted as warnings.")
+    target = document_workspace_directory(root, document_id) / "review-state.json"
+    review = DocumentReview.model_validate_json(target.read_text(encoding="utf-8"))
+    item = next(
+        (candidate for candidate in review.sentences if candidate.sentence_id == sentence_id),
+        None,
+    )
+    if item is None:
+        raise ReviewError(f"Unknown sentence ID: {sentence_id}")
+    if code not in item.accepted_warning_codes:
+        item.accepted_warning_codes.append(code)
+        item.accepted_warning_codes.sort()
+        item.audit.append(
+            AuditEvent(
+                event="warning_accepted",
+                actor=reviewer.strip(),
+                occurred_at=datetime.now(timezone.utc),
+                details={
+                    "code": code,
+                    "message": warning.message,
+                    "evidence": warning.evidence,
+                    "comment": comment,
+                },
+            )
+        )
+        _write_json(target, review.model_dump(mode="json"))
     return target
 
 

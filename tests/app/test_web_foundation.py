@@ -1548,6 +1548,10 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert '"Ready for validation"' in script
     assert "/validate" in script
     assert "renderDocumentValidation" in script
+    assert "acceptWarning" in script
+    assert "/warnings/" in script
+    assert "Accept warning" in script
+    assert "Accepted warning:" in script
     assert "validationCategory" in script
     assert 'return "People and roles"' in script
     assert "issue.severity" in script

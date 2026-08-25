@@ -10,6 +10,7 @@ import pytest
 from heva.workflow.project_registry import sync_registry
 from heva.workflow.review_state import (
     ReviewError,
+    accept_quality_warning,
     initialize_sentence_reviews,
     record_decisions,
     replace_sentence_record,
@@ -143,3 +144,31 @@ def test_invalid_edit_names_contract_field_and_does_not_write(tmp_path: Path) ->
         )
 
     assert json.loads((package / "annotations.json").read_text())[0] == record(1)
+
+
+def test_warning_acceptance_is_audited_and_survives_reload(tmp_path: Path) -> None:
+    document_id, package = project(tmp_path)
+    records = json.loads((package / "annotations.json").read_text())
+    records[0]["sentence"] = "The historic harbour remains visible"
+    records[0]["tokens"] = ["The", "historic", "harbour", "remains", "visible"]
+    records[0]["ner_tags"] = ["O", "B-historic", "I-historic", "O", "O"]
+    (package / "annotations.json").write_text(json.dumps(records), encoding="utf-8")
+    review_path = initialize_sentence_reviews(tmp_path, document_id)
+
+    accept_quality_warning(
+        tmp_path,
+        document_id,
+        1,
+        "likely_sentence_boundary_error",
+        reviewer="Research Curator",
+        comment="The source block intentionally ends here.",
+    )
+
+    reloaded = json.loads(review_path.read_text())
+    sentence = reloaded["sentences"][0]
+    assert sentence["accepted_warning_codes"] == ["likely_sentence_boundary_error"]
+    assert sentence["audit"][-1]["event"] == "warning_accepted"
+    assert sentence["audit"][-1]["actor"] == "Research Curator"
+    assert sentence["audit"][-1]["details"]["comment"] == (
+        "The source block intentionally ends here."
+    )

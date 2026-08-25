@@ -30,7 +30,11 @@ from heva.workflow.review_queue import (
     load_review_document,
     submit_review_document,
 )
-from heva.workflow.review_state import initialize_sentence_reviews, record_decisions
+from heva.workflow.review_state import (
+    accept_quality_warning,
+    initialize_sentence_reviews,
+    record_decisions,
+)
 
 
 def record(sentence_id: int, sentence: str) -> dict[str, object]:
@@ -360,6 +364,32 @@ def test_canonical_annotations_explain_active_curator_edit_lock(tmp_path: Path) 
     assert "Citation and original annotator metadata do not lock editing" in selected[
         "editability"
     ]["action"]
+
+
+def test_accepted_warning_is_not_an_active_problem_but_remains_visible(tmp_path: Path) -> None:
+    documents = prepared_project(tmp_path)
+    document_id = str(documents[0]["document_id"])
+    curator = add_person(tmp_path, PersonRecord(name="Curator", roles=["curator"]))
+    activate_curator(tmp_path, curator.person_id)
+
+    accept_quality_warning(
+        tmp_path,
+        document_id,
+        2,
+        "unusually_short_sentence",
+        reviewer="Curator",
+    )
+    selected = load_review_document(tmp_path, document_id)
+    sentence = next(
+        item for item in selected["sentences"] if item["record"]["sentence_id"] == 2
+    )
+
+    assert "unusually_short_sentence" not in {
+        flag["code"] for flag in sentence["flags"]
+    }
+    assert "unusually_short_sentence" in {
+        flag["code"] for flag in sentence["accepted_flags"]
+    }
 
 
 def test_document_is_complete_only_when_all_four_gates_pass(tmp_path: Path) -> None:

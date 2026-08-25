@@ -95,6 +95,32 @@ async function decide(sentenceIds, status, comment = null) {
   render();
 }
 
+async function acceptWarning(sentenceId, code) {
+  const comment = window.prompt(
+    "Optional note explaining why this warning is acceptable. Select Cancel to keep it active.",
+    "",
+  );
+  if (comment === null) return;
+  const response = await fetch(
+    `/api/review/${encodeURIComponent(documentId)}/sentences/${sentenceId}/warnings/${encodeURIComponent(code)}`,
+    {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({comment}),
+    },
+  );
+  const result = await response.json();
+  if (!response.ok) {
+    statusBox.className = "notice error";
+    statusBox.textContent = `${result.message} ${result.action}`;
+    return;
+  }
+  reviewDocument = result;
+  render();
+  statusBox.className = "notice success";
+  statusBox.textContent = `Warning ${code} was accepted and retained in the audit history.`;
+}
+
 function renderReadiness() {
   const panel = document.getElementById("review-readiness");
   const gates = document.getElementById("review-gates");
@@ -435,8 +461,27 @@ function sentenceCard(item) {
   if (item.flags.length) {
     const flags = document.createElement("div");
     flags.className = "flag-list";
-    item.flags.forEach((flag) => flags.appendChild(textElement("span", "flag", `${flag.code}: ${flag.message}`)));
+    item.flags.forEach((flag) => {
+      const row = document.createElement("div");
+      row.className = "flag-row";
+      row.appendChild(textElement("span", "flag", `${flag.code}: ${flag.message}`));
+      if (flag.severity === "warning" && editability.editable) {
+        const accept = textElement("button", "button secondary compact", "Accept warning");
+        accept.type = "button";
+        accept.addEventListener("click", () => acceptWarning(record.sentence_id, flag.code));
+        row.appendChild(accept);
+      }
+      flags.appendChild(row);
+    });
     card.appendChild(flags);
+  }
+  if (item.accepted_flags?.length) {
+    const accepted = document.createElement("div");
+    accepted.className = "accepted-flag-list";
+    item.accepted_flags.forEach((flag) => {
+      accepted.appendChild(textElement("span", "accepted-flag", `✓ Accepted warning: ${flag.code}`));
+    });
+    card.appendChild(accepted);
   }
   const actions = document.createElement("div");
   actions.className = "decision-actions";

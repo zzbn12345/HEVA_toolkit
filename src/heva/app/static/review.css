@@ -203,6 +203,11 @@
   border-left: .65rem solid var(--evidence-color, transparent);
 }
 .field-help, .muted { color: var(--muted); font-size: .85rem; }
+.flag-row { display: flex; align-items: center; gap: .65rem; margin-top: .45rem; }
+.flag-row .flag { flex: 1 1 auto; }
+.button.compact { padding: .45rem .7rem; font-size: .82rem; }
+.accepted-flag-list { margin-top: .5rem; }
+.accepted-flag { color: var(--accent); font-size: .85rem; }
 .editor-actions { justify-content: flex-end; }
 .review-pdf { min-height: 0; border-left: 1px solid var(--border); background: #34383f; }
 .review-pdf iframe { width: 100%; height: 100%; border: 0; }

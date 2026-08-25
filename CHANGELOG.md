@@ -48,6 +48,10 @@
 
 ### Added
 
+- Added explicit **Accept warning** decisions for non-blocking automated sentence findings.
+  Accepted warnings leave the active-problem list but retain their code, evidence, curator,
+  timestamp, and optional explanation in review audit history; validation errors cannot be
+  waived this way.
 - Explicit original-annotator assignment per document, backed by stable project-person
   references and distributable identity snapshots that omit private email. The checklist,
   validation, and export now distinguish source authors, original annotators, and curators.

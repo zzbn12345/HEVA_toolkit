@@ -32,6 +32,7 @@ from heva.workflow.review_queue import (
 )
 from heva.workflow.review_state import (
     ReviewError,
+    accept_quality_warning,
     record_decisions,
     replace_sentence_record,
 )
@@ -231,4 +232,43 @@ def create_review_router(
                 status_code=422,
             )
 
+    @router.put("/api/review/{document_id}/sentences/{sentence_id}/warnings/{code}")
+    def accept_sentence_warning(
+        document_id: str,
+        sentence_id: int,
+        code: str,
+        payload: dict,
+    ):
+        """Record a curator's explicit acceptance of one automated warning."""
+
+        comment = payload.get("comment")
+        if comment is not None and not isinstance(comment, str):
+            raise HTTPException(status_code=422, detail="Warning comment must be text.")
+        try:
+            accept_quality_warning(
+                root,
+                document_id,
+                sentence_id,
+                code,
+                reviewer=active_reviewer_name(),
+                comment=comment,
+            )
+            return load_review_document(root, document_id)
+        except (
+            OSError,
+            ValueError,
+            ValidationError,
+            AnnotatorRegistryError,
+            PeopleRegistryError,
+            ReviewError,
+            ReviewQueueError,
+        ) as error:
+            return JSONResponse(
+                {
+                    "code": "warning_disposition_not_saved",
+                    "message": "The warning was not accepted.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
     return router
