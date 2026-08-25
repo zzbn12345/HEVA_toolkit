@@ -2,6 +2,7 @@ import fitz  # PyMuPDF
 import math
 import re
 import spacy
+from collections.abc import Callable
 
 try:
     from .utils import (
@@ -324,7 +325,11 @@ def iter_sentence_word_spans(sentences, global_word_spans):
 
         yield sent, sent_text, sent_start_offset, sent_words, sent_pages
 
-def extract_colored_highlights(pdf_path, color_label_map=None):
+def extract_colored_highlights(
+    pdf_path,
+    color_label_map=None,
+    progress_callback: Callable[[int, int], None] | None = None,
+):
     """
     Extracts highlights along with their exact hex color codes or mapped labels.
     It uses an automated drawing-overlap alignment algorithm to find and map
@@ -486,6 +491,8 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
 
         page_reconstructed_text = page_reconstructed_text.strip()
         if not page_reconstructed_text:
+            if progress_callback is not None:
+                progress_callback(page_num + 1, len(doc))
             continue
 
         # Append page text to global text with a space boundary to prevent splitting sentences on page join
@@ -503,6 +510,8 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
             })
             
         global_reconstructed_text += page_reconstructed_text
+        if progress_callback is not None:
+            progress_callback(page_num + 1, len(doc))
 
     # Refuse corrupted font mappings before NLP can turn them into plausible records.
     require_readable_text_layer(global_reconstructed_text)

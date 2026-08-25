@@ -849,9 +849,15 @@ async function waitForExtraction(documentId) {
     );
     const job = await response.json();
     if (!response.ok) throw new Error(job.detail || "Extraction progress could not be loaded.");
-    progressBar.max = job.total_steps;
-    progressBar.value = job.completed_steps;
-    progressMessage.textContent = `${job.message} Stage ${Math.min(job.completed_steps + 1, job.total_steps)} of ${job.total_steps}.`;
+    if (job.stage === "extracting" && job.total_pages) {
+      progressBar.max = job.total_pages;
+      progressBar.value = job.completed_pages;
+      progressMessage.textContent = `${job.message} Extracted ${job.completed_pages} of ${job.total_pages} source pages.`;
+    } else {
+      progressBar.max = job.total_steps;
+      progressBar.value = job.completed_steps;
+      progressMessage.textContent = `${job.message} Stage ${Math.min(job.completed_steps + 1, job.total_steps)} of ${job.total_steps}.`;
+    }
     status.className = "notice neutral";
     status.textContent = job.message;
     if (["completed", "draft_saved", "failed"].includes(job.state)) return job;

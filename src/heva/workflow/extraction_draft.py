@@ -297,6 +297,7 @@ def run_registered_raw_extraction(
     extractor: Callable[[Path], Sequence[dict[str, Any]]] | None = None,
     extractor_name: str | None = None,
     extractor_version: str = "0.1.0",
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> Path:
     """Extract raw colors for a registered PDF or DOCX and persist the draft."""
 
@@ -308,12 +309,18 @@ def run_registered_raw_extraction(
             if source.suffix.lower() == ".pdf":
                 from heva.extraction.pdf_extractor import extract_colored_highlights
 
-                records = extract_colored_highlights(source, color_label_map=None)
+                records = extract_colored_highlights(
+                    source,
+                    color_label_map=None,
+                    progress_callback=progress_callback,
+                )
                 name = "HEVA PDF extractor"
             elif source.suffix.lower() == ".docx":
                 from heva.extraction.docx_extractor import extract_docx_highlights
 
                 records = extract_docx_highlights(source, color_label_map=None)
+                if progress_callback is not None:
+                    progress_callback(1, 1)
                 name = "HEVA DOCX extractor"
             else:
                 raise ExtractionDraftError(
@@ -329,6 +336,8 @@ def run_registered_raw_extraction(
             ) from error
     else:
         records = extractor(source)
+        if progress_callback is not None:
+            progress_callback(1, 1)
         name = extractor_name or getattr(extractor, "__name__", "custom extractor")
     path = persist_extraction_draft(
         root,

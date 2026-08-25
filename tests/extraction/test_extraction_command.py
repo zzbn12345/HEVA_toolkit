@@ -66,3 +66,4 @@ def test_raw_extraction_runs_through_python_module_command(tmp_path: Path) -> No
     assert records[0]["entities"][0]["label"] == "historic"
     assert records[0]["entities"][0]["color"] == "#FFFF00"
     assert "1 records" in completed.stdout
+    assert "source.pdf: page 1/1" in completed.stderr

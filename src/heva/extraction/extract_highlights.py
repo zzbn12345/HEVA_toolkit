@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Iterable
+import sys
+from collections.abc import Callable, Iterable
 from pathlib import Path
 
 from heva.extraction.docx_extractor import extract_docx_highlights
@@ -43,10 +44,18 @@ def load_color_map(path: Path | None) -> dict[str, str] | None:
     return payload
 
 
-def extract_source(source: Path, color_map: dict[str, str] | None):
-    """Run the shared optimized extractor selected by source suffix."""
+def extract_source(
+    source: Path,
+    color_map: dict[str, str] | None,
+    progress_callback: Callable[[int, int], None] | None = None,
+):
+    """Run the shared adapter and optionally report completed source units."""
     if source.suffix.lower() == ".pdf":
-        return extract_colored_highlights(source, color_label_map=color_map)
+        return extract_colored_highlights(
+            source,
+            color_label_map=color_map,
+            progress_callback=progress_callback,
+        )
     if source.suffix.lower() == ".docx":
         return extract_docx_highlights(source, color_label_map=color_map)
     raise ValueError(f"Unsupported source format: {source.suffix or '(none)'}")
@@ -117,7 +126,14 @@ def main(argv: Iterable[str] | None = None) -> int:
     failed = False
     for source in sources:
         try:
-            records = extract_source(source, color_map)
+            records = extract_source(
+                source,
+                color_map,
+                progress_callback=lambda completed, total: print(
+                    f"{source.name}: page {completed}/{total}",
+                    file=sys.stderr,
+                ),
+            )
             destination = output_path_for(
                 source,
                 explicit_output=args.output,

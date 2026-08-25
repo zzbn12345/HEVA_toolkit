@@ -369,7 +369,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=24"' in response.text
+    assert 'src="/static/create.js?v=25"' in response.text
     assert 'href="/static/create.css?v=13"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -660,6 +660,9 @@ def test_extraction_interface_polls_background_stages_and_shows_errors() -> None
     assert "progress.hidden = false" in script
     assert "progress.hidden = true" in script
     assert "/extraction/progress" in script
+    assert 'job.stage === "extracting" && job.total_pages' in script
+    assert "job.completed_pages" in script
+    assert "of ${job.total_pages} source pages" in script
     assert "Stage ${Math.min(job.completed_steps + 1, job.total_steps)}" in script
     assert "still running after ten minutes" in script
     assert "result.message" in script
@@ -697,8 +700,10 @@ def test_extraction_endpoint_persists_raw_evidence_before_canonical_promotion(
 ) -> None:
     calls = []
 
-    def fake_raw(root, document_id):
+    def fake_raw(root, document_id, *, progress_callback=None):
         calls.append(("raw", document_id))
+        progress_callback(1, 4)
+        progress_callback(4, 4)
 
     def fake_promote(root, document_id):
         calls.append(("canonical", document_id))
@@ -723,6 +728,8 @@ def test_extraction_endpoint_persists_raw_evidence_before_canonical_promotion(
     progress = client.get("/api/documents/HEVA-TEST/extraction/progress").json()
     assert progress["state"] == "completed"
     assert progress["completed_steps"] == 3
+    assert progress["completed_pages"] == 4
+    assert progress["total_pages"] == 4
     assert progress["result"]["record_count"] == 3
 
 
@@ -734,7 +741,7 @@ def test_pending_color_map_keeps_successful_raw_extraction_as_draft(
 
     calls = []
 
-    def fake_raw(root, document_id):
+    def fake_raw(root, document_id, *, progress_callback=None):
         calls.append(("raw", document_id))
 
     def pending_map(root, document_id):
@@ -761,7 +768,7 @@ def test_missing_extraction_dependency_is_reported_clearly(
 ) -> None:
     """A missing optional extractor package must become a useful UI error."""
 
-    def missing_dependency(root, document_id):
+    def missing_dependency(root, document_id, *, progress_callback=None):
         raise ModuleNotFoundError("No module named 'spacy'", name="spacy")
 
     monkeypatch.setattr(
@@ -786,7 +793,7 @@ def test_color_discovery_reports_missing_extraction_dependency(
 ) -> None:
     """Color discovery must expose dependency failures instead of returning server errors."""
 
-    def missing_dependency(root, document_id):
+    def missing_dependency(root, document_id, *, progress_callback=None):
         raise ModuleNotFoundError("No module named 'spacy'", name="spacy")
 
     monkeypatch.setattr(

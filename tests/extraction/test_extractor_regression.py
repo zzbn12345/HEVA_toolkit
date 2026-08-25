@@ -70,6 +70,29 @@ def test_pdf_extractor_reads_generated_highlight_and_mapping(tmp_path: Path) -> 
     assert mapped[0]["entities"][0]["label"] == "historic"
 
 
+def test_pdf_extractor_reports_each_source_page_before_sentence_nlp(tmp_path: Path) -> None:
+    """Page progress reflects completed adapter reads without claiming NLP completion."""
+
+    source = tmp_path / "two-pages.pdf"
+    document = fitz.open()
+    for text in ("Historic harbour remains.", "Political use continues."):
+        page = document.new_page()
+        page.insert_text((100, 100), text, fontsize=12)
+        highlighted = page.search_for(text.split()[0])[0]
+        page.draw_rect(highlighted, fill=(1, 1, 0), color=None, overlay=False)
+    document.save(source)
+    document.close()
+    progress: list[tuple[int, int]] = []
+
+    records = extract_colored_highlights(
+        source,
+        progress_callback=lambda completed, total: progress.append((completed, total)),
+    )
+
+    assert len(records) == 2
+    assert progress == [(1, 2), (2, 2)]
+
+
 def test_table_pdf_with_broken_font_encoding_fails_before_persisting_gibberish() -> None:
     """The authorized Alpha table fixture must fail honestly instead of yielding cipher text."""
 

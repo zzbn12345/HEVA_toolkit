@@ -926,6 +926,16 @@ def create_project_router(
     def run_extraction_job(document_id: str) -> None:
         """Run extraction off the request path while publishing honest stage changes."""
 
+        def publish_page_progress(completed: int, total: int) -> None:
+            """Expose source-adapter progress without claiming NLP or persistence is done."""
+
+            extraction_jobs.update(
+                document_id,
+                completed_pages=completed,
+                total_pages=total,
+                message=f"Reading source page {completed} of {total}.",
+            )
+
         try:
             extraction_jobs.update(
                 document_id,
@@ -934,7 +944,11 @@ def create_project_router(
                 message="Reading the source and extracting colored text.",
                 completed_steps=0,
             )
-            run_registered_raw_extraction(root, document_id)
+            run_registered_raw_extraction(
+                root,
+                document_id,
+                progress_callback=publish_page_progress,
+            )
             extraction_jobs.update(
                 document_id,
                 stage="compiling",

@@ -30,6 +30,8 @@ class ExtractionJobRegistry:
                 "message": "Extraction is queued.",
                 "completed_steps": 0,
                 "total_steps": 3,
+                "completed_pages": 0,
+                "total_pages": None,
                 "started_at": now,
                 "updated_at": now,
                 "result": None,

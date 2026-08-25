@@ -62,6 +62,9 @@
 
 ### Added
 
+- Added honest PDF page progress to the shared extractor, web background job, and command-line
+  adapter. During source reading the app reports completed pages against the actual total,
+  then returns to explicit compiling and persistence stages without implying resumability.
 - Added deterministic document selection to Data Package generation. Python callers and the
   module command can export one or several valid registered documents while invalid
   unselected project documents remain explicitly recorded as excluded membership. In the

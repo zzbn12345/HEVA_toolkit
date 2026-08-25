@@ -57,6 +57,10 @@ Use `--all` instead of `--document-id` to process every registered document. Bot
 commands call the same optimized PDF and DOCX extraction adapters used by the web
 application.
 
+For PDFs, progress callbacks and the module command report completed source pages against
+the actual page total. This covers the PDF-reading stage only; it does not imply that NLP or
+persistence has completed, and extraction is not yet resumable by page.
+
 ## Responsibilities
 
 - `pdf_extractor.py` aligns PDF text with colored drawings and font evidence.
