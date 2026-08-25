@@ -66,8 +66,8 @@ implementation_evidence:
       delivered: "Measured loop optimizations, command-line parity, live extraction stages, and actual PDF page totals"
       remains: "Page scope, cancellation, checkpoint resume, representative large-PDF evidence"
     - feature: "F14.17 strict annotation correction"
-      delivered: "Direct API persistence of annotation substrings with immutable source evidence"
-      remains: "P0 browser editing journey; then annotation add/remove/exclusion and exceptional source-typo correction"
+      delivered: "Direct API persistence plus F14.17B two-layer source/curated sentence correction in the browser, contract, quality checks, JSON, and CSV"
+      remains: "P0 browser editing journey acceptance review; then annotation add/remove/exclusion"
   unstarted:
     - "F14.5 PDF evidence navigation"
     - "F14.7-F14.10 remaining intake and usability features"

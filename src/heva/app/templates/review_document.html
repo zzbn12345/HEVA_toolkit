@@ -93,12 +93,16 @@
         </div>
         <button id="close-sentence-editor" class="button secondary" type="button">Close</button>
       </div>
-      <p class="muted">Correct extracted text only. Page, label, and color are displayed as read-only evidence. Each corrected phrase must occur exactly in the sentence.</p>
+      <p class="muted">Correct transcription or OCR errors in the curated sentence when needed. The extracted source remains unchanged. Annotation text must occur exactly in the effective sentence.</p>
       <div id="sentence-editor-error" class="notice error" aria-live="assertive" hidden></div>
       <section class="source-sentence-evidence" aria-labelledby="source-sentence-title">
         <strong id="source-sentence-title">Source sentence — read only</strong>
         <p id="edit-source-sentence"></p>
       </section>
+      <label>Curated sentence <span class="muted">(optional)</span>
+        <textarea id="edit-curated-sentence" rows="4" aria-describedby="curated-sentence-help"></textarea>
+      </label>
+      <p id="curated-sentence-help" class="field-help">Leave this identical to the source when no transcription correction is needed. HEVA stores only a distinct correction.</p>
       <div class="editor-grid">
         <label>Sentence ID
           <input id="edit-sentence-id" type="number" readonly>

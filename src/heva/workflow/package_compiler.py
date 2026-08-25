@@ -31,6 +31,7 @@ CSV_FIELDS = (
     "sentence_id",
     "page",
     "sentence",
+    "curated_sentence",
     "values",
     "tokens",
     "entities",
@@ -51,6 +52,9 @@ def _decode_row(row: dict[str, str], row_number: int) -> tuple[str, dict[str, An
     decoded: dict[str, Any] = {}
     for field in CSV_FIELDS[1:]:
         value = row.get(field)
+        if value is None and field == "curated_sentence":
+            decoded[field] = None
+            continue
         if value is None:
             raise PackageCompileError(f"CSV row {row_number}: missing column {field}.")
         if field in JSON_FIELDS:
@@ -67,6 +71,8 @@ def _decode_row(row: dict[str, str], row_number: int) -> tuple[str, dict[str, An
                 raise PackageCompileError(
                     f"CSV row {row_number}, {field}: expected an integer."
                 ) from error
+        elif field == "curated_sentence":
+            decoded[field] = value or None
         else:
             decoded[field] = value
     result = validate_record(decoded)
@@ -85,7 +91,10 @@ def load_compilation_rows(csv_path: str | Path) -> dict[str, list[dict[str, Any]
     try:
         with path.open(newline="", encoding="utf-8-sig") as stream:
             reader = csv.DictReader(stream)
-            missing = [field for field in CSV_FIELDS if field not in (reader.fieldnames or [])]
+            required_fields = [field for field in CSV_FIELDS if field != "curated_sentence"]
+            missing = [
+                field for field in required_fields if field not in (reader.fieldnames or [])
+            ]
             if missing:
                 raise PackageCompileError(
                     f"CSV is missing required columns: {', '.join(missing)}."

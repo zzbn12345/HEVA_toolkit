@@ -48,7 +48,7 @@ def assess_record(
 
     config = thresholds or QualityThresholds()
     flags: list[QualityFlag] = []
-    sentence = record.get("sentence")
+    sentence = record.get("curated_sentence") or record.get("sentence")
     tokens = record.get("tokens")
     if not isinstance(sentence, str) or not sentence.strip():
         flags.append(

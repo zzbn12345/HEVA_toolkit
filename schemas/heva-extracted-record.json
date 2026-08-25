@@ -19,6 +19,11 @@
       "constraints": {"required": true}
     },
     {
+      "name": "curated_sentence",
+      "type": "string",
+      "description": "Optional human-corrected sentence. When present, entity offsets, tokens, and BIO tags refer to this text."
+    },
+    {
       "name": "tokens",
       "type": "array",
       "constraints": {"required": true}

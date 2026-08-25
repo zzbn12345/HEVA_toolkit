@@ -10,6 +10,9 @@
 
 ### Changed
 
+- Added an optional curated sentence alongside immutable extracted source text. Annotation
+  offsets, tokens, BIO tags, quality checks, JSON, and CSV now use or expose the curated
+  sentence when a researcher corrects a transcription or OCR error.
 - Reduced Alpha validation to annotation Data Package requirements. Detailed per-document
   source authorization/access fields and color-detection method remain optional workspace
   provenance; dataset-level license and rights remain mandatory for export.

@@ -641,6 +641,7 @@ def _csv_text(rows: list[dict[str, Any]]) -> str:
         "sentence_id",
         "page",
         "sentence",
+        "curated_sentence",
         "values",
         "tokens",
         "entities",
@@ -656,7 +657,7 @@ def _csv_text(rows: list[dict[str, Any]]) -> str:
                 key: (
                     json.dumps(row[key], ensure_ascii=False, sort_keys=True, separators=(",", ":"))
                     if key in {"values", "tokens", "entities", "ner_tags"}
-                    else row[key]
+                    else row.get(key, "")
                 )
                 for key in fields
             }

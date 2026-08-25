@@ -63,6 +63,7 @@ class RecordInput(BaseModel):
     sentence_id: StrictInt
     page: StrictInt
     sentence: StrictStr
+    curated_sentence: StrictStr | None = None
     tokens: list[StrictStr]
     values: list[StrictStr]
     entities: list[EntityInput]
@@ -107,6 +108,7 @@ class CanonicalRecord:
     sentence_id: int
     page: int
     sentence: str
+    curated_sentence: str | None
     tokens: tuple[str, ...]
     values: tuple[str, ...]
     entities: tuple[Entity, ...]
@@ -124,6 +126,8 @@ class CanonicalRecord:
         descriptor["ner_tags"] = list(self.ner_tags)
         if self.mapping_provenance is None:
             descriptor.pop("mapping_provenance")
+        if self.curated_sentence is None:
+            descriptor.pop("curated_sentence")
         for entity in descriptor["entities"]:
             if entity["color"] is None:
                 entity.pop("color")
@@ -298,10 +302,22 @@ def validate_record(value: Any) -> ValidationResult:
     sentence_id = parsed.sentence_id
     page = parsed.page
     sentence = parsed.sentence
+    curated_sentence = parsed.curated_sentence
+    if curated_sentence == sentence:
+        curated_sentence = None
+    if curated_sentence is not None and not curated_sentence.strip():
+        issues.append(
+            _issue(
+                "invalid_curated_sentence",
+                "$.curated_sentence",
+                "A curated sentence cannot be empty.",
+            )
+        )
+    effective_sentence = curated_sentence or sentence
     tokens = tuple(parsed.tokens)
     values = tuple(parsed.values)
     ner_tags = tuple(parsed.ner_tags)
-    entities = _parse_entities(parsed.entities, sentence, issues)
+    entities = _parse_entities(parsed.entities, effective_sentence, issues)
     schema_version = parsed.schema_version
     if sentence_id < 1:
         issues.append(_issue("invalid_type", "$.sentence_id", "Expected an integer greater than zero."))
@@ -351,6 +367,7 @@ def validate_record(value: Any) -> ValidationResult:
         sentence_id=sentence_id,
         page=page,
         sentence=sentence,
+        curated_sentence=curated_sentence,
         tokens=tokens,
         values=values,
         entities=entities,

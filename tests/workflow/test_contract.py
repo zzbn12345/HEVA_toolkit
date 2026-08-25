@@ -55,6 +55,7 @@ def test_schema_descriptor_describes_existing_and_versioned_fields() -> None:
         "sentence_id",
         "page",
         "sentence",
+        "curated_sentence",
         "tokens",
         "values",
         "entities",
@@ -73,6 +74,32 @@ def test_valid_record_preserves_color_and_mapping_provenance() -> None:
     assert result.record.mapping_provenance is not None
     assert result.record.mapping_provenance.method == "human_reviewed"
     assert result.record.to_dict()["mapping_provenance"]["status"] == "approved"
+
+
+def test_curated_sentence_is_the_annotation_coordinate_space() -> None:
+    record = representative_record()
+    record["curated_sentence"] = "The historic harbor remains visible."
+    record["tokens"] = ["The", "historic", "harbor", "remains", "visible", "."]
+    record["entities"][0].update(start=4, end=19, text="historic harbor")
+
+    result = validate_record(record)
+
+    assert result.valid
+    assert result.record is not None
+    assert result.record.sentence == "The historic harbour remains visible."
+    assert result.record.curated_sentence == "The historic harbor remains visible."
+    assert result.record.to_dict()["curated_sentence"] == record["curated_sentence"]
+
+
+def test_redundant_curated_sentence_is_omitted() -> None:
+    record = representative_record()
+    record["curated_sentence"] = record["sentence"]
+
+    result = validate_record(record)
+
+    assert result.valid
+    assert result.record is not None
+    assert "curated_sentence" not in result.record.to_dict()
 
 
 @pytest.mark.parametrize(

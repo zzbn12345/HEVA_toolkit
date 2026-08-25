@@ -248,7 +248,7 @@ def replace_sentence_record(
     *,
     editor: str,
 ) -> None:
-    """Persist annotation-span corrections without altering immutable source evidence."""
+    """Persist curated text and annotation corrections while retaining source evidence."""
 
     result = validate_record(replacement)
     if not result.valid or result.record is None:
@@ -271,7 +271,7 @@ def replace_sentence_record(
     before = records[index]
     after = result.record.to_dict()
     immutable_fields = (
-        "sentence_id", "page", "sentence", "tokens", "schema_version",
+        "sentence_id", "page", "sentence", "schema_version",
         "mapping_provenance",
     )
     changed_immutable = [
@@ -281,8 +281,13 @@ def replace_sentence_record(
         raise ReviewError(
             "Source sentence evidence cannot be edited during annotation curation: "
             + ", ".join(changed_immutable)
-            + ". Correct only extracted annotation text that occurs in the sentence."
+            + ". Use curated_sentence for transcription or OCR corrections."
         )
+    if before.get("curated_sentence") == after.get("curated_sentence"):
+        if before.get("tokens") != after.get("tokens"):
+            raise ReviewError(
+                "Tokens can change only when the curated sentence changes."
+            )
     before_entities = before.get("entities", [])
     after_entities = after.get("entities", [])
     if len(before_entities) != len(after_entities):

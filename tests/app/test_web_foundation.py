@@ -1797,6 +1797,57 @@ def test_invalid_sentence_correction_reports_field_and_preserves_record(tmp_path
     assert json.loads((package / "annotations.json").read_text()) == [original]
 
 
+def test_sentence_correction_route_retains_source_and_returns_curated_text(
+    tmp_path: Path,
+) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    entry = registry["documents"][0]
+    package = tmp_path / entry["package_path"]
+    original = {
+        "sentence_id": 1,
+        "page": 1,
+        "sentence": "A historic prot.",
+        "tokens": ["A", "historic", "prot", "."],
+        "values": ["historic"],
+        "entities": [{
+            "start": 2, "end": 15, "text": "historic prot",
+            "label": "historic", "color": "#FFFF00",
+        }],
+        "ner_tags": ["O", "B-historic", "I-historic", "O"],
+        "schema_version": "1.0",
+    }
+    (package / "annotations.json").write_text(json.dumps([original]), encoding="utf-8")
+    initialize_sentence_reviews(tmp_path, entry["document_id"])
+    curator = add_person(tmp_path, PersonRecord(name="Sentence Curator", roles=["curator"]))
+    activate_curator(tmp_path, curator.person_id)
+    client = TestClient(create_app(tmp_path))
+    corrected = {
+        **original,
+        "curated_sentence": "A historic port.",
+        "tokens": ["A", "historic", "port", "."],
+        "entities": [{
+            "start": 2, "end": 15, "text": "historic port",
+            "label": "historic", "color": "#FFFF00",
+        }],
+    }
+
+    response = client.put(
+        f"/api/review/{entry['document_id']}/sentences/1",
+        json={"record": corrected},
+    )
+
+    assert response.status_code == 200
+    returned = response.json()["sentences"][0]["record"]
+    assert returned["sentence"] == "A historic prot."
+    assert returned["curated_sentence"] == "A historic port."
+    persisted = json.loads((package / "annotations.json").read_text())[0]
+    assert persisted == corrected
+
+
 def test_review_queue_asset_always_offers_edit_annotation_action() -> None:
     script = (
         Path(__file__).parents[2]

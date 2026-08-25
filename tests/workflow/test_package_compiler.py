@@ -29,7 +29,7 @@ def write_csv(path: Path, document_id: str, item: dict[str, object]) -> None:
                     key: (
                         json.dumps(item[key], ensure_ascii=False)
                         if key in {"values", "tokens", "entities", "ner_tags"}
-                        else item[key]
+                        else item.get(key, "")
                     )
                     for key in CSV_FIELDS[1:]
                 },

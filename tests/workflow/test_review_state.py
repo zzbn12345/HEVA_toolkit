@@ -128,6 +128,31 @@ def test_edit_rejects_changes_to_immutable_source_sentence(tmp_path: Path) -> No
     assert json.loads((package / "annotations.json").read_text())[0] == record(1)
 
 
+def test_edit_persists_curated_sentence_without_replacing_source(tmp_path: Path) -> None:
+    document_id, package = project(tmp_path)
+    initialize_sentence_reviews(tmp_path, document_id)
+    replacement = record(1)
+    replacement["curated_sentence"] = "The historic harbor remains visible."
+    replacement["tokens"] = ["The", "historic", "harbor", "remains", "visible", "."]
+    replacement["entities"] = [{
+        "start": 4, "end": 19, "text": "historic harbor",
+        "label": "historic", "color": "#FF40FF",
+    }]
+
+    replace_sentence_record(
+        tmp_path, document_id, 1, replacement, editor="Research Curator"
+    )
+
+    persisted = json.loads((package / "annotations.json").read_text())[0]
+    assert persisted["sentence"] == "The historic harbour remains visible."
+    assert persisted["curated_sentence"] == "The historic harbor remains visible."
+    assert persisted["entities"][0]["text"] == "historic harbor"
+    review = json.loads(
+        (tmp_path / ".heva/documents" / document_id / "review-state.json").read_text()
+    )
+    assert review["sentences"][0]["audit"][-1]["actor"] == "Research Curator"
+
+
 def test_invalid_edit_names_contract_field_and_does_not_write(tmp_path: Path) -> None:
     document_id, package = project(tmp_path)
     initialize_sentence_reviews(tmp_path, document_id)

@@ -37,7 +37,8 @@ function contrastColor(hex) {
 function highlightedSentence(record) {
   const paragraph = document.createElement("p");
   paragraph.className = "sentence-text annotated-sentence";
-  const boundaries = new Set([0, record.sentence.length]);
+  const sentence = record.curated_sentence || record.sentence;
+  const boundaries = new Set([0, sentence.length]);
   record.entities.forEach((entity) => {
     boundaries.add(entity.start);
     boundaries.add(entity.end);
@@ -46,7 +47,7 @@ function highlightedSentence(record) {
   for (let index = 0; index < positions.length - 1; index += 1) {
     const start = positions[index];
     const end = positions[index + 1];
-    const text = record.sentence.slice(start, end);
+    const text = sentence.slice(start, end);
     const active = record.entities.filter(
       (entity) => entity.start <= start && entity.end >= end,
     );
@@ -317,6 +318,8 @@ function openEditor(record) {
   document.getElementById("edit-sentence-id").value = record.sentence_id;
   document.getElementById("edit-page").value = record.page;
   document.getElementById("edit-source-sentence").textContent = record.sentence;
+  document.getElementById("edit-curated-sentence").value =
+    record.curated_sentence || record.sentence;
   entityRows.replaceChildren(...record.entities.map(entityRow));
   editor.showModal();
 }
@@ -368,12 +371,25 @@ function deriveBioTags(sentence, tokens, entities) {
   });
 }
 
+function tokenizeSentence(sentence) {
+  return sentence.match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || [];
+}
+
 function correctedRecord() {
+  const sourceSentence = editingRecord.sentence;
+  const editedSentence = document.getElementById("edit-curated-sentence").value.trim();
+  if (!editedSentence) {
+    throw new Error("The curated sentence cannot be empty.");
+  }
+  const effectiveSentence = editedSentence === sourceSentence ? sourceSentence : editedSentence;
+  const tokens = effectiveSentence === sourceSentence
+    ? editingRecord.tokens
+    : tokenizeSentence(effectiveSentence);
   const entities = [...entityRows.querySelectorAll(".entity-row")].map((row) => {
     const value = (name) => row.querySelector(`[data-entity-field="${name}"]`).value;
     const text = value("text").trim();
     const start = locateExtraction(
-      editingRecord.sentence,
+      effectiveSentence,
       text,
       Number(row.dataset.originalStart),
     );
@@ -389,11 +405,13 @@ function correctedRecord() {
   });
   return {
     ...editingRecord,
+    curated_sentence: effectiveSentence === sourceSentence ? null : effectiveSentence,
     sentence_id: Number(document.getElementById("edit-sentence-id").value),
     page: Number(document.getElementById("edit-page").value),
     values: [...new Set(entities.map((entity) => entity.label))],
     entities,
-    ner_tags: deriveBioTags(editingRecord.sentence, editingRecord.tokens, entities),
+    tokens,
+    ner_tags: deriveBioTags(effectiveSentence, tokens, entities),
   };
 }
 
