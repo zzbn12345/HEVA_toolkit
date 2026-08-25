@@ -321,6 +321,65 @@ def test_validated_release_is_deterministic_and_excludes_working_files(tmp_path:
     assert all(resource["hash"].startswith("sha256:") for resource in descriptor["resources"])
 
 
+def test_release_can_select_valid_documents_without_invalid_project_neighbors(
+    tmp_path: Path,
+) -> None:
+    valid_id, _, _ = project(tmp_path)
+    (tmp_path / "documents" / "unfinished.pdf").write_bytes(b"unfinished")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    unfinished_id = next(
+        item["document_id"]
+        for item in registry["documents"]
+        if item["document_id"] != valid_id
+    )
+
+    target = build_release(tmp_path, document_ids=[valid_id])
+
+    payload = json.loads((target / "heva-annotations.json").read_text())
+    build_log = json.loads((target / "build-log.json").read_text())
+    assert payload["membership"] == [valid_id]
+    assert payload["excluded_project_document_ids"] == [unfinished_id]
+    assert build_log["excluded_project_document_ids"] == [unfinished_id]
+
+
+def test_release_rejects_empty_duplicate_or_unknown_selection(tmp_path: Path) -> None:
+    valid_id, _, _ = project(tmp_path)
+
+    with pytest.raises(PackageValidationError, match="at least one"):
+        build_release(tmp_path, document_ids=[])
+    with pytest.raises(PackageValidationError, match="duplicate"):
+        build_release(tmp_path, document_ids=[valid_id, valid_id])
+    with pytest.raises(PackageValidationError, match="Unknown"):
+        build_release(tmp_path, document_ids=["HEVA-UNKNOWN"])
+
+
+def test_release_cli_accepts_repeated_document_selection(tmp_path: Path) -> None:
+    valid_id, _, _ = project(tmp_path)
+    output = tmp_path / "selected-release"
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "heva.workflow.package_validator",
+            str(tmp_path),
+            "release",
+            "--output",
+            str(output),
+            "--document-id",
+            valid_id,
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    payload = json.loads((output / "heva-annotations.json").read_text())
+    assert payload["membership"] == [valid_id]
+
+
 def test_legacy_done_status_does_not_require_curator_acceptance(
     tmp_path: Path,
 ) -> None:

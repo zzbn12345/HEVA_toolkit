@@ -8,7 +8,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
-from typing import Any, Iterable, Literal
+from typing import Any, Iterable, Literal, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
@@ -668,8 +668,9 @@ def build_release(
     project_root: str | Path,
     *,
     output_directory: str | Path = DEFAULT_RELEASE_DIRECTORY,
+    document_ids: Sequence[str] | None = None,
 ) -> Path:
-    """Build a deterministic Data Package from HEVA-valid registered documents."""
+    """Build a deterministic Data Package from selected HEVA-valid documents."""
 
     root = Path(project_root).resolve()
     try:
@@ -684,8 +685,21 @@ def build_release(
     registry = ProjectRegistry.model_validate_json(
         (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")
     )
+    registered_ids = {entry.document_id for entry in registry.documents}
+    if document_ids is not None:
+        selected_ids = list(document_ids)
+        if not selected_ids:
+            raise PackageValidationError("Select at least one document for export.")
+        if len(selected_ids) != len(set(selected_ids)):
+            raise PackageValidationError("Document selection contains duplicate IDs.")
+        unknown = sorted(set(selected_ids) - registered_ids)
+        if unknown:
+            raise PackageValidationError(f"Unknown selected document IDs: {unknown}")
+        selected = set(selected_ids)
+    else:
+        selected = registered_ids
     documents_to_export = sorted(
-        registry.documents,
+        (entry for entry in registry.documents if entry.document_id in selected),
         key=lambda item: (item.source_path, item.document_id),
     )
     if not documents_to_export:
@@ -760,6 +774,7 @@ def build_release(
         "document_count": len(documents),
         "record_count": len(rows),
         "membership": [document["document_id"] for document in documents],
+        "excluded_project_document_ids": sorted(registered_ids - selected),
         "documents": documents,
     }
     _write_json(target / "heva-annotations.json", payload)
@@ -778,6 +793,7 @@ def build_release(
             }
             for document in documents
         ],
+        "excluded_project_document_ids": sorted(registered_ids - selected),
         "excluded_working_evidence": [
             "source documents",
             "review-state.json",
@@ -840,6 +856,11 @@ def main(argv: Iterable[str] | None = None) -> int:
     )
     release = commands.add_parser("release")
     release.add_argument("--output", default=DEFAULT_RELEASE_DIRECTORY.as_posix())
+    release.add_argument(
+        "--document-id",
+        action="append",
+        help="Export only this registered document; repeat to select several.",
+    )
     args = parser.parse_args(list(argv) if argv is not None else None)
     try:
         if args.command == "validate":
@@ -860,7 +881,11 @@ def main(argv: Iterable[str] | None = None) -> int:
                 report_path.write_text(rendered + "\n", encoding="utf-8")
             print(rendered if args.json else format_validation_report(report))
             return 0 if report.valid else 1
-        target = build_release(args.project_root, output_directory=args.output)
+        target = build_release(
+            args.project_root,
+            output_directory=args.output,
+            document_ids=args.document_id,
+        )
         print(f"HEVA release written to {target}")
         return 0
     except (PackageValidationError, OSError, ValidationError, ValueError) as error:
