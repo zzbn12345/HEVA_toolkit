@@ -25,6 +25,9 @@
 
 ### Fixed
 
+- Localized annotation and sentence-review validation findings with document ID, canonical
+  JSON path, record index, and sentence ID where available. Sentence findings now link to
+  and reveal the exact sentence across paginated review results.
 - Persist annotation-text corrections while keeping source sentences, tokens, pages,
   labels, and colors immutable. The editor now shows the full read-only sentence, attributes
   changes to the active curator, and explains whether color configuration or curator identity

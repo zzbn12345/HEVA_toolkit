@@ -1555,6 +1555,11 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert "validationCategory" in script
     assert 'return "People and roles"' in script
     assert "issue.severity" in script
+    assert "issue.document_id" in script
+    assert "issue.sentence_id" in script
+    assert "issue.path" in script
+    assert "Go to sentence" in script
+    assert "scrollIntoView" in script
     assert 'button.textContent = "Validate document"' in script
 
 

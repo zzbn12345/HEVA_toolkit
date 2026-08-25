@@ -197,11 +197,33 @@ function renderDocumentValidation(payload) {
     findings.className = "validation-findings";
     issues.forEach((issue) => {
       const item = document.createElement("li");
+      const location = [
+        `Document ${issue.document_id}`,
+        issue.sentence_id == null ? null : `Sentence ${issue.sentence_id}`,
+        issue.path,
+      ].filter(Boolean).join(" · ");
       item.append(
         textElement("strong", `validation-severity ${issue.severity}`, `${issue.severity}: ${issue.code}`),
+        textElement("small", "validation-location", location),
         textElement("span", "", issue.message),
         textElement("small", "", `Fix: ${issue.action}`),
       );
+      if (issue.sentence_id != null) {
+        const link = textElement("a", "validation-fix-link", `Go to sentence ${issue.sentence_id}`);
+        link.href = `#sentence-${issue.sentence_id}`;
+        link.addEventListener("click", () => {
+          document.getElementById("review-filter").value = "all";
+          const index = reviewDocument.sentences.findIndex(
+            (entry) => entry.record.sentence_id === issue.sentence_id,
+          );
+          currentSentencePage = Math.floor(index / Number(document.getElementById("page-size").value)) + 1;
+          render();
+          window.requestAnimationFrame(() => {
+            document.getElementById(`sentence-${issue.sentence_id}`)?.scrollIntoView({behavior: "smooth", block: "center"});
+          });
+        });
+        item.appendChild(link);
+      }
       findings.appendChild(item);
     });
     section.appendChild(findings);
@@ -437,6 +459,7 @@ function sentenceCard(item) {
   const card = document.createElement("article");
   card.className = `sentence-card${item.flags.length ? " problematic" : ""}`;
   card.dataset.status = item.review.status;
+  card.id = `sentence-${record.sentence_id}`;
   card.dataset.problematic = String(Boolean(item.flags.length));
   if (selectedSentenceIds.has(record.sentence_id)) card.classList.add("selected");
   const selection = document.createElement("label");

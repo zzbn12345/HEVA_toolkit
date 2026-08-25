@@ -216,6 +216,12 @@ def test_incomplete_review_blocks_export(tmp_path: Path) -> None:
     with pytest.raises(PackageValidationError, match="sentence_review_incomplete"):
         build_release(tmp_path)
 
+    report = validate_document_package(tmp_path, document_id)
+    issue = next(item for item in report.issues if item.code == "sentence_review_incomplete")
+    assert issue.sentence_id == review["sentences"][0]["sentence_id"]
+    assert f"sentence_id={issue.sentence_id}" in issue.path
+    assert "this sentence" in issue.action
+
 
 def test_changed_sentence_invalidates_its_existing_review(tmp_path: Path) -> None:
     document_id, package, _ = project(tmp_path)
@@ -226,6 +232,8 @@ def test_changed_sentence_invalidates_its_existing_review(tmp_path: Path) -> Non
     report = validate_document_package(tmp_path, document_id)
 
     assert "stale_sentence_review" in {item.code for item in report.issues}
+    stale = next(item for item in report.issues if item.code == "stale_sentence_review")
+    assert stale.sentence_id == annotations[0]["sentence_id"]
     assert not report.valid
 
 

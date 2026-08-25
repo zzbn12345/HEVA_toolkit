@@ -101,6 +101,8 @@ class ValidationIssue(BaseModel):
     message: str
     action: str
     guide: str
+    sentence_id: int | None = None
+    record_index: int | None = None
 
 
 class DocumentValidation(BaseModel):
@@ -175,6 +177,9 @@ def _issue(
     message: str,
     action: str,
     severity: Literal["error", "warning"] = "error",
+    *,
+    sentence_id: int | None = None,
+    record_index: int | None = None,
 ) -> ValidationIssue:
     return ValidationIssue(
         code=code,
@@ -184,6 +189,8 @@ def _issue(
         message=message,
         action=action,
         guide=_guide_for_issue(code, path),
+        sentence_id=sentence_id,
+        record_index=record_index,
     )
 
 
@@ -361,6 +368,11 @@ def validate_document_package(
             seen_ids: set[int] = set()
             for index, value in enumerate(annotations_value):
                 result = validate_record(value)
+                sentence_id = (
+                    value.get("sentence_id")
+                    if isinstance(value, dict) and isinstance(value.get("sentence_id"), int)
+                    else None
+                )
                 for item in result.issues:
                     issues.append(
                         _issue(
@@ -369,6 +381,8 @@ def validate_document_package(
                             f"$.annotations[{index}]{item.path[1:]}",
                             item.message,
                             "Correct the sentence record and run validation again.",
+                            sentence_id=sentence_id,
+                            record_index=index,
                         )
                     )
                 if result.valid and result.record is not None:
@@ -382,6 +396,8 @@ def validate_document_package(
                                 f"$.annotations[{index}].sentence_id",
                                 f"Sentence ID {sentence_id} occurs more than once.",
                                 "Assign a unique, stable sentence ID within the document.",
+                                sentence_id=sentence_id,
+                                record_index=index,
                             )
                         )
                     seen_ids.add(sentence_id)
@@ -462,14 +478,15 @@ def validate_document_package(
                 for item in review.sentences
                 if record_digests.get(item.sentence_id) != item.record_sha256
             ]
-            if stale:
+            for sentence_id in stale:
                 issues.append(
                     _issue(
                         document_id,
                         "stale_sentence_review",
-                        "$.review_state.sentences",
-                        f"Review decisions no longer match sentences: {stale}.",
-                        "Reinitialize review state and review the changed sentences.",
+                        f"$.review_state.sentences[sentence_id={sentence_id}]",
+                        f"Review decision no longer matches sentence {sentence_id}.",
+                        "Reinitialize this sentence review and review the changed annotation.",
+                        sentence_id=sentence_id,
                     )
                 )
             unresolved = [
@@ -477,14 +494,15 @@ def validate_document_package(
                 for item in review.sentences
                 if item.status in {"pending", "needs_correction"}
             ]
-            if unresolved:
+            for sentence_id in unresolved:
                 issues.append(
                     _issue(
                         document_id,
                         "sentence_review_incomplete",
-                        "$.review_state.sentences",
-                        f"Sentences still require a final decision: {unresolved}.",
-                        "Approve, correct, or exclude every listed sentence.",
+                        f"$.review_state.sentences[sentence_id={sentence_id}].status",
+                        f"Sentence {sentence_id} still requires a final decision.",
+                        "Approve, correct, or exclude this sentence.",
+                        sentence_id=sentence_id,
                     )
                 )
 
