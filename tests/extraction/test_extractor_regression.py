@@ -10,6 +10,7 @@ import pytest
 from docx.shared import RGBColor
 
 from heva.extraction.docx_extractor import RunColorIndex, extract_docx_highlights
+from heva.extraction.errors import ExtractionCancelled
 from heva.extraction.pdf_extractor import (
     PDFTextExtractionError,
     VerticalRectIndex,
@@ -91,6 +92,30 @@ def test_pdf_extractor_reports_each_source_page_before_sentence_nlp(tmp_path: Pa
 
     assert len(records) == 2
     assert progress == [(1, 2), (2, 2)]
+
+
+def test_pdf_extractor_cancels_at_page_boundary(tmp_path: Path) -> None:
+    """Cancellation stops before the next page and never returns partial records."""
+
+    source = tmp_path / "two-pages.pdf"
+    document = fitz.open()
+    for text in ("Historic harbour remains.", "Political use continues."):
+        page = document.new_page()
+        page.insert_text((100, 100), text, fontsize=12)
+        highlighted = page.search_for(text.split()[0])[0]
+        page.draw_rect(highlighted, fill=(1, 1, 0), color=None, overlay=False)
+    document.save(source)
+    document.close()
+    progress: list[tuple[int, int]] = []
+
+    with pytest.raises(ExtractionCancelled, match="before source page 2"):
+        extract_colored_highlights(
+            source,
+            progress_callback=lambda completed, total: progress.append((completed, total)),
+            cancellation_callback=lambda: bool(progress),
+        )
+
+    assert progress == [(1, 2)]
 
 
 def test_table_pdf_with_broken_font_encoding_fails_before_persisting_gibberish() -> None:

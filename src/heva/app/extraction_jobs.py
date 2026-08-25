@@ -36,6 +36,7 @@ class ExtractionJobRegistry:
                 "updated_at": now,
                 "result": None,
                 "error": None,
+                "cancel_requested": False,
             }
             return deepcopy(self._jobs[document_id])
 
@@ -54,3 +55,26 @@ class ExtractionJobRegistry:
         with self._lock:
             job = self._jobs.get(document_id)
             return deepcopy(job) if job else None
+
+    def request_cancellation(self, document_id: str) -> dict[str, Any] | None:
+        """Request cooperative cancellation for a queued or running job."""
+
+        with self._lock:
+            job = self._jobs.get(document_id)
+            if (
+                job is None
+                or job["state"] not in {"queued", "running"}
+                or job["stage"] not in {"queued", "extracting"}
+            ):
+                return None
+            job["cancel_requested"] = True
+            job["message"] = "Cancellation requested; finishing the current safe unit."
+            job["updated_at"] = datetime.now(UTC).isoformat()
+            return deepcopy(job)
+
+    def cancellation_requested(self, document_id: str) -> bool:
+        """Return whether an active job should stop at its next safe boundary."""
+
+        with self._lock:
+            job = self._jobs.get(document_id)
+            return bool(job and job.get("cancel_requested"))

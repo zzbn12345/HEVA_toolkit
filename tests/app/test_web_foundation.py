@@ -369,7 +369,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=25"' in response.text
+    assert 'src="/static/create.js?v=26"' in response.text
     assert 'href="/static/create.css?v=13"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -379,6 +379,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert "<script>" not in response.text
     assert 'id="confirm-citation"' in response.text
     assert 'id="extraction-progress"' in response.text
+    assert 'id="cancel-extraction"' in response.text
     assert 'id="proposal-progress"' in response.text
     assert 'id="color-code-list"' in response.text
     assert "Document color code" in response.text
@@ -700,7 +701,9 @@ def test_extraction_endpoint_persists_raw_evidence_before_canonical_promotion(
 ) -> None:
     calls = []
 
-    def fake_raw(root, document_id, *, progress_callback=None):
+    def fake_raw(
+        root, document_id, *, progress_callback=None, cancellation_callback=None
+    ):
         calls.append(("raw", document_id))
         progress_callback(1, 4)
         progress_callback(4, 4)
@@ -741,7 +744,9 @@ def test_pending_color_map_keeps_successful_raw_extraction_as_draft(
 
     calls = []
 
-    def fake_raw(root, document_id, *, progress_callback=None):
+    def fake_raw(
+        root, document_id, *, progress_callback=None, cancellation_callback=None
+    ):
         calls.append(("raw", document_id))
 
     def pending_map(root, document_id):
@@ -768,7 +773,9 @@ def test_missing_extraction_dependency_is_reported_clearly(
 ) -> None:
     """A missing optional extractor package must become a useful UI error."""
 
-    def missing_dependency(root, document_id, *, progress_callback=None):
+    def missing_dependency(
+        root, document_id, *, progress_callback=None, cancellation_callback=None
+    ):
         raise ModuleNotFoundError("No module named 'spacy'", name="spacy")
 
     monkeypatch.setattr(
@@ -785,6 +792,20 @@ def test_missing_extraction_dependency_is_reported_clearly(
     assert progress["error"]["code"] == "extraction_dependency_missing"
     assert "spacy" in progress["error"]["action"]
     assert "restart the server" in progress["error"]["action"]
+
+
+def test_cancel_extraction_requires_an_active_job(tmp_path: Path) -> None:
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/documents/HEVA-TEST/extraction/cancel")
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "extraction_not_running"
+    script = (
+        Path(__file__).parents[2] / "src/heva/app/static/create.js"
+    ).read_text(encoding="utf-8")
+    assert "/extraction/cancel" in script
+    assert 'job.state === "cancelled"' in script
 
 
 def test_color_discovery_reports_missing_extraction_dependency(

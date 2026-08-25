@@ -841,6 +841,7 @@ async function waitForExtraction(documentId) {
   const progress = document.getElementById("extraction-progress");
   const progressBar = document.getElementById("extraction-progress-bar");
   const progressMessage = document.getElementById("extraction-progress-message");
+  const cancelButton = document.getElementById("cancel-extraction");
   const status = document.getElementById("extraction-status");
   const deadline = Date.now() + 10 * 60 * 1000;
   while (Date.now() < deadline) {
@@ -849,6 +850,7 @@ async function waitForExtraction(documentId) {
     );
     const job = await response.json();
     if (!response.ok) throw new Error(job.detail || "Extraction progress could not be loaded.");
+    cancelButton.hidden = !["queued", "extracting"].includes(job.stage);
     if (job.stage === "extracting" && job.total_pages) {
       progressBar.max = job.total_pages;
       progressBar.value = job.completed_pages;
@@ -860,7 +862,7 @@ async function waitForExtraction(documentId) {
     }
     status.className = "notice neutral";
     status.textContent = job.message;
-    if (["completed", "draft_saved", "failed"].includes(job.state)) return job;
+    if (["completed", "draft_saved", "failed", "cancelled"].includes(job.state)) return job;
     await wait(750);
   }
   throw new Error("Extraction is still running after ten minutes. Its work was not cancelled; reopen this document to check its status.");
@@ -873,9 +875,13 @@ async function extractAnnotations(force = false) {
   );
   const progress = document.getElementById("extraction-progress");
   const status = document.getElementById("extraction-status");
+  const cancelButton = document.getElementById("cancel-extraction");
   button.disabled = true;
   button.textContent = force ? "Rebuilding…" : "Extracting…";
   progress.hidden = false;
+  cancelButton.hidden = false;
+  cancelButton.disabled = false;
+  cancelButton.textContent = "Cancel extraction";
   status.className = "notice neutral";
   status.textContent = "Extraction is running. Keep this page open.";
   try {
@@ -890,6 +896,11 @@ async function extractAnnotations(force = false) {
       return;
     }
     const job = await waitForExtraction(documentId);
+    if (job.state === "cancelled") {
+      status.className = "notice warning";
+      status.textContent = job.message;
+      return;
+    }
     if (job.state === "failed") {
       status.className = "notice error";
       status.textContent = `${job.message} ${job.error?.action || ""}`;
@@ -911,8 +922,27 @@ async function extractAnnotations(force = false) {
     status.textContent = error.message || "Extraction could not be completed. Check the local service and try again.";
   } finally {
     progress.hidden = true;
+    cancelButton.hidden = true;
     button.textContent = force ? "Rebuild extraction" : "Extract annotations";
     button.disabled = false;
+  }
+}
+
+async function cancelExtraction() {
+  const documentId = document.getElementById("selected-document-id").value;
+  const button = document.getElementById("cancel-extraction");
+  button.disabled = true;
+  button.textContent = "Cancelling…";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/extraction/cancel`,
+      {method: "POST"},
+    );
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Extraction is not running.");
+    document.getElementById("extraction-status").textContent = result.message;
+  } catch (error) {
+    document.getElementById("extraction-status").textContent = error.message;
   }
 }
 
@@ -1002,6 +1032,10 @@ document.getElementById("extract-annotations").addEventListener(
 document.getElementById("rebuild-annotations").addEventListener(
   "click",
   () => extractAnnotations(true),
+);
+document.getElementById("cancel-extraction").addEventListener(
+  "click",
+  cancelExtraction,
 );
 document.getElementById("compile-annotations").addEventListener(
   "click",

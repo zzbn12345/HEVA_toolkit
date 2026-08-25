@@ -329,6 +329,7 @@ def extract_colored_highlights(
     pdf_path,
     color_label_map=None,
     progress_callback: Callable[[int, int], None] | None = None,
+    cancellation_callback: Callable[[], bool] | None = None,
 ):
     """
     Extracts highlights along with their exact hex color codes or mapped labels.
@@ -345,6 +346,13 @@ def extract_colored_highlights(
     global_word_spans = []
 
     for page_num in range(len(doc)):
+        if cancellation_callback is not None and cancellation_callback():
+            from heva.extraction.errors import ExtractionCancelled
+
+            doc.close()
+            raise ExtractionCancelled(
+                f"Extraction was cancelled before source page {page_num + 1}."
+            )
         page = doc[page_num]
         page_rect = page.rect
         # DICT uses the superset of flags required by all three derived views,
@@ -512,6 +520,12 @@ def extract_colored_highlights(
         global_reconstructed_text += page_reconstructed_text
         if progress_callback is not None:
             progress_callback(page_num + 1, len(doc))
+
+    if cancellation_callback is not None and cancellation_callback():
+        from heva.extraction.errors import ExtractionCancelled
+
+        doc.close()
+        raise ExtractionCancelled("Extraction was cancelled before sentence analysis.")
 
     # Refuse corrupted font mappings before NLP can turn them into plausible records.
     require_readable_text_layer(global_reconstructed_text)

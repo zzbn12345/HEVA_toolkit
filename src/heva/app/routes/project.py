@@ -124,6 +124,7 @@ RELEASE_FILENAMES = frozenset(
 )
 from heva.app.project_context import ProjectContext
 from heva.app.extraction_jobs import ExtractionJobRegistry
+from heva.extraction.errors import ExtractionCancelled
 from heva.app.folder_picker import (
     FolderPickerUnavailable,
     select_local_csv_file,
@@ -948,7 +949,14 @@ def create_project_router(
                 root,
                 document_id,
                 progress_callback=publish_page_progress,
+                cancellation_callback=lambda: extraction_jobs.cancellation_requested(
+                    document_id
+                ),
             )
+            if extraction_jobs.cancellation_requested(document_id):
+                raise ExtractionCancelled(
+                    "Extraction was cancelled before canonical compilation."
+                )
             extraction_jobs.update(
                 document_id,
                 stage="compiling",
@@ -979,6 +987,18 @@ def create_project_router(
                     },
                 )
                 return
+        except ExtractionCancelled:
+            extraction_jobs.update(
+                document_id,
+                state="cancelled",
+                stage="cancelled",
+                message=(
+                    "Extraction was cancelled. Previously saved annotation evidence "
+                    "and checkpoints were preserved."
+                ),
+                error=None,
+            )
+            return
         except ModuleNotFoundError as error:
             dependency = error.name or "an extraction dependency"
             extraction_jobs.update(
@@ -1049,6 +1069,22 @@ def create_project_router(
                 status_code=409,
             )
         background_tasks.add_task(run_extraction_job, document_id)
+        return job
+
+    @router.post("/api/documents/{document_id}/extraction/cancel", status_code=202)
+    def cancel_document_extraction(document_id: str):
+        """Request cancellation at the next safe extraction boundary."""
+
+        job = extraction_jobs.request_cancellation(document_id)
+        if job is None:
+            return JSONResponse(
+                {
+                    "code": "extraction_not_running",
+                    "message": "No extraction is currently running for this document.",
+                    "action": "Start extraction before requesting cancellation.",
+                },
+                status_code=409,
+            )
         return job
 
     @router.get("/api/annotator")

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from heva.extraction.errors import ExtractionCancelled
 from heva.workflow.color_configuration_registry import (
     create_color_configuration_version,
     select_color_configuration,
@@ -197,6 +198,31 @@ def test_registered_raw_run_shows_observed_colors_for_review(tmp_path: Path) -> 
     assert all(color.text_color in {"#000000", "#FFFFFF"} for color in configuration.colors)
     assert configuration.human_confirmed is False
     assert configuration.use_for_extraction is False
+
+
+def test_cancelled_raw_run_preserves_previous_draft(tmp_path: Path) -> None:
+    """Cancellation before persistence cannot replace a valid collaborative checkpoint."""
+
+    document_id, records = _project(tmp_path)
+    path = persist_extraction_draft(
+        tmp_path,
+        document_id,
+        records,
+        extractor="first extractor",
+        extractor_version="1.0",
+    )
+    before = path.read_bytes()
+
+    with pytest.raises(ExtractionCancelled, match="before saving raw evidence"):
+        run_registered_raw_extraction(
+            tmp_path,
+            document_id,
+            extractor=lambda _source: records,
+            extractor_name="cancelled extractor",
+            cancellation_callback=lambda: True,
+        )
+
+    assert path.read_bytes() == before
 
 
 def test_promotion_writes_canonical_annotations_only_after_selected_mapping(tmp_path: Path) -> None:

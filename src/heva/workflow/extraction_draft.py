@@ -10,6 +10,7 @@ from typing import Any, Callable, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from heva.extraction.errors import ExtractionCancelled
 from heva.workflow.color_configuration_registry import selected_color_configuration
 from heva.workflow.contract import CURRENT_SCHEMA_VERSION, HEX_COLOR, validate_record
 from heva.workflow.people_registry import load_people_registry
@@ -298,6 +299,7 @@ def run_registered_raw_extraction(
     extractor_name: str | None = None,
     extractor_version: str = "0.1.0",
     progress_callback: Callable[[int, int], None] | None = None,
+    cancellation_callback: Callable[[], bool] | None = None,
 ) -> Path:
     """Extract raw colors for a registered PDF or DOCX and persist the draft."""
 
@@ -313,11 +315,16 @@ def run_registered_raw_extraction(
                     source,
                     color_label_map=None,
                     progress_callback=progress_callback,
+                    cancellation_callback=cancellation_callback,
                 )
                 name = "HEVA PDF extractor"
             elif source.suffix.lower() == ".docx":
                 from heva.extraction.docx_extractor import extract_docx_highlights
 
+                if cancellation_callback is not None and cancellation_callback():
+                    from heva.extraction.errors import ExtractionCancelled
+
+                    raise ExtractionCancelled("Extraction was cancelled before reading DOCX.")
                 records = extract_docx_highlights(source, color_label_map=None)
                 if progress_callback is not None:
                     progress_callback(1, 1)
@@ -326,7 +333,7 @@ def run_registered_raw_extraction(
                 raise ExtractionDraftError(
                     f"Unsupported source format: {source.suffix or '(none)'}"
                 )
-        except ModuleNotFoundError:
+        except (ModuleNotFoundError, ExtractionCancelled):
             raise
         except ExtractionDraftError:
             raise
@@ -339,6 +346,10 @@ def run_registered_raw_extraction(
         if progress_callback is not None:
             progress_callback(1, 1)
         name = extractor_name or getattr(extractor, "__name__", "custom extractor")
+    if cancellation_callback is not None and cancellation_callback():
+        from heva.extraction.errors import ExtractionCancelled
+
+        raise ExtractionCancelled("Extraction was cancelled before saving raw evidence.")
     path = persist_extraction_draft(
         root,
         document_id,
