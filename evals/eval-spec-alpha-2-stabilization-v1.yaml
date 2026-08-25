@@ -44,6 +44,40 @@ objective:
     - "docs/adr/HEVA-ADR-001-versioned-eva-specifications.md"
     - "docs/adr/HEVA-ADR-002-repository-owned-approval.md"
 
+implementation_evidence:
+  updated: "2026-08-25"
+  branch: "algorithm-improvement"
+  automated_suite: "262 passed"
+  completed:
+    - "F14.1 canonical annotations rebuild after color confirmation"
+    - "F14.6 independent sentence-review pagination"
+    - "F14.11 removal of internal curator-submission workflow"
+    - "F14.12 active-document validation and localized findings"
+    - "F14.13 explicit original-annotator assignment"
+    - "F14.14 annotation-only distribution validation contract"
+  awaiting_human_review:
+    - "F14.16 explicit warning acceptance with retained audit evidence"
+    - "F14.17 persisted annotation-substring correction slice"
+    - "F14.20 selected valid-subset Data Package export"
+  partial:
+    - feature: "F14.4 observable and resilient large-document extraction"
+      delivered: "Measured loop optimizations, command-line parity, and live extraction stages"
+      remains: "Page-level totals and scope, cancellation, checkpoint resume, representative large-PDF evidence"
+    - feature: "F14.17 strict annotation correction"
+      delivered: "Persisted annotation substrings with immutable source evidence"
+      remains: "Annotation add/remove/exclusion and exceptional source-typo correction"
+    - feature: "F14.2 aligned working, valid, and exported gates"
+      delivered: "Removed internal approval gates and reduced validation to the annotation distribution contract"
+      remains: "One end-to-end GUI, CLI, persisted-state, and export equivalence regression"
+  unstarted:
+    - "F14.3 table-bearing PDF extraction"
+    - "F14.5 PDF evidence navigation"
+    - "F14.7-F14.10 remaining intake and usability features"
+    - "F14.15 annotation context"
+    - "F14.18 single workflow shell"
+    - "F14.19 documentation delivery and special paths"
+    - "F14.21 collaborative workspace identity"
+
 budget:
   mode: implementation
   max_turns: 60
