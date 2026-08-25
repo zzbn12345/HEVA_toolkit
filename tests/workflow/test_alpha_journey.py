@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from fastapi.testclient import TestClient
+
+from heva.app.main import create_app
 from heva.workflow.citation_import import import_citation_row
 from heva.workflow.color_configuration_registry import (
     create_color_configuration_version,
@@ -13,11 +18,10 @@ from heva.workflow.color_configuration_registry import (
 )
 from heva.workflow.color_mapping import propose_color_configuration, save_color_configuration
 from heva.workflow.document_metadata import (
-    AnnotatorMetadata,
     PackageMetadata,
-    RightsMetadata,
     save_package_metadata,
 )
+from heva.workflow.document_contributors import assign_document_annotators
 from heva.workflow.extraction_draft import persist_extraction_draft, promote_extraction_draft
 from heva.workflow.package_validator import build_release, validate_project
 from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
@@ -29,8 +33,10 @@ from heva.workflow.project_registry import (
 from heva.workflow.review_state import record_decisions
 
 
-def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: Path) -> None:
-    """Exercise validation and export without internal submission or approval gates."""
+def test_researcher_sees_the_same_valid_and_exportable_state_everywhere(
+    tmp_path: Path,
+) -> None:
+    """Keep persisted state, domain, GUI, CLI, and selected export gates equivalent."""
 
     dataset = tmp_path / "curated-dataset"
     dataset.mkdir()
@@ -55,6 +61,7 @@ def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: 
         PersonRecord(name="Responsible Data Owner", roles=["data_owner"], affiliation="Archive"),
     )
     activate_curator(dataset, curator.person_id)
+    assign_document_annotators(dataset, document_id, [annotator.person_id])
     import_citation_row(
         dataset,
         {
@@ -98,26 +105,9 @@ def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: 
 
     entry = next(item for item in load_project_registry(dataset).documents if item.document_id == document_id)
     metadata = PackageMetadata.model_validate_json((dataset / entry.metadata_path).read_text())
-    metadata.annotator = AnnotatorMetadata(name=annotator.name, affiliation=annotator.affiliation)
-    metadata.rights = RightsMetadata(
-        access_level="restricted",
-        authorization_status="authorized",
-        authorization_date="2026-08-11",
-        authorized_by=owner.name,
-        evidence_reference="owner-waiver-001",
-        source_distribution_allowed=False,
-        extracted_text_distribution_allowed=True,
-        annotation_distribution_allowed=True,
-        license="CC-BY-4.0",
-    )
     metadata.annotation_process.review.completed = True
     metadata.annotation_process.review.reviewed_at = datetime(2026, 8, 11, 12, tzinfo=timezone.utc)
     save_package_metadata(dataset, metadata)
-    registry = json.loads(registry_path.read_text())
-    selected = next(item for item in registry["documents"] if item["document_id"] == document_id)
-    selected["status"] = "in_review"
-    registry["summary"].update({"backlog": 1, "in_review": 1, "done": 0})
-    registry_path.write_text(json.dumps(registry), encoding="utf-8")
     (dataset / "dataset-metadata.json").write_text(
         json.dumps({
             "name": "heva-alpha",
@@ -133,15 +123,42 @@ def test_researcher_can_build_release_without_ollama_or_committed_pdf(tmp_path: 
     )
 
     report = validate_project(dataset)
-    release = build_release(dataset)
+    web_report = TestClient(create_app(dataset)).post("/api/validate")
+    command = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "heva.workflow.package_validator",
+            str(dataset),
+            "validate",
+            "--json",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    web_release = TestClient(create_app(dataset)).post(
+        "/api/release",
+        json={"document_ids": [document_id]},
+    )
+    release = build_release(dataset, document_ids=[document_id])
     payload = json.loads((release / "heva-annotations.json").read_text())
 
     target_report = next(item for item in report.documents if item.document_id == document_id)
+    cli_report = json.loads(command.stdout)
+    assert web_report.status_code == 200
+    assert command.returncode == 0, command.stdout + command.stderr
+    assert web_release.status_code == 200
+    assert target_report.model_dump(mode="json") == web_report.json()["documents"][0]
+    assert target_report.model_dump(mode="json") == cli_report["documents"][0]
     assert target_report.release_ready
+    assert web_release.json()["membership"] == [document_id]
     assert payload["membership"] == [document_id]
     assert "data_owner" not in payload["documents"][0]
     assert "curator" not in payload["documents"][0]
     assert "rights" not in payload["documents"][0]
     assert payload["documents"][0]["records"][0]["values"] == ["historic"]
+    persisted = json.loads(registry_path.read_text())
+    assert persisted["documents"][0]["status"] == "in_progress"
     assert str(external) not in (dataset / ".heva/project.json").read_text()
     assert not any(path.suffix == ".pdf" for path in release.iterdir())

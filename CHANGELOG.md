@@ -25,6 +25,10 @@
 
 ### Fixed
 
+- Aligned the Alpha journey across persisted working state, domain validation, the web API,
+  command-line validation, and selected Data Package export. A valid `in_progress` document
+  now exports without source-rights or internal submission/approval evidence, and every
+  validation surface returns the same document report.
 - Localized annotation and sentence-review validation findings with document ID, canonical
   JSON path, record index, and sentence ID where available. Sentence findings now link to
   and reveal the exact sentence across paginated review results.
