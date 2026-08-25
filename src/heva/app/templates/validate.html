@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Validate project · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/validation.css?v=2">
-  <script src="/static/validate.js?v=7" defer></script>
+  <link rel="stylesheet" href="/static/validation.css?v=3">
+  <script src="/static/validate.js?v=8" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -23,7 +23,7 @@
     <div id="data-package" class="validation-toolbar">
       <button id="validate-project" class="button" type="button">Run validation</button>
       <button id="download-validation" class="button secondary" type="button" disabled>Download JSON report</button>
-      <button id="generate-release" class="button secondary" type="button">Generate Data Package</button>
+      <button id="generate-release" class="button secondary" type="button" disabled>Export selected Data Package</button>
       <a id="download-release" class="button secondary" href="/api/release/download" hidden>Download Data Package ZIP</a>
     </div>
     <div id="release-status" class="notice neutral" aria-live="polite">
@@ -39,6 +39,11 @@
       <button class="button secondary" type="button" data-validation-filter="issues">Needs attention</button>
       <button class="button secondary" type="button" data-validation-filter="completed">Completed</button>
       <button class="button secondary" type="button" data-validation-filter="incomplete">Not completed</button>
+    </div>
+    <div class="release-selection-toolbar" aria-label="Data Package document selection">
+      <button id="select-visible-documents" class="button secondary" type="button" disabled>Select all shown</button>
+      <button id="clear-document-selection" class="button secondary" type="button" disabled>Clear selection</button>
+      <strong id="release-selection-count" aria-live="polite">Run validation to select documents.</strong>
     </div>
     <section id="validation-results" class="results" aria-label="Validation results"></section>
   </main>

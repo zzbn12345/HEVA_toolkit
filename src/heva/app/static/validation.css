@@ -69,3 +69,18 @@
   .validation-document-heading { display: grid; }
   .validation-badges { justify-content: flex-start; }
 }
+.release-selection-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin: 1rem 0;
+}
+
+.release-document-selection {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  margin-top: .6rem;
+  font-weight: 700;
+}

@@ -1272,10 +1272,14 @@ def test_validation_page_exposes_report_runner_filters_and_download(
     assert 'data-validation-filter="issues"' in response.text
     assert 'data-validation-filter="completed"' in response.text
     assert 'data-validation-filter="incomplete"' in response.text
-    assert 'src="/static/validate.js?v=7"' in response.text
+    assert 'src="/static/validate.js?v=8"' in response.text
+    assert 'href="/static/validation.css?v=3"' in response.text
+    assert 'id="select-visible-documents"' in response.text
+    assert "Select all shown" in response.text
+    assert 'id="clear-document-selection"' in response.text
+    assert "Export selected Data Package" in response.text
     assert 'id="generate-release"' in response.text
     assert 'id="download-release"' in response.text
-    assert 'href="/static/validation.css?v=2"' in response.text
     script = (
         Path(__file__).parents[2]
         / "src"
@@ -1286,6 +1290,11 @@ def test_validation_page_exposes_report_runner_filters_and_download(
     ).read_text(encoding="utf-8")
     assert '"Read the relevant guide"' in script
     assert "/guide/${issue.guide" in script
+    assert "filteredDocuments(currentReport).forEach" in script
+    assert "selectedDocumentIds.add(documentReport.document_id)" in script
+    assert "selectedDocumentIds.clear()" in script
+    assert "updateReleaseSelection()" in script
+    assert "document_ids: [...selectedDocumentIds]" in script
 
 
 def test_app_generates_and_downloads_only_release_files(

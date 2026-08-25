@@ -3,12 +3,26 @@ const downloadButton = document.getElementById("download-validation");
 const releaseButton = document.getElementById("generate-release");
 const releaseLink = document.getElementById("download-release");
 const releaseStatus = document.getElementById("release-status");
+const selectVisibleButton = document.getElementById("select-visible-documents");
+const clearSelectionButton = document.getElementById("clear-document-selection");
+const selectionCount = document.getElementById("release-selection-count");
 const statusBox = document.getElementById("validation-status");
 const summaryBox = document.getElementById("validation-summary");
 const results = document.getElementById("validation-results");
 let currentReport = null;
 let currentFilter = "all";
 const selectedDocumentIds = new Set();
+
+/** Synchronize export controls with the explicit document selection. */
+function updateReleaseSelection() {
+  const total = currentReport?.documents?.length || 0;
+  selectionCount.textContent = currentReport
+    ? `${selectedDocumentIds.size} of ${total} documents selected for export.`
+    : "Run validation to select documents.";
+  releaseButton.disabled = !currentReport || selectedDocumentIds.size === 0;
+  selectVisibleButton.disabled = !currentReport;
+  clearSelectionButton.disabled = !currentReport || selectedDocumentIds.size === 0;
+}
 
 /**
  * Create a text-only element so validation evidence cannot inject markup.
@@ -119,6 +133,7 @@ function showReport(report) {
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) selectedDocumentIds.add(documentReport.document_id);
         else selectedDocumentIds.delete(documentReport.document_id);
+        updateReleaseSelection();
       });
       selection.append(checkbox, " Include in Data Package");
       identity.append(
@@ -196,9 +211,7 @@ async function runValidation() {
     }
     currentReport = report;
     selectedDocumentIds.clear();
-    report.documents.forEach((documentReport) => {
-      selectedDocumentIds.add(documentReport.document_id);
-    });
+    updateReleaseSelection();
     showSummary(report);
     showReport(report);
     downloadButton.disabled = false;
@@ -208,6 +221,8 @@ async function runValidation() {
       : "Check completed: review the failed documents and corrective actions below.";
   } catch (error) {
     currentReport = null;
+    selectedDocumentIds.clear();
+    updateReleaseSelection();
     statusBox.className = "notice error";
     statusBox.textContent = error.message;
   } finally {
@@ -241,6 +256,21 @@ document.querySelectorAll("[data-validation-filter]").forEach((filterButton) => 
       showReport(currentReport);
     }
   });
+});
+
+selectVisibleButton.addEventListener("click", () => {
+  if (!currentReport) return;
+  filteredDocuments(currentReport).forEach((documentReport) => {
+    selectedDocumentIds.add(documentReport.document_id);
+  });
+  showReport(currentReport);
+  updateReleaseSelection();
+});
+
+clearSelectionButton.addEventListener("click", () => {
+  selectedDocumentIds.clear();
+  if (currentReport) showReport(currentReport);
+  updateReleaseSelection();
 });
 
 button.addEventListener("click", runValidation);
@@ -282,3 +312,4 @@ async function generateRelease() {
 }
 
 releaseButton.addEventListener("click", generateRelease);
+updateReleaseSelection();
