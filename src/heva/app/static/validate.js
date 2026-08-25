@@ -8,6 +8,7 @@ const summaryBox = document.getElementById("validation-summary");
 const results = document.getElementById("validation-results");
 let currentReport = null;
 let currentFilter = "all";
+const selectedDocumentIds = new Set();
 
 /**
  * Create a text-only element so validation evidence cannot inject markup.
@@ -109,9 +110,21 @@ function showReport(report) {
       const heading = document.createElement("div");
       heading.className = "validation-document-heading";
       const identity = document.createElement("div");
+      const selection = document.createElement("label");
+      selection.className = "release-document-selection";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = selectedDocumentIds.has(documentReport.document_id);
+      checkbox.setAttribute("aria-label", `Include ${documentReport.source_path} in Data Package`);
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) selectedDocumentIds.add(documentReport.document_id);
+        else selectedDocumentIds.delete(documentReport.document_id);
+      });
+      selection.append(checkbox, " Include in Data Package");
       identity.append(
         textElement("h2", "", documentReport.source_path),
         textElement("small", "", documentReport.document_id),
+        selection,
       );
       const badges = document.createElement("div");
       badges.className = "validation-badges";
@@ -182,6 +195,10 @@ async function runValidation() {
       );
     }
     currentReport = report;
+    selectedDocumentIds.clear();
+    report.documents.forEach((documentReport) => {
+      selectedDocumentIds.add(documentReport.document_id);
+    });
     showSummary(report);
     showReport(report);
     downloadButton.disabled = false;
@@ -231,12 +248,21 @@ downloadButton.addEventListener("click", downloadReport);
 
 /** Build the release through the same guarded domain boundary used by scripts. */
 async function generateRelease() {
+  if (currentReport && selectedDocumentIds.size === 0) {
+    releaseStatus.className = "notice error";
+    releaseStatus.textContent = "Select at least one document to include in the Data Package.";
+    return;
+  }
   releaseButton.disabled = true;
   releaseLink.hidden = true;
   releaseStatus.className = "notice neutral";
   releaseStatus.textContent = "Checking final release gates and generating derivatives…";
   try {
-    const response = await fetch("/api/release", {method: "POST"});
+    const options = {method: "POST", headers: {"Content-Type": "application/json"}};
+    if (currentReport) {
+      options.body = JSON.stringify({document_ids: [...selectedDocumentIds]});
+    }
+    const response = await fetch("/api/release", options);
     const result = await response.json();
     if (!response.ok) {
       releaseStatus.className = "notice error";

@@ -1047,6 +1047,36 @@ def test_missing_annotator_explains_registration_and_submission_boundary(
     assert response.json()["action"]
 
 
+def test_app_preserves_selected_documents_in_release_download(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    release = tmp_path / "release"
+    release.mkdir()
+    (release / "datapackage.json").write_text("{}", encoding="utf-8")
+    selections = []
+
+    def fake_build_release(_root: Path, **options) -> Path:
+        selections.append(options.get("document_ids"))
+        return release
+
+    monkeypatch.setattr(project_routes, "build_release", fake_build_release)
+    client = TestClient(create_app(tmp_path))
+
+    generated = client.post(
+        "/api/release",
+        json={"document_ids": ["HEVA-FIRST", "HEVA-SECOND"]},
+    )
+    downloaded = client.get(generated.json()["download"])
+
+    assert generated.status_code == 200
+    assert downloaded.status_code == 200
+    assert selections == [
+        ["HEVA-FIRST", "HEVA-SECOND"],
+        ["HEVA-FIRST", "HEVA-SECOND"],
+    ]
+
+
 def test_annotator_schema_drives_form_and_requires_name(tmp_path: Path) -> None:
     client = TestClient(create_app(tmp_path))
 
@@ -1242,7 +1272,7 @@ def test_validation_page_exposes_report_runner_filters_and_download(
     assert 'data-validation-filter="issues"' in response.text
     assert 'data-validation-filter="completed"' in response.text
     assert 'data-validation-filter="incomplete"' in response.text
-    assert 'src="/static/validate.js?v=6"' in response.text
+    assert 'src="/static/validate.js?v=7"' in response.text
     assert 'id="generate-release"' in response.text
     assert 'id="download-release"' in response.text
     assert 'href="/static/validation.css?v=2"' in response.text
@@ -1269,7 +1299,7 @@ def test_app_generates_and_downloads_only_release_files(
     (release / "source.pdf").write_bytes(b"must not be distributed")
     included = {"datapackage.json", "heva-annotations.csv"}
 
-    def fake_build_release(_root: Path) -> Path:
+    def fake_build_release(_root: Path, **_options) -> Path:
         return release
 
     monkeypatch.setattr(project_routes, "build_release", fake_build_release)
@@ -1295,7 +1325,7 @@ def test_app_explains_release_gate_failure(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def fail_release(_root: Path) -> Path:
+    def fail_release(_root: Path, **_options) -> Path:
         raise PackageValidationError("Document lacks data-owner approval.")
 
     monkeypatch.setattr(project_routes, "build_release", fail_release)

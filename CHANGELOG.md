@@ -53,7 +53,8 @@
 
 - Added deterministic document selection to Data Package generation. Python callers and the
   module command can export one or several valid registered documents while invalid
-  unselected project documents remain explicitly recorded as excluded membership.
+  unselected project documents remain explicitly recorded as excluded membership. The
+  validation screen offers the same per-document selection and preserves it in ZIP download.
 - Added explicit **Accept warning** decisions for non-blocking automated sentence findings.
   Accepted warnings leave the active-problem list but retain their code, evidence, curator,
   timestamp, and optional explanation in review audit history; validation errors cannot be

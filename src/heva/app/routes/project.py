@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Callable
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from fastapi.responses import (
     FileResponse,
     HTMLResponse,
@@ -202,6 +202,13 @@ class ProjectPaletteSelectionInput(BaseModel):
 
     configuration_id: str
     version: int
+
+
+class ReleaseSelectionInput(BaseModel):
+    """Explicit registered document membership for one Data Package build."""
+
+    model_config = ConfigDict(extra="forbid")
+    document_ids: list[str]
 
 
 def create_project_router(
@@ -1305,11 +1312,12 @@ def create_project_router(
         return {"configured": True, "metadata": saved.model_dump(mode="json")}
 
     @router.post("/api/release")
-    def generate_release():
+    def generate_release(payload: ReleaseSelectionInput | None = None):
         """Build the validated annotation-only Data Package for the active project."""
 
         try:
-            target = build_release(root)
+            selection = payload.document_ids if payload is not None else None
+            target = build_release(root, document_ids=selection)
         except (OSError, ValidationError, PackageValidationError) as error:
             return JSONResponse(
                 {
@@ -1327,14 +1335,22 @@ def create_project_router(
             for path in target.iterdir()
             if path.is_file() and path.name in RELEASE_FILENAMES
         )
-        return {"generated": True, "files": files, "download": "/api/release/download"}
+        query = "" if selection is None else "?" + "&".join(
+            f"document_id={item}" for item in selection
+        )
+        return {
+            "generated": True,
+            "files": files,
+            "membership": selection,
+            "download": f"/api/release/download{query}",
+        }
 
     @router.get("/api/release/download")
-    def download_release():
+    def download_release(document_id: list[str] | None = Query(default=None)):
         """Rebuild and stream a deterministic ZIP without exposing local paths."""
 
         try:
-            target = build_release(root)
+            target = build_release(root, document_ids=document_id)
         except (OSError, ValidationError, PackageValidationError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         archive = io.BytesIO()

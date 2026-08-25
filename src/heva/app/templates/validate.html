@@ -6,7 +6,7 @@
   <title>Validate project · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/validation.css?v=2">
-  <script src="/static/validate.js?v=6" defer></script>
+  <script src="/static/validate.js?v=7" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -27,7 +27,8 @@
       <a id="download-release" class="button secondary" href="/api/release/download" hidden>Download Data Package ZIP</a>
     </div>
     <div id="release-status" class="notice neutral" aria-live="polite">
-      Data Package generation separately checks citation, curator evidence, data-owner approval, rights, and dataset metadata.
+      Run validation, then select the documents to include. Only selected documents must pass
+      the Data Package contract; excluded project documents remain recorded in build evidence.
     </div>
     <div id="validation-status" class="notice neutral" aria-live="polite">
       Select Run validation to begin. No project data will be changed.
