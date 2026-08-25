@@ -14,7 +14,7 @@ from heva.workflow.annotator_registry import (
     AnnotatorRegistryError,
     load_annotator_registry,
 )
-from heva.workflow.people_registry import PeopleRegistryError
+from heva.workflow.people_registry import PeopleRegistryError, load_people_registry
 from heva.workflow.package_validator import (
     PackageValidationError,
     validate_document_package,
@@ -42,6 +42,19 @@ def create_review_router(
     template: Callable[[str], str],
 ) -> APIRouter:
     router = APIRouter()
+
+    def active_reviewer_name() -> str:
+        """Resolve the active curator, retaining legacy-project compatibility."""
+
+        curator = load_people_registry(root).active_curator()
+        if curator is not None:
+            return curator.name
+        legacy = load_annotator_registry(root).active()
+        if legacy is not None and legacy.name:
+            return legacy.name
+        raise ValueError(
+            "Select an active curator in People and roles before changing review data."
+        )
 
     @router.get("/review", response_class=HTMLResponse)
     def review_queue_page() -> str:
@@ -146,15 +159,13 @@ def create_review_router(
                 detail="Select sentences and choose an approved review decision.",
             )
         try:
-            annotator = load_annotator_registry(root).active()
-            if annotator is None or not annotator.name:
-                raise ValueError("Select an active project annotator before reviewing.")
+            reviewer = active_reviewer_name()
             record_decisions(
                 root,
                 document_id,
                 sentence_ids,
                 status=status,
-                reviewer=annotator.name,
+                reviewer=reviewer,
                 comment=comment if isinstance(comment, str) else None,
             )
             return load_review_document(root, document_id)
@@ -194,15 +205,13 @@ def create_review_router(
                 detail="The sentence identifier cannot be changed.",
             )
         try:
-            annotator = load_annotator_registry(root).active()
-            if annotator is None or not annotator.name:
-                raise ValueError("Select an active project annotator before editing.")
+            reviewer = active_reviewer_name()
             replace_sentence_record(
                 root,
                 document_id,
                 sentence_id,
                 replacement,
-                editor=annotator.name,
+                editor=reviewer,
             )
             return load_review_document(root, document_id)
         except (

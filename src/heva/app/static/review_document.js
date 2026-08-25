@@ -272,6 +272,7 @@ function openEditor(record) {
   editorError.hidden = true;
   document.getElementById("edit-sentence-id").value = record.sentence_id;
   document.getElementById("edit-page").value = record.page;
+  document.getElementById("edit-source-sentence").textContent = record.sentence;
   entityRows.replaceChildren(...record.entities.map(entityRow));
   editor.showModal();
 }

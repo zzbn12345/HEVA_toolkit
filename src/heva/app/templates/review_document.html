@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Review document · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/review.css?v=10">
-  <script src="/static/review_document.js?v=13" defer></script>
+  <link rel="stylesheet" href="/static/review.css?v=11">
+  <script src="/static/review_document.js?v=14" defer></script>
 </head>
 <body data-document-id="DOCUMENT_ID_PLACEHOLDER" class="review-body">
   <div id="review-app" class="review-app">
@@ -65,7 +65,7 @@
           <p id="review-edit-lock-message"></p>
           <p id="review-edit-lock-action" class="muted"></p>
         </div>
-        <a id="review-edit-lock-link" class="button" href="#">Open color configuration</a>
+        <a id="review-edit-lock-link" class="button" href="#">Resolve editing requirement</a>
       </section>
       <section id="review-readiness" class="review-readiness" aria-labelledby="review-readiness-title">
         <div>
@@ -95,6 +95,10 @@
       </div>
       <p class="muted">Correct extracted text only. Page, label, and color are displayed as read-only evidence. Each corrected phrase must occur exactly in the sentence.</p>
       <div id="sentence-editor-error" class="notice error" aria-live="assertive" hidden></div>
+      <section class="source-sentence-evidence" aria-labelledby="source-sentence-title">
+        <strong id="source-sentence-title">Source sentence — read only</strong>
+        <p id="edit-source-sentence"></p>
+      </section>
       <div class="editor-grid">
         <label>Sentence ID
           <input id="edit-sentence-id" type="number" readonly>

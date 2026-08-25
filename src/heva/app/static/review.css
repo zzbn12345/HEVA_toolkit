@@ -173,6 +173,14 @@
 .editor-heading h2, .editor-heading p { margin: 0; }
 .editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .entity-editor { padding: 1rem; border: 1px solid var(--border); border-radius: 10px; }
+.source-sentence-evidence {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.source-sentence-evidence p { margin: .5rem 0 0; line-height: 1.6; }
 .entity-row {
   display: grid;
   grid-template-columns: minmax(240px, 3fr) minmax(130px, 1fr) 130px;

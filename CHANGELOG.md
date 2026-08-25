@@ -25,6 +25,10 @@
 
 ### Fixed
 
+- Persist annotation-text corrections while keeping source sentences, tokens, pages,
+  labels, and colors immutable. The editor now shows the full read-only sentence, attributes
+  changes to the active curator, and explains whether color configuration or curator identity
+  must be completed before editing is available.
 - Added independent previous/next sentence pagination with a visible page indicator, so
   researchers can inspect later batches without approving the current batch first.
 - Connected raw PDF/DOCX color discovery to the document Color config: observed hex values

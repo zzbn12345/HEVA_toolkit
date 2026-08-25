@@ -186,7 +186,7 @@ def replace_sentence_record(
     *,
     editor: str,
 ) -> None:
-    """Validate and persist an edit with before/after evidence and read-back verification."""
+    """Persist annotation-span corrections without altering immutable source evidence."""
 
     result = validate_record(replacement)
     if not result.valid or result.record is None:
@@ -208,6 +208,35 @@ def replace_sentence_record(
     index = matches[0]
     before = records[index]
     after = result.record.to_dict()
+    immutable_fields = (
+        "sentence_id", "page", "sentence", "tokens", "schema_version",
+        "mapping_provenance",
+    )
+    changed_immutable = [
+        field for field in immutable_fields if before.get(field) != after.get(field)
+    ]
+    if changed_immutable:
+        raise ReviewError(
+            "Source sentence evidence cannot be edited during annotation curation: "
+            + ", ".join(changed_immutable)
+            + ". Correct only extracted annotation text that occurs in the sentence."
+        )
+    before_entities = before.get("entities", [])
+    after_entities = after.get("entities", [])
+    if len(before_entities) != len(after_entities):
+        raise ReviewError(
+            "This editor cannot add or remove annotations yet; correct each existing "
+            "annotation independently."
+        )
+    for position, (previous, corrected) in enumerate(
+        zip(before_entities, after_entities, strict=True)
+    ):
+        for field in ("label", "color"):
+            if previous.get(field) != corrected.get(field):
+                raise ReviewError(
+                    f"Annotation {position + 1} {field} is read-only. "
+                    "Change document Color config instead."
+                )
     records[index] = after
     _write_json(annotations_path, records)
     if json.loads(annotations_path.read_text(encoding="utf-8"))[index] != after:

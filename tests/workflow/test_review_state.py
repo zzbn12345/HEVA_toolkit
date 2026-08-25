@@ -90,12 +90,11 @@ def test_edit_is_validated_read_back_and_audited(tmp_path: Path) -> None:
     document_id, package = project(tmp_path)
     initialize_sentence_reviews(tmp_path, document_id)
     replacement = record(1)
-    replacement["sentence"] = "The historic port remains visible."
-    replacement["tokens"] = ["The", "historic", "port", "remains", "visible", "."]
     replacement["entities"] = [{
-        "start": 4, "end": 17, "text": "historic port",
+        "start": 13, "end": 20, "text": "harbour",
         "label": "historic", "color": "#FF40FF",
     }]
+    replacement["ner_tags"] = ["O", "O", "B-historic", "O", "O", "O"]
 
     replace_sentence_record(
         tmp_path, document_id, 1, replacement, editor="Research Annotator"
@@ -103,9 +102,29 @@ def test_edit_is_validated_read_back_and_audited(tmp_path: Path) -> None:
 
     persisted = json.loads((package / "annotations.json").read_text())
     review = json.loads((tmp_path / ".heva/documents" / document_id / "review-state.json").read_text())
-    assert persisted[0]["sentence"] == "The historic port remains visible."
+    assert persisted[0]["sentence"] == "The historic harbour remains visible."
+    assert persisted[0]["entities"][0]["text"] == "harbour"
     assert review["sentences"][0]["status"] == "needs_correction"
     assert review["sentences"][0]["audit"][-1]["event"] == "edit"
+
+
+def test_edit_rejects_changes_to_immutable_source_sentence(tmp_path: Path) -> None:
+    document_id, package = project(tmp_path)
+    initialize_sentence_reviews(tmp_path, document_id)
+    replacement = record(1)
+    replacement["sentence"] = "The historic port remains visible."
+    replacement["tokens"] = ["The", "historic", "port", "remains", "visible", "."]
+    replacement["entities"] = [{
+        "start": 4, "end": 17, "text": "historic port",
+        "label": "historic", "color": "#FF40FF",
+    }]
+
+    with pytest.raises(ReviewError, match="Source sentence evidence cannot be edited"):
+        replace_sentence_record(
+            tmp_path, document_id, 1, replacement, editor="Research Curator"
+        )
+
+    assert json.loads((package / "annotations.json").read_text())[0] == record(1)
 
 
 def test_invalid_edit_names_contract_field_and_does_not_write(tmp_path: Path) -> None:

@@ -1477,8 +1477,10 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=13"' in response.text
-    assert 'href="/static/review.css?v=10"' in response.text
+    assert 'src="/static/review_document.js?v=14"' in response.text
+    assert 'id="edit-source-sentence"' in response.text
+    assert "Source sentence — read only" in response.text
+    assert 'href="/static/review.css?v=11"' in response.text
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text
@@ -1643,18 +1645,21 @@ def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path)
     (package / "annotations.json").write_text(json.dumps([original]), encoding="utf-8")
     initialize_sentence_reviews(tmp_path, entry["document_id"])
     client = TestClient(create_app(tmp_path))
-    assert client.post("/api/annotators", json={"name": "Sentence Editor"}).status_code == 201
+    curator = add_person(
+        tmp_path,
+        PersonRecord(name="Sentence Curator", roles=["curator"]),
+    )
+    activate_curator(tmp_path, curator.person_id)
     corrected = {
         **original,
-        "sentence": "A historic harbour.",
-        "tokens": ["A", "historic", "harbour", "."],
         "entities": [{
-            "start": 2,
-            "end": 18,
-            "text": "historic harbour",
+            "start": 11,
+            "end": 15,
+            "text": "port",
             "label": "historic",
             "color": "#FFFF00",
         }],
+        "ner_tags": ["O", "O", "B-historic", "O"],
     }
 
     response = client.put(
@@ -1666,10 +1671,15 @@ def test_sentence_correction_route_validates_persists_and_audits(tmp_path: Path)
     assert response.json()["sentences"][0]["review"]["status"] == "needs_correction"
     saved = json.loads((package / "annotations.json").read_text())
     audit = json.loads((tmp_path / ".heva/documents" / entry["document_id"] / "review-state.json").read_text())
-    assert saved[0]["sentence"] == "A historic harbour."
-    assert audit["sentences"][0]["audit"][-1]["actor"] == "Sentence Editor"
+    assert saved[0]["sentence"] == "A historic port."
+    assert saved[0]["entities"][0]["text"] == "port"
+    assert audit["sentences"][0]["audit"][-1]["actor"] == "Sentence Curator"
     assert audit["sentences"][0]["audit"][-1]["details"]["before"] == original
     assert audit["sentences"][0]["audit"][-1]["details"]["after"] == corrected
+
+    reloaded = client.get(f"/api/review/{entry['document_id']}")
+    assert reloaded.status_code == 200
+    assert reloaded.json()["sentences"][0]["record"]["entities"][0]["text"] == "port"
 
 
 def test_invalid_sentence_correction_reports_field_and_preserves_record(tmp_path: Path) -> None:

@@ -347,6 +347,21 @@ def test_confirmed_colors_remain_complete_while_annotations_are_still_a_draft(
     ]
 
 
+def test_canonical_annotations_explain_active_curator_edit_lock(tmp_path: Path) -> None:
+    documents = prepared_project(tmp_path)
+    document_id = str(documents[0]["document_id"])
+
+    selected = load_review_document(tmp_path, document_id)
+
+    assert selected["draft_only"] is False
+    assert selected["editability"]["editable"] is False
+    assert selected["editability"]["code"] == "active_curator_required"
+    assert selected["editability"]["href"] == "/people"
+    assert "Citation and original annotator metadata do not lock editing" in selected[
+        "editability"
+    ]["action"]
+
+
 def test_document_is_complete_only_when_all_four_gates_pass(tmp_path: Path) -> None:
     documents = prepared_project(tmp_path)
     entry = documents[0]

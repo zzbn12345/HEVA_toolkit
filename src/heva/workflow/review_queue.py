@@ -374,8 +374,12 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
             0,
             "Convert the unresolved color draft into canonical HEVA annotations.",
         )
+    try:
+        curator_ready = load_people_registry(root).active_curator() is not None
+    except PeopleRegistryError:
+        curator_ready = False
     editability = {
-        "editable": not draft_only,
+        "editable": not draft_only and curator_ready,
         "code": None,
         "message": None,
         "action": None,
@@ -394,6 +398,20 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
                 "canonical annotations. Citation and annotator metadata do not lock editing."
             ),
             "href": f"/create?document_id={document_id}&section=colors",
+        }
+    elif not curator_ready:
+        editability = {
+            "editable": False,
+            "code": "active_curator_required",
+            "message": (
+                "Annotation text is ready, but review changes require an active curator "
+                "so every correction has an accountable author."
+            ),
+            "action": (
+                "Open People and roles and select an active curator. Citation and original "
+                "annotator metadata do not lock editing."
+            ),
+            "href": "/people",
         }
     return {
         "document_id": document_id,
