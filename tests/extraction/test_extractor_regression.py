@@ -6,16 +6,19 @@ from pathlib import Path
 
 import docx
 import fitz
+import pytest
 from docx.shared import RGBColor
 
 from heva.extraction.docx_extractor import RunColorIndex, extract_docx_highlights
 from heva.extraction.pdf_extractor import (
+    PDFTextExtractionError,
     VerticalRectIndex,
     extract_colored_highlights,
     find_highlight_color,
     find_text_span_color,
     group_words_by_block,
     iter_sentence_word_spans,
+    require_readable_text_layer,
     sort_page_blocks,
 )
 
@@ -65,6 +68,22 @@ def test_pdf_extractor_reads_generated_highlight_and_mapping(tmp_path: Path) -> 
         }
     ]
     assert mapped[0]["entities"][0]["label"] == "historic"
+
+
+def test_table_pdf_with_broken_font_encoding_fails_before_persisting_gibberish() -> None:
+    """The authorized Alpha table fixture must fail honestly instead of yielding cipher text."""
+
+    source = Path(__file__).parents[1] / "2011 EC Galle part 1(Appendix IV) - Copy.pdf"
+
+    with pytest.raises(PDFTextExtractionError, match="searchable Unicode text or apply OCR"):
+        extract_colored_highlights(source)
+
+
+def test_text_quality_guard_accepts_short_or_non_latin_language_evidence() -> None:
+    """The encoding guard must not mistake short labels or Unicode scripts for corruption."""
+
+    require_readable_text_layer("12345")
+    require_readable_text_layer("文化遺産の価値を説明する文章です。" * 30)
 
 
 def test_docx_extractor_reads_generated_custom_font_colors(tmp_path: Path) -> None:

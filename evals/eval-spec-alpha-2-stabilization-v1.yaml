@@ -57,6 +57,7 @@ implementation_evidence:
     - "F14.13 explicit original-annotator assignment"
     - "F14.14 annotation-only distribution validation contract"
   awaiting_human_review:
+    - "F14.3 safe rejection of unreadable table-PDF font encoding"
     - "F14.16 explicit warning acceptance with retained audit evidence"
     - "F14.17 persisted annotation-substring correction slice"
     - "F14.18 single embedded document workflow shell"
@@ -69,7 +70,6 @@ implementation_evidence:
       delivered: "Persisted annotation substrings with immutable source evidence"
       remains: "Annotation add/remove/exclusion and exceptional source-typo correction"
   unstarted:
-    - "F14.3 table-bearing PDF extraction"
     - "F14.5 PDF evidence navigation"
     - "F14.7-F14.10 remaining intake and usability features"
     - "F14.15 annotation context"

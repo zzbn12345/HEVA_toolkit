@@ -74,6 +74,9 @@ their provenance and requires human confirmation.
 - Flattened visual colors may not be represented as structured annotation evidence.
 - Image-only documents require OCR outside the current extractor.
 - Layout reconstruction and sentence segmentation can fail on unusual page structures.
+- PDFs with broken embedded font mappings may look correct but expose punctuation-like
+  cipher text to software. HEVA rejects long unreadable text layers before creating
+  annotations; re-export with searchable Unicode text or apply OCR and retry.
 - Successful extraction does not prove complete recall or correct semantic labels.
 
 ## Tests

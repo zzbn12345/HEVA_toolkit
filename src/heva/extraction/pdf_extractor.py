@@ -20,6 +20,31 @@ except ImportError:  # Preserve a clear error if optional local NLP support is u
         normalize_ligatures,
     )
 
+
+class PDFTextExtractionError(ValueError):
+    """Raised when a PDF text layer cannot safely support sentence extraction."""
+
+
+def require_readable_text_layer(text: str) -> None:
+    """Reject long text layers dominated by encoding artifacts rather than letters.
+
+    Short labels and ordinary numeric fragments are allowed. A long document whose
+    non-space characters contain very few Unicode letters cannot be segmented into
+    trustworthy natural-language sentences and must be re-exported or OCRed first.
+    """
+
+    characters = [character for character in text if not character.isspace()]
+    if len(characters) < 200:
+        return
+    letter_ratio = sum(character.isalpha() for character in characters) / len(characters)
+    if letter_ratio < 0.15:
+        raise PDFTextExtractionError(
+            "The PDF text layer is not readable enough for annotation extraction "
+            f"({letter_ratio:.0%} letters). Its embedded font encoding may be broken. "
+            "Re-export the PDF with searchable Unicode text or apply OCR, then retry; "
+            "HEVA did not persist the corrupted extraction."
+        )
+
 def int_to_hex(color_int):
     """Converts a PyMuPDF integer color code to a standard Hex string."""
     r = (color_int >> 16) & 255
@@ -478,6 +503,9 @@ def extract_colored_highlights(pdf_path, color_label_map=None):
             })
             
         global_reconstructed_text += page_reconstructed_text
+
+    # Refuse corrupted font mappings before NLP can turn them into plausible records.
+    require_readable_text_layer(global_reconstructed_text)
 
     # Dynamically load the language-specific spaCy blank model
     lang_code = detect_language(global_reconstructed_text)

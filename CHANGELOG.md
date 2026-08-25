@@ -25,6 +25,9 @@
 
 ### Fixed
 
+- Reject PDF text layers dominated by broken font-encoding artifacts before sentence NLP or
+  annotation persistence. The Alpha table-PDF reproducer now returns guidance to re-export
+  searchable Unicode text or apply OCR instead of producing 138 corrupted records.
 - Removed the duplicated navigation and readiness shell from the sentence queue embedded in
   document preparation. Embedded mode is now rendered by the server without a visible flash,
   while the sentence controls and compact document-validation action remain available;
