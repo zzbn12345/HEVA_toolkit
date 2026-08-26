@@ -16,7 +16,9 @@ import io
 import json
 from pathlib import Path
 import platform
+import resource
 import statistics
+import sys
 import time
 from typing import Callable
 
@@ -47,6 +49,24 @@ def _checksum(records: list[dict[str, object]]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _peak_process_rss_bytes() -> int:
+    """Return the process peak resident set using the platform's documented unit."""
+
+    peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return int(peak if sys.platform == "darwin" else peak * 1024)
+
+
+def _page_count(source: Path) -> int | None:
+    """Report PDF pages without adding page parsing to the measured extraction interval."""
+
+    if source.suffix.lower() != ".pdf":
+        return None
+    import fitz
+
+    with fitz.open(source) as document:
+        return document.page_count
+
+
 def benchmark(source: Path, *, repeats: int, warmups: int) -> dict[str, object]:
     """Measure extraction repeatedly and assert identical output across every run."""
 
@@ -68,6 +88,7 @@ def benchmark(source: Path, *, repeats: int, warmups: int) -> dict[str, object]:
     return {
         "source": source.as_posix(),
         "source_bytes": source.stat().st_size,
+        "source_pages": _page_count(source),
         "python": platform.python_version(),
         "platform": platform.platform(),
         "warmups": warmups,
@@ -77,6 +98,7 @@ def benchmark(source: Path, *, repeats: int, warmups: int) -> dict[str, object]:
         "mean_seconds": statistics.mean(durations),
         "min_seconds": min(durations),
         "max_seconds": max(durations),
+        "peak_process_rss_bytes": _peak_process_rss_bytes(),
         "record_count": len(records),
         "output_sha256": checksums[0],
     }

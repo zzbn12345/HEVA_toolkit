@@ -16,6 +16,36 @@ and repetition count. Compare medians rather than a single run. The bundled PDF 
 regression and smoke timing, but it is small; performance claims require the researcher-agreed
 large and visually complex Alpha corpus.
 
+## Synthetic 87-page scaling check
+
+When the authorized researcher document is unavailable, generate a controlled source that
+checks page scaling, output stability, and gross memory behavior:
+
+```bash
+python benchmarks/generate_large_pdf.py \
+  --output /tmp/heva-synthetic-87.pdf \
+  --pages 87
+python benchmarks/benchmark_extraction.py \
+  --source /tmp/heva-synthetic-87.pdf \
+  --warmups 1 \
+  --repeats 5
+```
+
+This fixture contains one simple searchable highlighted sentence per page. It is not a proxy
+for the visual complexity, accuracy, privacy, or performance of the researchers' real
+87-page source. `peak_process_rss_bytes` is the operating system's process high-water mark,
+so it includes Python, imported models, warm-up work, and native library allocations.
+
+Measured on 2026-08-26 with macOS ARM64, Python 3.12.7, PyMuPDF 1.27.2.3, one warm-up,
+and five measured runs:
+
+| Pages | Size | Records | Runs (seconds) | Median | Peak process RSS | Output SHA-256 |
+|---:|---:|---:|---|---:|---:|---|
+| 87 | 33 KB | 87 | 0.0594, 0.0541, 0.0545, 0.0539, 0.0677 | 0.0545 s | 115,130,368 bytes | `c9a1b0e9cb0515cc01d3a9118681d604ee5d4c4ee4dd5cc477fdd353f2df4f11` |
+
+Interpretation: the optimized extractor handles a long but intentionally sparse source
+without page-count-related slowdown. It does not close the real-document evidence gap.
+
 ## Initial baseline
 
 Baseline commit: `511d830ba6658c18f676944056a8c5f892153a47`

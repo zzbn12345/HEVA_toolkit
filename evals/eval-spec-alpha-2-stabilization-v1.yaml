@@ -63,8 +63,8 @@ implementation_evidence:
     - "F14.18 single embedded document workflow shell"
   partial:
     - feature: "F14.4 observable and resilient large-document extraction"
-      delivered: "Measured loop optimizations, command-line parity, live extraction stages, actual PDF page totals, cooperative cancellation, and provenance-aware PDF page scope"
-      remains: "Partial checkpoint resume, representative large-PDF evidence, finer NLP progress"
+      delivered: "Measured loop optimizations, command-line parity, live extraction stages, actual PDF page totals, cooperative cancellation, provenance-aware PDF page scope, and a reproducible synthetic 87-page scaling benchmark"
+      remains: "Partial checkpoint resume, authorized representative large-PDF evidence, finer NLP progress"
     - feature: "F14.17 strict annotation correction"
       delivered: "Accepted browser persistence, F14.17B two-layer source/curated sentence correction, and F14.17C audited independent annotation exclusion"
       remains: "Creating new annotations remains a separately scoped future capability"

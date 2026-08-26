@@ -10,6 +10,8 @@
 
 ### Changed
 
+- Added a generated 87-page scaling benchmark and honest process peak-memory reporting while
+  retaining the real researcher PDF as required performance-claim evidence.
 - Added a reproducible, app-openable two-document workspace fixture for validating and
   manually accepting selected-document Data Package export.
 - Added inclusive PDF page-range extraction in the app and list/range selection in the
