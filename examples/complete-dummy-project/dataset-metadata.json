@@ -1,0 +1,17 @@
+{
+  "name": "heva-complete-workspace-fixture",
+  "title": "Complete HEVA workspace fixture",
+  "description": "Two fictional, validated heritage-value annotation documents.",
+  "creators": [
+    "HEVA Toolkit contributors"
+  ],
+  "contributors": [
+    "Dana Demonstrator",
+    "Casey Curator"
+  ],
+  "license": "CC-BY-4.0",
+  "rights": "Fictional sources and annotations may be redistributed for demonstration.",
+  "known_limitations": [
+    "Synthetic demonstration data is not an accuracy benchmark."
+  ]
+}

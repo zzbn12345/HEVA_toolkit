@@ -1,0 +1,44 @@
+[
+  {
+    "sentence_id": 1,
+    "page": 1,
+    "sentence": "The coastal wetland supports ecological value and local memory.",
+    "tokens": [
+      "The",
+      "coastal",
+      "wetland",
+      "supports",
+      "ecological",
+      "value",
+      "and",
+      "local",
+      "memory",
+      "."
+    ],
+    "values": [
+      "ecological"
+    ],
+    "entities": [
+      {
+        "start": 29,
+        "end": 45,
+        "text": "ecological value",
+        "label": "ecological",
+        "color": "#A8D200"
+      }
+    ],
+    "ner_tags": [
+      "O",
+      "O",
+      "O",
+      "O",
+      "B-ecological",
+      "I-ecological",
+      "O",
+      "O",
+      "O",
+      "O"
+    ],
+    "schema_version": "1.0"
+  }
+]

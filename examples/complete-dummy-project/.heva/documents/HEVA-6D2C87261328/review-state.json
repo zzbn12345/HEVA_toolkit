@@ -1,0 +1,27 @@
+{
+  "review_version": "1.0",
+  "document_id": "HEVA-6D2C87261328",
+  "sentences": [
+    {
+      "sentence_id": 1,
+      "record_sha256": "60ffecdc4f2802bbf1a5870d95bc01a8c4bd8b07f9d52100df0cfcfebea78cc8",
+      "status": "approved",
+      "reviewer": "Casey Curator",
+      "decided_at": "2026-08-26T09:24:16.434292Z",
+      "comment": "Accepted demonstration annotation.",
+      "audit": [
+        {
+          "event": "decision",
+          "actor": "Casey Curator",
+          "occurred_at": "2026-08-26T09:24:16.434292Z",
+          "details": {
+            "from": "pending",
+            "to": "approved",
+            "comment": "Accepted demonstration annotation."
+          }
+        }
+      ],
+      "accepted_warning_codes": []
+    }
+  ]
+}

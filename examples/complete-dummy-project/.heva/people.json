@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "active_curator_id": "PERSON-DEMOCURATOR",
+  "people": [
+    {
+      "person_id": "PERSON-DEMOANNOTATOR",
+      "name": "Dana Demonstrator",
+      "roles": [
+        "annotator"
+      ],
+      "affiliation": "HEVA Demonstration Lab",
+      "email": null,
+      "orcid": "0000-0002-1825-0097"
+    },
+    {
+      "person_id": "PERSON-DEMOCURATOR",
+      "name": "Casey Curator",
+      "roles": [
+        "curator"
+      ],
+      "affiliation": "HEVA Demonstration Lab",
+      "email": null,
+      "orcid": null
+    }
+  ]
+}

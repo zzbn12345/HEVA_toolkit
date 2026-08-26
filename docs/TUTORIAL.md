@@ -1,8 +1,9 @@
 # Tutorial: inspect and repair an example
 
-This tutorial uses two examples:
+This tutorial uses three examples:
 
 - `examples/dummy-data-package/` is a finished distribution to inspect.
+- `examples/complete-dummy-project/` is a complete workspace for validation and selected export.
 - `examples/incomplete-dummy-project/` is working project state to open and validate.
 
 Complete [Install and run HEVA](INSTALLATION.md) before continuing.

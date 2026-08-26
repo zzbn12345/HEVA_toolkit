@@ -10,6 +10,8 @@
 
 ### Changed
 
+- Added a reproducible, app-openable two-document workspace fixture for validating and
+  manually accepting selected-document Data Package export.
 - Added inclusive PDF page-range extraction in the app and list/range selection in the
   command-line adapter. Selected pages are retained in raw-draft, canonical metadata, and
   extraction-session provenance.

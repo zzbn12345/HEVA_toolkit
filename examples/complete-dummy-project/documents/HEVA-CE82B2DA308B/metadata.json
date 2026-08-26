@@ -1,0 +1,99 @@
+{
+  "metadata_version": "1.0",
+  "document_id": "HEVA-CE82B2DA308B",
+  "source": {
+    "title": "Historic Harbour Demonstration",
+    "creators": [
+      "Amara Example"
+    ],
+    "citation": "Amara Example. Historic Harbour Demonstration. 2026.",
+    "item_type": "report",
+    "issued_year": 2026,
+    "undated": false,
+    "source_filename": "historic-harbour.pdf",
+    "reference": "https://example.org/heva/heva-ce82b2da308b",
+    "not_findable_reason": null,
+    "human_confirmed": false,
+    "confirmed_by": null,
+    "confirmed_at": null,
+    "validation_method": "programmatic",
+    "validated_by": "complete-workspace-fixture/1.0",
+    "validated_at": "2026-08-26T12:00:00Z"
+  },
+  "original_annotators": [
+    {
+      "person_id": "PERSON-DEMOANNOTATOR",
+      "name": "Dana Demonstrator",
+      "affiliation": "HEVA Demonstration Lab",
+      "orcid": "0000-0002-1825-0097"
+    }
+  ],
+  "annotator": {
+    "name": null,
+    "affiliation": null,
+    "email": null,
+    "orcid": null
+  },
+  "rights": {
+    "access_level": null,
+    "authorization_status": null,
+    "authorization_date": null,
+    "authorized_by": null,
+    "evidence_reference": null,
+    "source_distribution_allowed": null,
+    "extracted_text_distribution_allowed": null,
+    "annotation_distribution_allowed": null,
+    "license": null,
+    "embargo_until": null
+  },
+  "annotation_process": {
+    "method": "hybrid",
+    "extractor": "HEVA deterministic fixture",
+    "extractor_version": "1.0",
+    "performed_at": "2026-08-26T12:00:00Z",
+    "source_scope": "full_source",
+    "selected_pages": [],
+    "review": {
+      "all_sentences_require_approval": true,
+      "completed": true,
+      "reviewed_at": "2026-08-26T12:00:00Z"
+    }
+  },
+  "color_configuration": {
+    "detection_method": "automatic",
+    "document_consistency": "unknown",
+    "human_confirmed": true,
+    "confirmed_by": "Casey Curator",
+    "confirmed_at": "2026-08-26T12:00:00Z",
+    "use_for_extraction": false,
+    "extraction_authorized_by": null,
+    "extraction_authorized_at": null,
+    "shared_from_document_id": null,
+    "configuration_id": null,
+    "configuration_version": null,
+    "colors": [
+      {
+        "hex": "#FF40FF",
+        "color_name": null,
+        "text_color": null,
+        "suggested_label": null,
+        "label": "historic",
+        "display_name": null,
+        "method": "manual",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": null,
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "name": "annotations",
+      "path": "annotations.json",
+      "format": "json",
+      "record_count": 1
+    }
+  ]
+}

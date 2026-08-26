@@ -1,0 +1,44 @@
+[
+  {
+    "sentence_id": 1,
+    "page": 1,
+    "sentence": "The historic harbour remains central to the town's identity.",
+    "tokens": [
+      "The",
+      "historic",
+      "harbour",
+      "remains",
+      "central",
+      "to",
+      "the",
+      "town's",
+      "identity",
+      "."
+    ],
+    "values": [
+      "historic"
+    ],
+    "entities": [
+      {
+        "start": 4,
+        "end": 20,
+        "text": "historic harbour",
+        "label": "historic",
+        "color": "#FF40FF"
+      }
+    ],
+    "ner_tags": [
+      "O",
+      "B-historic",
+      "I-historic",
+      "O",
+      "O",
+      "O",
+      "O",
+      "O",
+      "O",
+      "O"
+    ],
+    "schema_version": "1.0"
+  }
+]

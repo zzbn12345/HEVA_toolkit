@@ -1,0 +1,37 @@
+{
+  "registry_version": "1.0",
+  "source_directory": "documents",
+  "documents": [
+    {
+      "document_id": "HEVA-6D2C87261328",
+      "source_path": "documents/coastal-wetland.pdf",
+      "package_path": "documents/HEVA-6D2C87261328",
+      "metadata_path": "documents/HEVA-6D2C87261328/metadata.json",
+      "checksum_sha256": "a11b26808f3c69a4e98c9afe14bc56234cfcbc75f809db22224fd5011698c961",
+      "observed_checksum_sha256": null,
+      "status": "backlog",
+      "source_state": "present",
+      "source_binding": "project"
+    },
+    {
+      "document_id": "HEVA-CE82B2DA308B",
+      "source_path": "documents/historic-harbour.pdf",
+      "package_path": "documents/HEVA-CE82B2DA308B",
+      "metadata_path": "documents/HEVA-CE82B2DA308B/metadata.json",
+      "checksum_sha256": "86bff186f53339445780002b9bb11ed79bdda380a6f097b0713b0abd2f3ed650",
+      "observed_checksum_sha256": null,
+      "status": "backlog",
+      "source_state": "present",
+      "source_binding": "project"
+    }
+  ],
+  "summary": {
+    "total": 2,
+    "backlog": 2,
+    "in_progress": 0,
+    "in_review": 0,
+    "done": 0,
+    "changed": 0,
+    "missing": 0
+  }
+}
