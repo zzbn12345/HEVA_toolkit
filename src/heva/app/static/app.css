@@ -390,7 +390,12 @@ h1 {
 .project-progress progress::-webkit-progress-bar { border-radius: 999px; background: var(--field); }
 .project-progress progress::-webkit-progress-value { border-radius: 999px; background: var(--accent); }
 .project-progress progress::-moz-progress-bar { border-radius: 999px; background: var(--accent); }
-.project-action .button { margin: 0; white-space: nowrap; }
+.project-action {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.project-action .button { margin: 0; white-space: nowrap; text-align: center; }
 .action-unavailable { color: var(--muted); font-size: .86rem; }
 
 @container (max-width: 1000px) {

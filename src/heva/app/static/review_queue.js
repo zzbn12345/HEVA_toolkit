@@ -94,11 +94,15 @@ function renderQueue() {
 
     const action = document.createElement("div");
     action.className = "project-action";
+    const scopeLink = document.createElement("a");
+    scopeLink.className = "button secondary";
+    scopeLink.href = `/create?document_id=${encodeURIComponent(item.document_id)}&section=annotations`;
+    scopeLink.textContent = "Extraction scope";
     const link = document.createElement("a");
     link.className = "button";
     link.href = `/create?document_id=${encodeURIComponent(item.document_id)}&section=annotations`;
     link.textContent = "Edit this annotation";
-    action.appendChild(link);
+    action.append(scopeLink, link);
     row.append(documentCell, workflow, readiness, progressCell, action);
     return row;
   }));

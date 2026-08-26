@@ -15,6 +15,8 @@
   extraction-session provenance.
 - Exposed the current PDF page scope and re-extraction controls directly in the document
   annotation view, including progress and safe cancellation.
+- Added a dedicated Extraction scope action to every document row so researchers can choose
+  the PDF range before starting extraction.
 - Added cooperative PDF extraction cancellation at safe page boundaries. Cancelling before
   persistence preserves the previous valid raw or canonical checkpoint instead of replacing
   it with partial output.

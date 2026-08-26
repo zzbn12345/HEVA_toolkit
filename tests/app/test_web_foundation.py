@@ -1939,6 +1939,7 @@ def test_review_queue_asset_always_offers_edit_annotation_action() -> None:
     ).read_text(encoding="utf-8")
 
     assert 'link.textContent = "Edit this annotation"' in script
+    assert 'scopeLink.textContent = "Extraction scope"' in script
     assert "/create?document_id=" in script
     assert "&section=annotations" in script
     assert 'fetch("/api/projects/close", {method: "POST"})' in script
@@ -1975,7 +1976,8 @@ def test_review_queue_can_close_or_switch_project(tmp_path: Path) -> None:
     assert 'id="open-another-project"' in response.text
     assert 'id="close-project"' in response.text
     assert 'id="stop-app"' in response.text
-    assert 'src="/static/review_queue.js?v=7"' in response.text
+    assert 'href="/static/app.css?v=6"' in response.text
+    assert 'src="/static/review_queue.js?v=8"' in response.text
     assert 'badge.textContent = item.annotation_complete ? "Complete" : "Incomplete"' in script
     assert "readiness_gates" in script
     assert 'fetch("/api/app/shutdown", {method: "POST"})' in script
