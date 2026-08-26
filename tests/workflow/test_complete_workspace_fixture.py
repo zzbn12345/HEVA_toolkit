@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 
@@ -42,3 +43,23 @@ def test_complete_workspace_validates_and_exports_selected_membership(tmp_path: 
     assert payload["membership"] == [selected]
     assert len(payload["excluded_project_document_ids"]) == 1
     assert not any(path.suffix == ".pdf" for path in release.iterdir())
+
+
+def test_complete_workspace_rebuild_is_byte_stable(tmp_path: Path) -> None:
+    """Rebuilding the fixture must not create meaningless Git changes."""
+
+    builder = _builder_module()
+    workspace = builder.build_complete_workspace(tmp_path / "workspace")
+
+    def digest() -> str:
+        files = sorted(path for path in workspace.rglob("*") if path.is_file())
+        payload = b"".join(
+            path.relative_to(workspace).as_posix().encode("utf-8") + b"\0" + path.read_bytes()
+            for path in files
+        )
+        return hashlib.sha256(payload).hexdigest()
+
+    first = digest()
+    builder.build_complete_workspace(workspace, force=True)
+
+    assert digest() == first

@@ -1,61 +1,37 @@
-%PDF-1.7
-%ÂµÂ¶
-% Written by MuPDF 1.27.2
-
+%PDF-1.4
+%âãÏÓ
 1 0 obj
-<</Type/Catalog/Pages 2 0 R/Info<</Producer(MuPDF 1.27.2)>>>>
+<< /Type /Catalog /Pages 2 0 R >>
 endobj
-
 2 0 obj
-<</Type/Pages/Count 1/Kids[4 0 R]>>
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
 endobj
-
 3 0 obj
-<</Font<</helv 5 0 R>>>>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
 endobj
-
 4 0 obj
-<</Type/Page/MediaBox[0 0 595 842]/Rotate 0/Resources 3 0 R/Parent 2 0 R/Contents[6 0 R 7 0 R]>>
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
-
 5 0 obj
-<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>
+<< /Length 149 >>
+stream
+BT /F1 18 Tf 72 752 Td (Coastal Wetland Demonstration) Tj 0 -40 Td /F1 12 Tf (The coastal wetland supports ecological value and local memory.) Tj ET
+endstream
 endobj
-
 6 0 obj
-<</Length 102/Filter/FlateDecode>>
-stream
-xÚÊ±
-ƒP…á=O‘7ğ&æ´ ‚K·B6q²W:´ƒ‹Ïoä,ç‡š‚„KNØ•½*ÇŸºoû,—Ázìïİ Ø´TGÍ¿e5˜3T|Ò´Û¸¦5<ï×xÑô¦òÂW
-endstream
+<< /Title (HEVA complete workspace fixture) /Author (HEVA Toolkit) >>
 endobj
-
-7 0 obj
-<</Length 132/Filter/FlateDecode>>
-stream
-xÚ-Œ1B1C÷"'€6mm*¡? ±°!uCLı­``áü„òY±•<»·;UÄÛ¡
-JÙ©/Ù?úó#A¥¹sÂY="#šzÙ|³Ô‘,Gfzz*£y2ÍDó¿Í<;7vşlw¬Æ­³¥h_îõâÎÕ]İ¤(i
-endstream
-endobj
-
-8 0 obj
-<</Title(Coastal Wetland Demonstration)/Author(HEVA fixture builder)>>
-endobj
-
 xref
-0 9
-0000000000 65535 f 
-0000000042 00000 n 
-0000000120 00000 n 
-0000000172 00000 n 
-0000000213 00000 n 
-0000000326 00000 n 
-0000000415 00000 n 
-0000000586 00000 n 
-0000000787 00000 n 
-
+0 7
+0000000000 65535 f
+0000000015 00000 n
+0000000064 00000 n
+0000000121 00000 n
+0000000247 00000 n
+0000000317 00000 n
+0000000516 00000 n
 trailer
-<</Size 9/Info 8 0 R/Root 1 0 R/ID[<C29BC28026C284C3A76D6CC3A46BC2A4><FBC30EB9C0DA46C2E43C3DEBF8AFDA4A>]>>
+<< /Size 7 /Root 1 0 R /Info 6 0 R >>
 startxref
-874
+601
 %%EOF

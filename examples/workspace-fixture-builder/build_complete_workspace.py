@@ -8,8 +8,6 @@ import json
 from pathlib import Path
 import shutil
 
-import fitz
-
 from heva.workflow.document_metadata import (
     AnnotationProcessMetadata,
     AnnotatorMetadata,
@@ -51,15 +49,47 @@ FIXTURE_DOCUMENTS = (
 
 
 def _write_pdf(path: Path, title: str, sentence: str) -> None:
-    """Create a small readable source PDF without embedding annotations or private data."""
+    """Create a small byte-stable PDF without timestamps or random document identifiers."""
 
-    document = fitz.open()
-    page = document.new_page(width=595, height=842)
-    page.insert_text((72, 90), title, fontsize=18)
-    page.insert_textbox(fitz.Rect(72, 130, 520, 260), sentence, fontsize=12)
-    document.set_metadata({"title": title, "author": "HEVA fixture builder"})
-    document.save(path)
-    document.close()
+    def pdf_text(value: str) -> str:
+        return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+    content = (
+        f"BT /F1 18 Tf 72 752 Td ({pdf_text(title)}) Tj "
+        f"0 -40 Td /F1 12 Tf ({pdf_text(sentence)}) Tj ET\n"
+    ).encode("ascii")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
+            b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>"
+        ),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length " + str(len(content)).encode("ascii") + b" >>\nstream\n"
+        + content
+        + b"endstream",
+        b"<< /Title (HEVA complete workspace fixture) /Author (HEVA Toolkit) >>",
+    ]
+    output = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = [0]
+    for index, item in enumerate(objects, start=1):
+        offsets.append(len(output))
+        output.extend(f"{index} 0 obj\n".encode("ascii"))
+        output.extend(item)
+        output.extend(b"\nendobj\n")
+    xref_offset = len(output)
+    output.extend(f"xref\n0 {len(objects) + 1}\n".encode("ascii"))
+    output.extend(b"0000000000 65535 f\n")
+    for offset in offsets[1:]:
+        output.extend(f"{offset:010d} 00000 n\n".encode("ascii"))
+    output.extend(
+        (
+            f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R /Info 6 0 R >>\n"
+            f"startxref\n{xref_offset}\n%%EOF\n"
+        ).encode("ascii")
+    )
+    path.write_bytes(output)
 
 
 def _record(specification: dict[str, str]) -> dict[str, object]:
@@ -197,6 +227,16 @@ def build_complete_workspace(output: Path, *, force: bool = False) -> Path:
             status="approved",
             reviewer=curator.name,
             comment="Accepted demonstration annotation.",
+        )
+        review_path = output / ".heva" / "documents" / entry.document_id / "review-state.json"
+        review_payload = json.loads(review_path.read_text(encoding="utf-8"))
+        for sentence_review in review_payload["sentences"]:
+            sentence_review["decided_at"] = "2026-08-26T12:00:00Z"
+            for event in sentence_review["audit"]:
+                event["occurred_at"] = "2026-08-26T12:00:00Z"
+        review_path.write_text(
+            json.dumps(review_payload, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
         )
 
     dataset = DatasetReleaseMetadata(

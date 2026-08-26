@@ -7,13 +7,13 @@
       "record_sha256": "21fbfa0a46c02b2b6722a620d24d2eee3fa65944ea243d61341de62c5e0bbb2f",
       "status": "approved",
       "reviewer": "Casey Curator",
-      "decided_at": "2026-08-26T09:24:16.431619Z",
+      "decided_at": "2026-08-26T12:00:00Z",
       "comment": "Accepted demonstration annotation.",
       "audit": [
         {
           "event": "decision",
           "actor": "Casey Curator",
-          "occurred_at": "2026-08-26T09:24:16.431619Z",
+          "occurred_at": "2026-08-26T12:00:00Z",
           "details": {
             "from": "pending",
             "to": "approved",
