@@ -78,6 +78,7 @@ implementation_evidence:
     - "F14.19 documentation delivery and special paths"
     - "F14.21 collaborative workspace identity"
     - "F14.22 Git-ready external Data Package destination"
+    - "F14.24 managed PDF import with atomic registry update"
 
 budget:
   mode: implementation
