@@ -10,6 +10,9 @@
 
 ### Changed
 
+- Linked every reviewed PDF sentence to its persisted source page. The action reveals and
+  navigates the correct PDF pane in both standalone and embedded document review, while
+  clearly limiting the promise to page-level evidence until coordinates are retained.
 - Added the shared top-of-app notification foundation and connected validation and selected
   Data Package export to running, success, warning, download, and failure feedback.
 - Fixed validation correction links so embedded annotation review cannot load another full

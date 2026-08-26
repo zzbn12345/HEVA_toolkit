@@ -76,6 +76,30 @@ function highlightedSentence(record) {
   return paragraph;
 }
 
+/**
+ * Reveal the source PDF at the one-based page retained by extraction evidence.
+ * The current schema does not retain annotation rectangles, so HEVA deliberately
+ * promises page navigation rather than an inaccurate coordinate highlight.
+ */
+function navigatePdfEvidence(record) {
+  const page = Number(record.page);
+  if (!Number.isInteger(page) || page < 1) return;
+  if (document.body.classList.contains("embedded-review")) {
+    window.parent.postMessage(
+      {type: "heva-pdf-evidence", documentId, page},
+      window.location.origin,
+    );
+    return;
+  }
+  app.classList.remove("pdf-hidden");
+  const toggle = document.getElementById("toggle-review-pdf");
+  toggle.textContent = "Hide PDF";
+  toggle.setAttribute("aria-expanded", "true");
+  document.getElementById("review-pdf-frame").src =
+    `/api/review/${encodeURIComponent(documentId)}/source#page=${page}`;
+  document.getElementById("review-pdf").scrollIntoView({block: "nearest"});
+}
+
 async function decide(sentenceIds, status, comment = null) {
   const response = await fetch(`/api/review/${encodeURIComponent(documentId)}/decisions`, {
     method: "PUT",
@@ -539,6 +563,17 @@ function sentenceCard(item) {
   }
   const actions = document.createElement("div");
   actions.className = "decision-actions";
+  if (reviewDocument.source_path.toLowerCase().endsWith(".pdf")) {
+    const evidenceButton = textElement(
+      "button",
+      "button secondary",
+      `View page ${record.page} in PDF`,
+    );
+    evidenceButton.type = "button";
+    evidenceButton.title = "Exact annotation coordinates are not retained yet; HEVA will open the persisted source page.";
+    evidenceButton.addEventListener("click", () => navigatePdfEvidence(record));
+    actions.appendChild(evidenceButton);
+  }
   const editable = editability.editable;
   const editButton = textElement("button", "button secondary", "Edit sentence");
   editButton.type = "button";

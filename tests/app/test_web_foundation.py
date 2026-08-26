@@ -369,7 +369,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=27"' in response.text
+    assert 'src="/static/create.js?v=28"' in response.text
     assert 'href="/static/create.css?v=13"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -1597,7 +1597,7 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=17"' in response.text
+    assert 'src="/static/review_document.js?v=18"' in response.text
     assert 'id="edit-source-sentence"' in response.text
     assert "Source sentence — read only" in response.text
     assert 'href="/static/review.css?v=14"' in response.text
@@ -1657,6 +1657,10 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert 'filter === "checked"' in script
     assert 'filter === "to_check"' in script
     assert '"Edit sentence"' in script
+    assert "View page ${record.page} in PDF" in script
+    assert "navigatePdfEvidence(record)" in script
+    assert 'type: "heva-pdf-evidence"' in script
+    assert "#page=${page}" in script
     assert "correctedRecord" in script
     assert "values: [...new Set" in script
     assert "locateExtraction" in script
@@ -1735,6 +1739,24 @@ def test_embedded_sentence_review_uses_parent_workflow_shell(tmp_path: Path) -> 
         / "review_document.js"
     ).read_text(encoding="utf-8")
     assert 'link.target = "_top"' in script
+
+
+def test_document_setup_synchronizes_embedded_pdf_evidence_navigation() -> None:
+    """An embedded sentence can reveal the outer PDF pane at its persisted page."""
+
+    script = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "create.js"
+    ).read_text(encoding="utf-8")
+
+    assert 'event.data?.type === "heva-pdf-evidence"' in script
+    assert "event.data.documentId !== documentId" in script
+    assert "app.classList.remove(\"pdf-hidden\")" in script
+    assert "#page=${event.data.page}" in script
 
 
 def test_shared_notifications_are_accessible_and_update_by_event_id() -> None:

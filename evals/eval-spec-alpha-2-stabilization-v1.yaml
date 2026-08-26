@@ -62,6 +62,9 @@ implementation_evidence:
     - "F14.16 explicit warning acceptance with retained audit evidence"
     - "F14.18 single embedded document workflow shell"
   partial:
+    - feature: "F14.5 PDF evidence navigation"
+      delivered: "Sentence actions reveal the standalone or embedded PDF pane at the persisted source page"
+      remains: "Persisted coordinate evidence and color-filtered representative occurrences"
     - feature: "F14.4 observable and resilient large-document extraction"
       delivered: "Measured loop optimizations, command-line parity, live extraction stages, actual PDF page totals, cooperative cancellation, provenance-aware PDF page scope, and a reproducible synthetic 87-page scaling benchmark"
       remains: "Partial checkpoint resume, authorized representative large-PDF evidence, finer NLP progress"
@@ -72,7 +75,6 @@ implementation_evidence:
       delivered: "One accessible top-of-app component with validation and selected Data Package export feedback"
       remains: "Extraction, setup, and sentence-review event integration"
   unstarted:
-    - "F14.5 PDF evidence navigation"
     - "F14.7-F14.10 remaining intake and usability features"
     - "F14.15 annotation context"
     - "F14.19 documentation delivery and special paths"

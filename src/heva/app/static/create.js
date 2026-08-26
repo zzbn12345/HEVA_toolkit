@@ -97,10 +97,23 @@ async function loadDocumentReadiness(documentId) {
 
 window.addEventListener("message", (event) => {
   if (event.origin !== window.location.origin) return;
-  if (event.data?.type !== "heva-review-updated") return;
   const documentId = document.getElementById("selected-document-id").value;
-  if (documentId && event.data.documentId === documentId) {
+  if (!documentId || event.data.documentId !== documentId) return;
+  if (event.data?.type === "heva-review-updated") {
     loadDocumentReadiness(documentId);
+    return;
+  }
+  if (event.data?.type === "heva-pdf-evidence") {
+    const page = Number(event.data.page);
+    if (!Number.isInteger(page) || page < 1) return;
+    app.classList.remove("pdf-hidden");
+    const toggle = document.getElementById("toggle-pdf");
+    toggle.textContent = "Hide PDF";
+    toggle.setAttribute("aria-expanded", "true");
+    openPreview(
+      `/api/documents/${encodeURIComponent(documentId)}/source#page=${event.data.page}`,
+      `Source evidence · page ${page}`,
+    );
   }
 });
 
