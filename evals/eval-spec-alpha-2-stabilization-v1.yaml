@@ -66,8 +66,8 @@ implementation_evidence:
       delivered: "Measured loop optimizations, command-line parity, live extraction stages, actual PDF page totals, cooperative cancellation, and provenance-aware PDF page scope"
       remains: "Partial checkpoint resume, representative large-PDF evidence, finer NLP progress"
     - feature: "F14.17 strict annotation correction"
-      delivered: "Direct API persistence, F14.17B two-layer source/curated sentence correction, and F14.17C audited independent annotation exclusion"
-      remains: "Manual acceptance of annotation exclusion; creating new annotations remains separate"
+      delivered: "Accepted browser persistence, F14.17B two-layer source/curated sentence correction, and F14.17C audited independent annotation exclusion"
+      remains: "Creating new annotations remains a separately scoped future capability"
   unstarted:
     - "F14.5 PDF evidence navigation"
     - "F14.7-F14.10 remaining intake and usability features"
