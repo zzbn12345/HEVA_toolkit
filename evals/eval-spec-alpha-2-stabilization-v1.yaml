@@ -62,6 +62,9 @@ implementation_evidence:
     - "F14.16 explicit warning acceptance with retained audit evidence"
     - "F14.18 single embedded document workflow shell"
   partial:
+    - feature: "F14.24 managed PDF import with atomic registry update"
+      delivered: "Portable managed-source copy, checksum verification, duplicate and collision handling, and rollback-safe registry mutation"
+      remains: "Native picker/API, web controls, shared notifications, restart acceptance, and user documentation"
     - feature: "F14.5 PDF evidence navigation"
       delivered: "Sentence actions reveal the standalone or embedded PDF pane at the persisted source page"
       remains: "Persisted coordinate evidence and color-filtered representative occurrences"
@@ -80,7 +83,6 @@ implementation_evidence:
     - "F14.19 documentation delivery and special paths"
     - "F14.21 collaborative workspace identity"
     - "F14.22 Git-ready external Data Package destination"
-    - "F14.24 managed PDF import with atomic registry update"
 
 budget:
   mode: implementation

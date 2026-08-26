@@ -105,6 +105,16 @@ class SourceScanReport:
     missing: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class ManagedImportResult:
+    """Outcome of copying one PDF into project-managed source storage."""
+
+    document_id: str
+    source_path: str
+    checksum_sha256: str
+    created: bool
+
+
 def scan_project_sources(project_root: str | Path) -> SourceScanReport:
     """Inspect configured sources without registering or rewriting project state."""
 
@@ -268,6 +278,93 @@ def register_external_source(project_root: str | Path, source_file: str | Path) 
     bindings[document_id] = str(source)
     _write_local_source_bindings(root, bindings)
     return document_id
+
+
+def import_managed_pdf(
+    project_root: str | Path,
+    source_file: str | Path,
+) -> ManagedImportResult:
+    """Copy one PDF into managed storage and atomically register its verified bytes.
+
+    Identical content resolves to the existing document. A same-name file with different
+    bytes receives a checksum-prefixed name and is never allowed to overwrite silently.
+    The incoming absolute path is used only for this operation and is not persisted.
+    """
+
+    root = Path(project_root).resolve()
+    source = Path(source_file).expanduser().resolve()
+    if not source.is_file() or source.suffix.lower() != ".pdf":
+        raise RegistryError("Choose an existing PDF file to import into this project.")
+    try:
+        with source.open("rb") as stream:
+            header = stream.read(1024)
+    except OSError as error:
+        raise RegistryError(f"The selected PDF cannot be read: {error}") from error
+    if b"%PDF-" not in header:
+        raise RegistryError("The selected file does not contain a valid PDF header.")
+
+    registry = load_project_registry(root)
+    checksum = _checksum(source)
+    for entry in registry.documents:
+        if entry.checksum_sha256 == checksum:
+            return ManagedImportResult(
+                document_id=entry.document_id,
+                source_path=entry.source_path,
+                checksum_sha256=checksum,
+                created=False,
+            )
+
+    configured_root = Path(registry.source_directory)
+    managed_directory = configured_root / "sources"
+    destination_relative = managed_directory / source.name
+    destination = root / destination_relative
+    occupied_paths = {entry.source_path for entry in registry.documents}
+    if destination_relative.as_posix() in occupied_paths or destination.exists():
+        destination_relative = managed_directory / f"{checksum[:12]}-{source.name}"
+        destination = root / destination_relative
+    if destination.exists():
+        raise RegistryError(
+            f"Managed destination already exists and will not be overwritten: {destination_relative.as_posix()}"
+        )
+
+    logical = destination_relative.as_posix()
+    occupied = {entry.document_id: entry.source_path for entry in registry.documents}
+    document_id = _new_document_id(logical, occupied)
+    entry = DocumentEntry(
+        document_id=document_id,
+        source_path=logical,
+        package_path=f"{DATA_DOCUMENTS_DIRECTORY.as_posix()}/{document_id}",
+        checksum_sha256=checksum,
+        source_binding="project",
+    )
+    package_directory = document_data_directory(root, document_id)
+    temporary = destination.with_name(f".{destination.name}.heva-import")
+    try:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, temporary)
+        if _checksum(temporary) != checksum:
+            raise RegistryError("The managed PDF copy failed checksum verification.")
+        temporary.replace(destination)
+        registry.documents.append(entry)
+        registry.documents.sort(key=lambda item: item.source_path)
+        registry.summary = _summarize(registry.documents)
+        _create_package_directories(root, [entry])
+        _write_registry(root / DEFAULT_REGISTRY_PATH, registry)
+    except (OSError, RegistryError) as error:
+        temporary.unlink(missing_ok=True)
+        destination.unlink(missing_ok=True)
+        if package_directory.exists():
+            shutil.rmtree(package_directory)
+        if isinstance(error, RegistryError):
+            raise
+        raise RegistryError(f"The PDF could not be imported into the project: {error}") from error
+
+    return ManagedImportResult(
+        document_id=document_id,
+        source_path=logical,
+        checksum_sha256=checksum,
+        created=True,
+    )
 
 
 class RegistryError(ValueError):

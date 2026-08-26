@@ -10,6 +10,9 @@
 
 ### Changed
 
+- Added the managed PDF import foundation for researchers who want a portable project copy
+  instead of an external source binding. Imports verify copied bytes, reuse identical content,
+  avoid filename overwrites, and roll back when the registry cannot be updated.
 - Linked every reviewed PDF sentence to its persisted source page. The action reveals and
   navigates the correct PDF pane in both standalone and embedded document review, while
   clearly limiting the promise to page-level evidence until coordinates are retained.

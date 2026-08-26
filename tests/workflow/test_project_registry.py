@@ -9,6 +9,7 @@ import sys
 
 import pytest
 
+from heva.workflow import project_registry
 from heva.workflow.project_registry import (
     REGISTRY_VERSION,
     RegistryError,
@@ -18,6 +19,7 @@ from heva.workflow.project_registry import (
     scan_project_sources,
     register_discovered_sources,
     register_external_source,
+    import_managed_pdf,
     resolve_document_source,
 )
 
@@ -96,6 +98,115 @@ def test_external_source_path_remains_local_while_dataset_state_is_portable(tmp_
     assert resolve_document_source(project_root, entry) == external
     assert scan_project_sources(project_root).discovered == ()
     assert str(external) in (project_root / ".heva/local-sources.json").read_text()
+
+
+def test_managed_pdf_import_copies_and_registers_one_portable_source(tmp_path: Path) -> None:
+    """Managed import makes a verified project copy and one registry record."""
+
+    project = tmp_path / "dataset"
+    project.mkdir()
+    (project / "seed.pdf").write_bytes(b"%PDF-1.4\nseed")
+    sync_registry(project, source_dir=".")
+    external = tmp_path / "incoming" / "Galle & harbour.pdf"
+    external.parent.mkdir()
+    external.write_bytes(b"%PDF-1.4\nmanaged source")
+
+    result = import_managed_pdf(project, external)
+    registry = load_project_registry(project)
+    entry = next(item for item in registry.documents if item.document_id == result.document_id)
+
+    assert result.created is True
+    assert entry.source_binding == "project"
+    assert entry.source_path == "sources/Galle & harbour.pdf"
+    assert (project / entry.source_path).read_bytes() == external.read_bytes()
+    assert entry.checksum_sha256 == result.checksum_sha256
+    assert str(external) not in (project / ".heva/project.json").read_text()
+
+
+def test_managed_pdf_import_reuses_identical_content_without_second_copy(tmp_path: Path) -> None:
+    """Identical bytes resolve to the existing logical document regardless of filename."""
+
+    project = tmp_path / "dataset"
+    project.mkdir()
+    (project / "seed.pdf").write_bytes(b"%PDF-1.4\nseed")
+    sync_registry(project, source_dir=".")
+    first = add_source(tmp_path / "incoming", "first.pdf", b"%PDF-1.4\nsame")
+    second = add_source(tmp_path / "other", "second.pdf", b"%PDF-1.4\nsame")
+
+    created = import_managed_pdf(project, first)
+    duplicate = import_managed_pdf(project, second)
+
+    assert duplicate.created is False
+    assert duplicate.document_id == created.document_id
+    assert len(load_project_registry(project).documents) == 2
+    assert not (project / "sources/second.pdf").exists()
+
+
+def test_managed_pdf_import_never_overwrites_same_name_with_different_content(tmp_path: Path) -> None:
+    project = tmp_path / "dataset"
+    project.mkdir()
+    (project / "seed.pdf").write_bytes(b"%PDF-1.4\nseed")
+    sync_registry(project, source_dir=".")
+    first = add_source(tmp_path / "one", "report.pdf", b"%PDF-1.4\nfirst")
+    second = add_source(tmp_path / "two", "report.pdf", b"%PDF-1.4\nsecond")
+
+    first_result = import_managed_pdf(project, first)
+    second_result = import_managed_pdf(project, second)
+    registry = load_project_registry(project)
+    paths = {entry.document_id: entry.source_path for entry in registry.documents}
+
+    assert paths[first_result.document_id] == "sources/report.pdf"
+    assert paths[second_result.document_id].startswith("sources/")
+    assert paths[second_result.document_id] != paths[first_result.document_id]
+    assert (project / paths[first_result.document_id]).read_bytes() == first.read_bytes()
+    assert (project / paths[second_result.document_id]).read_bytes() == second.read_bytes()
+
+
+def test_managed_pdf_import_rejects_non_pdf_and_invalid_pdf_without_mutation(tmp_path: Path) -> None:
+    project = tmp_path / "dataset"
+    project.mkdir()
+    (project / "seed.pdf").write_bytes(b"%PDF-1.4\nseed")
+    sync_registry(project, source_dir=".")
+    before = (project / ".heva/project.json").read_bytes()
+    invalid = add_source(tmp_path / "incoming", "invalid.pdf", b"plain text")
+    wrong_type = add_source(tmp_path / "incoming", "notes.docx", b"docx")
+
+    with pytest.raises(RegistryError, match="valid PDF"):
+        import_managed_pdf(project, invalid)
+    with pytest.raises(RegistryError, match="PDF file"):
+        import_managed_pdf(project, wrong_type)
+
+    assert (project / ".heva/project.json").read_bytes() == before
+    assert not (project / "sources").exists()
+
+
+def test_managed_pdf_import_rolls_back_copy_when_registry_write_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A failed registry commit cannot leave a managed file or document package behind."""
+
+    project = tmp_path / "dataset"
+    project.mkdir()
+    (project / "seed.pdf").write_bytes(b"%PDF-1.4\nseed")
+    sync_registry(project, source_dir=".")
+    incoming = add_source(tmp_path / "incoming", "report.pdf", b"%PDF-1.4\nincoming")
+    before = (project / ".heva/project.json").read_bytes()
+
+    def fail_write(path: Path, registry: object) -> None:
+        raise OSError("simulated registry failure")
+
+    monkeypatch.setattr(project_registry, "_write_registry", fail_write)
+
+    with pytest.raises(RegistryError, match="could not be imported"):
+        import_managed_pdf(project, incoming)
+
+    assert (project / ".heva/project.json").read_bytes() == before
+    assert not (project / "sources/report.pdf").exists()
+    assert not any(
+        path.name != json.loads(before)["documents"][0]["document_id"]
+        for path in (project / "documents").iterdir()
+    )
 
 
 def test_initialization_creates_registry_without_renaming_sources(tmp_path: Path) -> None:
