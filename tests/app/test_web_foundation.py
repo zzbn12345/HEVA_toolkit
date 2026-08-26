@@ -283,6 +283,55 @@ def test_native_source_picker_registers_external_file_without_copying(
     assert str(external) not in (project / ".heva/project.json").read_text()
 
 
+def test_native_pdf_picker_imports_managed_copy_and_updates_registry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The managed action copies a PDF while the external action remains no-copy."""
+
+    project = tmp_path / "dataset"
+    project.mkdir()
+    (project / "seed.pdf").write_bytes(b"%PDF-1.4\nseed")
+    sync_registry(project, source_dir=".")
+    incoming = tmp_path / "incoming" / "managed.pdf"
+    incoming.parent.mkdir()
+    incoming.write_bytes(b"%PDF-1.4\nmanaged")
+    monkeypatch.setattr(project_routes, "select_local_pdf_file", lambda prompt: str(incoming))
+    client = TestClient(create_app())
+    client.post("/api/projects/open", json={"path": str(project)})
+
+    response = client.post("/api/files/import-pdf")
+
+    assert response.status_code == 200
+    assert response.json()["selected"] is True
+    assert response.json()["created"] is True
+    assert response.json()["source_path"] == "sources/managed.pdf"
+    assert (project / "sources/managed.pdf").read_bytes() == incoming.read_bytes()
+    registry = json.loads((project / ".heva/project.json").read_text())
+    assert response.json()["document_id"] in {
+        entry["document_id"] for entry in registry["documents"]
+    }
+
+
+def test_cancelled_managed_pdf_picker_does_not_mutate_project(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project = tmp_path / "dataset"
+    project.mkdir()
+    (project / "seed.pdf").write_bytes(b"%PDF-1.4\nseed")
+    sync_registry(project, source_dir=".")
+    before = (project / ".heva/project.json").read_bytes()
+    monkeypatch.setattr(project_routes, "select_local_pdf_file", lambda prompt: None)
+    client = TestClient(create_app(project))
+
+    response = client.post("/api/files/import-pdf")
+
+    assert response.status_code == 200
+    assert response.json()["selected"] is False
+    assert (project / ".heva/project.json").read_bytes() == before
+
+
 def test_cancelled_native_folder_picker_is_not_an_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

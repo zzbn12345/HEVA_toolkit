@@ -103,6 +103,7 @@ from heva.workflow.project_registry import (
     ProjectRegistry,
     RegistryError,
     load_project_registry,
+    import_managed_pdf,
     relocate_project_root_to_sources,
     register_discovered_sources,
     register_external_source,
@@ -129,6 +130,7 @@ from heva.app.folder_picker import (
     FolderPickerUnavailable,
     select_local_csv_file,
     select_local_folder,
+    select_local_pdf_file,
     select_local_source_file,
 )
 
@@ -312,6 +314,34 @@ def create_project_router(
         except RegistryError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return {"selected": True, "document_id": document_id, "filename": Path(selected).name}
+
+    @router.post("/api/files/import-pdf")
+    def import_pdf_file() -> dict[str, str | bool]:
+        """Choose a PDF, copy it into managed storage, and register it atomically."""
+
+        try:
+            selected = select_local_pdf_file("Import an annotated PDF into this HEVA project")
+        except FolderPickerUnavailable as error:
+            raise HTTPException(status_code=501, detail=str(error)) from error
+        if selected is None:
+            return {
+                "selected": False,
+                "created": False,
+                "document_id": "",
+                "filename": "",
+                "source_path": "",
+            }
+        try:
+            result = import_managed_pdf(root.require(), selected)
+        except RegistryError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return {
+            "selected": True,
+            "created": result.created,
+            "document_id": result.document_id,
+            "filename": Path(result.source_path).name,
+            "source_path": result.source_path,
+        }
 
     def validated_folder(value: str) -> Path:
         candidate = Path(value).expanduser().resolve()

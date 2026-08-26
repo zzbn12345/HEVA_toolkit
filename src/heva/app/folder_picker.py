@@ -87,6 +87,39 @@ def select_local_source_file(prompt: str) -> str | None:
     return result.stdout.strip() or None
 
 
+def select_local_pdf_file(prompt: str) -> str | None:
+    """Open a native PDF-only chooser for an explicit managed-source import."""
+
+    system = platform.system()
+    if system == "Darwin":
+        command = [
+            "osascript",
+            "-e",
+            f'POSIX path of (choose file with prompt "{_apple_script_text(prompt)}" of type {{"com.adobe.pdf"}})',
+        ]
+    elif system == "Windows":
+        command = [
+            "powershell", "-NoProfile", "-Command",
+            (
+                "Add-Type -AssemblyName System.Windows.Forms; "
+                "$dialog = New-Object System.Windows.Forms.OpenFileDialog; "
+                "$dialog.Filter = 'PDF (*.pdf)|*.pdf'; "
+                f"$dialog.Title = '{_powershell_text(prompt)}'; "
+                "if ($dialog.ShowDialog() -eq 'OK') { $dialog.FileName }"
+            ),
+        ]
+    elif shutil.which("zenity"):
+        command = ["zenity", "--file-selection", "--file-filter=PDF | *.pdf", f"--title={prompt}"]
+    elif shutil.which("kdialog"):
+        command = ["kdialog", "--getopenfilename", ".", "*.pdf", "--title", prompt]
+    else:
+        raise FolderPickerUnavailable("No supported system file chooser is available on this computer.")
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
+
+
 def select_local_csv_file(prompt: str) -> str | None:
     """Open a native CSV chooser without uploading spreadsheet contents to a browser."""
 

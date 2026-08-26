@@ -63,8 +63,8 @@ implementation_evidence:
     - "F14.18 single embedded document workflow shell"
   partial:
     - feature: "F14.24 managed PDF import with atomic registry update"
-      delivered: "Portable managed-source copy, checksum verification, duplicate and collision handling, and rollback-safe registry mutation"
-      remains: "Native picker/API, web controls, shared notifications, restart acceptance, and user documentation"
+      delivered: "Portable managed-source copy, checksum verification, duplicate and collision handling, rollback-safe registry mutation, and a PDF-only native picker/API"
+      remains: "Web controls, shared notifications, restart acceptance, and user documentation"
     - feature: "F14.5 PDF evidence navigation"
       delivered: "Sentence actions reveal the standalone or embedded PDF pane at the persisted source page"
       remains: "Persisted coordinate evidence and color-filtered representative occurrences"
