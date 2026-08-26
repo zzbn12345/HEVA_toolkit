@@ -229,6 +229,7 @@ function renderDocumentValidation(payload) {
     if (href) {
       const link = textElement("a", "validation-fix-link", `Open ${category.toLowerCase()}`);
       link.href = href;
+      if (document.body.classList.contains("embedded-review")) link.target = "_top";
       section.appendChild(link);
     }
     groups.appendChild(section);

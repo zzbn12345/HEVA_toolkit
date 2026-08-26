@@ -1348,7 +1348,9 @@ def test_validation_page_exposes_report_runner_filters_and_download(
     assert 'data-validation-filter="issues"' in response.text
     assert 'data-validation-filter="completed"' in response.text
     assert 'data-validation-filter="incomplete"' in response.text
-    assert 'src="/static/validate.js?v=8"' in response.text
+    assert 'href="/static/app.css?v=7"' in response.text
+    assert 'src="/static/notifications.js?v=1"' in response.text
+    assert 'src="/static/validate.js?v=9"' in response.text
     assert 'href="/static/validation.css?v=3"' in response.text
     assert 'id="select-visible-documents"' in response.text
     assert "Select all shown" in response.text
@@ -1371,6 +1373,9 @@ def test_validation_page_exposes_report_runner_filters_and_download(
     assert "selectedDocumentIds.clear()" in script
     assert "updateReleaseSelection()" in script
     assert "document_ids: [...selectedDocumentIds]" in script
+    assert 'id: "project-validation"' in script
+    assert 'id: "data-package-export"' in script
+    assert 'title: "Download initiated"' in script
 
 
 def test_app_generates_and_downloads_only_release_files(
@@ -1592,7 +1597,7 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=16"' in response.text
+    assert 'src="/static/review_document.js?v=17"' in response.text
     assert 'id="edit-source-sentence"' in response.text
     assert "Source sentence — read only" in response.text
     assert 'href="/static/review.css?v=14"' in response.text
@@ -1721,6 +1726,36 @@ def test_embedded_sentence_review_uses_parent_workflow_shell(tmp_path: Path) -> 
     assert ".review-body.embedded-review .review-toolbar { display: none; }" in styles
     assert ".review-body.embedded-review .review-readiness > div" in styles
     assert 'id="validate-document"' in embedded.text
+    script = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "review_document.js"
+    ).read_text(encoding="utf-8")
+    assert 'link.target = "_top"' in script
+
+
+def test_shared_notifications_are_accessible_and_update_by_event_id() -> None:
+    """One notification surface owns timing, severity, deduplication, and dismissal."""
+
+    script = (
+        Path(__file__).parents[2]
+        / "src"
+        / "heva"
+        / "app"
+        / "static"
+        / "notifications.js"
+    ).read_text(encoding="utf-8")
+
+    assert 'notifications.id = "heva-notifications"' in script
+    assert 'notifications.setAttribute("aria-label", "Application notifications")' in script
+    assert 'type === "error" ? "alert" : "status"' in script
+    assert 'data-notification-id=' in script
+    assert "item.onmouseenter" in script
+    assert "item.onfocusin" in script
+    assert "window.hevaNotifications = {notify, dismiss}" in script
 
 
 def test_document_setup_asset_opens_requested_review_section() -> None:

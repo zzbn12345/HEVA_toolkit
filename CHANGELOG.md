@@ -10,6 +10,10 @@
 
 ### Changed
 
+- Added the shared top-of-app notification foundation and connected validation and selected
+  Data Package export to running, success, warning, download, and failure feedback.
+- Fixed validation correction links so embedded annotation review cannot load another full
+  workflow shell inside itself.
 - Added a generated 87-page scaling benchmark and honest process peak-memory reporting while
   retaining the real researcher PDF as required performance-claim evidence.
 - Added a reproducible, app-openable two-document workspace fixture for validating and

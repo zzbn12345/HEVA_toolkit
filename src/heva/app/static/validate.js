@@ -13,6 +13,10 @@ let currentReport = null;
 let currentFilter = "all";
 const selectedDocumentIds = new Set();
 
+function notify(options) {
+  window.hevaNotifications?.notify(options);
+}
+
 /** Synchronize export controls with the explicit document selection. */
 function updateReleaseSelection() {
   const total = currentReport?.documents?.length || 0;
@@ -195,6 +199,13 @@ function showReport(report) {
 
 /** Run the complete read-only package check and display its report. */
 async function runValidation() {
+  notify({
+    id: "project-validation",
+    type: "info",
+    title: "Validation running",
+    message: "Checking every registered document against the HEVA specification.",
+    duration: null,
+  });
   button.disabled = true;
   downloadButton.disabled = true;
   statusBox.className = "notice neutral";
@@ -219,12 +230,24 @@ async function runValidation() {
     statusBox.textContent = report.valid
       ? "Check completed: every document passed the current HEVA specification."
       : "Check completed: review the failed documents and corrective actions below.";
+    notify({
+      id: "project-validation",
+      type: report.valid ? "success" : "warning",
+      title: report.valid ? "Validation passed" : "Validation needs attention",
+      message: `${report.summary.passed} passed, ${report.summary.failed} failed, ${report.summary.warnings} warnings.`,
+    });
   } catch (error) {
     currentReport = null;
     selectedDocumentIds.clear();
     updateReleaseSelection();
     statusBox.className = "notice error";
     statusBox.textContent = error.message;
+    notify({
+      id: "project-validation",
+      type: "error",
+      title: "Validation failed",
+      message: error.message,
+    });
   } finally {
     button.disabled = false;
   }
@@ -281,8 +304,21 @@ async function generateRelease() {
   if (currentReport && selectedDocumentIds.size === 0) {
     releaseStatus.className = "notice error";
     releaseStatus.textContent = "Select at least one document to include in the Data Package.";
+    notify({
+      id: "data-package-export",
+      type: "warning",
+      title: "Select documents first",
+      message: "Choose at least one validated document for the Data Package.",
+    });
     return;
   }
+  notify({
+    id: "data-package-export",
+    type: "info",
+    title: "Generating Data Package",
+    message: `Preparing ${selectedDocumentIds.size} selected document${selectedDocumentIds.size === 1 ? "" : "s"}.`,
+    duration: null,
+  });
   releaseButton.disabled = true;
   releaseLink.hidden = true;
   releaseStatus.className = "notice neutral";
@@ -297,19 +333,45 @@ async function generateRelease() {
     if (!response.ok) {
       releaseStatus.className = "notice error";
       releaseStatus.textContent = `${result.message || "Data Package generation failed."} ${result.action || ""}`;
+      notify({
+        id: "data-package-export",
+        type: "error",
+        title: "Data Package not generated",
+        message: `${result.message || "Generation failed."} ${result.action || ""}`.trim(),
+      });
       return;
     }
     releaseStatus.className = "notice success";
     releaseStatus.textContent = `Generated ${result.files.length} release files: ${result.files.join(", ")}.`;
     releaseLink.href = result.download;
     releaseLink.hidden = false;
+    const memberCount = result.membership?.length ?? selectedDocumentIds.size;
+    notify({
+      id: "data-package-export",
+      type: "success",
+      title: "Data Package generated",
+      message: `${memberCount} document${memberCount === 1 ? "" : "s"} and ${result.files.length} release files are ready.`,
+      action: {label: "Download ZIP", href: result.download},
+      duration: 10000,
+    });
   } catch (error) {
     releaseStatus.className = "notice error";
     releaseStatus.textContent = "The local service could not generate the Data Package.";
+    notify({
+      id: "data-package-export",
+      type: "error",
+      title: "Data Package generation failed",
+      message: "The local HEVA service could not complete the request.",
+    });
   } finally {
     releaseButton.disabled = false;
   }
 }
 
 releaseButton.addEventListener("click", generateRelease);
+releaseLink.addEventListener("click", () => notify({
+  type: "info",
+  title: "Download initiated",
+  message: "HEVA asked the browser to download the ZIP; the browser controls where it is saved.",
+}));
 updateReleaseSelection();
