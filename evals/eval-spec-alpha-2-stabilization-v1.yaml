@@ -75,7 +75,7 @@ implementation_evidence:
     - "F14.19 documentation delivery and special paths"
     - "F14.21 collaborative workspace identity"
     - "F14.22 Git-ready external Data Package destination"
-    - "F14.23 observable feedback for consequential application events"
+    - "F14.23 one shared top-of-app notification system for consequential events"
 
 budget:
   mode: implementation
