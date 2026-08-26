@@ -1595,8 +1595,8 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     assert 'src="/static/review_document.js?v=16"' in response.text
     assert 'id="edit-source-sentence"' in response.text
     assert "Source sentence — read only" in response.text
-    assert 'href="/static/review.css?v=13"' in response.text
-    assert 'id="review-extraction-panel"' in response.text
+    assert 'href="/static/review.css?v=14"' in response.text
+    assert 'id="review-extraction-panel" class="review-extraction-panel" open' in response.text
     assert 'id="review-page-start"' in response.text
     assert 'id="review-page-end"' in response.text
     assert 'id="review-run-extraction"' in response.text
