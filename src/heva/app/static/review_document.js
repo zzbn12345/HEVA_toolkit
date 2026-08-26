@@ -620,6 +620,119 @@ function navigationLink(documentIdValue, label) {
   return link;
 }
 
+function reviewWait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+async function loadReviewExtractionScope() {
+  const response = await fetch(
+    `/api/documents/${encodeURIComponent(documentId)}/extraction`,
+  );
+  const status = document.getElementById("review-extraction-status");
+  if (!response.ok) {
+    status.className = "notice error";
+    status.textContent = "The current extraction scope could not be loaded.";
+    return;
+  }
+  const extraction = await response.json();
+  const pages = extraction.extraction_scope?.selected_pages || [];
+  document.getElementById("review-page-start").value = pages.length ? pages[0] : "";
+  document.getElementById("review-page-end").value = pages.length
+    ? pages[pages.length - 1]
+    : "";
+  status.className = "notice neutral";
+  status.textContent = pages.length
+    ? `Current extraction scope: PDF pages ${pages[0]}–${pages[pages.length - 1]}.`
+    : "Current extraction scope: complete source document.";
+}
+
+async function waitForReviewExtraction() {
+  const progress = document.getElementById("review-extraction-progress");
+  const cancel = document.getElementById("review-cancel-extraction");
+  const status = document.getElementById("review-extraction-status");
+  const deadline = Date.now() + 10 * 60 * 1000;
+  while (Date.now() < deadline) {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/extraction/progress`,
+    );
+    const job = await response.json();
+    if (!response.ok) throw new Error(job.detail || "Extraction progress is unavailable.");
+    cancel.hidden = !["queued", "extracting"].includes(job.stage);
+    if (job.stage === "extracting" && job.total_pages) {
+      progress.max = job.total_pages;
+      progress.value = job.completed_pages;
+    } else {
+      progress.max = job.total_steps;
+      progress.value = job.completed_steps;
+    }
+    status.textContent = job.message;
+    if (["completed", "draft_saved", "failed", "cancelled"].includes(job.state)) {
+      return job;
+    }
+    await reviewWait(750);
+  }
+  throw new Error("Extraction is still running after ten minutes.");
+}
+
+async function runReviewExtraction() {
+  const start = document.getElementById("review-page-start").value.trim();
+  const end = document.getElementById("review-page-end").value.trim();
+  const status = document.getElementById("review-extraction-status");
+  if ((start && !end) || (!start && end)) {
+    status.className = "notice error";
+    status.textContent = "Provide both the first and last PDF page, or leave both blank.";
+    return;
+  }
+  if (!window.confirm(
+    "Re-extraction replaces this document's extracted draft and may reset sentence review decisions. Continue?",
+  )) return;
+  const scope = start && end
+    ? `&page_start=${encodeURIComponent(start)}&page_end=${encodeURIComponent(end)}`
+    : "";
+  const run = document.getElementById("review-run-extraction");
+  const progress = document.getElementById("review-extraction-progress");
+  run.disabled = true;
+  progress.hidden = false;
+  status.className = "notice neutral";
+  status.textContent = "Extraction is starting…";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/extract?force=true${scope}`,
+      {method: "POST"},
+    );
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || result.message || "Extraction failed.");
+    const job = await waitForReviewExtraction();
+    status.className = job.state === "completed"
+      ? "notice success"
+      : job.state === "failed" ? "notice error" : "notice warning";
+    status.textContent = job.error?.action
+      ? `${job.message} ${job.error.action}`
+      : job.message;
+    if (["completed", "draft_saved"].includes(job.state)) {
+      await loadReviewExtractionScope();
+      await loadDocument();
+    }
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = error.message;
+  } finally {
+    run.disabled = false;
+    progress.hidden = true;
+    document.getElementById("review-cancel-extraction").hidden = true;
+  }
+}
+
+async function cancelReviewExtraction() {
+  const response = await fetch(
+    `/api/documents/${encodeURIComponent(documentId)}/extraction/cancel`,
+    {method: "POST"},
+  );
+  const result = await response.json();
+  const status = document.getElementById("review-extraction-status");
+  status.textContent = result.message || result.detail || "Cancellation could not be requested.";
+}
+
 async function loadDocument() {
   const response = await fetch(`/api/review/${encodeURIComponent(documentId)}`);
   const result = await response.json();
@@ -638,10 +751,15 @@ async function loadDocument() {
     `/documents/${encodeURIComponent(documentId)}/rights`;
   document.getElementById("review-pdf-frame").src = `/api/review/${encodeURIComponent(documentId)}/source`;
   const navigation = document.getElementById("document-navigation");
+  navigation.replaceChildren();
   if (result.previous_document_id) navigation.appendChild(navigationLink(result.previous_document_id, "← Previous document"));
   else navigation.appendChild(document.createElement("span"));
   if (result.next_document_id) navigation.appendChild(navigationLink(result.next_document_id, "Next document →"));
+  const isDocx = result.source_path.toLowerCase().endsWith(".docx");
+  document.getElementById("review-page-start").disabled = isDocx;
+  document.getElementById("review-page-end").disabled = isDocx;
   render();
+  await loadReviewExtractionScope();
 }
 
 document.getElementById("toggle-review-pdf").addEventListener("click", (event) => {
@@ -685,6 +803,8 @@ document.querySelectorAll("[data-batch-status]").forEach((button) => {
   });
 });
 document.getElementById("validate-document").addEventListener("click", validateDocument);
+document.getElementById("review-run-extraction").addEventListener("click", runReviewExtraction);
+document.getElementById("review-cancel-extraction").addEventListener("click", cancelReviewExtraction);
 document.getElementById("close-sentence-editor").addEventListener("click", closeEditor);
 document.getElementById("cancel-sentence-editor").addEventListener("click", closeEditor);
 editorForm.addEventListener("submit", (event) => {

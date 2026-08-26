@@ -862,8 +862,10 @@ def create_project_router(
         try:
             draft = load_extraction_draft(root, document_id)
             draft_count = len(draft.sentences)
+            extraction_scope = draft.extraction_scope.model_dump(mode="json")
         except ExtractionDraftError:
             draft_count = 0
+            extraction_scope = {"mode": "full_source", "selected_pages": []}
         return {
             "document_id": status.document_id,
             "state": status.state,
@@ -873,6 +875,7 @@ def create_project_router(
             "warnings": list(status.warnings),
             "stale_reasons": list(status.stale_reasons),
             "draft_record_count": draft_count,
+            "extraction_scope": extraction_scope,
         }
 
     @router.get("/api/documents/{document_id}/extraction/progress")

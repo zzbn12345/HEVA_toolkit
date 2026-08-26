@@ -556,6 +556,7 @@ def test_confirmed_colors_compile_saved_draft_without_rerunning_extraction(
     assert confirmed.json()["canonical_annotations"]["status"] == "canonical_saved"
     assert confirmed.json()["canonical_annotations"]["record_count"] == 1
     assert after["state"] == "current"
+    assert after["extraction_scope"] == {"mode": "full_source", "selected_pages": []}
     assert after["record_count"] == 1
     assert review["draft_only"] is False
     assert review["sentences"][0]["record"]["values"] == ["historic"]
@@ -1591,10 +1592,21 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=15"' in response.text
+    assert 'src="/static/review_document.js?v=16"' in response.text
     assert 'id="edit-source-sentence"' in response.text
     assert "Source sentence — read only" in response.text
-    assert 'href="/static/review.css?v=12"' in response.text
+    assert 'href="/static/review.css?v=13"' in response.text
+    assert 'id="review-extraction-panel"' in response.text
+    assert 'id="review-page-start"' in response.text
+    assert 'id="review-page-end"' in response.text
+    assert 'id="review-run-extraction"' in response.text
+    script = (
+        Path(__file__).parents[2] / "src/heva/app/static/review_document.js"
+    ).read_text(encoding="utf-8")
+    assert "page_start=" in script
+    assert "page_end=" in script
+    assert "/extraction/cancel" in script
+    assert "Re-extraction replaces this document's extracted draft" in script
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text

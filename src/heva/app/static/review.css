@@ -129,6 +129,24 @@
 .validation-severity.error { color: #ff8795; }
 .validation-fix-link { display: inline-block; margin-top: .3rem; }
 .sentence-list { display: grid; gap: 1rem; }
+.review-extraction-panel {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.review-extraction-panel summary { cursor: pointer; font-weight: 800; }
+.review-extraction-fields {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr) max-content max-content;
+  align-items: end;
+  gap: .75rem;
+}
+.review-extraction-fields label { display: grid; gap: .35rem; }
+.review-extraction-fields input { width: 100%; }
+.review-extraction-panel progress { width: 100%; margin: 1rem 0 .5rem; }
+body.embedded-review .review-extraction-panel { display: none; }
 .sentence-card { padding: 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
 .sentence-card.selected { border-color: var(--accent); }
 .sentence-selection { display: flex; align-items: center; gap: .45rem; margin-bottom: .65rem; font-weight: 750; }
@@ -235,7 +253,7 @@
   .review-blockers { grid-column: auto; }
   .review-toolbar { flex-wrap: wrap; }
   .document-tools { order: 2; width: 100%; flex-wrap: wrap; }
-  .editor-grid, .entity-row { grid-template-columns: 1fr; }
+  .editor-grid, .entity-row, .review-extraction-fields { grid-template-columns: 1fr; }
 }
 .review-edit-lock {
   align-items: center;

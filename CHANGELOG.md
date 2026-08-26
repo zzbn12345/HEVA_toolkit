@@ -13,6 +13,8 @@
 - Added inclusive PDF page-range extraction in the app and list/range selection in the
   command-line adapter. Selected pages are retained in raw-draft, canonical metadata, and
   extraction-session provenance.
+- Exposed the current PDF page scope and re-extraction controls directly in the standalone
+  document review view, including progress and safe cancellation.
 - Added cooperative PDF extraction cancellation at safe page boundaries. Cancelling before
   persistence preserves the previous valid raw or canonical checkpoint instead of replacing
   it with partial output.
