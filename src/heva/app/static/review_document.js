@@ -21,6 +21,13 @@ let editingRecord = null;
 const excludedEntityIndices = new Set();
 const selectedSentenceIds = new Set();
 
+function routeWorkflowLink(link) {
+  if (document.body.classList.contains("embedded-review")) {
+    link.target = "_top";
+  }
+  return link;
+}
+
 function textElement(tag, className, text) {
   const element = document.createElement(tag);
   element.className = className;
@@ -602,6 +609,7 @@ function render() {
     document.getElementById("review-edit-lock-action").textContent = editability.action;
     const link = document.getElementById("review-edit-lock-link");
     link.href = editability.href;
+    routeWorkflowLink(link);
   }
   const filter = document.getElementById("review-filter").value;
   const limit = Number(document.getElementById("page-size").value);
@@ -653,7 +661,7 @@ function navigationLink(documentIdValue, label) {
   link.href = document.body.classList.contains("embedded-review")
     ? `/create?document_id=${encodeURIComponent(documentIdValue)}&section=annotations`
     : `/review/${encodeURIComponent(documentIdValue)}`;
-  return link;
+  return routeWorkflowLink(link);
 }
 
 function reviewWait(milliseconds) {
@@ -779,12 +787,15 @@ async function loadDocument() {
   }
   reviewDocument = result;
   document.getElementById("document-name").textContent = result.source_path;
-  document.getElementById("review-citation-link").href =
-    `/create?document_id=${encodeURIComponent(documentId)}&section=citation`;
-  document.getElementById("review-colors-link").href =
-    `/create?document_id=${encodeURIComponent(documentId)}&section=colors`;
-  document.getElementById("review-rights-link").href =
-    `/documents/${encodeURIComponent(documentId)}/rights`;
+  const citationLink = document.getElementById("review-citation-link");
+  citationLink.href = `/create?document_id=${encodeURIComponent(documentId)}&section=citation`;
+  routeWorkflowLink(citationLink);
+  const colorsLink = document.getElementById("review-colors-link");
+  colorsLink.href = `/create?document_id=${encodeURIComponent(documentId)}&section=colors`;
+  routeWorkflowLink(colorsLink);
+  const rightsLink = document.getElementById("review-rights-link");
+  rightsLink.href = `/documents/${encodeURIComponent(documentId)}/rights`;
+  routeWorkflowLink(rightsLink);
   document.getElementById("review-pdf-frame").src = `/api/review/${encodeURIComponent(documentId)}/source`;
   const navigation = document.getElementById("document-navigation");
   navigation.replaceChildren();

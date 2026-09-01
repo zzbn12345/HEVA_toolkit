@@ -1742,7 +1742,7 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=18"' in response.text
+    assert 'src="/static/review_document.js?v=19"' in response.text
     assert 'id="edit-source-sentence"' in response.text
     assert "Source sentence — read only" in response.text
     assert 'href="/static/review.css?v=14"' in response.text
@@ -1884,6 +1884,11 @@ def test_embedded_sentence_review_uses_parent_workflow_shell(tmp_path: Path) -> 
         / "review_document.js"
     ).read_text(encoding="utf-8")
     assert 'link.target = "_top"' in script
+    assert "routeWorkflowLink(link);" in script
+    assert "return routeWorkflowLink(link);" in script
+    assert "routeWorkflowLink(citationLink);" in script
+    assert "routeWorkflowLink(colorsLink);" in script
+    assert "routeWorkflowLink(rightsLink);" in script
 
 
 def test_document_setup_synchronizes_embedded_pdf_evidence_navigation() -> None:
