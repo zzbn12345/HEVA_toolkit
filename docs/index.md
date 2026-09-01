@@ -9,7 +9,8 @@ Read these pages in order:
 2. [HEVA and validation](HEVA_AND_VALIDATION.md)
 3. [What is a HEVA Data Package?](DATA_PACKAGE.md)
 4. [Tutorial: inspect and repair an example](TUTORIAL.md)
-5. [Software design](SOFTWARE_DESIGN.md)
+5. [Limitations and extraction troubleshooting](LIMITATIONS_AND_TROUBLESHOOTING.md)
+6. [Software design](SOFTWARE_DESIGN.md)
 
 This is the complete alpha documentation set. It is intentionally small enough to review in
 one day.

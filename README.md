@@ -29,6 +29,9 @@ conda activate heva-toolkit
 See [Install and run HEVA](docs/INSTALLATION.md) for Windows, macOS, Linux, and
 troubleshooting details.
 
+For unreadable PDFs, scans, and complex tables, see
+[Limitations and extraction troubleshooting](docs/LIMITATIONS_AND_TROUBLESHOOTING.md).
+
 ## Alpha workflow
 
 1. Open or create a project from a folder containing PDF/DOCX sources.
@@ -99,5 +102,5 @@ python -m pip install -e ".[dev]"
 python -m pytest
 ```
 
-The complete documentation is intentionally limited to five short pages listed in
+The complete documentation is intentionally limited to six short pages listed in
 [`docs/index.md`](docs/index.md).

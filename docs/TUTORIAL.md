@@ -68,3 +68,6 @@ working files are not included.
 
 During alpha testing, record installation problems, extraction time, missed colors or text,
 unclear validation findings, and whether the result is understandable without assistance.
+
+If a PDF is scanned, contains a complex table, produces text in the wrong order, or is rejected
+as unreadable, follow [Limitations and extraction troubleshooting](LIMITATIONS_AND_TROUBLESHOOTING.md).
