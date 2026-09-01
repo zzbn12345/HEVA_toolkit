@@ -418,7 +418,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=30"' in response.text
+    assert 'src="/static/create.js?v=31"' in response.text
     assert 'href="/static/create.css?v=14"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -1731,7 +1731,7 @@ def test_review_queue_page_exposes_list_columns(tmp_path: Path) -> None:
     assert "Readiness" in response.text
     assert 'data-readiness="incomplete"' in response.text
     assert "Action" in response.text
-    assert 'href="/create">＋ Add document</a>' in response.text
+    assert 'href="/create?section=annotations">＋ Add document</a>' in response.text
     assert 'href="/validate">Validate project</a>' in response.text
     assert 'href="/validate#data-package">Export Data Package</a>' in response.text
 
@@ -2376,3 +2376,12 @@ def test_add_document_mode_has_file_choice(tmp_path: Path) -> None:
     assert "Choose document file" in response.text
     assert ".pdf" in response.text
     assert ".docx" in response.text
+
+
+def test_add_document_navigation_opens_source_selection_without_document_id() -> None:
+    script = (
+        Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "create.js"
+    ).read_text(encoding="utf-8")
+
+    assert 'const requestedSection = parameters.get("section")' in script
+    assert 'if (requestedSection === "annotations") showStep(4);' in script

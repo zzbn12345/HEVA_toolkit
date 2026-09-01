@@ -1053,7 +1053,11 @@ async function cancelExtraction() {
 async function loadSelectedDocument() {
   const parameters = new URLSearchParams(window.location.search);
   const documentId = parameters.get("document_id");
-  if (!documentId) return;
+  const requestedSection = parameters.get("section");
+  if (!documentId) {
+    if (requestedSection === "annotations") showStep(4);
+    return;
+  }
   const status = document.getElementById("selected-document-status");
   status.hidden = false;
   status.textContent = "Loading the registered document…";
@@ -1076,7 +1080,6 @@ async function loadSelectedDocument() {
     await loadCitation(documentId);
     await loadColors(documentId);
     await loadExtractionStatus(documentId);
-    const requestedSection = parameters.get("section");
     if (requestedSection === "citation") showStep(2);
     if (requestedSection === "colors") showStep(3);
     if (requestedSection === "annotations") showStep(4);
