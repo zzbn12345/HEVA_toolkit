@@ -659,10 +659,31 @@ def create_project_router(
             configuration = load_color_configuration(root, document_id)
         except ColorMappingError as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
+        occurrences: dict[str, list[dict[str, object]]] = {
+            color.hex: [] for color in configuration.colors
+        }
+        try:
+            draft = load_extraction_draft(root, document_id)
+        except ExtractionDraftError:
+            draft = None
+        if draft is not None:
+            for sentence in draft.sentences:
+                for entity in sentence.entities:
+                    occurrences.setdefault(entity.color, []).append(
+                        {
+                            "sentence_id": sentence.sentence_id,
+                            "page": sentence.page,
+                            "sentence": sentence.sentence,
+                            "start": entity.start,
+                            "end": entity.end,
+                            "text": entity.text,
+                        }
+                    )
         return {
             "document_id": document_id,
             "labels": sorted(HEVA_LABELS),
             "configuration": configuration.model_dump(mode="json"),
+            "occurrences": occurrences,
             "automatic_proposal_available": (
                 not configuration.human_confirmed
                 and any(

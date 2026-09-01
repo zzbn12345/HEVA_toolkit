@@ -418,8 +418,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=28"' in response.text
-    assert 'href="/static/create.css?v=13"' in response.text
+    assert 'src="/static/create.js?v=29"' in response.text
+    assert 'href="/static/create.css?v=14"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text
@@ -513,6 +513,74 @@ def test_automatic_color_proposal_route_reports_generated_evidence(
     assert available.json()["automatic_proposal_available"] is True
     assert proposed.status_code == 200
     assert proposed.json()["proposed_color_count"] == 1
+
+
+def test_color_review_api_groups_source_occurrences_by_color(tmp_path: Path) -> None:
+    sources = tmp_path / "documents"
+    sources.mkdir()
+    (sources / "source.pdf").write_bytes(b"source")
+    sync_registry(tmp_path, source_dir="documents")
+    registry = json.loads((tmp_path / ".heva/project.json").read_text())
+    document_id = registry["documents"][0]["document_id"]
+    curator = add_person(tmp_path, PersonRecord(name="Researcher", roles=["curator"]))
+    activate_curator(tmp_path, curator.person_id)
+    persist_extraction_draft(
+        tmp_path,
+        document_id,
+        [
+            {
+                "sentence_id": 1,
+                "page": 2,
+                "sentence": "Historic harbour and social square.",
+                "tokens": ["Historic", "harbour", "and", "social", "square", "."],
+                "entities": [
+                    {"start": 0, "end": 16, "text": "Historic harbour", "label": "#CCCC00"},
+                    {"start": 21, "end": 34, "text": "social square", "label": "#FF9900"},
+                ],
+                "ner_tags": [
+                    "B-#CCCC00", "I-#CCCC00", "O", "B-#FF9900", "I-#FF9900", "O",
+                ],
+            },
+            {
+                "sentence_id": 2,
+                "page": 4,
+                "sentence": "Historic wall.",
+                "tokens": ["Historic", "wall", "."],
+                "entities": [
+                    {"start": 0, "end": 13, "text": "Historic wall", "label": "#CCCC00"},
+                ],
+                "ner_tags": ["B-#CCCC00", "I-#CCCC00", "O"],
+            },
+        ],
+        extractor="test extractor",
+        extractor_version="1.0",
+    )
+    save_color_configuration(
+        tmp_path,
+        document_id,
+        propose_color_configuration(["#CCCC00", "#FF9900", "#00FFFF"]),
+    )
+
+    result = TestClient(create_app(tmp_path)).get(
+        f"/api/documents/{document_id}/colors"
+    ).json()
+
+    assert [item["page"] for item in result["occurrences"]["#CCCC00"]] == [2, 4]
+    assert result["occurrences"]["#CCCC00"][0]["text"] == "Historic harbour"
+    assert result["occurrences"]["#FF9900"][0]["start"] == 21
+    assert result["occurrences"]["#00FFFF"] == []
+
+
+def test_create_asset_renders_and_navigates_color_occurrences() -> None:
+    script = (
+        Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "create.js"
+    ).read_text(encoding="utf-8")
+
+    assert 'const occurrencesByColor = result.occurrences || {}' in script
+    assert 'previous.textContent = "Previous occurrence"' in script
+    assert 'next.textContent = "Next occurrence"' in script
+    assert "No source occurrence evidence is available for this color." in script
+    assert "source#page=${occurrence.page}" in script
 
 
 def test_confirmed_document_colors_create_and_select_reusable_project_palette(

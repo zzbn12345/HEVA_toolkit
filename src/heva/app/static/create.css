@@ -228,6 +228,28 @@ fieldset { margin: 1rem 0; padding: 0; border: 0; }
 }
 
 .color-evidence { margin: .55rem 0 0; color: var(--muted); line-height: 1.45; }
+.color-occurrences {
+  margin-top: .8rem;
+  padding-top: .8rem;
+  border-top: 1px solid var(--border);
+}
+.color-occurrence-summary { margin: 0 0 .55rem; color: var(--muted); }
+.color-occurrence-snippet {
+  margin: 0 0 .65rem;
+  padding: .7rem .8rem;
+  border-left: 3px solid var(--swatch, var(--accent));
+  border-radius: 0 6px 6px 0;
+  background: var(--field);
+  line-height: 1.5;
+}
+.color-occurrence-snippet mark {
+  padding: .08rem .18rem;
+  border-radius: 3px;
+  background: var(--occurrence-color);
+  color: var(--occurrence-text);
+}
+.color-occurrence-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.color-occurrence-controls .button { padding: .5rem .7rem; }
 
 .batch-mapping {
   margin: 1.5rem 0;

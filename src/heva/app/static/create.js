@@ -426,11 +426,13 @@ async function loadReferenceColorCode() {
  */
 function renderColorConfiguration(result) {
   const configuration = result.configuration;
+  const occurrencesByColor = result.occurrences || {};
   const list = document.getElementById("color-list");
   list.replaceChildren(...configuration.colors.map((color) => {
     const record = document.createElement("article");
     record.className = "color-record";
     record.dataset.hex = color.hex;
+    record.style.setProperty("--swatch", color.hex);
 
     const swatch = document.createElement("span");
     swatch.className = "color-swatch";
@@ -480,6 +482,85 @@ function renderColorConfiguration(result) {
 
     label.append(select);
     fields.append(label, reason);
+
+    const occurrences = occurrencesByColor[color.hex] || [];
+    const evidence = document.createElement("section");
+    evidence.className = "color-occurrences";
+    const evidenceSummary = document.createElement("p");
+    evidenceSummary.className = "color-occurrence-summary";
+    if (!occurrences.length) {
+      evidenceSummary.textContent = "No source occurrence evidence is available for this color.";
+      evidence.append(evidenceSummary);
+    } else {
+      const pages = [...new Set(occurrences.map((occurrence) => occurrence.page))];
+      evidenceSummary.textContent =
+        `${occurrences.length} occurrence${occurrences.length === 1 ? "" : "s"} on `
+        + `${pages.length === 1 ? "page" : "pages"} ${pages.join(", ")}.`;
+      const snippet = document.createElement("blockquote");
+      snippet.className = "color-occurrence-snippet";
+      const controls = document.createElement("div");
+      controls.className = "color-occurrence-controls";
+      const position = document.createElement("span");
+      position.className = "muted";
+      const previous = document.createElement("button");
+      previous.className = "button secondary";
+      previous.type = "button";
+      previous.textContent = "Previous occurrence";
+      const open = document.createElement("button");
+      open.className = "button secondary";
+      open.type = "button";
+      const next = document.createElement("button");
+      next.className = "button secondary";
+      next.type = "button";
+      next.textContent = "Next occurrence";
+      let occurrenceIndex = 0;
+      const renderOccurrence = () => {
+        const occurrence = occurrences[occurrenceIndex];
+        snippet.replaceChildren();
+        snippet.append(
+          document.createTextNode(occurrence.sentence.slice(0, occurrence.start)),
+        );
+        const mark = document.createElement("mark");
+        mark.style.setProperty("--occurrence-color", color.hex);
+        mark.style.setProperty(
+          "--occurrence-text",
+          color.text_color || contrastingTextColor(color.hex),
+        );
+        mark.textContent = occurrence.sentence.slice(occurrence.start, occurrence.end);
+        snippet.append(
+          mark,
+          document.createTextNode(occurrence.sentence.slice(occurrence.end)),
+        );
+        position.textContent = `Occurrence ${occurrenceIndex + 1} of ${occurrences.length}`;
+        open.textContent = `View page ${occurrence.page} in source`;
+        previous.disabled = occurrenceIndex === 0;
+        next.disabled = occurrenceIndex === occurrences.length - 1;
+      };
+      previous.addEventListener("click", () => {
+        occurrenceIndex -= 1;
+        renderOccurrence();
+      });
+      next.addEventListener("click", () => {
+        occurrenceIndex += 1;
+        renderOccurrence();
+      });
+      open.addEventListener("click", () => {
+        const occurrence = occurrences[occurrenceIndex];
+        const documentId = document.getElementById("selected-document-id").value;
+        app.classList.remove("pdf-hidden");
+        const toggle = document.getElementById("toggle-pdf");
+        toggle.textContent = "Hide PDF";
+        toggle.setAttribute("aria-expanded", "true");
+        openPreview(
+          `/api/documents/${encodeURIComponent(documentId)}/source#page=${occurrence.page}`,
+          `Source evidence · page ${occurrence.page}`,
+        );
+      });
+      controls.append(previous, position, next, open);
+      evidence.append(evidenceSummary, snippet, controls);
+      renderOccurrence();
+    }
+    fields.append(evidence);
     if (color.method === "document_legend" && color.suggested_label) {
       const specification = document.createElement("p");
       specification.className = "color-evidence";
