@@ -22,8 +22,10 @@ from heva.workflow.extraction_draft import (
 )
 from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
 from heva.workflow.color_mapping import (
+    confirm_color_configuration,
     load_color_configuration,
     propose_color_configuration,
+    resolve_color,
     save_color_configuration,
 )
 from heva.workflow.project_registry import sync_registry
@@ -131,6 +133,54 @@ def test_unresolved_color_blocks_compilation(tmp_path: Path) -> None:
 
     with pytest.raises(ExtractionDraftError, match="#FFF200"):
         compile_extraction_draft(tmp_path, document_id)
+
+
+def test_ignored_raw_color_is_removed_during_canonical_compilation(
+    tmp_path: Path,
+) -> None:
+    """An explicit ignore decision resolves a color without creating an entity."""
+
+    document_id, records = _project(tmp_path)
+    persist_extraction_draft(
+        tmp_path,
+        document_id,
+        records,
+        extractor="test extractor",
+        extractor_version="1.0",
+    )
+    document_colors = propose_color_configuration(["#FFFF00", "#FFF200"])
+    document_colors = resolve_color(document_colors, "#FFFF00", label="historic")
+    document_colors = resolve_color(
+        document_colors,
+        "#FFF200",
+        ignore_reason="Document legend rather than annotation evidence.",
+    )
+    document_colors = confirm_color_configuration(
+        document_colors,
+        confirmed_by="Project Curator",
+    )
+    save_color_configuration(tmp_path, document_id, document_colors)
+    selected = create_color_configuration_version(
+        tmp_path,
+        configuration_id="heritage-palette",
+        name="Heritage palette",
+        mappings=[{"label": "historic", "hexes": ["#FFFF00"]}],
+    )
+    select_color_configuration(tmp_path, selected.configuration_id, selected.version)
+
+    compiled = compile_extraction_draft(tmp_path, document_id)
+
+    assert compiled[0]["values"] == ["historic"]
+    assert [entity["text"] for entity in compiled[0]["entities"]] == ["Old port"]
+    assert compiled[0]["ner_tags"] == ["B-historic", "I-historic", "O", "O", "O"]
+
+    promoted = promote_extraction_draft(tmp_path, document_id)
+    saved_colors = load_color_configuration(tmp_path, document_id)
+
+    assert promoted.record_count == 1
+    ignored = next(color for color in saved_colors.colors if color.hex == "#FFF200")
+    assert ignored.status == "ignored"
+    assert ignored.ignore_reason == "Document legend rather than annotation evidence."
 
 
 def test_empty_rerun_preserves_previous_collaborative_draft(tmp_path: Path) -> None:

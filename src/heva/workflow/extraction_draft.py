@@ -276,8 +276,14 @@ def compile_extraction_draft(
         raise ExtractionDraftError("The extraction draft is stale because the source changed.")
     configuration = selected_color_configuration(root)
     mapping = configuration.values
+    from heva.workflow.color_mapping import load_color_configuration
+
+    document_configuration = load_color_configuration(root, document_id)
+    ignored = {
+        color.hex for color in document_configuration.colors if color.status == "ignored"
+    }
     observed = {entity.color for sentence in draft.sentences for entity in sentence.entities}
-    missing = sorted(observed - mapping.keys())
+    missing = sorted(observed - mapping.keys() - ignored)
     if missing:
         raise ExtractionDraftError(
             "The selected color configuration does not resolve: " + ", ".join(missing)
@@ -294,11 +300,18 @@ def compile_extraction_draft(
                 "color": entity.color,
             }
             for entity in sentence.entities
+            if entity.color not in ignored
         ]
+        if not entities:
+            continue
         tags = [
             tag
             if tag == "O"
-            else f"{tag[0]}-{mapping[tag[2:].upper()]}"
+            else (
+                "O"
+                if tag[2:].upper() in ignored
+                else f"{tag[0]}-{mapping[tag[2:].upper()]}"
+            )
             for tag in sentence.ner_tags
         ]
         record = {

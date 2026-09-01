@@ -293,7 +293,11 @@ def apply_selected_configuration_to_document(
     selected = selected_color_configuration(root)
     values = selected.values
     document = load_color_configuration(root, document_id)
-    unresolved = [color.hex for color in document.colors if color.hex not in values]
+    unresolved = [
+        color.hex
+        for color in document.colors
+        if color.status != "ignored" and color.hex not in values
+    ]
     if unresolved:
         raise ProjectColorConfigurationError(
             "The selected configuration does not define these observed colors: "
@@ -301,6 +305,8 @@ def apply_selected_configuration_to_document(
         )
     updated = document.model_copy(deep=True)
     for color in updated.colors:
+        if color.status == "ignored":
+            continue
         color.suggested_label = values[color.hex]
         color.label = values[color.hex]
         color.method = "manual"
