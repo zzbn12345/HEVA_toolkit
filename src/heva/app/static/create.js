@@ -1076,6 +1076,19 @@ async function loadSelectedDocument() {
     if (!title.value) title.value = result.filename.replace(/\.[^.]+$/, "");
     status.className = "notice success";
     status.textContent = `Editing ${result.filename}. Its existing project state will be reused.`;
+    const importResult = parameters.get("managed_import");
+    if (importResult) {
+      const reused = importResult === "reused";
+      window.hevaNotifications?.notify({
+        id: "managed-pdf-import",
+        type: reused ? "info" : "success",
+        title: reused ? "PDF already in this project" : "PDF imported into this project",
+        message: reused
+          ? `${result.filename} matches an existing managed source and was reused.`
+          : `${result.filename} was copied into managed project storage and registered.`,
+      });
+      window.history.replaceState({}, "", `/create?document_id=${encodeURIComponent(documentId)}`);
+    }
     await loadDocumentAnnotators(documentId);
     await loadCitation(documentId);
     await loadColors(documentId);
@@ -1115,6 +1128,41 @@ async function chooseExternalSource() {
   window.location.assign(`/create?document_id=${encodeURIComponent(result.document_id)}`);
 }
 
+async function importManagedPdf() {
+  const selected = document.getElementById("selected-files");
+  const button = document.getElementById("import-managed-pdf");
+  button.disabled = true;
+  selected.textContent = "Waiting for you to choose a PDF…";
+  try {
+    const response = await fetch("/api/files/import-pdf", {method: "POST"});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || "The PDF could not be imported.");
+    if (!result.selected) {
+      selected.textContent = "No PDF was selected.";
+      window.hevaNotifications?.notify({
+        type: "info",
+        title: "PDF import cancelled",
+        message: "No project files were changed.",
+      });
+      return;
+    }
+    const outcome = result.created ? "created" : "reused";
+    window.location.assign(
+      `/create?document_id=${encodeURIComponent(result.document_id)}&managed_import=${outcome}`,
+    );
+  } catch (error) {
+    const message = error.message || "The PDF could not be imported into this project.";
+    selected.textContent = message;
+    window.hevaNotifications?.notify({
+      type: "error",
+      title: "PDF import failed",
+      message,
+    });
+  } finally {
+    button.disabled = false;
+  }
+}
+
 document.getElementById("save-citation").addEventListener(
   "click",
   () => persistCitation(false),
@@ -1127,6 +1175,7 @@ document.getElementById("propose-colors").addEventListener("click", proposeColor
 document.getElementById("discover-colors").addEventListener("click", discoverColors);
 document.getElementById("confirm-colors").addEventListener("click", confirmColors);
 document.getElementById("choose-external-source").addEventListener("click", chooseExternalSource);
+document.getElementById("import-managed-pdf").addEventListener("click", importManagedPdf);
 document.getElementById("batch-confirmed").addEventListener("change", updateBatchAction);
 document.getElementById("apply-batch-mapping").addEventListener(
   "click",
@@ -1152,8 +1201,8 @@ document.getElementById("compile-annotations").addEventListener(
 document.querySelectorAll("[name='processing-mode']").forEach((radio) => radio.addEventListener("change", () => {
   const batch = document.querySelector("[name='processing-mode']:checked").value === "batch";
   document.getElementById("source-help").textContent = batch
-    ? "Choose and register external files one at a time; batch extraction can run after registration."
-    : "The source may remain outside this dataset repository. HEVA stores only a local binding and does not copy it.";
+    ? "Add documents one at a time. External sources remain outside the project; imported PDFs are copied into managed project storage."
+    : "Choose an external source to keep it outside the project, or import a PDF to copy it into managed project storage.";
 }));
 restoreAnnotator();
 loadReferenceColorCode();

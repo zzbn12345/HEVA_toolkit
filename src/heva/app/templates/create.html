@@ -6,6 +6,7 @@
   <title>Prepare annotations · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/create.css?v=14">
+  <script src="/static/notifications.js?v=1" defer></script>
   <script src="/static/create.js?v=31" defer></script>
 </head>
 <body class="create-body">
@@ -141,7 +142,8 @@
           <div id="new-document-source">
             <label>Choose document file</label>
             <button id="choose-external-source" class="button secondary" type="button">Choose PDF (.pdf) or DOCX (.docx)</button>
-            <small id="source-help">The source may remain outside this dataset repository. HEVA stores only a local binding and does not copy it.</small>
+            <button id="import-managed-pdf" class="button secondary" type="button">Import PDF into this project</button>
+            <small id="source-help">Choose an external source to keep it outside the project, or import a PDF to copy it into managed project storage.</small>
             <div id="selected-files" class="selected-files"></div>
           </div>
           <div id="existing-document-source" class="notice success" hidden>

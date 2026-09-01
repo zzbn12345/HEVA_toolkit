@@ -45,7 +45,7 @@ objective:
     - "docs/adr/HEVA-ADR-002-repository-owned-approval.md"
 
 implementation_evidence:
-  updated: "2026-08-25"
+  updated: "2026-08-27"
   branch: "algorithm-improvement"
   automated_suite: "283 passed"
   completed:
@@ -57,14 +57,12 @@ implementation_evidence:
     - "F14.13 explicit original-annotator assignment"
     - "F14.14 annotation-only distribution validation contract"
     - "F14.20 selected valid-subset Data Package export"
+    - "F14.24 managed PDF import with atomic registry update and web workflow"
   awaiting_human_review:
     - "F14.3 safe rejection of unreadable table-PDF font encoding"
     - "F14.16 explicit warning acceptance with retained audit evidence"
     - "F14.18 single embedded document workflow shell"
   partial:
-    - feature: "F14.24 managed PDF import with atomic registry update"
-      delivered: "Portable managed-source copy, checksum verification, duplicate and collision handling, rollback-safe registry mutation, and a PDF-only native picker/API"
-      remains: "Web controls, shared notifications, restart acceptance, and user documentation"
     - feature: "F14.5 PDF evidence navigation"
       delivered: "Sentence actions reveal the standalone or embedded PDF pane at the persisted source page"
       remains: "Persisted coordinate evidence and color-filtered representative occurrences"
@@ -174,6 +172,11 @@ evaluation:
         tipo: "fail-to-pass"
         test_confidence: "integration"
         comando: "python -m pytest tests/workflow/test_document_contributors.py tests/app/test_web_foundation.py tests/workflow/test_alpha_journey.py -q -k annotator_assignment"
+      - id: "A2-INT-008"
+        descripcion: "The web workflow imports a selected PDF into managed project storage, atomically registers it, and makes it available after the app restarts."
+        tipo: "fail-to-pass"
+        test_confidence: "integration"
+        comando: "python -m pytest tests/app/test_web_foundation.py -q -k 'managed_pdf_picker or managed_pdf_import_remains'"
     functional:
       - id: "A2-FLOW-001"
         descripcion: "A researcher can prepare, validate, and export a Data Package through the supported Alpha journey without an internal approval workflow."

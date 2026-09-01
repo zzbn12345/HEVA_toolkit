@@ -39,8 +39,11 @@ not restored after restart. Citation, annotator, color,
 extraction, review, validation, and curation changes are persisted by `heva.workflow` in
 the selected project's JSON package files. Browser state is never the authoritative copy.
 
-The application does not upload, copy, or distribute source documents. Rights and release
-decisions remain document-local workflow evidence.
+The application does not upload or distribute source documents. Researchers can either
+register an external PDF/DOCX without copying it or explicitly import a PDF into managed
+project source storage. Managed imports are copied and registered atomically, so they remain
+available after the application restarts. Rights and release decisions remain document-local
+workflow evidence.
 
 ## Tests
 

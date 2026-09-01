@@ -313,6 +313,32 @@ def test_native_pdf_picker_imports_managed_copy_and_updates_registry(
     }
 
 
+def test_managed_pdf_import_remains_available_after_app_restart(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project = tmp_path / "dataset"
+    project.mkdir()
+    (project / "seed.pdf").write_bytes(b"%PDF-1.4\nseed")
+    sync_registry(project, source_dir=".")
+    incoming = tmp_path / "incoming" / "managed.pdf"
+    incoming.parent.mkdir()
+    incoming.write_bytes(b"%PDF-1.4\nmanaged")
+    monkeypatch.setattr(project_routes, "select_local_pdf_file", lambda prompt: str(incoming))
+
+    importing_client = TestClient(create_app(project))
+    imported = importing_client.post("/api/files/import-pdf").json()
+
+    restarted_client = TestClient(create_app(project))
+    project_status = restarted_client.get("/api/project")
+
+    assert project_status.status_code == 200
+    assert (project / "sources/managed.pdf").read_bytes() == incoming.read_bytes()
+    assert imported["document_id"] in {
+        document["document_id"] for document in project_status.json()["documents"]
+    }
+
+
 def test_cancelled_managed_pdf_picker_does_not_mutate_project(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -418,6 +444,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
+    assert 'src="/static/notifications.js?v=1"' in response.text
     assert 'src="/static/create.js?v=31"' in response.text
     assert 'href="/static/create.css?v=14"' in response.text
     assert "Individual" in response.text
@@ -2376,6 +2403,8 @@ def test_add_document_mode_has_file_choice(tmp_path: Path) -> None:
     assert "Choose document file" in response.text
     assert ".pdf" in response.text
     assert ".docx" in response.text
+    assert 'id="import-managed-pdf"' in response.text
+    assert "Import PDF into this project" in response.text
 
 
 def test_add_document_navigation_opens_source_selection_without_document_id() -> None:
@@ -2385,3 +2414,15 @@ def test_add_document_navigation_opens_source_selection_without_document_id() ->
 
     assert 'const requestedSection = parameters.get("section")' in script
     assert 'if (requestedSection === "annotations") showStep(4);' in script
+
+
+def test_create_asset_imports_managed_pdf_with_visible_outcomes() -> None:
+    script = (
+        Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "create.js"
+    ).read_text(encoding="utf-8")
+
+    assert 'fetch("/api/files/import-pdf", {method: "POST"})' in script
+    assert 'getElementById("import-managed-pdf")' in script
+    assert 'title: "PDF import cancelled"' in script
+    assert 'title: "PDF import failed"' in script
+    assert 'title: reused ? "PDF already in this project" : "PDF imported into this project"' in script

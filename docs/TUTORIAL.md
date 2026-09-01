@@ -46,7 +46,21 @@ or DOCX files. For each document:
 
 Run validation again. Resolve the reported findings before generating the Data Package.
 
-## 5. Compare the result
+## 5. Add a document to an existing project
+
+Choose **Add document** from the project review queue. In the document setup screen, choose
+one of the following source options:
+
+- **Choose PDF (.pdf) or DOCX (.docx)** registers an external source without copying it into
+	the project.
+- **Import PDF into this project** copies the PDF into the project's managed `sources/`
+	directory and updates the project registry. HEVA verifies the copy, reuses an already
+	imported identical PDF, and gives a same-named but different PDF a distinct filename.
+
+Both source choices are recorded in the project and remain available after restarting HEVA.
+Managed source PDFs, like external sources, are never included in the generated Data Package.
+
+## 6. Compare the result
 
 Compare the generated files with `examples/dummy-data-package/`. Confirm that JSON preserves
 the full structure, CSV provides the flat analytical view, and source documents or `.heva/`
