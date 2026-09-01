@@ -25,6 +25,8 @@ except ImportError:  # Preserve a clear error if optional local NLP support is u
 class PDFTextExtractionError(ValueError):
     """Raised when a PDF text layer cannot safely support sentence extraction."""
 
+    code = "pdf_text_unreadable"
+
 
 def require_readable_text_layer(text: str) -> None:
     """Reject long text layers dominated by encoding artifacts rather than letters.

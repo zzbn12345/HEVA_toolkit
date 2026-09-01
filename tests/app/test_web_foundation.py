@@ -418,7 +418,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert 'id="annotator-name"' not in response.text
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
-    assert 'src="/static/create.js?v=29"' in response.text
+    assert 'src="/static/create.js?v=30"' in response.text
     assert 'href="/static/create.css?v=14"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
@@ -993,6 +993,34 @@ def test_color_discovery_reports_missing_extraction_dependency(
     assert response.status_code == 503
     assert response.json()["code"] == "extraction_dependency_missing"
     assert "spacy" in response.json()["action"]
+
+
+def test_color_discovery_preserves_unreadable_pdf_remediation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Broken font maps are rejected with an actionable, stable API response."""
+
+    def unreadable_pdf(root, document_id, *, progress_callback=None):
+        raise ExtractionDraftError(
+            "The PDF text layer is not readable enough. Re-export the PDF with "
+            "searchable Unicode text or apply OCR, then retry; HEVA did not persist "
+            "the corrupted extraction.",
+            code="pdf_text_unreadable",
+        )
+
+    monkeypatch.setattr(
+        "heva.app.routes.project.run_registered_raw_extraction",
+        unreadable_pdf,
+    )
+    client = TestClient(create_app(tmp_path))
+
+    response = client.post("/api/documents/HEVA-TEST/colors/discover")
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "pdf_text_unreadable"
+    assert "apply OCR" in response.json()["action"]
+    assert "did not persist" in response.json()["action"]
 
 
 def test_color_discovery_exposes_raw_hex_evidence_to_the_interface(

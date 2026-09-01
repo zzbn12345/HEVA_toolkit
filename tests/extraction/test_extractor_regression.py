@@ -146,8 +146,12 @@ def test_table_pdf_with_broken_font_encoding_fails_before_persisting_gibberish()
 
     source = Path(__file__).parents[1] / "2011 EC Galle part 1(Appendix IV) - Copy.pdf"
 
-    with pytest.raises(PDFTextExtractionError, match="searchable Unicode text or apply OCR"):
+    with pytest.raises(
+        PDFTextExtractionError, match="searchable Unicode text or apply OCR"
+    ) as failure:
         extract_colored_highlights(source)
+
+    assert failure.value.code == "pdf_text_unreadable"
 
 
 def test_text_quality_guard_accepts_short_or_non_latin_language_evidence() -> None:

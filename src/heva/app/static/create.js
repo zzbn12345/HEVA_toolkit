@@ -648,7 +648,7 @@ async function discoverColors() {
     status.className = "notice error";
     status.textContent = error.name === "AbortError"
       ? "Color discovery did not finish within two minutes. Check the source and try again."
-      : "Color discovery could not contact the local extraction service.";
+      : "Color discovery stopped unexpectedly. Retry; if it continues, check the local server log.";
   } finally {
     window.clearTimeout(timeout);
     progress.hidden = true;

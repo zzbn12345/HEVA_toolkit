@@ -110,6 +110,10 @@ class ExtractionDraft(BaseModel):
 class ExtractionDraftError(ValueError):
     """Raised when raw evidence cannot safely be saved or resolved."""
 
+    def __init__(self, message: str, *, code: str = "extraction_draft_error") -> None:
+        super().__init__(message)
+        self.code = code
+
 
 def _registered_document(root: Path, document_id: str):
     """Return a present registry document or raise a user-facing draft error."""
@@ -374,7 +378,8 @@ def run_registered_raw_extraction(
             raise
         except (OSError, RuntimeError, ValueError) as error:
             raise ExtractionDraftError(
-                f"Raw color evidence could not be read from {source.name}: {error}"
+                f"Raw color evidence could not be read from {source.name}: {error}",
+                code=getattr(error, "code", "raw_extraction_failed"),
             ) from error
     else:
         records = extractor(source)
