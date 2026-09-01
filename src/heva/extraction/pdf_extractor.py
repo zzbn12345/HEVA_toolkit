@@ -28,7 +28,7 @@ class PDFTextExtractionError(ValueError):
     code = "pdf_text_unreadable"
 
 
-def require_readable_text_layer(text: str) -> None:
+def require_readable_text_layer(text: str, *, page_number: int | None = None) -> None:
     """Reject long text layers dominated by encoding artifacts rather than letters.
 
     Short labels and ordinary numeric fragments are allowed. A long document whose
@@ -41,8 +41,9 @@ def require_readable_text_layer(text: str) -> None:
         return
     letter_ratio = sum(character.isalpha() for character in characters) / len(characters)
     if letter_ratio < 0.15:
+        location = f" on source page {page_number}" if page_number is not None else ""
         raise PDFTextExtractionError(
-            "The PDF text layer is not readable enough for annotation extraction "
+            f"The PDF text layer{location} is not readable enough for annotation extraction "
             f"({letter_ratio:.0%} letters). Its embedded font encoding may be broken. "
             "Re-export the PDF with searchable Unicode text or apply OCR, then retry; "
             "HEVA did not persist the corrupted extraction."
@@ -525,6 +526,11 @@ def extract_colored_highlights(
             if progress_callback is not None:
                 progress_callback(completed_pages, len(selected_page_indices))
             continue
+
+        # A readable section must not conceal later pages with broken font maps.
+        # Validate before appending anything to the document-wide NLP input so the
+        # caller either receives a complete trustworthy result or no result at all.
+        require_readable_text_layer(page_reconstructed_text, page_number=page_num + 1)
 
         # Append page text to global text with a space boundary to prevent splitting sentences on page join
         if global_reconstructed_text:

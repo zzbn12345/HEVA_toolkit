@@ -161,6 +161,28 @@ def test_text_quality_guard_accepts_short_or_non_latin_language_evidence() -> No
     require_readable_text_layer("文化遺産の価値を説明する文章です。" * 30)
 
 
+def test_pdf_extractor_rejects_a_corrupt_page_inside_otherwise_readable_pdf(
+    tmp_path: Path,
+) -> None:
+    """Readable pages must not dilute a later page's broken font-map evidence."""
+
+    source = tmp_path / "mixed-text-quality.pdf"
+    document = fitz.open()
+    readable = document.new_page()
+    readable_text = "Historic harbour remains important to the community. " * 8
+    readable.insert_textbox(fitz.Rect(50, 50, 550, 500), readable_text, fontsize=10)
+    highlight = readable.search_for("Historic harbour")[0]
+    readable.draw_rect(highlight, fill=(1, 1, 0), color=None, overlay=False)
+    corrupted = document.new_page()
+    corrupted_text = "!@#$%^&*()_+-=[]{};:',.<>/? " * 12
+    corrupted.insert_textbox(fitz.Rect(50, 50, 550, 500), corrupted_text, fontsize=10)
+    document.save(source)
+    document.close()
+
+    with pytest.raises(PDFTextExtractionError, match="source page 2"):
+        extract_colored_highlights(source)
+
+
 def test_docx_extractor_reads_generated_custom_font_colors(tmp_path: Path) -> None:
     source = tmp_path / "colored.docx"
     create_colored_docx(source)
