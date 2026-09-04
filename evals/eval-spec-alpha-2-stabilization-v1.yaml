@@ -1,10 +1,10 @@
 schema_version: "1.1"
-estado: borrador
+status: draft
 id: "ES-2026-001"
 
 objective:
-  titulo: "Alpha 2 workflow stabilization"
-  descripcion: |
+  title: "Alpha 2 workflow stabilization"
+  description: |
     Alpha testing showed that researchers cannot yet reliably complete the core HEVA
     workflow because project state, color configuration, extraction, annotation readiness,
     and validation feedback can be inconsistent or unclear. This undermines confidence in
@@ -16,8 +16,8 @@ objective:
     annotations, run validation, and generate a valid Data Package without editing JSON
     manually or encountering silent failures or contradictory readiness states.
   owner: "Jose Carlos Urra, product owner in consultation with HEVA researchers"
-  alcance:
-    incluye:
+  scope:
+    includes:
       - "Project and canonical data validation"
       - "Project registry and document readiness state"
       - "Command-line validation interoperability"
@@ -26,7 +26,7 @@ objective:
       - "Explicit original-annotator assignment and contributor provenance per document"
       - "Validated Data Package export without internal repository-governance gates"
       - "Automated, integration, and manual alpha acceptance evidence"
-    excluye:
+    excludes:
       - "Changes to PDF or DOCX source documents"
       - "Changes to extraction algorithms or HEVA label meanings"
       - "Advanced curator, publication, and repository governance"
@@ -34,13 +34,13 @@ objective:
       - "Internal curator-review submission actions and status management"
       - "Automatic destructive repair of canonical project data"
       - "CSV as an editable canonical source"
-  riesgos_identificados:
+  identified_risks:
     - "HEVA may report a document or package complete while required data is inconsistent."
     - "Researchers may distribute incorrect training data believing it passed validation."
     - "Manual edits or external scripts may corrupt canonical JSON structurally or semantically."
     - "A repair could lose or reinterpret valid annotations, stable IDs, or review decisions."
     - "HEVA may incorrectly attribute source annotations to the active curator or an unrelated project person."
-  adrs_referenciados:
+  referenced_adrs:
     - "docs/adr/HEVA-ADR-001-versioned-eva-specifications.md"
     - "docs/adr/HEVA-ADR-002-repository-owned-approval.md"
 
@@ -102,117 +102,117 @@ evaluation:
   automated_tests:
     unit:
       - id: "A2-VAL-001"
-        descripcion: "Malformed JSON is reported with its file and parse location without modifying it."
-        tipo: "fail-to-pass"
+        description: "Malformed JSON is reported with its file and parse location without modifying it."
+        type: "fail-to-pass"
         test_confidence: "functional"
-        comando: "python -m pytest tests/workflow/test_evaluation.py -q -k corrupted_json"
+        command: "python -m pytest tests/workflow/test_evaluation.py -q -k corrupted_json"
       - id: "A2-VAL-002"
-        descripcion: "Structurally valid but semantically inconsistent project data produces actionable findings."
-        tipo: "fail-to-pass"
+        description: "Structurally valid but semantically inconsistent project data produces actionable findings."
+        type: "fail-to-pass"
         test_confidence: "functional"
-        comando: "python -m pytest tests/workflow/test_evaluation.py -q -k semantic_corruption"
+        command: "python -m pytest tests/workflow/test_evaluation.py -q -k semantic_corruption"
       - id: "A2-VAL-003"
-        descripcion: "A document without an explicit original-annotator assignment fails validation without auto-assigning the active curator."
-        tipo: "fail-to-pass"
+        description: "A document without an explicit original-annotator assignment fails validation without auto-assigning the active curator."
+        type: "fail-to-pass"
         test_confidence: "functional"
-        comando: "python -m pytest tests/workflow/test_document_contributors.py tests/workflow/test_evaluation.py -q -k document_annotator"
+        command: "python -m pytest tests/workflow/test_document_contributors.py tests/workflow/test_evaluation.py -q -k document_annotator"
       - id: "A2-VAL-004"
-        descripcion: "Optional document rights and color-detection provenance do not block an annotation-only package, while dataset license and rights remain mandatory."
-        tipo: "fail-to-pass"
+        description: "Optional document rights and color-detection provenance do not block an annotation-only package, while dataset license and rights remain mandatory."
+        type: "fail-to-pass"
         test_confidence: "functional"
-        comando: "python -m pytest tests/workflow/test_document_metadata.py tests/workflow/test_package_validator.py -q -k 'optional_document_rights or color_detection_method or dataset_license'"
+        command: "python -m pytest tests/workflow/test_document_metadata.py tests/workflow/test_package_validator.py -q -k 'optional_document_rights or color_detection_method or dataset_license'"
       - id: "A2-REG-001"
-        descripcion: "Valid canonical HEVA records continue to satisfy the existing contract and semantics."
-        tipo: "pass-to-pass"
+        description: "Valid canonical HEVA records continue to satisfy the existing contract and semantics."
+        type: "pass-to-pass"
         test_confidence: "functional"
-        comando: "python -m pytest tests/workflow/test_contract.py tests/extraction/test_extractor_regression.py -q"
+        command: "python -m pytest tests/workflow/test_contract.py tests/extraction/test_extractor_regression.py -q"
       - id: "A2-REG-002"
-        descripcion: "Stable document IDs and persisted review decisions survive project resynchronization."
-        tipo: "pass-to-pass"
+        description: "Stable document IDs and persisted review decisions survive project resynchronization."
+        type: "pass-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/workflow/test_project_registry.py tests/workflow/test_review_state.py -q"
+        command: "python -m pytest tests/workflow/test_project_registry.py tests/workflow/test_review_state.py -q"
       - id: "A2-REG-003"
-        descripcion: "CSV remains a generated derivative and package compilation reads canonical JSON."
-        tipo: "pass-to-pass"
+        description: "CSV remains a generated derivative and package compilation reads canonical JSON."
+        type: "pass-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/workflow/test_package_compiler.py tests/workflow/test_release_builder.py -q"
+        command: "python -m pytest tests/workflow/test_package_compiler.py tests/workflow/test_release_builder.py -q"
     integration:
       - id: "A2-INT-001"
-        descripcion: "CLI and domain validation return equivalent blocking findings for the same corrupted fixture."
-        tipo: "fail-to-pass"
+        description: "CLI and domain validation return equivalent blocking findings for the same corrupted fixture."
+        type: "fail-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/workflow/test_evaluation.py -q -k cli_and_domain_corruption"
+        command: "python -m pytest tests/workflow/test_evaluation.py -q -k cli_and_domain_corruption"
       - id: "A2-INT-002"
-        descripcion: "The web application presents validation failures without a server error or silent hang."
-        tipo: "fail-to-pass"
+        description: "The web application presents validation failures without a server error or silent hang."
+        type: "fail-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/app/test_web_foundation.py -q -k validation_failure"
+        command: "python -m pytest tests/app/test_web_foundation.py -q -k validation_failure"
       - id: "A2-INT-003"
-        descripcion: "Working, valid, and exported outcomes immediately reflect persisted preparation and validation state."
-        tipo: "fail-to-pass"
+        description: "Working, valid, and exported outcomes immediately reflect persisted preparation and validation state."
+        type: "fail-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/workflow/test_alpha_journey.py -q -k readiness"
+        command: "python -m pytest tests/workflow/test_alpha_journey.py -q -k readiness"
       - id: "A2-INT-004"
-        descripcion: "A valid Alpha project exports without internal submission, curator acceptance, data-owner approval, candidate snapshot, or done-state evidence."
-        tipo: "fail-to-pass"
+        description: "A valid Alpha project exports without internal submission, curator acceptance, data-owner approval, candidate snapshot, or done-state evidence."
+        type: "fail-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/workflow/test_alpha_journey.py tests/workflow/test_package_validator.py -q -k repository_owned_approval"
+        command: "python -m pytest tests/workflow/test_alpha_journey.py tests/workflow/test_package_validator.py -q -k repository_owned_approval"
       - id: "A2-INT-005"
-        descripcion: "The active-document validation endpoint and command-line path return equivalent blocking findings without modifying project data."
-        tipo: "fail-to-pass"
+        description: "The active-document validation endpoint and command-line path return equivalent blocking findings without modifying project data."
+        type: "fail-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/app/test_web_foundation.py tests/workflow/test_evaluation.py -q -k document_validation"
+        command: "python -m pytest tests/app/test_web_foundation.py tests/workflow/test_evaluation.py -q -k document_validation"
       - id: "A2-INT-006"
-        descripcion: "Researcher-facing views and Alpha export contain no internal curator-submission action or gate."
-        tipo: "fail-to-pass"
+        description: "Researcher-facing views and Alpha export contain no internal curator-submission action or gate."
+        type: "fail-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/app/test_web_foundation.py tests/workflow/test_alpha_journey.py -q -k no_internal_submission"
+        command: "python -m pytest tests/app/test_web_foundation.py tests/workflow/test_alpha_journey.py -q -k no_internal_submission"
       - id: "A2-INT-007"
-        descripcion: "Project people, document annotator assignments, checklist readiness, validation, and export resolve the same stable contributor identities."
-        tipo: "fail-to-pass"
+        description: "Project people, document annotator assignments, checklist readiness, validation, and export resolve the same stable contributor identities."
+        type: "fail-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/workflow/test_document_contributors.py tests/app/test_web_foundation.py tests/workflow/test_alpha_journey.py -q -k annotator_assignment"
+        command: "python -m pytest tests/workflow/test_document_contributors.py tests/app/test_web_foundation.py tests/workflow/test_alpha_journey.py -q -k annotator_assignment"
       - id: "A2-INT-008"
-        descripcion: "The web workflow imports a selected PDF into managed project storage, atomically registers it, and makes it available after the app restarts."
-        tipo: "fail-to-pass"
+        description: "The web workflow imports a selected PDF into managed project storage, atomically registers it, and makes it available after the app restarts."
+        type: "fail-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/app/test_web_foundation.py -q -k 'managed_pdf_picker or managed_pdf_import_remains'"
+        command: "python -m pytest tests/app/test_web_foundation.py -q -k 'managed_pdf_picker or managed_pdf_import_remains'"
     functional:
       - id: "A2-FLOW-001"
-        descripcion: "A researcher can prepare, validate, and export a Data Package through the supported Alpha journey without an internal approval workflow."
-        tipo: "fail-to-pass"
+        description: "A researcher can prepare, validate, and export a Data Package through the supported Alpha journey without an internal approval workflow."
+        type: "fail-to-pass"
         test_confidence: "integration"
         golden_data: "examples/incomplete-dummy-project"
-        comando: "python -m pytest tests/workflow/test_alpha_journey.py -q"
+        command: "python -m pytest tests/workflow/test_alpha_journey.py -q"
       - id: "A2-FLOW-002"
-        descripcion: "A corrupted project is blocked from package generation and receives repair-oriented findings."
-        tipo: "fail-to-pass"
+        description: "A corrupted project is blocked from package generation and receives repair-oriented findings."
+        type: "fail-to-pass"
         test_confidence: "integration"
         golden_data: "tests/fixtures/corrupted-project"
-        comando: "python -m pytest tests/workflow/test_evaluation.py tests/workflow/test_package_compiler.py -q -k corrupted"
+        command: "python -m pytest tests/workflow/test_evaluation.py tests/workflow/test_package_compiler.py -q -k corrupted"
     e2e:
       - id: "A2-E2E-001"
-        descripcion: "A browser-level researcher journey opens a project, resolves visible preparation gates, validates it, and exports a Data Package without manual JSON editing or internal approval steps."
-        tipo: "fail-to-pass"
+        description: "A browser-level researcher journey opens a project, resolves visible preparation gates, validates it, and exports a Data Package without manual JSON editing or internal approval steps."
+        type: "fail-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/app/test_web_foundation.py tests/workflow/test_alpha_journey.py -q -k alpha_e2e"
+        command: "python -m pytest tests/app/test_web_foundation.py tests/workflow/test_alpha_journey.py -q -k alpha_e2e"
     contract:
       - id: "A2-CONTRACT-001"
-        descripcion: "Validation preserves the canonical HEVA data contract and controlled vocabulary."
-        tipo: "pass-to-pass"
+        description: "Validation preserves the canonical HEVA data contract and controlled vocabulary."
+        type: "pass-to-pass"
         test_confidence: "functional"
-        comando: "python -m pytest tests/workflow/test_contract.py -q"
+        command: "python -m pytest tests/workflow/test_contract.py -q"
     architecture: []
     bootstrap:
       - id: "A2-BOOT-001"
-        descripcion: "The FastAPI application imports and answers its home route in the supported environment."
-        tipo: "pass-to-pass"
+        description: "The FastAPI application imports and answers its home route in the supported environment."
+        type: "pass-to-pass"
         test_confidence: "integration"
-        comando: "python -m pytest tests/app/test_web_foundation.py -q -k home"
+        command: "python -m pytest tests/app/test_web_foundation.py -q -k home"
 
   live_verification:
-    comando: "python -m pytest tests/workflow/test_alpha_journey.py tests/app/test_web_foundation.py -q"
-    instruccion: "Confirm the alpha journey passes and every failure is rendered as an actionable finding."
+    command: "python -m pytest tests/workflow/test_alpha_journey.py tests/app/test_web_foundation.py -q"
+    instruction: "Confirm the alpha journey passes and every failure is rendered as an actionable finding."
 
   static_analysis:
     lint: "N/A — no linter is configured in the current project"
@@ -221,9 +221,9 @@ evaluation:
     dependency_scan: "N/A — no dependency change is authorized by this spec"
 
   model_graders:
-    - nombre: "Researcher actionability of validation findings"
-      tipo: "rubric"
-      rubrica: |
+    - name: "Researcher actionability of validation findings"
+      type: "rubric"
+      rubric: |
         A researcher unfamiliar with JSON internals can identify:
         1. which document or project file has a problem;
         2. whether the problem blocks Data Package generation;
@@ -231,49 +231,49 @@ evaluation:
         4. that HEVA did not silently overwrite canonical data.
         The interface uses working, valid, and exported accurately and does not describe
         HEVA output as curator-approved, repository-accepted, or published.
-      calibrado_con_humano: false
+      calibrated_with_human: false
       dataset: "evals/fixtures/alpha-2-validation-scenarios.jsonl"
 
   metrics:
-    - nombre: "Supported alpha journey completion"
-      umbral_minimo: "100% of required journey gates pass for the dummy alpha project"
-      umbral_objetivo: "100% for the dummy project and the researcher-selected real alpha dataset"
-      descripcion: "Researchers can complete the promised workflow and obtain a validated Data Package."
+    - name: "Supported alpha journey completion"
+      minimum_threshold: "100% of required journey gates pass for the dummy alpha project"
+      target_threshold: "100% for the dummy project and the researcher-selected real alpha dataset"
+      description: "Researchers can complete the promised workflow and obtain a validated Data Package."
       measurement_method: "automated"
-    - nombre: "Corruption detection before package generation"
-      umbral_minimo: "100% of known structural and semantic corruption fixtures block generation"
-      umbral_objetivo: "100%, with file-specific and repair-oriented findings"
-      descripcion: "Manual or scripted damage cannot silently enter a distributed research dataset."
+    - name: "Corruption detection before package generation"
+      minimum_threshold: "100% of known structural and semantic corruption fixtures block generation"
+      target_threshold: "100%, with file-specific and repair-oriented findings"
+      description: "Manual or scripted damage cannot silently enter a distributed research dataset."
       measurement_method: "automated"
-    - nombre: "Readiness-state consistency"
-      umbral_minimo: "100% agreement between persisted state, CLI validation, GUI gates, and export eligibility"
-      umbral_objetivo: "100% agreement after every supported state-changing action"
-      descripcion: "Researchers can trust working, valid, and exported outcomes without encountering hidden approval gates."
+    - name: "Readiness-state consistency"
+      minimum_threshold: "100% agreement between persisted state, CLI validation, GUI gates, and export eligibility"
+      target_threshold: "100% agreement after every supported state-changing action"
+      description: "Researchers can trust working, valid, and exported outcomes without encountering hidden approval gates."
       measurement_method: "automated"
-    - nombre: "Repository-governance independence"
-      umbral_minimo: "100% of otherwise valid Alpha fixtures export without internal approval artifacts"
-      umbral_objetivo: "100%, with no submission or approval step in the documented journey"
-      descripcion: "Researchers can deliver value through HEVA while their chosen repository owns review and publication."
+    - name: "Repository-governance independence"
+      minimum_threshold: "100% of otherwise valid Alpha fixtures export without internal approval artifacts"
+      target_threshold: "100%, with no submission or approval step in the documented journey"
+      description: "Researchers can deliver value through HEVA while their chosen repository owns review and publication."
       measurement_method: "automated"
-    - nombre: "Document-validation availability"
-      umbral_minimo: "100% of active documents expose a validation action and render its result"
-      umbral_objetivo: "100% agreement between GUI, domain, CLI, and export findings"
-      descripcion: "Researchers can run HEVA's primary quality check where they review a document."
+    - name: "Document-validation availability"
+      minimum_threshold: "100% of active documents expose a validation action and render its result"
+      target_threshold: "100% agreement between GUI, domain, CLI, and export findings"
+      description: "Researchers can run HEVA's primary quality check where they review a document."
       measurement_method: "automated"
-    - nombre: "Minimal distribution contract"
-      umbral_minimo: "100% of valid annotation-only fixtures export without optional source-governance metadata"
-      umbral_objetivo: "100%, while every export retains a dataset license and rights statement"
-      descripcion: "Validation protects the distributed annotation dataset without reproducing repository or source-governance workflows."
+    - name: "Minimal distribution contract"
+      minimum_threshold: "100% of valid annotation-only fixtures export without optional source-governance metadata"
+      target_threshold: "100%, while every export retains a dataset license and rights statement"
+      description: "Validation protects the distributed annotation dataset without reproducing repository or source-governance workflows."
       measurement_method: "automated"
-    - nombre: "Document contributor attribution"
-      umbral_minimo: "100% of exported documents identify at least one explicitly assigned original annotator"
-      umbral_objetivo: "100% agreement across project people, document metadata, GUI checklist, validation, and export"
-      descripcion: "Original annotation authorship is explicit and never inferred from the active curator."
+    - name: "Document contributor attribution"
+      minimum_threshold: "100% of exported documents identify at least one explicitly assigned original annotator"
+      target_threshold: "100% agreement across project people, document metadata, GUI checklist, validation, and export"
+      description: "Original annotation authorship is explicit and never inferred from the active curator."
       measurement_method: "automated"
-    - nombre: "Canonical-data preservation"
-      umbral_minimo: "0 unapproved modifications during validation and diagnosis"
-      umbral_objetivo: "0 modifications; proposed repairs are written separately"
-      descripcion: "Validation is safe to run even when project data has been manually corrupted."
+    - name: "Canonical-data preservation"
+      minimum_threshold: "0 unapproved modifications during validation and diagnosis"
+      target_threshold: "0 modifications; proposed repairs are written separately"
+      description: "Validation is safe to run even when project data has been manually corrupted."
       measurement_method: "automated"
 
   eval_type: "regression"
@@ -286,9 +286,9 @@ evaluation:
     - "A new external script is authorized to modify canonical project data."
 
   security:
-    secretos: "prohibido"
-    datos_sensibles: "Synthetic fixtures by default; real alpha data remains subject to document rights."
-    permisos_herramientas:
+    secrets: "forbidden"
+    sensitive_data: "Synthetic fixtures by default; real alpha data remains subject to document rights."
+    tool_permissions:
       - "git: read/write on a feature branch; no push, merge, or activation without human approval"
       - "test suite: full execution"
       - "project data: read and diagnose; write only a separate proposed repair"
@@ -317,15 +317,15 @@ evaluation:
   budget_limit_usd: null
   budget_mode: "advisory"
   human_gates:
-    - tipo: "arquitectura"
-      obligatorio: true
-      condicion: "A human approves activation, supersession, or material changes to this EVA specification."
-    - tipo: "destructive_action"
-      obligatorio: true
-      condicion: "Replacing, deleting, or overwriting canonical project data requires explicit human approval."
-    - tipo: "release"
-      obligatorio: true
-      condicion: "All EVA evidence and the human alpha walkthrough are complete."
+    - type: "architecture"
+      required: true
+      condition: "A human approves activation, supersession, or material changes to this EVA specification."
+    - type: "destructive_action"
+      required: true
+      condition: "Replacing, deleting, or overwriting canonical project data requires explicit human approval."
+    - type: "release"
+      required: true
+      condition: "All EVA evidence and the human alpha walkthrough are complete."
 
   hypothesis:
     statement: |
