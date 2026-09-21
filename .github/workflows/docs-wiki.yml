@@ -7,14 +7,14 @@ on:
       - "docs/**"
       - "mkdocs.yml"
       - "src/heva/wiki.py"
-      - "tests/workflow/test_wiki.py"
+      - "tests/curation/test_wiki.py"
       - ".github/workflows/docs-wiki.yml"
   pull_request:
     paths:
       - "docs/**"
       - "mkdocs.yml"
       - "src/heva/wiki.py"
-      - "tests/workflow/test_wiki.py"
+      - "tests/curation/test_wiki.py"
       - ".github/workflows/docs-wiki.yml"
   workflow_dispatch:
 

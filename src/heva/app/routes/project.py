@@ -17,7 +17,7 @@ from fastapi.responses import (
 )
 from pydantic import BaseModel, ConfigDict, StrictBool, ValidationError
 
-from heva.workflow.annotator_registry import (
+from heva.curation.annotator_registry import (
     AnnotatorRegistryError,
     activate_annotator,
     add_annotator,
@@ -25,57 +25,57 @@ from heva.workflow.annotator_registry import (
     remove_annotator,
     update_annotator,
 )
-from heva.workflow.automatic_color_proposal import (
+from heva.curation.automatic_color_proposal import (
     AutomaticColorProposalError,
     generate_automatic_color_proposals,
 )
-from heva.workflow.document_metadata import (
+from heva.curation.document_metadata import (
     AnnotatorMetadata,
     RightsMetadata,
 )
-from heva.workflow.document_contributors import (
+from heva.curation.document_contributors import (
     DocumentContributorError,
     assign_document_annotators,
     load_document_annotators,
 )
-from heva.workflow.document_rights import (
+from heva.curation.document_rights import (
     DocumentRightsError,
     load_document_rights,
     save_document_rights,
 )
-from heva.workflow.color_mapping import (
+from heva.curation.color_mapping import (
     apply_shared_color_mapping,
     ColorMappingError,
     load_color_configuration,
     review_and_confirm_color_configuration,
     save_color_configuration,
 )
-from heva.workflow.color_configuration_registry import (
+from heva.curation.color_configuration_registry import (
     ProjectColorConfigurationError,
     create_color_configuration_version,
     load_color_configuration_registry,
     select_color_configuration,
 )
-from heva.workflow.contract import HEVA_LABELS
-from heva.workflow.document_citation import (
+from heva.curation.contract import HEVA_LABELS
+from heva.curation.document_citation import (
     CitationDraft,
     CitationError,
     confirm_document_citation,
     load_document_citation,
     save_document_citation,
 )
-from heva.workflow.dataset_metadata import (
+from heva.curation.dataset_metadata import (
     DatasetMetadataError,
     load_dataset_metadata,
     save_dataset_metadata,
 )
-from heva.workflow.package_validator import (
+from heva.curation.package_validator import (
     DatasetReleaseMetadata,
     PackageValidationError,
     build_release,
     validate_project,
 )
-from heva.workflow.people_registry import (
+from heva.curation.people_registry import (
     PeopleRegistryError,
     PersonRecord,
     activate_curator,
@@ -84,19 +84,19 @@ from heva.workflow.people_registry import (
     remove_person,
     update_person,
 )
-from heva.workflow.people_import import PeopleImportError, import_people_csv
-from heva.workflow.extraction_session import (
+from heva.curation.people_import import PeopleImportError, import_people_csv
+from heva.curation.extraction_session import (
     ExtractionSessionError,
     load_extraction_checkpoint_status,
     run_registered_extraction,
 )
-from heva.workflow.extraction_draft import (
+from heva.curation.extraction_draft import (
     ExtractionDraftError,
     load_extraction_draft,
     promote_extraction_draft,
     run_registered_raw_extraction,
 )
-from heva.workflow.project_registry import (
+from heva.curation.project_registry import (
     DEFAULT_REGISTRY_PATH,
     LEGACY_REGISTRY_PATH,
     SUPPORTED_SUFFIXES,
@@ -110,7 +110,7 @@ from heva.workflow.project_registry import (
     scan_project_sources,
     sync_registry,
 )
-from heva.workflow.review_queue import (
+from heva.curation.review_queue import (
     ReviewQueueError,
     registered_source_path,
 )

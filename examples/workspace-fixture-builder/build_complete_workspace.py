@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import shutil
 
-from heva.workflow.document_metadata import (
+from heva.curation.document_metadata import (
     AnnotationProcessMetadata,
     AnnotatorMetadata,
     ColorConfigurationMetadata,
@@ -19,11 +19,11 @@ from heva.workflow.document_metadata import (
     SourceMetadata,
     save_package_metadata,
 )
-from heva.workflow.document_contributors import assign_document_annotators
-from heva.workflow.package_validator import DatasetReleaseMetadata, validate_project
-from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
-from heva.workflow.project_registry import load_project_registry, sync_registry
-from heva.workflow.review_state import initialize_sentence_reviews, record_decisions
+from heva.curation.document_contributors import assign_document_annotators
+from heva.curation.package_validator import DatasetReleaseMetadata, validate_project
+from heva.curation.people_registry import PersonRecord, activate_curator, add_person
+from heva.curation.project_registry import load_project_registry, sync_registry
+from heva.curation.review_state import initialize_sentence_reviews, record_decisions
 
 
 FIXTURE_DOCUMENTS = (

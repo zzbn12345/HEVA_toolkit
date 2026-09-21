@@ -4,7 +4,7 @@ This package provides the optional local FastAPI interface for opening HEVA proj
 guiding annotators through document preparation, reviewing extracted sentences, running
 validation, and recording curator decisions.
 
-The web interface is a view over the workflow package. It must not contain a second data
+The web interface is a view over the curation package. It must not contain a second data
 model or silently rewrite extraction evidence.
 
 ## Install and start
@@ -27,7 +27,7 @@ tool, not as a multi-user internet service.
 
 - `main.py` composes the FastAPI application and project boundary.
 - `project_context.py` holds the active project only for the running app session.
-- `routes/` translates HTTP requests into workflow operations.
+- `routes/` translates HTTP requests into curation operations.
 - `templates/` and `static/` contain the accessible browser interface.
 - `documentation.py` renders the same sanitized Markdown used by the repository guide.
 - `folder_picker.py` opens a native local folder chooser without uploading sources.
@@ -36,7 +36,7 @@ tool, not as a multi-user internet service.
 
 The currently selected project exists only in memory for the running application and is
 not restored after restart. Citation, annotator, color,
-extraction, review, validation, and curation changes are persisted by `heva.workflow` in
+extraction, review, validation, and curation changes are persisted by `heva.curation` in
 the selected project's JSON package files. Browser state is never the authoritative copy.
 
 The application does not upload or distribute source documents. Researchers can either
