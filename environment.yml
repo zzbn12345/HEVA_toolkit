@@ -4,5 +4,6 @@ channels:
 dependencies:
   - python=3.12
   - pip
+  - tesseract>=5
   - pip:
       - -e .[app,extraction]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import logging
 from pathlib import Path
 from typing import Callable
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
@@ -75,6 +76,11 @@ from heva.curation.package_validator import (
     build_release,
     validate_project,
 )
+from heva.curation.ocr_candidate import (
+    load_ocr_candidate,
+    promote_ocr_candidate,
+    run_registered_ocr_candidate,
+)
 from heva.curation.people_registry import (
     PeopleRegistryError,
     PersonRecord,
@@ -126,6 +132,8 @@ RELEASE_FILENAMES = frozenset(
 from heva.app.project_context import ProjectContext
 from heva.app.extraction_jobs import ExtractionJobRegistry
 from heva.extraction.errors import ExtractionCancelled
+from heva.extraction.source_diagnostics import diagnose_pdf_source
+from heva.extraction.ocr_assistance import OCRAssistanceError
 from heva.app.folder_picker import (
     FolderPickerUnavailable,
     select_local_csv_file,
@@ -133,6 +141,9 @@ from heva.app.folder_picker import (
     select_local_pdf_file,
     select_local_source_file,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ColorDecisionInput(BaseModel):
@@ -947,6 +958,151 @@ def create_project_router(
             }
         return job
 
+    @router.post("/api/documents/{document_id}/source-diagnostics")
+    def run_source_diagnostics(document_id: str):
+        """Inspect a rejected PDF without modifying it or starting assisted extraction."""
+
+        try:
+            source = registered_source_path(root, document_id)
+            if source.suffix.lower() != ".pdf":
+                raise ValueError("Source diagnostics currently support PDF documents only.")
+            report = diagnose_pdf_source(
+                source,
+                trigger_code="pdf_text_unreadable",
+            )
+        except (OSError, RuntimeError, ValueError, ReviewQueueError) as error:
+            return JSONResponse(
+                {
+                    "code": "source_diagnostics_failed",
+                    "message": "Source diagnostics could not be completed.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+        return {
+            "document_id": document_id,
+            "status": report.status,
+            "trigger_code": report.trigger_code,
+            "source_sha256": report.source_sha256,
+            "affected_pages": report.affected_pages,
+            "issues": [
+                {
+                    "code": issue.code,
+                    "pages": issue.pages,
+                    "evidence": issue.evidence,
+                }
+                for issue in report.issues
+            ],
+            "recommended_strategy": report.recommended_strategy,
+            "assistance_started": report.assistance_started,
+        }
+
+    @router.post("/api/documents/{document_id}/ocr-candidate")
+    def create_ocr_candidate(document_id: str):
+        """Run explicitly requested OCR and persist only a review-required candidate."""
+
+        failed_job = extraction_jobs.get(document_id)
+        if not (
+            failed_job
+            and failed_job.get("state") == "failed"
+            and (failed_job.get("error") or {}).get("code") == "pdf_text_unreadable"
+        ):
+            return JSONResponse(
+                {
+                    "code": "ocr_assistance_not_recommended",
+                    "message": "OCR assistance is not available for this extraction state.",
+                    "action": (
+                        "Run normal extraction first. Assisted extraction is offered only "
+                        "after HEVA confirms an unreadable PDF text layer."
+                    ),
+                },
+                status_code=409,
+            )
+        try:
+            path, candidate = run_registered_ocr_candidate(root, document_id)
+        except (
+            ColorMappingError,
+            ExtractionDraftError,
+            OCRAssistanceError,
+            PeopleRegistryError,
+            RegistryError,
+            OSError,
+            RuntimeError,
+            ValueError,
+        ) as error:
+            return JSONResponse(
+                {
+                    "code": getattr(error, "code", "ocr_candidate_failed"),
+                    "message": "OCR-assisted extraction did not produce a candidate.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+        return {
+            "document_id": document_id,
+            "status": candidate.status,
+            "requires_review": candidate.requires_review,
+            "record_count": len(candidate.sentences),
+            "processed_pages": candidate.processed_pages,
+            "mean_confidence": round(candidate.mean_confidence, 1),
+            "engine": candidate.engine,
+            "candidate_path": path.relative_to(root).as_posix(),
+            "canonical_data_changed": False,
+        }
+
+    @router.get("/api/documents/{document_id}/ocr-candidate")
+    def inspect_ocr_candidate(document_id: str):
+        """Return candidate text for local researcher inspection before promotion."""
+
+        try:
+            candidate = load_ocr_candidate(root, document_id)
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return {
+            "document_id": document_id,
+            "status": candidate.status,
+            "requires_review": candidate.requires_review,
+            "source_sha256": candidate.source_checksum_sha256,
+            "engine": candidate.engine,
+            "engine_version": candidate.engine_version,
+            "mean_confidence": round(candidate.mean_confidence, 1),
+            "processed_pages": candidate.processed_pages,
+            "records": [sentence.model_dump(mode="json") for sentence in candidate.sentences],
+        }
+
+    @router.post("/api/documents/{document_id}/ocr-candidate/promote")
+    def accept_ocr_candidate(document_id: str):
+        """Create ordinary annotations from explicitly accepted OCR candidate evidence."""
+
+        try:
+            result, candidate = promote_ocr_candidate(root, document_id)
+        except (
+            ColorMappingError,
+            ExtractionDraftError,
+            ExtractionSessionError,
+            PeopleRegistryError,
+            RegistryError,
+            OSError,
+            RuntimeError,
+            ValueError,
+        ) as error:
+            return JSONResponse(
+                {
+                    "code": getattr(error, "code", "ocr_candidate_promotion_failed"),
+                    "message": "OCR candidate annotations were not created.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+        return {
+            "document_id": document_id,
+            "status": candidate.status,
+            "record_count": result.record_count,
+            "requires_sentence_review": True,
+            "canonical_data_changed": True,
+            "next_action": "Review every OCR-derived sentence and annotation.",
+        }
+
     @router.post("/api/documents/{document_id}/annotations/compile")
     def compile_document_annotations(document_id: str):
         """Promote saved raw evidence without rerunning the source extractor."""
@@ -1093,6 +1249,22 @@ def create_project_router(
                 },
             )
             return
+        except Exception:
+            logger.exception("Unexpected extraction worker failure for %s", document_id)
+            extraction_jobs.update(
+                document_id,
+                state="failed",
+                stage="failed",
+                message="Extraction stopped unexpectedly.",
+                error={
+                    "code": "unexpected_extraction_failure",
+                    "action": (
+                        "Retry once. If the problem continues, inspect the local server "
+                        "log; no new extraction evidence was reported as complete."
+                    ),
+                },
+            )
+            return
         extraction_jobs.update(
             document_id,
             state="completed",
@@ -1118,6 +1290,24 @@ def create_project_router(
         page_end: int | None = Query(default=None, ge=1),
     ):
         """Queue extraction and return immediately so clients can observe progress."""
+
+        if not force:
+            try:
+                checkpoint = load_extraction_checkpoint_status(root, document_id)
+            except ExtractionSessionError:
+                checkpoint = None
+            if checkpoint is not None and checkpoint.state == "current":
+                return JSONResponse(
+                    {
+                        "code": "extraction_already_current",
+                        "message": "Annotations have already been extracted for this document.",
+                        "action": (
+                            "Continue with annotation review, or explicitly choose "
+                            "Rebuild extraction to replace the current evidence."
+                        ),
+                    },
+                    status_code=409,
+                )
 
         if (page_start is None) != (page_end is None):
             raise HTTPException(

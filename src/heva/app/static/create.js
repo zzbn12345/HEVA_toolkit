@@ -833,6 +833,7 @@ async function confirmColors() {
 
 async function loadExtractionStatus(documentId) {
   const status = document.getElementById("extraction-status");
+  const extract = document.getElementById("extract-annotations");
   const rebuild = document.getElementById("rebuild-annotations");
   try {
     const response = await fetch(
@@ -846,8 +847,10 @@ async function loadExtractionStatus(documentId) {
       status.textContent = result.detail || "Extraction status could not be loaded.";
       return;
     }
-    rebuild.hidden = result.state === "not_extracted";
-    rebuild.disabled = document.getElementById("extract-annotations").disabled;
+    const canonicalReady = result.record_count > 0;
+    extract.hidden = canonicalReady;
+    rebuild.hidden = !canonicalReady;
+    rebuild.disabled = extract.disabled;
     if (result.state === "not_extracted") {
       status.className = result.draft_record_count ? "notice warning" : "notice neutral";
       status.textContent = result.draft_record_count
@@ -860,7 +863,6 @@ async function loadExtractionStatus(documentId) {
       status.className = result.state === "invalid" ? "notice error" : "notice warning";
       status.textContent = `Persisted extraction contains ${result.record_count} record${result.record_count === 1 ? "" : "s"} but must be rebuilt. ${result.stale_reasons.join(" ")}`;
     }
-    const canonicalReady = result.record_count > 0;
     const draftAvailable = result.draft_record_count > 0;
     const mappingConfirmed = document.getElementById("mapping-confirmed").checked;
     if (
@@ -885,6 +887,7 @@ async function loadExtractionStatus(documentId) {
       "Extract annotation evidence from this document.",
     );
     await loadDocumentReadiness(documentId);
+    await loadOcrCandidate();
   } catch (error) {
     setReadiness("extracted", false, "Extraction status could not be loaded.");
     showAnnotationsWorkspace(documentId, false);
@@ -970,6 +973,8 @@ async function extractAnnotations(force = false) {
   const progress = document.getElementById("extraction-progress");
   const status = document.getElementById("extraction-status");
   const cancelButton = document.getElementById("cancel-extraction");
+  const diagnosticsActions = document.getElementById("source-diagnostics-actions");
+  const diagnosticsResult = document.getElementById("source-diagnostics-result");
   const pageStart = document.getElementById("extraction-page-start").value.trim();
   const pageEnd = document.getElementById("extraction-page-end").value.trim();
   if ((pageStart && !pageEnd) || (!pageStart && pageEnd)) {
@@ -986,6 +991,11 @@ async function extractAnnotations(force = false) {
   cancelButton.hidden = false;
   cancelButton.disabled = false;
   cancelButton.textContent = "Cancel extraction";
+  diagnosticsActions.hidden = true;
+  diagnosticsResult.hidden = true;
+  document.getElementById("ocr-assistance-actions").hidden = true;
+  document.getElementById("ocr-assistance-result").hidden = true;
+  document.getElementById("ocr-candidate-review").hidden = true;
   status.className = "notice neutral";
   status.textContent = "Extraction is running. Keep this page open.";
   try {
@@ -1008,6 +1018,7 @@ async function extractAnnotations(force = false) {
     if (job.state === "failed") {
       status.className = "notice error";
       status.textContent = `${job.message} ${job.error?.action || ""}`;
+      diagnosticsActions.hidden = job.error?.code !== "pdf_text_unreadable";
       return;
     }
     if (job.state === "draft_saved") {
@@ -1029,6 +1040,151 @@ async function extractAnnotations(force = false) {
     cancelButton.hidden = true;
     button.textContent = force ? "Rebuild extraction" : "Extract annotations";
     button.disabled = false;
+  }
+}
+
+/** Inspect a rejected PDF without modifying it or automatically starting OCR. */
+async function runSourceDiagnostics() {
+  const documentId = document.getElementById("selected-document-id").value;
+  const button = document.getElementById("run-source-diagnostics");
+  const resultBox = document.getElementById("source-diagnostics-result");
+  button.disabled = true;
+  button.textContent = "Inspecting source…";
+  resultBox.hidden = false;
+  resultBox.className = "notice neutral";
+  resultBox.textContent = "Inspecting the PDF text layer and embedded fonts…";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/source-diagnostics`,
+      {method: "POST"},
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(`${result.message || "Source diagnostics failed."} ${result.action || ""}`);
+    }
+    const pages = result.affected_pages.join(", ");
+    const brokenMapping = result.issues.some(
+      (issue) => issue.code === "broken_unicode_mapping",
+    );
+    resultBox.className = brokenMapping ? "notice warning" : "notice neutral";
+    resultBox.textContent = brokenMapping
+      ? `Broken Unicode font mapping detected on pages ${pages}. OCR-assisted extraction is recommended, but HEVA has not started OCR or changed the source. Source checksum: ${result.source_sha256}.`
+      : `No known broken font mapping was detected. HEVA has not changed the source. Source checksum: ${result.source_sha256}.`;
+    document.getElementById("ocr-assistance-actions").hidden = !brokenMapping;
+  } catch (error) {
+    resultBox.className = "notice error";
+    resultBox.textContent = error.message || "Source diagnostics could not be completed.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Run source diagnostics";
+  }
+}
+
+/** Run OCR only after explicit confirmation and retain its output as a review candidate. */
+async function startOcrAssistance() {
+  if (!window.confirm(
+    "Run OCR-assisted extraction? The result will be saved separately and will not replace existing annotations or extraction evidence.",
+  )) return;
+  const documentId = document.getElementById("selected-document-id").value;
+  const button = document.getElementById("start-ocr-assistance");
+  const resultBox = document.getElementById("ocr-assistance-result");
+  button.disabled = true;
+  button.textContent = "Running OCR…";
+  resultBox.hidden = false;
+  resultBox.className = "notice neutral";
+  resultBox.textContent = "Rendering the PDF and aligning OCR words with its colored spans…";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/ocr-candidate`,
+      {method: "POST"},
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(`${result.message || "OCR assistance failed."} ${result.action || ""}`);
+    }
+    resultBox.className = "notice warning";
+    resultBox.textContent = `Created ${result.record_count} OCR candidate records from pages ${result.processed_pages.join(", ")} with ${result.mean_confidence}% mean word confidence. They remain separate from canonical data and require researcher review.`;
+    await loadOcrCandidate();
+  } catch (error) {
+    resultBox.className = "notice error";
+    resultBox.textContent = error.message || "OCR assistance could not be completed.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Start OCR-assisted extraction";
+  }
+}
+
+/** Render the locally stored candidate without treating it as accepted extraction evidence. */
+async function loadOcrCandidate() {
+  const documentId = document.getElementById("selected-document-id").value;
+  const section = document.getElementById("ocr-candidate-review");
+  const response = await fetch(
+    `/api/documents/${encodeURIComponent(documentId)}/ocr-candidate`,
+  );
+  if (!response.ok) {
+    section.hidden = true;
+    return;
+  }
+  const candidate = await response.json();
+  document.getElementById("ocr-candidate-summary").textContent =
+    `${candidate.records.length} candidate records from pages ${candidate.processed_pages.join(", ")}; ${candidate.mean_confidence}% mean OCR word confidence.`;
+  const records = candidate.records.map((record) => {
+    const item = document.createElement("li");
+    const heading = document.createElement("strong");
+    heading.textContent = `Page ${record.page}`;
+    const sentence = document.createElement("p");
+    let position = 0;
+    [...record.entities].sort((left, right) => left.start - right.start).forEach((entity) => {
+      sentence.append(document.createTextNode(record.sentence.slice(position, entity.start)));
+      const mark = document.createElement("mark");
+      mark.style.backgroundColor = entity.color;
+      mark.style.color = contrastingTextColor(entity.color);
+      mark.textContent = record.sentence.slice(entity.start, entity.end);
+      sentence.append(mark);
+      position = entity.end;
+    });
+    sentence.append(document.createTextNode(record.sentence.slice(position)));
+    item.append(heading, sentence);
+    return item;
+  });
+  document.getElementById("ocr-candidate-records").replaceChildren(...records);
+  const promote = document.getElementById("promote-ocr-candidate");
+  promote.hidden = candidate.status === "promoted";
+  section.hidden = false;
+}
+
+/** Explicitly enter an inspected OCR candidate into normal pending sentence review. */
+async function promoteOcrCandidate() {
+  if (!window.confirm(
+    "Create annotations from this OCR candidate? Every sentence will remain pending and must be reviewed before validation or export.",
+  )) return;
+  const documentId = document.getElementById("selected-document-id").value;
+  const button = document.getElementById("promote-ocr-candidate");
+  const resultBox = document.getElementById("ocr-assistance-result");
+  button.disabled = true;
+  button.textContent = "Creating annotations…";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/ocr-candidate/promote`,
+      {method: "POST"},
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(`${result.message || "Annotations were not created."} ${result.action || ""}`);
+    }
+    resultBox.hidden = false;
+    resultBox.className = "notice success";
+    resultBox.textContent = `Created ${result.record_count} annotations from the OCR candidate. Review every sentence before validation or export.`;
+    button.hidden = true;
+    await loadExtractionStatus(documentId);
+    refreshAnnotationsReview();
+  } catch (error) {
+    resultBox.hidden = false;
+    resultBox.className = "notice error";
+    resultBox.textContent = error.message || "OCR candidate annotations could not be created.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Use candidate and create annotations";
   }
 }
 
@@ -1192,6 +1348,18 @@ document.getElementById("rebuild-annotations").addEventListener(
 document.getElementById("cancel-extraction").addEventListener(
   "click",
   cancelExtraction,
+);
+document.getElementById("run-source-diagnostics").addEventListener(
+  "click",
+  runSourceDiagnostics,
+);
+document.getElementById("start-ocr-assistance").addEventListener(
+  "click",
+  startOcrAssistance,
+);
+document.getElementById("promote-ocr-candidate").addEventListener(
+  "click",
+  promoteOcrCandidate,
 );
 document.getElementById("compile-annotations").addEventListener(
   "click",

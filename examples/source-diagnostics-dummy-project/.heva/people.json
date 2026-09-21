@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "active_curator_id": "PERSON-DIAGNOSTICCURATOR",
+  "people": [
+    {
+      "person_id": "PERSON-DIAGNOSTICANNOTATOR",
+      "name": "Dana Diagnostic",
+      "roles": [
+        "annotator"
+      ],
+      "affiliation": "HEVA Demonstration Lab",
+      "email": null,
+      "orcid": null
+    },
+    {
+      "person_id": "PERSON-DIAGNOSTICCURATOR",
+      "name": "Casey Curator",
+      "roles": [
+        "curator"
+      ],
+      "affiliation": "HEVA Demonstration Lab",
+      "email": null,
+      "orcid": null
+    }
+  ]
+}

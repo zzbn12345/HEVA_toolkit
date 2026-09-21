@@ -75,6 +75,9 @@ implementation_evidence:
     - feature: "F14.23 shared application notifications"
       delivered: "One accessible top-of-app component with validation and selected Data Package export feedback"
       remains: "Extraction, setup, and sentence-review event integration"
+    - feature: "F14.25 rejected-source diagnostics and opt-in assisted extraction"
+      delivered: "Read-only Type3 font-map diagnosis plus explicit Tesseract candidate creation, visual inspection, checksum-safe promotion into pending sentence review, and a no-loop guard against accidentally restarting normal extraction"
+      remains: "Background OCR progress and cancellation, page scope, and representative human quality evidence beyond the four-page fixture"
   unstarted:
     - "F14.7-F14.10 remaining intake and usability features"
     - "F14.15 annotation context"
@@ -177,6 +180,11 @@ evaluation:
         type: "fail-to-pass"
         test_confidence: "integration"
         command: "python -m pytest tests/app/test_web_foundation.py -q -k 'managed_pdf_picker or managed_pdf_import_remains'"
+      - id: "A2-INT-009"
+        description: "A rejected unreadable PDF produces a read-only diagnosis of its broken Unicode mapping and recommends, but does not start, OCR assistance."
+        type: "fail-to-pass"
+        test_confidence: "integration"
+        command: "python -m pytest tests/extraction/test_source_diagnostics.py tests/app/test_extraction_failure_lifecycle.py -q"
     functional:
       - id: "A2-FLOW-001"
         description: "A researcher can prepare, validate, and export a Data Package through the supported Alpha journey without an internal approval workflow."

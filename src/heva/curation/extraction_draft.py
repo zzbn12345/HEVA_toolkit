@@ -374,8 +374,6 @@ def run_registered_raw_extraction(
                 from heva.extraction.docx_extractor import extract_docx_highlights
 
                 if cancellation_callback is not None and cancellation_callback():
-                    from heva.extraction.errors import ExtractionCancelled
-
                     raise ExtractionCancelled("Extraction was cancelled before reading DOCX.")
                 records = extract_docx_highlights(source, color_label_map=None)
                 if progress_callback is not None:
@@ -400,8 +398,6 @@ def run_registered_raw_extraction(
             progress_callback(1, 1)
         name = extractor_name or getattr(extractor, "__name__", "custom extractor")
     if cancellation_callback is not None and cancellation_callback():
-        from heva.extraction.errors import ExtractionCancelled
-
         raise ExtractionCancelled("Extraction was cancelled before saving raw evidence.")
     path = persist_extraction_draft(
         root,
