@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "selected": {
+    "configuration_id": "project-palette",
+    "version": 1,
+    "selected_by": "PERSON-DIAGNOSTICCURATOR",
+    "selected_at": "2026-09-21T12:00:00Z"
+  },
+  "configurations": [
+    {
+      "configuration_id": "project-palette",
+      "version": 1,
+      "name": "Project palette",
+      "description": "Created from a curator-confirmed document color configuration.",
+      "mappings": [
+        {
+          "label": "aesthetical",
+          "hexes": [
+            "#00D5FF"
+          ]
+        },
+        {
+          "label": "ecological",
+          "hexes": [
+            "#A8D200"
+          ]
+        },
+        {
+          "label": "economic",
+          "hexes": [
+            "#D7AEFF"
+          ]
+        },
+        {
+          "label": "historic",
+          "hexes": [
+            "#FF40FF"
+          ]
+        },
+        {
+          "label": "social",
+          "hexes": [
+            "#FFD300"
+          ]
+        },
+        {
+          "label": "political",
+          "hexes": [
+            "#FFFC00"
+          ]
+        }
+      ],
+      "created_by": "PERSON-DIAGNOSTICCURATOR",
+      "created_at": "2026-09-21T12:00:00Z"
+    }
+  ]
+}

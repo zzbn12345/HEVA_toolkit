@@ -50,7 +50,7 @@ future product decisions rather than steps in the main tutorial.
 Use **Run validation** in the app, or run:
 
 ```bash
-python -m heva.workflow.package_validator /path/to/project validate
+python -m heva.curation.package_validator /path/to/project validate
 ```
 
 Validation checks structure and HEVA relationships. A passing result means the project
@@ -92,7 +92,7 @@ must be reviewed for the annotation protocol being processed.
 The code is separated into:
 
 - `src/heva/extraction` — PDF/DOCX and NLP adapters;
-- `src/heva/workflow` — project state, validation, and Data Package services;
+- `src/heva/curation` — data-curation state, validation, and Data Package services;
 - `src/heva/app` — optional FastAPI interface.
 
 Run the full test suite in the Conda environment:

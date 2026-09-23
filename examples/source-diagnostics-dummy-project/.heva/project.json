@@ -1,0 +1,26 @@
+{
+  "registry_version": "1.0",
+  "source_directory": "documents",
+  "documents": [
+    {
+      "document_id": "HEVA-DEMO-BROKEN-FONT",
+      "source_path": "documents/broken-type3-font.pdf",
+      "package_path": "documents/HEVA-DEMO-BROKEN-FONT",
+      "metadata_path": "documents/HEVA-DEMO-BROKEN-FONT/metadata.json",
+      "checksum_sha256": "2ef43c75037ea820d46f1f4f43262b6b29d9151fe966ce3433d6dbd9b3d2de5c",
+      "observed_checksum_sha256": null,
+      "status": "backlog",
+      "source_state": "present",
+      "source_binding": "project"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "backlog": 1,
+    "in_progress": 0,
+    "in_review": 0,
+    "done": 0,
+    "changed": 0,
+    "missing": 0
+  }
+}

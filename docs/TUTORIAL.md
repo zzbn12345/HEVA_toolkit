@@ -31,7 +31,7 @@ in this teaching example.
 Run the same check from a terminal with:
 
 ```bash
-python -m heva.workflow.package_validator examples/incomplete-dummy-project validate
+python -m heva.curation.package_validator examples/incomplete-dummy-project validate
 ```
 
 ## 4. Repeat with your documents

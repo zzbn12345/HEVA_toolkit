@@ -1,0 +1,162 @@
+{
+  "metadata_version": "1.0",
+  "document_id": "HEVA-DEMO-BROKEN-FONT",
+  "source": {
+    "title": "Broken Type3 Font Demonstration",
+    "creators": [
+      "Example Author"
+    ],
+    "citation": "Example Author. Broken Type3 Font Demonstration. 2011.",
+    "item_type": "report",
+    "issued_year": 2011,
+    "undated": false,
+    "source_filename": "broken-type3-font.pdf",
+    "reference": null,
+    "not_findable_reason": "Authorized local regression excerpt with intentionally dummy citation metadata.",
+    "human_confirmed": true,
+    "confirmed_by": "Casey Curator",
+    "confirmed_at": "2026-09-21T12:00:00Z",
+    "validation_method": null,
+    "validated_by": null,
+    "validated_at": null
+  },
+  "original_annotators": [
+    {
+      "person_id": "PERSON-DIAGNOSTICANNOTATOR",
+      "name": "Dana Diagnostic",
+      "affiliation": "HEVA Demonstration Lab",
+      "orcid": null
+    }
+  ],
+  "annotator": {
+    "name": null,
+    "affiliation": null,
+    "email": null,
+    "orcid": null
+  },
+  "rights": {
+    "access_level": "restricted",
+    "authorization_status": "authorized",
+    "authorization_date": "2026-09-21",
+    "authorized_by": "HEVA Toolkit maintainers",
+    "evidence_reference": "tests/fixtures/pdf/README.md",
+    "source_distribution_allowed": false,
+    "extracted_text_distribution_allowed": false,
+    "annotation_distribution_allowed": true,
+    "license": null,
+    "embargo_until": null
+  },
+  "annotation_process": {
+    "method": "automatic",
+    "extractor": "HEVA PDF extractor",
+    "extractor_version": "0.1.0",
+    "performed_at": null,
+    "source_scope": "full_source",
+    "selected_pages": [],
+    "review": {
+      "all_sentences_require_approval": true,
+      "completed": false,
+      "reviewed_at": null
+    }
+  },
+  "color_configuration": {
+    "detection_method": "manual",
+    "document_consistency": "consistent",
+    "human_confirmed": true,
+    "confirmed_by": "Casey Curator",
+    "confirmed_at": "2026-09-21T12:00:00Z",
+    "use_for_extraction": true,
+    "extraction_authorized_by": "Casey Curator",
+    "extraction_authorized_at": "2026-09-21T12:00:00Z",
+    "shared_from_document_id": null,
+    "configuration_id": "project-palette",
+    "configuration_version": 1,
+    "colors": [
+      {
+        "hex": "#00D5FF",
+        "color_name": "Near turquoise",
+        "text_color": "#000000",
+        "suggested_label": null,
+        "label": "aesthetical",
+        "display_name": "Aesthetical value",
+        "method": "manual",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": null,
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#A8D200",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": null,
+        "label": "ecological",
+        "display_name": "Ecological value",
+        "method": "manual",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": null,
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#D7AEFF",
+        "color_name": "Near white",
+        "text_color": "#000000",
+        "suggested_label": null,
+        "label": "economic",
+        "display_name": "Economic value",
+        "method": "manual",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": null,
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#FF40FF",
+        "color_name": "Near magenta",
+        "text_color": "#FFFFFF",
+        "suggested_label": null,
+        "label": "historic",
+        "display_name": "Historic value",
+        "method": "manual",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": null,
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#FFD300",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": null,
+        "label": "social",
+        "display_name": "Social value",
+        "method": "manual",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": null,
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      },
+      {
+        "hex": "#FFFC00",
+        "color_name": "Near yellow",
+        "text_color": "#000000",
+        "suggested_label": null,
+        "label": "political",
+        "display_name": "Political value",
+        "method": "manual",
+        "confidence": null,
+        "status": "approved",
+        "reasoning": null,
+        "ignore_reason": null,
+        "source_mechanism": "unknown"
+      }
+    ]
+  },
+  "resources": []
+}

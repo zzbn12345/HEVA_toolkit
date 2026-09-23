@@ -18,7 +18,7 @@ import urllib.request
 
 from pydantic import BaseModel, ConfigDict
 
-from heva.workflow.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
+from heva.curation.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
 
 
 class DiagnosticCheck(BaseModel):

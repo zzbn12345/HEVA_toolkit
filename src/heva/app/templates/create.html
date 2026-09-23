@@ -172,6 +172,26 @@
             <span id="extraction-progress-message">Preparing extraction…</span>
             <button id="cancel-extraction" class="button secondary" type="button">Cancel extraction</button>
           </div>
+          <div id="source-diagnostics-actions" class="notice warning" hidden>
+            <span>The source may have a broken text encoding.</span>
+            <button id="run-source-diagnostics" class="button secondary" type="button">Run source diagnostics</button>
+          </div>
+          <div id="source-diagnostics-result" class="notice neutral" aria-live="polite" hidden></div>
+          <div id="ocr-assistance-actions" class="notice warning" hidden>
+            <span>OCR output will be saved as a separate candidate and will still require review.</span>
+            <button id="start-ocr-assistance" class="button secondary" type="button">Start OCR-assisted extraction</button>
+          </div>
+          <div id="ocr-assistance-result" class="notice neutral" aria-live="polite" hidden></div>
+          <section id="ocr-candidate-review" class="panel-section" hidden>
+            <h2>Review OCR candidate</h2>
+            <p id="ocr-candidate-summary" class="muted"></p>
+            <ol id="ocr-candidate-records"></ol>
+            <div class="notice warning">
+              Creating annotations accepts this OCR output as extraction evidence. Every
+              resulting sentence will still be pending in the normal annotation review.
+            </div>
+            <button id="promote-ocr-candidate" class="button" type="button">Use candidate and create annotations</button>
+          </section>
           <div class="form-actions">
             <button class="button secondary" type="button" data-back="3">Back</button>
             <button id="extract-annotations" class="button" type="button" disabled>Extract annotations</button>

@@ -144,7 +144,7 @@ def test_pdf_extractor_reads_only_selected_source_pages(tmp_path: Path) -> None:
 def test_table_pdf_with_broken_font_encoding_fails_before_persisting_gibberish() -> None:
     """The authorized Alpha table fixture must fail honestly instead of yielding cipher text."""
 
-    source = Path(__file__).parents[1] / "2011 EC Galle part 1(Appendix IV) - Copy.pdf"
+    source = Path(__file__).parents[1] / "fixtures/pdf/broken-type3-font.pdf"
 
     with pytest.raises(
         PDFTextExtractionError, match="searchable Unicode text or apply OCR"

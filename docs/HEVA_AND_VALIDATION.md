@@ -10,7 +10,7 @@ Validation is the repeatable check that tells a user what is complete and what m
 It can run in the app or from a terminal:
 
 ```bash
-python -m heva.workflow.package_validator /path/to/project validate
+python -m heva.curation.package_validator /path/to/project validate
 ```
 
 HEVA uses two kinds of checks:

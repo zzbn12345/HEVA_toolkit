@@ -20,8 +20,8 @@ Most development happens under `src/heva/`:
 ```text
 src/heva/
 ├── extraction/   reads PDF/DOCX text, highlights, and colors
-├── workflow/     stores project state, validates it, and builds Data Packages
-├── app/          presents the workflow through FastAPI and the browser
+├── curation/     stores curation state, validates it, and builds Data Packages
+├── app/          presents the curation workflow through FastAPI and the browser
 └── doctor.py     checks whether the installation is ready
 ```
 
@@ -30,17 +30,17 @@ src/heva/
 Extraction records what the source contains: text, locations, and colors. It does not decide
 that a color has a universal HEVA meaning. A researcher reviews that mapping.
 
-## Workflow and validation layer
+## Curation and validation layer
 
 This is the core of HEVA. It manages durable project records, validates them against the
 schemas and HEVA relationships, and builds the distributable Data Package.
 
 ## Command-line access
 
-The workflow modules can be used from a terminal without the browser. For example:
+The curation modules can be used from a terminal without the browser. For example:
 
 ```bash
-python -m heva.workflow.package_validator /path/to/project validate
+python -m heva.curation.package_validator /path/to/project validate
 ```
 
 This is currently script interoperability rather than a large standalone CLI utility.
@@ -50,5 +50,5 @@ This is currently script interoperability rather than a large standalone CLI uti
 The optional FastAPI app guides a user through the same services and shows source documents
 beside their records. It does not implement a second data model.
 
-In short: **extraction observes, workflow validates and packages, and the app guides the
+In short: **extraction observes, curation validates and packages, and the app guides the
 user**. This separation keeps the HEVA specification useful even if the interface changes.

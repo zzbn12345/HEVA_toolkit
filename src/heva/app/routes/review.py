@@ -10,27 +10,27 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import ValidationError
 
-from heva.workflow.annotator_registry import (
+from heva.curation.annotator_registry import (
     AnnotatorRegistryError,
     load_annotator_registry,
 )
-from heva.workflow.people_registry import PeopleRegistryError, load_people_registry
-from heva.workflow.package_validator import (
+from heva.curation.people_registry import PeopleRegistryError, load_people_registry
+from heva.curation.package_validator import (
     PackageValidationError,
     validate_document_package,
 )
-from heva.workflow.project_registry import (
+from heva.curation.project_registry import (
     RegistryError,
     register_discovered_sources,
     scan_project_sources,
 )
-from heva.workflow.review_queue import (
+from heva.curation.review_queue import (
     ReviewQueueError,
     list_review_queue,
     load_review_document,
     registered_source_path,
 )
-from heva.workflow.review_state import (
+from heva.curation.review_state import (
     ReviewError,
     accept_quality_warning,
     record_decisions,

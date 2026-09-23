@@ -48,7 +48,7 @@ To extract registered documents and persist their package metadata, checkpoints,
 and canonical annotations, use the project workflow instead:
 
 ```bash
-python -m heva.workflow.extraction_session /path/to/project \
+python -m heva.curation.extraction_session /path/to/project \
   --document-id HEVA-EXAMPLE \
   --force
 ```
@@ -70,7 +70,7 @@ persistence has completed, and extraction is not yet resumable by page.
 - `auto_color_mapper.py` optionally asks local Ollama for controlled-label proposals.
 - `extract_highlights.py` preserves the original script interoperability layer.
 
-Automatic mappings are proposals, not scholarly decisions. The workflow package records
+Automatic mappings are proposals, not scholarly decisions. The curation package records
 their provenance and requires human confirmation.
 
 ## Known boundaries
