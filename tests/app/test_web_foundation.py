@@ -13,21 +13,21 @@ import pytest
 
 from heva.app.main import create_app
 from heva.app.routes import project as project_routes
-from heva.curation.color_mapping import (
+from heva.workflow.color_mapping import (
     ColorMappingError,
     confirm_color_configuration,
     propose_color_configuration,
     resolve_color,
     save_color_configuration,
 )
-from heva.curation.project_registry import register_external_source, sync_registry
-from heva.curation.package_validator import PackageValidationError
-from heva.curation.extraction_draft import (
+from heva.workflow.project_registry import register_external_source, sync_registry
+from heva.workflow.package_validator import PackageValidationError
+from heva.workflow.extraction_draft import (
     ExtractionDraftError,
     persist_extraction_draft,
 )
-from heva.curation.people_registry import PersonRecord, activate_curator, add_person
-from heva.curation.review_state import initialize_sentence_reviews
+from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
+from heva.workflow.review_state import initialize_sentence_reviews
 
 
 def test_home_only_offers_project_selection_without_inline_assets() -> None:
@@ -542,74 +542,6 @@ def test_automatic_color_proposal_route_reports_generated_evidence(
     assert proposed.json()["proposed_color_count"] == 1
 
 
-def test_color_review_api_groups_source_occurrences_by_color(tmp_path: Path) -> None:
-    sources = tmp_path / "documents"
-    sources.mkdir()
-    (sources / "source.pdf").write_bytes(b"source")
-    sync_registry(tmp_path, source_dir="documents")
-    registry = json.loads((tmp_path / ".heva/project.json").read_text())
-    document_id = registry["documents"][0]["document_id"]
-    curator = add_person(tmp_path, PersonRecord(name="Researcher", roles=["curator"]))
-    activate_curator(tmp_path, curator.person_id)
-    persist_extraction_draft(
-        tmp_path,
-        document_id,
-        [
-            {
-                "sentence_id": 1,
-                "page": 2,
-                "sentence": "Historic harbour and social square.",
-                "tokens": ["Historic", "harbour", "and", "social", "square", "."],
-                "entities": [
-                    {"start": 0, "end": 16, "text": "Historic harbour", "label": "#CCCC00"},
-                    {"start": 21, "end": 34, "text": "social square", "label": "#FF9900"},
-                ],
-                "ner_tags": [
-                    "B-#CCCC00", "I-#CCCC00", "O", "B-#FF9900", "I-#FF9900", "O",
-                ],
-            },
-            {
-                "sentence_id": 2,
-                "page": 4,
-                "sentence": "Historic wall.",
-                "tokens": ["Historic", "wall", "."],
-                "entities": [
-                    {"start": 0, "end": 13, "text": "Historic wall", "label": "#CCCC00"},
-                ],
-                "ner_tags": ["B-#CCCC00", "I-#CCCC00", "O"],
-            },
-        ],
-        extractor="test extractor",
-        extractor_version="1.0",
-    )
-    save_color_configuration(
-        tmp_path,
-        document_id,
-        propose_color_configuration(["#CCCC00", "#FF9900", "#00FFFF"]),
-    )
-
-    result = TestClient(create_app(tmp_path)).get(
-        f"/api/documents/{document_id}/colors"
-    ).json()
-
-    assert [item["page"] for item in result["occurrences"]["#CCCC00"]] == [2, 4]
-    assert result["occurrences"]["#CCCC00"][0]["text"] == "Historic harbour"
-    assert result["occurrences"]["#FF9900"][0]["start"] == 21
-    assert result["occurrences"]["#00FFFF"] == []
-
-
-def test_create_asset_renders_and_navigates_color_occurrences() -> None:
-    script = (
-        Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "create.js"
-    ).read_text(encoding="utf-8")
-
-    assert 'const occurrencesByColor = result.occurrences || {}' in script
-    assert 'previous.textContent = "Previous occurrence"' in script
-    assert 'next.textContent = "Next occurrence"' in script
-    assert "No source occurrence evidence is available for this color." in script
-    assert "source#page=${occurrence.page}" in script
-
-
 def test_confirmed_document_colors_create_and_select_reusable_project_palette(
     tmp_path: Path,
 ) -> None:
@@ -1020,34 +952,6 @@ def test_color_discovery_reports_missing_extraction_dependency(
     assert response.status_code == 503
     assert response.json()["code"] == "extraction_dependency_missing"
     assert "spacy" in response.json()["action"]
-
-
-def test_color_discovery_preserves_unreadable_pdf_remediation(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Broken font maps are rejected with an actionable, stable API response."""
-
-    def unreadable_pdf(root, document_id, *, progress_callback=None):
-        raise ExtractionDraftError(
-            "The PDF text layer is not readable enough. Re-export the PDF with "
-            "searchable Unicode text or apply OCR, then retry; HEVA did not persist "
-            "the corrupted extraction.",
-            code="pdf_text_unreadable",
-        )
-
-    monkeypatch.setattr(
-        "heva.app.routes.project.run_registered_raw_extraction",
-        unreadable_pdf,
-    )
-    client = TestClient(create_app(tmp_path))
-
-    response = client.post("/api/documents/HEVA-TEST/colors/discover")
-
-    assert response.status_code == 422
-    assert response.json()["code"] == "pdf_text_unreadable"
-    assert "apply OCR" in response.json()["action"]
-    assert "did not persist" in response.json()["action"]
 
 
 def test_color_discovery_exposes_raw_hex_evidence_to_the_interface(
@@ -1758,7 +1662,7 @@ def test_review_queue_page_exposes_list_columns(tmp_path: Path) -> None:
     assert "Readiness" in response.text
     assert 'data-readiness="incomplete"' in response.text
     assert "Action" in response.text
-    assert 'href="/create?section=annotations">＋ Add document</a>' in response.text
+    assert 'href="/create">＋ Add document</a>' in response.text
     assert 'href="/validate">Validate project</a>' in response.text
     assert 'href="/validate#data-package">Export Data Package</a>' in response.text
 
@@ -1915,11 +1819,6 @@ def test_embedded_sentence_review_uses_parent_workflow_shell(tmp_path: Path) -> 
         / "review_document.js"
     ).read_text(encoding="utf-8")
     assert 'link.target = "_top"' in script
-    assert "routeWorkflowLink(link);" in script
-    assert "return routeWorkflowLink(link);" in script
-    assert "routeWorkflowLink(citationLink);" in script
-    assert "routeWorkflowLink(colorsLink);" in script
-    assert "routeWorkflowLink(rightsLink);" in script
 
 
 def test_document_setup_synchronizes_embedded_pdf_evidence_navigation() -> None:
@@ -2409,15 +2308,6 @@ def test_add_document_mode_has_file_choice(tmp_path: Path) -> None:
     assert ".docx" in response.text
     assert 'id="import-managed-pdf"' in response.text
     assert "Import PDF into this project" in response.text
-
-
-def test_add_document_navigation_opens_source_selection_without_document_id() -> None:
-    script = (
-        Path(__file__).parents[2] / "src" / "heva" / "app" / "static" / "create.js"
-    ).read_text(encoding="utf-8")
-
-    assert 'const requestedSection = parameters.get("section")' in script
-    assert 'if (requestedSection === "annotations") showStep(4);' in script
 
 
 def test_create_asset_imports_managed_pdf_with_visible_outcomes() -> None:

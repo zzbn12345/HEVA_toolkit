@@ -433,13 +433,11 @@ async function loadReferenceColorCode() {
  */
 function renderColorConfiguration(result) {
   const configuration = result.configuration;
-  const occurrencesByColor = result.occurrences || {};
   const list = document.getElementById("color-list");
   list.replaceChildren(...configuration.colors.map((color) => {
     const record = document.createElement("article");
     record.className = "color-record";
     record.dataset.hex = color.hex;
-    record.style.setProperty("--swatch", color.hex);
 
     const swatch = document.createElement("span");
     swatch.className = "color-swatch";
@@ -489,85 +487,6 @@ function renderColorConfiguration(result) {
 
     label.append(select);
     fields.append(label, reason);
-
-    const occurrences = occurrencesByColor[color.hex] || [];
-    const evidence = document.createElement("section");
-    evidence.className = "color-occurrences";
-    const evidenceSummary = document.createElement("p");
-    evidenceSummary.className = "color-occurrence-summary";
-    if (!occurrences.length) {
-      evidenceSummary.textContent = "No source occurrence evidence is available for this color.";
-      evidence.append(evidenceSummary);
-    } else {
-      const pages = [...new Set(occurrences.map((occurrence) => occurrence.page))];
-      evidenceSummary.textContent =
-        `${occurrences.length} occurrence${occurrences.length === 1 ? "" : "s"} on `
-        + `${pages.length === 1 ? "page" : "pages"} ${pages.join(", ")}.`;
-      const snippet = document.createElement("blockquote");
-      snippet.className = "color-occurrence-snippet";
-      const controls = document.createElement("div");
-      controls.className = "color-occurrence-controls";
-      const position = document.createElement("span");
-      position.className = "muted";
-      const previous = document.createElement("button");
-      previous.className = "button secondary";
-      previous.type = "button";
-      previous.textContent = "Previous occurrence";
-      const open = document.createElement("button");
-      open.className = "button secondary";
-      open.type = "button";
-      const next = document.createElement("button");
-      next.className = "button secondary";
-      next.type = "button";
-      next.textContent = "Next occurrence";
-      let occurrenceIndex = 0;
-      const renderOccurrence = () => {
-        const occurrence = occurrences[occurrenceIndex];
-        snippet.replaceChildren();
-        snippet.append(
-          document.createTextNode(occurrence.sentence.slice(0, occurrence.start)),
-        );
-        const mark = document.createElement("mark");
-        mark.style.setProperty("--occurrence-color", color.hex);
-        mark.style.setProperty(
-          "--occurrence-text",
-          color.text_color || contrastingTextColor(color.hex),
-        );
-        mark.textContent = occurrence.sentence.slice(occurrence.start, occurrence.end);
-        snippet.append(
-          mark,
-          document.createTextNode(occurrence.sentence.slice(occurrence.end)),
-        );
-        position.textContent = `Occurrence ${occurrenceIndex + 1} of ${occurrences.length}`;
-        open.textContent = `View page ${occurrence.page} in source`;
-        previous.disabled = occurrenceIndex === 0;
-        next.disabled = occurrenceIndex === occurrences.length - 1;
-      };
-      previous.addEventListener("click", () => {
-        occurrenceIndex -= 1;
-        renderOccurrence();
-      });
-      next.addEventListener("click", () => {
-        occurrenceIndex += 1;
-        renderOccurrence();
-      });
-      open.addEventListener("click", () => {
-        const occurrence = occurrences[occurrenceIndex];
-        const documentId = document.getElementById("selected-document-id").value;
-        app.classList.remove("pdf-hidden");
-        const toggle = document.getElementById("toggle-pdf");
-        toggle.textContent = "Hide PDF";
-        toggle.setAttribute("aria-expanded", "true");
-        openPreview(
-          `/api/documents/${encodeURIComponent(documentId)}/source#page=${occurrence.page}`,
-          `Source evidence · page ${occurrence.page}`,
-        );
-      });
-      controls.append(previous, position, next, open);
-      evidence.append(evidenceSummary, snippet, controls);
-      renderOccurrence();
-    }
-    fields.append(evidence);
     if (color.method === "document_legend" && color.suggested_label) {
       const specification = document.createElement("p");
       specification.className = "color-evidence";
@@ -655,7 +574,7 @@ async function discoverColors() {
     status.className = "notice error";
     status.textContent = error.name === "AbortError"
       ? "Color discovery did not finish within two minutes. Check the source and try again."
-      : "Color discovery stopped unexpectedly. Retry; if it continues, check the local server log.";
+      : "Color discovery could not contact the local extraction service.";
   } finally {
     window.clearTimeout(timeout);
     progress.hidden = true;
@@ -1219,11 +1138,7 @@ async function cancelExtraction() {
 async function loadSelectedDocument() {
   const parameters = new URLSearchParams(window.location.search);
   const documentId = parameters.get("document_id");
-  const requestedSection = parameters.get("section");
-  if (!documentId) {
-    if (requestedSection === "annotations") showStep(4);
-    return;
-  }
+  if (!documentId) return;
   const status = document.getElementById("selected-document-status");
   status.hidden = false;
   status.textContent = "Loading the registered document…";
@@ -1259,9 +1174,19 @@ async function loadSelectedDocument() {
     await loadCitation(documentId);
     await loadColors(documentId);
     await loadExtractionStatus(documentId);
+    await loadOcrCandidate();
+    const requestedSection = parameters.get("section");
+    const extractionFailure = parameters.get("extraction_failure");
     if (requestedSection === "citation") showStep(2);
     if (requestedSection === "colors") showStep(3);
     if (requestedSection === "annotations") showStep(4);
+    if (extractionFailure === "pdf_text_unreadable") {
+      showAnnotationsWorkspace(documentId, false);
+      const extractionStatus = document.getElementById("extraction-status");
+      extractionStatus.className = "notice error";
+      extractionStatus.textContent = "The rebuilt extraction was rejected because the PDF text layer is unreadable. Run source diagnostics to continue with OCR assistance.";
+      document.getElementById("source-diagnostics-actions").hidden = false;
+    }
     if (result.preview_available) {
       openPreview(
         `/api/documents/${encodeURIComponent(documentId)}/source`,
