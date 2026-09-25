@@ -189,6 +189,46 @@ def test_edit_persists_curated_sentence_without_replacing_source(tmp_path: Path)
     assert review["sentences"][0]["audit"][-1]["actor"] == "Research Curator"
 
 
+def test_edit_can_shorten_sentence_and_its_overlapping_annotation(tmp_path: Path) -> None:
+    document_id, package = project(tmp_path)
+    original = record(1)
+    original.update(
+        sentence="The bay is sheltered by a rocky peninsula.",
+        tokens=["The", "bay", "is", "sheltered", "by", "a", "rocky", "peninsula", "."],
+        entities=[{
+            "start": 11,
+            "end": 42,
+            "text": "sheltered by a rocky peninsula",
+            "label": "historic",
+            "color": "#FF40FF",
+        }],
+        ner_tags=["O", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "I-historic", "O"],
+    )
+    (package / "annotations.json").write_text(json.dumps([original]), encoding="utf-8")
+    initialize_sentence_reviews(tmp_path, document_id)
+    replacement = {
+        **original,
+        "curated_sentence": "The bay is sheltered by a rocky.",
+        "tokens": ["The", "bay", "is", "sheltered", "by", "a", "rocky", "."],
+        "entities": [{
+            "start": 11,
+            "end": 31,
+            "text": "sheltered by a rocky",
+            "label": "historic",
+            "color": "#FF40FF",
+        }],
+        "ner_tags": ["O", "O", "O", "B-historic", "I-historic", "I-historic", "I-historic", "O"],
+    }
+
+    replace_sentence_record(
+        tmp_path, document_id, 1, replacement, editor="Research Curator"
+    )
+
+    persisted = json.loads((package / "annotations.json").read_text())[0]
+    assert persisted["curated_sentence"] == "The bay is sheltered by a rocky."
+    assert persisted["entities"][0]["text"] == "sheltered by a rocky"
+
+
 def test_edit_excludes_one_annotation_and_audits_exact_original(tmp_path: Path) -> None:
     document_id, package = project(tmp_path)
     original = record(1)

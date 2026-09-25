@@ -325,6 +325,8 @@ function entityRow(entity = {}, originalIndex = -1) {
   const row = document.createElement("div");
   row.className = "entity-row";
   row.dataset.originalStart = entity.start ?? "-1";
+  row.dataset.originalEnd = entity.end ?? "-1";
+  row.dataset.originalText = entity.text ?? "";
   row.dataset.label = entity.label ?? "";
   row.dataset.color = entity.color ?? "";
   row.dataset.originalIndex = originalIndex;
@@ -420,6 +422,53 @@ function locateExtraction(sentence, text, preferredStart) {
   );
 }
 
+function remapExtractionAfterSentenceEdit(sourceSentence, editedSentence, entity) {
+  let prefixLength = 0;
+  const sharedLength = Math.min(sourceSentence.length, editedSentence.length);
+  while (
+    prefixLength < sharedLength
+    && sourceSentence[prefixLength] === editedSentence[prefixLength]
+  ) {
+    prefixLength += 1;
+  }
+  let suffixLength = 0;
+  while (
+    suffixLength < sourceSentence.length - prefixLength
+    && suffixLength < editedSentence.length - prefixLength
+    && sourceSentence[sourceSentence.length - suffixLength - 1]
+      === editedSentence[editedSentence.length - suffixLength - 1]
+  ) {
+    suffixLength += 1;
+  }
+  const sourceChangeEnd = sourceSentence.length - suffixLength;
+  const editedChangeEnd = editedSentence.length - suffixLength;
+  const mapStart = (position) => {
+    if (position <= prefixLength) return position;
+    if (position >= sourceChangeEnd) {
+      return editedChangeEnd + position - sourceChangeEnd;
+    }
+    return prefixLength;
+  };
+  const mapEnd = (position) => {
+    if (position <= prefixLength) return position;
+    if (position >= sourceChangeEnd) {
+      return editedChangeEnd + position - sourceChangeEnd;
+    }
+    return editedChangeEnd;
+  };
+  let start = mapStart(entity.start);
+  let end = mapEnd(entity.end);
+  while (start < end && /\s/u.test(editedSentence[start])) start += 1;
+  while (end > start && /\s/u.test(editedSentence[end - 1])) end -= 1;
+  const text = editedSentence.slice(start, end);
+  if (!text) {
+    throw new Error(
+      `The annotation “${entity.text}” was removed by the sentence correction. Exclude that annotation before saving.`,
+    );
+  }
+  return {start, end, text};
+}
+
 function tokenSpans(sentence, tokens) {
   let cursor = 0;
   return tokens.map((token) => {
@@ -467,15 +516,27 @@ function correctedRecord() {
   const entities = [...entityRows.querySelectorAll(".entity-row")].map((row) => {
     const value = (name) => row.querySelector(`[data-entity-field="${name}"]`).value;
     const text = value("text").trim();
-    const start = locateExtraction(
-      effectiveSentence,
-      text,
-      Number(row.dataset.originalStart),
-    );
+    const originalEntity = {
+      start: Number(row.dataset.originalStart),
+      end: Number(row.dataset.originalEnd),
+      text: row.dataset.originalText,
+    };
+    let aligned = null;
+    try {
+      const start = locateExtraction(effectiveSentence, text, originalEntity.start);
+      aligned = {start, end: start + text.length, text};
+    } catch (error) {
+      if (text !== originalEntity.text || effectiveSentence === sourceSentence) throw error;
+      aligned = remapExtractionAfterSentenceEdit(
+        sourceSentence,
+        effectiveSentence,
+        originalEntity,
+      );
+    }
     const entity = {
-      text,
-      start,
-      end: start + text.length,
+      text: aligned.text,
+      start: aligned.start,
+      end: aligned.end,
       label: row.dataset.label,
     };
     const color = row.dataset.color.trim();
