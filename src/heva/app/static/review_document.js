@@ -350,6 +350,13 @@ function entityRow(entity = {}, originalIndex = -1) {
 
 function closeEditor() {
   editor.close();
+  document.body.classList.remove("editor-open");
+  if (document.body.classList.contains("embedded-review")) {
+    window.parent.postMessage(
+      {type: "heva-annotation-editor-closed", documentId},
+      window.location.origin,
+    );
+  }
   editingRecord = null;
   excludedEntityIndices.clear();
 }
@@ -366,7 +373,17 @@ function openEditor(record) {
   entityRows.replaceChildren(
     ...record.entities.map((entity, index) => entityRow(entity, index)),
   );
-  editor.showModal();
+  if (reviewDocument.source_path.toLowerCase().endsWith(".pdf")) {
+    navigatePdfEvidence(record);
+  }
+  if (document.body.classList.contains("embedded-review")) {
+    window.parent.postMessage(
+      {type: "heva-annotation-editor-opened", documentId, page: record.page},
+      window.location.origin,
+    );
+  }
+  document.body.classList.add("editor-open");
+  editor.show();
 }
 
 function locateExtraction(sentence, text, preferredStart) {
@@ -582,7 +599,7 @@ function sentenceCard(item) {
     actions.appendChild(evidenceButton);
   }
   const editable = editability.editable;
-  const editButton = textElement("button", "button secondary", "Edit sentence");
+  const editButton = textElement("button", "button secondary", "Edit annotation");
   editButton.type = "button";
   editButton.disabled = !editable;
   if (!editable) editButton.title = editability.message || "Sentence editing is locked.";

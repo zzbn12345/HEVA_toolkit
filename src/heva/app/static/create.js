@@ -99,6 +99,13 @@ window.addEventListener("message", (event) => {
   if (event.origin !== window.location.origin) return;
   const documentId = document.getElementById("selected-document-id").value;
   if (!documentId || event.data.documentId !== documentId) return;
+  if (event.data?.type === "heva-annotation-editor-closed") {
+    app.classList.remove("annotation-editor-active");
+    return;
+  }
+  if (event.data?.type === "heva-annotation-editor-opened") {
+    app.classList.add("annotation-editor-active");
+  }
   if (event.data?.type === "heva-review-updated") {
     loadDocumentReadiness(documentId);
     return;

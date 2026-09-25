@@ -184,6 +184,48 @@ def test_create_interface_offers_diagnostics_only_for_unreadable_pdf_failure() -
     assert "Review every sentence before validation or export" in script
     assert "extract.hidden = canonicalReady" in script
     assert "rebuild.hidden = !canonicalReady" in script
+    assert "Current annotations, OCR candidate data, and sentence-review decisions will be reset" in script
+
+
+def test_review_interface_routes_ocr_replacement_to_candidate_review() -> None:
+    root = Path(__file__).parents[2]
+    template = (root / "src/heva/app/templates/review_document.html").read_text(
+        encoding="utf-8"
+    )
+    script = (root / "src/heva/app/static/review_document.js").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'id="review-run-ocr-extraction"' in template
+    assert "Re-run OCR-assisted extraction?" in script
+    assert "/ocr-candidate?replace=true" in script
+    assert "normalReplacement.hidden = candidateResponse.ok" in script
+    assert "list.replaceChildren()" in script
+
+
+def test_annotation_editor_keeps_pdf_visible_beside_non_modal_editor() -> None:
+    root = Path(__file__).parents[2]
+    script = (root / "src/heva/app/static/review_document.js").read_text(
+        encoding="utf-8"
+    )
+    styles = (root / "src/heva/app/static/review.css").read_text(encoding="utf-8")
+
+    open_editor = script[script.index("function openEditor(record)") :]
+    open_editor = open_editor[: open_editor.index("function locateExtraction")]
+    assert "navigatePdfEvidence(record)" in open_editor
+    assert "editor.show();" in open_editor
+    assert "showModal" not in open_editor
+    assert 'document.body.classList.add("editor-open")' in open_editor
+    assert "heva-annotation-editor-opened" in open_editor
+    assert "width: min(900px, 56vw)" in styles
+    assert ".review-body.embedded-review .sentence-editor" in styles
+    assert "height: 100vh" in styles
+
+    create_script = (root / "src/heva/app/static/create.js").read_text(encoding="utf-8")
+    create_styles = (root / "src/heva/app/static/create.css").read_text(encoding="utf-8")
+    assert 'app.classList.add("annotation-editor-active")' in create_script
+    assert ".annotations-review-active.annotation-editor-active" in create_styles
+    assert "annotation-editor-active .pdf-viewer { display: flex; }" in create_styles
 
 
 def test_ocr_assistance_requires_prior_unreadable_pdf_failure(tmp_path: Path) -> None:

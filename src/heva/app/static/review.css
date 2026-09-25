@@ -170,16 +170,22 @@
 .decision-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
 .decision-actions button { margin: 0; }
 .sentence-editor {
-  width: min(900px, calc(100vw - 2rem));
-  max-height: calc(100vh - 2rem);
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(900px, 56vw);
+  height: 100vh;
+  max-height: none;
+  margin: 0;
   padding: 1.25rem;
+  box-sizing: border-box;
   overflow-y: auto;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 0;
   background: var(--panel);
   color: var(--ink);
+  z-index: 20;
 }
-.sentence-editor::backdrop { background: rgb(0 0 0 / .72); }
+.review-body.embedded-review .sentence-editor { width: 100vw; }
 .sentence-editor form, .sentence-editor label { display: grid; gap: .4rem; }
 .sentence-editor form { gap: 1rem; }
 .sentence-editor input, .sentence-editor textarea, .sentence-editor select {
@@ -253,6 +259,16 @@
   .review-toolbar { flex-wrap: wrap; }
   .document-tools { order: 2; width: 100%; flex-wrap: wrap; }
   .editor-grid, .entity-row, .review-extraction-fields { grid-template-columns: 1fr; }
+  .review-body:not(.embedded-review) .sentence-editor {
+    inset: 0 0 auto;
+    width: 100vw;
+    height: 52vh;
+  }
+  .review-body.embedded-review .sentence-editor {
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+  }
 }
 .review-edit-lock {
   align-items: center;

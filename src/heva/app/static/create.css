@@ -11,6 +11,10 @@
 .create-app.pdf-hidden .pdf-viewer { display: none; }
 .create-app.annotations-review-active { grid-template-columns: 240px minmax(0, 1fr); }
 .create-app.annotations-review-active .pdf-viewer { display: none; }
+.create-app.annotations-review-active.annotation-editor-active {
+  grid-template-columns: 240px minmax(460px, 1fr) minmax(340px, 42%);
+}
+.create-app.annotations-review-active.annotation-editor-active .pdf-viewer { display: flex; }
 
 .create-sidebar {
   padding: 1.5rem;

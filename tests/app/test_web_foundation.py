@@ -445,8 +445,8 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
     assert 'src="/static/notifications.js?v=1"' in response.text
-    assert 'src="/static/create.js?v=31"' in response.text
-    assert 'href="/static/create.css?v=14"' in response.text
+    assert 'src="/static/create.js?v=32"' in response.text
+    assert 'href="/static/create.css?v=15"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text
@@ -1769,21 +1769,22 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=19"' in response.text
+    assert 'src="/static/review_document.js?v=20"' in response.text
     assert 'id="edit-source-sentence"' in response.text
     assert "Source sentence — read only" in response.text
-    assert 'href="/static/review.css?v=14"' in response.text
+    assert 'href="/static/review.css?v=16"' in response.text
     assert 'id="review-extraction-panel" class="review-extraction-panel" open' in response.text
     assert 'id="review-page-start"' in response.text
     assert 'id="review-page-end"' in response.text
     assert 'id="review-run-extraction"' in response.text
+    assert 'id="review-run-ocr-extraction"' in response.text
     script = (
         Path(__file__).parents[2] / "src/heva/app/static/review_document.js"
     ).read_text(encoding="utf-8")
     assert "page_start=" in script
     assert "page_end=" in script
     assert "/extraction/cancel" in script
-    assert "Re-extraction replaces this document's extracted draft" in script
+    assert "Current annotations, the prior OCR candidate, and sentence-review decisions will be reset" in script
     assert 'value="to_check"' in response.text
     assert 'value="problematic"' in response.text
     assert 'value="checked"' in response.text
@@ -1828,7 +1829,7 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert "sentence_ids: sentenceIds" in script
     assert 'filter === "checked"' in script
     assert 'filter === "to_check"' in script
-    assert '"Edit sentence"' in script
+    assert '"Edit annotation"' in script
     assert "View page ${record.page} in PDF" in script
     assert "navigatePdfEvidence(record)" in script
     assert 'type: "heva-pdf-evidence"' in script
