@@ -33,6 +33,7 @@ from heva.curation.project_registry import sync_registry
 from heva.curation.review_state import (
     initialize_sentence_reviews,
     record_decisions,
+    synchronize_review_completion_metadata,
 )
 
 
@@ -221,6 +222,48 @@ def test_incomplete_review_blocks_export(tmp_path: Path) -> None:
     assert issue.sentence_id == review["sentences"][0]["sentence_id"]
     assert f"sentence_id={issue.sentence_id}" in issue.path
     assert "this sentence" in issue.action
+
+
+def test_document_with_all_sentences_excluded_still_validates(tmp_path: Path) -> None:
+    document_id, _, _ = project(tmp_path)
+
+    record_decisions(
+        tmp_path,
+        document_id,
+        [1],
+        status="excluded",
+        reviewer="Annotator",
+    )
+
+    report = validate_document_package(tmp_path, document_id)
+
+    assert report.valid is True
+    assert "annotation_review_incomplete" not in {item.code for item in report.issues}
+    assert "sentence_review_incomplete" not in {item.code for item in report.issues}
+
+
+def test_existing_all_excluded_review_repairs_stale_completion_metadata(
+    tmp_path: Path,
+) -> None:
+    document_id, package, _ = project(tmp_path)
+    record_decisions(
+        tmp_path,
+        document_id,
+        [1],
+        status="excluded",
+        reviewer="Annotator",
+    )
+    metadata = json.loads((package / "metadata.json").read_text())
+    metadata["annotation_process"]["review"]["completed"] = False
+    metadata["annotation_process"]["review"]["reviewed_at"] = None
+    (package / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
+
+    synchronize_review_completion_metadata(tmp_path, document_id)
+
+    repaired = json.loads((package / "metadata.json").read_text())
+    assert repaired["annotation_process"]["review"]["completed"] is True
+    assert repaired["annotation_process"]["review"]["reviewed_at"] is not None
+    assert validate_document_package(tmp_path, document_id).valid is True
 
 
 def test_changed_sentence_invalidates_its_existing_review(tmp_path: Path) -> None:

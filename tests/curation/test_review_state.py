@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from heva.curation.document_metadata import PackageMetadata, save_package_metadata
 from heva.curation.project_registry import sync_registry
 from heva.curation.review_state import (
     ReviewError,
@@ -85,6 +86,40 @@ def test_document_cannot_enter_review_with_unresolved_sentences(tmp_path: Path) 
     submit_document_for_review(tmp_path, document_id)
     registry = json.loads((tmp_path / ".heva/project.json").read_text())
     assert registry["documents"][0]["status"] == "in_review"
+
+
+def test_final_sentence_decision_updates_document_review_completion(tmp_path: Path) -> None:
+    document_id, package = project(tmp_path)
+    save_package_metadata(tmp_path, PackageMetadata(document_id=document_id))
+    initialize_sentence_reviews(tmp_path, document_id)
+
+    record_decisions(
+        tmp_path, document_id, [1], status="approved", reviewer="Annotator"
+    )
+    incomplete = json.loads((package / "metadata.json").read_text())
+    assert incomplete["annotation_process"]["review"]["completed"] is False
+    assert incomplete["annotation_process"]["review"]["reviewed_at"] is None
+
+    record_decisions(
+        tmp_path, document_id, [2], status="excluded", reviewer="Annotator"
+    )
+    completed = json.loads((package / "metadata.json").read_text())
+    assert completed["annotation_process"]["review"]["completed"] is True
+    assert completed["annotation_process"]["review"]["reviewed_at"] is not None
+
+    replacement = record(1)
+    replacement["curated_sentence"] = "The historic harbor remains visible."
+    replacement["tokens"] = ["The", "historic", "harbor", "remains", "visible", "."]
+    replacement["entities"] = [{
+        "start": 4, "end": 19, "text": "historic harbor",
+        "label": "historic", "color": "#FF40FF",
+    }]
+    replace_sentence_record(
+        tmp_path, document_id, 1, replacement, editor="Research Curator"
+    )
+    reset = json.loads((package / "metadata.json").read_text())
+    assert reset["annotation_process"]["review"]["completed"] is False
+    assert reset["annotation_process"]["review"]["reviewed_at"] is None
 
 
 def test_edit_is_validated_read_back_and_audited(tmp_path: Path) -> None:

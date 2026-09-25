@@ -81,6 +81,58 @@ def _package(root: Path, document_id: str) -> Path:
     return root / matches[0].package_path
 
 
+def _synchronize_review_completion_metadata(
+    root: Path,
+    document_id: str,
+    review: DocumentReview,
+    *,
+    completed_at: datetime | None = None,
+) -> None:
+    """Keep redundant package completion metadata aligned with sentence decisions."""
+
+    metadata_path = _package(root, document_id) / "metadata.json"
+    if not metadata_path.exists():
+        return
+    from heva.curation.document_metadata import PackageMetadata, save_package_metadata
+
+    metadata = PackageMetadata.model_validate_json(metadata_path.read_text(encoding="utf-8"))
+    completed = all(
+        item.status in {"approved", "excluded"} for item in review.sentences
+    )
+    completion = metadata.annotation_process.review
+    changed = completion.completed != completed
+    if completed and completion.reviewed_at is None:
+        completion.reviewed_at = completed_at or datetime.now(timezone.utc)
+        changed = True
+    elif not completed and completion.reviewed_at is not None:
+        completion.reviewed_at = None
+        changed = True
+    if changed:
+        completion.completed = completed
+        save_package_metadata(root, metadata)
+
+
+def synchronize_review_completion_metadata(
+    project_root: str | Path,
+    document_id: str,
+) -> None:
+    """Repair document completion metadata from the authoritative review state."""
+
+    root = Path(project_root).resolve()
+    target = document_workspace_directory(root, document_id) / "review-state.json"
+    review = DocumentReview.model_validate_json(target.read_text(encoding="utf-8"))
+    decided_at = max(
+        (item.decided_at for item in review.sentences if item.decided_at is not None),
+        default=None,
+    )
+    _synchronize_review_completion_metadata(
+        root,
+        document_id,
+        review,
+        completed_at=decided_at,
+    )
+
+
 def _require_editable(root: Path, document_id: str) -> None:
     """Require a registered document; legacy submission states no longer lock editing."""
 
@@ -104,8 +156,9 @@ def initialize_sentence_reviews(
     annotations = json.loads((package / "annotations.json").read_text(encoding="utf-8"))
     target = document_workspace_directory(root, document_id) / "review-state.json"
     target.parent.mkdir(parents=True, exist_ok=True)
+    had_existing_review = target.exists()
     existing: dict[int, SentenceReview] = {}
-    if target.exists():
+    if had_existing_review:
         previous = DocumentReview.model_validate_json(target.read_text(encoding="utf-8"))
         existing = {item.sentence_id: item for item in previous.sentences}
     sentences: list[SentenceReview] = []
@@ -133,6 +186,8 @@ def initialize_sentence_reviews(
         sentences=sorted(sentences, key=lambda item: item.sentence_id),
     )
     _write_json(target, review.model_dump(mode="json"))
+    if had_existing_review:
+        _synchronize_review_completion_metadata(root, document_id, review, completed_at=now)
     return target
 
 
@@ -177,6 +232,7 @@ def record_decisions(
             )
         )
     _write_json(target, review.model_dump(mode="json"))
+    _synchronize_review_completion_metadata(root, document_id, review, completed_at=now)
     return target
 
 
@@ -346,6 +402,7 @@ def replace_sentence_record(
         )
     )
     _write_json(review_path, review.model_dump(mode="json"))
+    _synchronize_review_completion_metadata(root, document_id, review, completed_at=now)
 
 
 def submit_document_for_review(project_root: str | Path, document_id: str) -> None:

@@ -35,6 +35,7 @@ from heva.curation.review_state import (
     accept_quality_warning,
     record_decisions,
     replace_sentence_record,
+    synchronize_review_completion_metadata,
 )
 
 
@@ -111,9 +112,10 @@ def create_review_router(
 
     @router.post("/api/review/{document_id}/validate")
     def validate_review_document(document_id: str):
-        """Run the shared read-only HEVA validator for the active document."""
+        """Reconcile review completion and validate the active document."""
 
         try:
+            synchronize_review_completion_metadata(root, document_id)
             report = validate_document_package(root, document_id)
         except (OSError, ValueError, ValidationError, PackageValidationError) as error:
             return JSONResponse(
