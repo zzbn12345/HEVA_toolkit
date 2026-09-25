@@ -1769,10 +1769,10 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     response = client.get("/review/HEVA-TEST")
 
     assert response.status_code == 200
-    assert 'src="/static/review_document.js?v=20"' in response.text
+    assert 'src="/static/review_document.js?v=23"' in response.text
     assert 'id="edit-source-sentence"' in response.text
     assert "Source sentence — read only" in response.text
-    assert 'href="/static/review.css?v=16"' in response.text
+    assert 'href="/static/review.css?v=17"' in response.text
     assert 'id="review-extraction-panel" class="review-extraction-panel" open' in response.text
     assert 'id="review-page-start"' in response.text
     assert 'id="review-page-end"' in response.text
@@ -1792,6 +1792,7 @@ def test_sentence_review_page_exposes_selected_batch_controls(tmp_path: Path) ->
     assert 'data-batch-status="approved"' in response.text
     assert 'data-batch-status="needs_correction"' in response.text
     assert 'data-batch-status="excluded"' in response.text
+    assert 'id="remove-all-warnings"' in response.text
     assert 'id="sentence-editor"' in response.text
     assert 'id="edit-entities"' in response.text
     assert 'id="edit-tokens"' not in response.text
@@ -1830,7 +1831,7 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert 'filter === "checked"' in script
     assert 'filter === "to_check"' in script
     assert '"Edit annotation"' in script
-    assert "View page ${record.page} in PDF" in script
+    assert "View page ${record.page} in PDF" not in script
     assert "navigatePdfEvidence(record)" in script
     assert 'type: "heva-pdf-evidence"' in script
     assert "#page=${page}" in script
@@ -1842,7 +1843,7 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert "row.dataset.label" in script
     assert "row.dataset.color" in script
     assert 'label: row.dataset.label' in script
-    assert '"Remove"' not in script
+    assert '"Remove warning"' in script
     assert "new Option" not in script
     assert "&section=citation" in script
     assert "&section=colors" in script
@@ -1858,8 +1859,10 @@ def test_sentence_review_asset_limits_batch_actions_to_visible_selection() -> No
     assert "renderDocumentValidation" in script
     assert "acceptWarning" in script
     assert "/warnings/" in script
-    assert "Accept warning" in script
-    assert "Accepted warning:" in script
+    assert "Accept warning" not in script
+    assert "Accepted warning:" not in script
+    assert 'button.setAttribute("aria-pressed", String(selected))' in script
+    assert 'selected ? `✓ ${label}` : label' in script
     assert "validationCategory" in script
     assert 'return "People and roles"' in script
     assert "issue.severity" in script

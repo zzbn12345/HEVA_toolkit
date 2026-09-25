@@ -169,6 +169,15 @@
 .flag { padding: .3rem .5rem; border-radius: 6px; background: #3c301a; color: var(--warning); font-size: .84rem; }
 .decision-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
 .decision-actions button { margin: 0; }
+.decision-button.selected {
+  border-width: 2px;
+  color: var(--ink);
+  font-weight: 850;
+  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 24%, transparent);
+}
+.decision-approved.selected { border-color: var(--accent); background: var(--accent-dark); }
+.decision-needs_correction.selected { border-color: var(--warning); background: #3c301a; }
+.decision-excluded.selected { border-color: var(--danger); background: #3c2029; }
 .sentence-editor {
   position: fixed;
   inset: 0 auto 0 0;

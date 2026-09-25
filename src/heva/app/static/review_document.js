@@ -662,17 +662,6 @@ function sentenceCard(item) {
   }
   const actions = document.createElement("div");
   actions.className = "decision-actions";
-  if (reviewDocument.source_path.toLowerCase().endsWith(".pdf")) {
-    const evidenceButton = textElement(
-      "button",
-      "button secondary",
-      `View page ${record.page} in PDF`,
-    );
-    evidenceButton.type = "button";
-    evidenceButton.title = "Exact annotation coordinates are not retained yet; HEVA will open the persisted source page.";
-    evidenceButton.addEventListener("click", () => navigatePdfEvidence(record));
-    actions.appendChild(evidenceButton);
-  }
   const editable = editability.editable;
   const editButton = textElement("button", "button secondary", "Edit annotation");
   editButton.type = "button";
@@ -681,8 +670,14 @@ function sentenceCard(item) {
   editButton.addEventListener("click", () => openEditor(record));
   actions.appendChild(editButton);
   [["Approve", "approved"], ["Needs correction", "needs_correction"], ["Exclude", "excluded"]].forEach(([label, status]) => {
-    const button = textElement("button", `button${status === "approved" ? "" : " secondary"}`, label);
+    const selected = item.review.status === status;
+    const button = textElement(
+      "button",
+      `button secondary decision-button decision-${status}${selected ? " selected" : ""}`,
+      selected ? `✓ ${label}` : label,
+    );
     button.type = "button";
+    button.setAttribute("aria-pressed", String(selected));
     button.disabled = !editable;
     if (!editable) button.title = editability.message || "Sentence review is locked.";
     button.addEventListener("click", () => decide([record.sentence_id], status));
