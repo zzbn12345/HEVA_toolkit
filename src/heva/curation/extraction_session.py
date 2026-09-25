@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import shutil
 from typing import Any, Callable, Iterable, Literal, Mapping, Sequence
 
 from pydantic import ValidationError
@@ -20,6 +21,7 @@ from heva.curation.color_mapping import (
     save_color_configuration,
 )
 from heva.curation.document_metadata import (
+    AnnotationProcessMetadata,
     ColorConfigurationMetadata,
     PackageMetadata,
     ResourceMetadata,
@@ -146,6 +148,69 @@ def _summary(registry: ProjectRegistry) -> RegistrySummary:
         changed=sum(item.source_state == "changed" for item in documents),
         missing=sum(item.source_state == "missing" for item in documents),
     )
+
+
+def archive_and_reset_extraction(
+    project_root: str | Path,
+    document_id: str,
+    *,
+    registry_path: str | Path = DEFAULT_REGISTRY_PATH,
+) -> Path | None:
+    """Archive active extraction evidence, then reset the document for replacement."""
+
+    root = Path(project_root).resolve()
+    registry_file = root / Path(registry_path)
+    try:
+        registry = ProjectRegistry.model_validate_json(
+            registry_file.read_text(encoding="utf-8")
+        )
+    except (OSError, ValidationError) as error:
+        raise ExtractionSessionError(f"Cannot load project registry: {error}") from error
+    entry = next(
+        (item for item in registry.documents if item.document_id == document_id),
+        None,
+    )
+    if entry is None or entry.metadata_path is None:
+        raise ExtractionSessionError(f"Document {document_id} is not registered.")
+
+    package = root / entry.package_path
+    workspace = document_workspace_directory(root, document_id)
+    metadata_file = root / entry.metadata_path
+    try:
+        metadata = PackageMetadata.model_validate_json(
+            metadata_file.read_text(encoding="utf-8")
+        )
+    except (OSError, ValidationError) as error:
+        raise ExtractionSessionError(f"Cannot load document metadata: {error}") from error
+
+    active_files = [
+        package / "annotations.json",
+        workspace / "extraction-session.json",
+        workspace / "extraction-draft.json",
+        workspace / "review-state.json",
+        workspace / "ocr-candidate.json",
+    ]
+    existing = [path for path in active_files if path.is_file()]
+    backup: Path | None = None
+    if existing:
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+        backup = workspace / "extraction-history" / stamp
+        backup.mkdir(parents=True, exist_ok=False)
+        for path in existing:
+            shutil.copy2(path, backup / path.name)
+        shutil.copy2(metadata_file, backup / "metadata.json")
+
+    for path in existing:
+        path.unlink()
+    metadata.annotation_process = AnnotationProcessMetadata()
+    metadata.resources = [
+        resource for resource in metadata.resources if resource.name != "annotations"
+    ]
+    _write_json(metadata_file, metadata.model_dump(mode="json"))
+    entry.status = "in_progress"
+    registry.summary = _summary(registry)
+    _write_json(registry_file, registry.model_dump(mode="json"))
+    return backup
 
 
 def persist_extraction_results(

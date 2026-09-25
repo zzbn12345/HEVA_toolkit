@@ -688,6 +688,16 @@ async function loadReviewExtractionScope() {
   status.textContent = pages.length
     ? `Current extraction scope: PDF pages ${pages[0]}–${pages[pages.length - 1]}.`
     : "Current extraction scope: complete source document.";
+  const candidateResponse = await fetch(
+    `/api/documents/${encodeURIComponent(documentId)}/ocr-candidate`,
+  );
+  const ocrReplacement = document.getElementById("review-run-ocr-extraction");
+  const normalReplacement = document.getElementById("review-run-extraction");
+  ocrReplacement.hidden = !candidateResponse.ok;
+  normalReplacement.hidden = candidateResponse.ok;
+  if (candidateResponse.ok) {
+    status.textContent += " These annotations came through OCR assistance; replacement will re-run OCR.";
+  }
 }
 
 async function waitForReviewExtraction() {
@@ -728,7 +738,7 @@ async function runReviewExtraction() {
     return;
   }
   if (!window.confirm(
-    "Re-extraction replaces this document's extracted draft and may reset sentence review decisions. Continue?",
+    "Re-extract annotations? Current annotations, OCR candidate data, and sentence-review decisions will be reset. HEVA will keep a local backup of the replaced data.",
   )) return;
   const scope = start && end
     ? `&page_start=${encodeURIComponent(start)}&page_end=${encodeURIComponent(end)}`
@@ -753,6 +763,12 @@ async function runReviewExtraction() {
     status.textContent = job.error?.action
       ? `${job.message} ${job.error.action}`
       : job.message;
+    if (job.state === "failed" && job.error?.code === "pdf_text_unreadable") {
+      window.location.assign(
+        `/create?document_id=${encodeURIComponent(documentId)}&section=annotations&extraction_failure=pdf_text_unreadable`,
+      );
+      return;
+    }
     if (["completed", "draft_saved"].includes(job.state)) {
       await loadReviewExtractionScope();
       await loadDocument();
@@ -764,6 +780,50 @@ async function runReviewExtraction() {
     run.disabled = false;
     progress.hidden = true;
     document.getElementById("review-cancel-extraction").hidden = true;
+  }
+}
+
+async function runReviewOcrExtraction() {
+  const start = document.getElementById("review-page-start").value.trim();
+  const end = document.getElementById("review-page-end").value.trim();
+  const status = document.getElementById("review-extraction-status");
+  if ((start && !end) || (!start && end)) {
+    status.className = "notice error";
+    status.textContent = "Provide both the first and last PDF page, or leave both blank.";
+    return;
+  }
+  if (!window.confirm(
+    "Re-run OCR-assisted extraction? Current annotations, the prior OCR candidate, and sentence-review decisions will be reset. HEVA will keep a local backup of the replaced data.",
+  )) return;
+  const scope = start && end
+    ? `&page_start=${encodeURIComponent(start)}&page_end=${encodeURIComponent(end)}`
+    : "";
+  const run = document.getElementById("review-run-ocr-extraction");
+  run.disabled = true;
+  run.textContent = "Running OCR…";
+  status.className = "notice neutral";
+  status.textContent = "Resetting the current review data and creating a new OCR candidate…";
+  try {
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(documentId)}/ocr-candidate?replace=true${scope}`,
+      {method: "POST"},
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.detail || `${result.message || "OCR replacement failed."} ${result.action || ""}`);
+    }
+    list.replaceChildren();
+    status.className = "notice success";
+    status.textContent = `Created ${result.record_count} replacement OCR candidates. Opening candidate review…`;
+    window.location.assign(
+      `/create?document_id=${encodeURIComponent(documentId)}&section=annotations`,
+    );
+  } catch (error) {
+    status.className = "notice error";
+    status.textContent = error.message;
+  } finally {
+    run.disabled = false;
+    run.textContent = "Re-run OCR-assisted extraction";
   }
 }
 
@@ -851,6 +911,7 @@ document.querySelectorAll("[data-batch-status]").forEach((button) => {
 });
 document.getElementById("validate-document").addEventListener("click", validateDocument);
 document.getElementById("review-run-extraction").addEventListener("click", runReviewExtraction);
+document.getElementById("review-run-ocr-extraction").addEventListener("click", runReviewOcrExtraction);
 document.getElementById("review-cancel-extraction").addEventListener("click", cancelReviewExtraction);
 document.getElementById("close-sentence-editor").addEventListener("click", closeEditor);
 document.getElementById("cancel-sentence-editor").addEventListener("click", closeEditor);

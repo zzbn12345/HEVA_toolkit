@@ -60,7 +60,7 @@
       </section>
       <details id="review-extraction-panel" class="review-extraction-panel" open>
         <summary>Extraction scope and re-extraction</summary>
-        <p class="field-help">Leave both page fields blank to analyze the full PDF. Re-extraction replaces this document's extracted draft; it does not append duplicate sentences.</p>
+        <p class="field-help">Leave both page fields blank to analyze the full PDF. Re-extraction resets current annotations, OCR candidate data, and sentence-review decisions after confirmation; HEVA keeps a local backup.</p>
         <div class="review-extraction-fields">
           <label>First PDF page
             <input id="review-page-start" type="number" min="1" inputmode="numeric">
@@ -69,6 +69,7 @@
             <input id="review-page-end" type="number" min="1" inputmode="numeric">
           </label>
           <button id="review-run-extraction" class="button" type="button">Re-extract annotations</button>
+          <button id="review-run-ocr-extraction" class="button" type="button" hidden>Re-run OCR-assisted extraction</button>
           <button id="review-cancel-extraction" class="button secondary" type="button" hidden>Cancel extraction</button>
         </div>
         <progress id="review-extraction-progress" max="1" value="0" hidden></progress>

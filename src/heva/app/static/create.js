@@ -966,6 +966,9 @@ async function waitForExtraction(documentId) {
 }
 
 async function extractAnnotations(force = false) {
+  if (force && !window.confirm(
+    "Rebuild extraction? Current annotations, OCR candidate data, and sentence-review decisions will be reset. HEVA will keep a local backup of the replaced data.",
+  )) return;
   const documentId = document.getElementById("selected-document-id").value;
   const button = document.getElementById(
     force ? "rebuild-annotations" : "extract-annotations",

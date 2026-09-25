@@ -92,6 +92,7 @@ from heva.curation.people_registry import (
 )
 from heva.curation.people_import import PeopleImportError, import_people_csv
 from heva.curation.extraction_session import (
+    archive_and_reset_extraction,
     ExtractionSessionError,
     load_extraction_checkpoint_status,
     run_registered_extraction,
@@ -998,11 +999,22 @@ def create_project_router(
         }
 
     @router.post("/api/documents/{document_id}/ocr-candidate")
-    def create_ocr_candidate(document_id: str):
+    def create_ocr_candidate(
+        document_id: str,
+        replace: bool = False,
+        page_start: int | None = Query(default=None, ge=1),
+        page_end: int | None = Query(default=None, ge=1),
+    ):
         """Run explicitly requested OCR and persist only a review-required candidate."""
 
         failed_job = extraction_jobs.get(document_id)
-        if not (
+        existing_candidate = None
+        if replace:
+            try:
+                existing_candidate = load_ocr_candidate(root, document_id)
+            except ValueError:
+                pass
+        if not replace and not (
             failed_job
             and failed_job.get("state") == "failed"
             and (failed_job.get("error") or {}).get("code") == "pdf_text_unreadable"
@@ -1018,8 +1030,37 @@ def create_project_router(
                 },
                 status_code=409,
             )
+        if replace and existing_candidate is None:
+            return JSONResponse(
+                {
+                    "code": "ocr_replacement_unavailable",
+                    "message": "No prior OCR candidate is available to replace.",
+                    "action": "Run source diagnostics before starting OCR assistance.",
+                },
+                status_code=409,
+            )
+        if (page_start is None) != (page_end is None):
+            raise HTTPException(
+                status_code=422,
+                detail="Provide both the first and last page, or leave both blank.",
+            )
+        if page_start is not None and page_end is not None and page_end < page_start:
+            raise HTTPException(
+                status_code=422,
+                detail="The last page must be greater than or equal to the first page.",
+            )
+        selected_pages = (
+            tuple(range(page_start, page_end + 1))
+            if page_start is not None and page_end is not None
+            else None
+        )
         try:
-            path, candidate = run_registered_ocr_candidate(root, document_id)
+            backup = archive_and_reset_extraction(root, document_id) if replace else None
+            path, candidate = run_registered_ocr_candidate(
+                root,
+                document_id,
+                page_numbers=selected_pages,
+            )
         except (
             ColorMappingError,
             ExtractionDraftError,
@@ -1048,6 +1089,8 @@ def create_project_router(
             "engine": candidate.engine,
             "candidate_path": path.relative_to(root).as_posix(),
             "canonical_data_changed": False,
+            "replaced_existing": replace,
+            "backup_path": backup.relative_to(root).as_posix() if backup else None,
         }
 
     @router.get("/api/documents/{document_id}/ocr-candidate")
@@ -1335,6 +1378,30 @@ def create_project_router(
                 },
                 status_code=409,
             )
+        if force:
+            try:
+                replacement_status = load_extraction_checkpoint_status(root, document_id)
+            except ExtractionSessionError:
+                replacement_status = None
+            try:
+                if replacement_status is not None and replacement_status.state != "not_extracted":
+                    archive_and_reset_extraction(root, document_id)
+            except ExtractionSessionError as error:
+                extraction_jobs.update(
+                    document_id,
+                    state="failed",
+                    stage="failed",
+                    message="Existing extraction data could not be reset.",
+                    error={"code": "extraction_reset_failed", "action": str(error)},
+                )
+                return JSONResponse(
+                    {
+                        "code": "extraction_reset_failed",
+                        "message": "Existing extraction data could not be reset.",
+                        "action": str(error),
+                    },
+                    status_code=422,
+                )
         job = extraction_jobs.update(
             document_id,
             selected_pages=list(selected_pages) if selected_pages else None,

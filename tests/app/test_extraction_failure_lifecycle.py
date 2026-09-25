@@ -130,7 +130,6 @@ def test_broken_font_example_reaches_actionable_failed_state(tmp_path: Path) -> 
     [queue_item] = list_review_queue(project)
     assert queue_item.readiness_gates["extraction"] is True
     assert queue_item.readiness_gates["sentence_review"] is False
-    assert hashlib.sha256(source.read_bytes()).hexdigest() == source_sha256
 
     repeated = client.post("/api/documents/HEVA-DEMO-BROKEN-FONT/extract")
 
@@ -140,6 +139,30 @@ def test_broken_font_example_reaches_actionable_failed_state(tmp_path: Path) -> 
     assert len(json.loads(annotations.read_text(encoding="utf-8"))) == promoted.json()[
         "record_count"
     ]
+
+    replacement = client.post(
+        "/api/documents/HEVA-DEMO-BROKEN-FONT/ocr-candidate?replace=true"
+    )
+
+    assert replacement.status_code == 200
+    assert replacement.json()["replaced_existing"] is True
+    assert replacement.json()["record_count"] == assisted.json()["record_count"]
+    assert replacement.json()["backup_path"]
+    assert not annotations.exists()
+    assert not (workspace / "review-state.json").exists()
+    assert not (workspace / "extraction-session.json").exists()
+    assert not (workspace / "extraction-draft.json").exists()
+    replacement_candidate = json.loads(
+        (workspace / "ocr-candidate.json").read_text(encoding="utf-8")
+    )
+    assert replacement_candidate["status"] == "pending_review"
+    backup = project / replacement.json()["backup_path"]
+    assert (backup / "annotations.json").is_file()
+    assert (backup / "review-state.json").is_file()
+    [queue_item] = list_review_queue(project)
+    assert queue_item.readiness_gates["extraction"] is False
+    assert queue_item.readiness_gates["sentence_review"] is False
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == source_sha256
 
 
 def test_create_interface_offers_diagnostics_only_for_unreadable_pdf_failure() -> None:
