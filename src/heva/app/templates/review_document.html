@@ -6,7 +6,7 @@
   <title>Review document · HEVA Toolkit</title>
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/review.css?v=16">
-  <script src="/static/review_document.js?v=20" defer></script>
+  <script src="/static/review_document.js?v=21" defer></script>
 </head>
 <body data-document-id="DOCUMENT_ID_PLACEHOLDER" class="review-body EMBEDDED_CLASS_PLACEHOLDER">
   <div id="review-app" class="review-app">
@@ -56,6 +56,7 @@
           <button class="button" type="button" data-batch-status="approved" disabled>Approve selected</button>
           <button class="button secondary" type="button" data-batch-status="needs_correction" disabled>Flag selected for correction</button>
           <button class="button secondary" type="button" data-batch-status="excluded" disabled>Exclude selected</button>
+          <button id="remove-all-warnings" class="button secondary" type="button">Remove all warnings</button>
         </div>
       </section>
       <details id="review-extraction-panel" class="review-extraction-panel" open>

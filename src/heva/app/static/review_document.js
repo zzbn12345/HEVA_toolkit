@@ -125,17 +125,12 @@ async function decide(sentenceIds, status, comment = null) {
 }
 
 async function acceptWarning(sentenceId, code) {
-  const comment = window.prompt(
-    "Optional note explaining why this warning is acceptable. Select Cancel to keep it active.",
-    "",
-  );
-  if (comment === null) return;
   const response = await fetch(
     `/api/review/${encodeURIComponent(documentId)}/sentences/${sentenceId}/warnings/${encodeURIComponent(code)}`,
     {
       method: "PUT",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({comment}),
+      body: JSON.stringify({}),
     },
   );
   const result = await response.json();
@@ -148,6 +143,28 @@ async function acceptWarning(sentenceId, code) {
   render();
   statusBox.className = "notice success";
   statusBox.textContent = `Warning ${code} was accepted and retained in the audit history.`;
+}
+
+async function removeAllWarnings() {
+  const button = document.getElementById("remove-all-warnings");
+  button.disabled = true;
+  const response = await fetch(
+    `/api/review/${encodeURIComponent(documentId)}/warnings`,
+    {method: "PUT"},
+  );
+  const result = await response.json();
+  if (!response.ok) {
+    statusBox.className = "notice error";
+    statusBox.textContent = `${result.message} ${result.action}`;
+    button.disabled = false;
+    return;
+  }
+  reviewDocument = result;
+  render();
+  statusBox.className = "notice success";
+  statusBox.textContent = result.removed_warning_count
+    ? `${result.removed_warning_count} warnings removed.`
+    : "There were no active warnings to remove.";
 }
 
 function renderReadiness() {
@@ -531,6 +548,11 @@ function updateSelectionControls() {
     visibleSentences.length > 0 && selectedCount === visibleSentences.length;
   selectVisible.indeterminate =
     selectedCount > 0 && selectedCount < visibleSentences.length;
+  const removeWarnings = document.getElementById("remove-all-warnings");
+  const activeWarnings = reviewDocument.sentences.some((item) =>
+    item.flags.some((flag) => flag.severity === "warning")
+  );
+  removeWarnings.disabled = !editable || !activeWarnings;
 }
 
 function sentenceCard(item) {
@@ -568,7 +590,7 @@ function sentenceCard(item) {
       row.className = "flag-row";
       row.appendChild(textElement("span", "flag", `${flag.code}: ${flag.message}`));
       if (flag.severity === "warning" && editability.editable) {
-        const accept = textElement("button", "button secondary compact", "Accept warning");
+        const accept = textElement("button", "button secondary compact", "Remove warning");
         accept.type = "button";
         accept.addEventListener("click", () => acceptWarning(record.sentence_id, flag.code));
         row.appendChild(accept);
@@ -576,14 +598,6 @@ function sentenceCard(item) {
       flags.appendChild(row);
     });
     card.appendChild(flags);
-  }
-  if (item.accepted_flags?.length) {
-    const accepted = document.createElement("div");
-    accepted.className = "accepted-flag-list";
-    item.accepted_flags.forEach((flag) => {
-      accepted.appendChild(textElement("span", "accepted-flag", `✓ Accepted warning: ${flag.code}`));
-    });
-    card.appendChild(accepted);
   }
   const actions = document.createElement("div");
   actions.className = "decision-actions";
@@ -927,6 +941,7 @@ document.querySelectorAll("[data-batch-status]").forEach((button) => {
   });
 });
 document.getElementById("validate-document").addEventListener("click", validateDocument);
+document.getElementById("remove-all-warnings").addEventListener("click", removeAllWarnings);
 document.getElementById("review-run-extraction").addEventListener("click", runReviewExtraction);
 document.getElementById("review-run-ocr-extraction").addEventListener("click", runReviewOcrExtraction);
 document.getElementById("review-cancel-extraction").addEventListener("click", cancelReviewExtraction);

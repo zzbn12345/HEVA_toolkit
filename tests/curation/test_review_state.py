@@ -11,6 +11,7 @@ from heva.curation.document_metadata import PackageMetadata, save_package_metada
 from heva.curation.project_registry import sync_registry
 from heva.curation.review_state import (
     ReviewError,
+    accept_all_quality_warnings,
     accept_quality_warning,
     initialize_sentence_reviews,
     record_decisions,
@@ -292,3 +293,27 @@ def test_warning_acceptance_is_audited_and_survives_reload(tmp_path: Path) -> No
     assert sentence["audit"][-1]["details"]["comment"] == (
         "The source block intentionally ends here."
     )
+
+
+def test_all_quality_warnings_can_be_removed_without_explanations(tmp_path: Path) -> None:
+    document_id, package = project(tmp_path)
+    records = json.loads((package / "annotations.json").read_text())
+    for record_value in records:
+        record_value["sentence"] = "The historic harbour remains visible"
+        record_value["tokens"] = ["The", "historic", "harbour", "remains", "visible"]
+        record_value["ner_tags"] = ["O", "B-historic", "I-historic", "O", "O"]
+    (package / "annotations.json").write_text(json.dumps(records), encoding="utf-8")
+    review_path = initialize_sentence_reviews(tmp_path, document_id)
+
+    _, removed = accept_all_quality_warnings(
+        tmp_path,
+        document_id,
+        reviewer="Research Curator",
+    )
+
+    assert removed == 2
+    review = json.loads(review_path.read_text())
+    for sentence in review["sentences"]:
+        assert sentence["accepted_warning_codes"] == ["likely_sentence_boundary_error"]
+        assert sentence["audit"][-1]["event"] == "warning_accepted"
+        assert sentence["audit"][-1]["details"]["comment"] is None

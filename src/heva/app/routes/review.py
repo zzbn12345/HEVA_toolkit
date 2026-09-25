@@ -32,6 +32,7 @@ from heva.curation.review_queue import (
 )
 from heva.curation.review_state import (
     ReviewError,
+    accept_all_quality_warnings,
     accept_quality_warning,
     record_decisions,
     replace_sentence_record,
@@ -273,6 +274,37 @@ def create_review_router(
                 {
                     "code": "warning_disposition_not_saved",
                     "message": "The warning was not accepted.",
+                    "action": str(error),
+                },
+                status_code=422,
+            )
+
+    @router.put("/api/review/{document_id}/warnings")
+    def accept_document_warnings(document_id: str):
+        """Dismiss all current non-blocking warnings without requiring explanations."""
+
+        try:
+            _, accepted_count = accept_all_quality_warnings(
+                root,
+                document_id,
+                reviewer=active_reviewer_name(),
+            )
+            result = load_review_document(root, document_id)
+            result["removed_warning_count"] = accepted_count
+            return result
+        except (
+            OSError,
+            ValueError,
+            ValidationError,
+            AnnotatorRegistryError,
+            PeopleRegistryError,
+            ReviewError,
+            ReviewQueueError,
+        ) as error:
+            return JSONResponse(
+                {
+                    "code": "warnings_not_removed",
+                    "message": "The warnings were not removed.",
                     "action": str(error),
                 },
                 status_code=422,

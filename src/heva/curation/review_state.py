@@ -297,6 +297,60 @@ def accept_quality_warning(
     return target
 
 
+def accept_all_quality_warnings(
+    project_root: str | Path,
+    document_id: str,
+    *,
+    reviewer: str,
+) -> tuple[Path, int]:
+    """Dismiss every active non-blocking warning while retaining audit evidence."""
+
+    if not reviewer.strip():
+        raise ReviewError("Reviewer identity is required.")
+    root = Path(project_root).resolve()
+    _require_editable(root, document_id)
+    records = json.loads(
+        (_package(root, document_id) / "annotations.json").read_text(encoding="utf-8")
+    )
+    from heva.curation.quality_flags import assess_record
+
+    target = document_workspace_directory(root, document_id) / "review-state.json"
+    review = DocumentReview.model_validate_json(target.read_text(encoding="utf-8"))
+    decisions = {item.sentence_id: item for item in review.sentences}
+    now = datetime.now(timezone.utc)
+    accepted_count = 0
+    for record in records:
+        sentence_id = record["sentence_id"]
+        decision = decisions.get(sentence_id)
+        if decision is None:
+            raise ReviewError(f"Unknown sentence ID: {sentence_id}")
+        for warning in assess_record(record):
+            if (
+                warning.severity != "warning"
+                or warning.code in decision.accepted_warning_codes
+            ):
+                continue
+            decision.accepted_warning_codes.append(warning.code)
+            decision.audit.append(
+                AuditEvent(
+                    event="warning_accepted",
+                    actor=reviewer.strip(),
+                    occurred_at=now,
+                    details={
+                        "code": warning.code,
+                        "message": warning.message,
+                        "evidence": warning.evidence,
+                        "comment": None,
+                    },
+                )
+            )
+            accepted_count += 1
+        decision.accepted_warning_codes.sort()
+    if accepted_count:
+        _write_json(target, review.model_dump(mode="json"))
+    return target, accepted_count
+
+
 def replace_sentence_record(
     project_root: str | Path,
     document_id: str,
