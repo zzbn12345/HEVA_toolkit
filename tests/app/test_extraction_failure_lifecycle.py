@@ -15,6 +15,13 @@ from heva.curation.review_queue import list_review_queue
 EXAMPLE = Path(__file__).parents[2] / "examples/source-diagnostics-dummy-project"
 
 
+def ignore_generated_example_state(directory: str, names: list[str]) -> set[str]:
+    ignored = {"annotations.json"} & set(names)
+    if Path(directory).name == ".heva":
+        ignored |= {"documents"} & set(names)
+    return ignored
+
+
 def test_unexpected_worker_failure_reaches_terminal_state(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -43,7 +50,11 @@ def test_broken_font_example_reaches_actionable_failed_state(tmp_path: Path) -> 
     """The representative PDF must terminate polling instead of remaining in running."""
 
     project = tmp_path / "source-diagnostics-dummy-project"
-    shutil.copytree(EXAMPLE, project)
+    shutil.copytree(
+        EXAMPLE,
+        project,
+        ignore=ignore_generated_example_state,
+    )
     client = TestClient(create_app(project))
 
     queued = client.post("/api/documents/HEVA-DEMO-BROKEN-FONT/extract")
@@ -94,6 +105,10 @@ def test_broken_font_example_reaches_actionable_failed_state(tmp_path: Path) -> 
     assert preview.status_code == 200
     assert len(preview.json()["records"]) == assisted.json()["record_count"]
     assert all(record["entities"] for record in preview.json()["records"])
+    assert preview.json()["records"][0]["sentence"] == (
+        '"a Franciscan chapel was built in 1543"'
+    )
+    assert "Argumentation" not in preview.json()["records"][0]["sentence"]
 
     promoted = client.post(
         "/api/documents/HEVA-DEMO-BROKEN-FONT/ocr-candidate/promote"

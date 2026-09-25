@@ -77,6 +77,25 @@ def _native_colored_spans(page: fitz.Page, accepted_colors: set[str]) -> list[tu
     return spans
 
 
+def _native_table_cells(page: fitz.Page) -> list[fitz.Rect]:
+    """Return ruled table cells, leaving non-table page regions unaffected."""
+
+    cells: list[fitz.Rect] = []
+    try:
+        tables = page.find_tables().tables
+    except (AttributeError, RuntimeError, ValueError):
+        return cells
+    for table in tables:
+        if table.row_count < 2 or table.col_count < 2:
+            continue
+        cells.extend(
+            fitz.Rect(cell)
+            for cell in table.cells
+            if cell is not None and fitz.Rect(cell).get_area() > 0
+        )
+    return cells
+
+
 def _ocr_page_words(
     page: fitz.Page,
     *,
@@ -140,9 +159,11 @@ def _records_from_words(
     *,
     page_number: int,
     colored_spans: list[tuple[fitz.Rect, str]],
+    table_cells: list[fitz.Rect] | None = None,
     first_sentence_id: int,
 ) -> list[dict]:
-    groups: dict[tuple[int, int], list[dict]] = {}
+    groups: dict[tuple, list[dict]] = {}
+    table_cells = table_cells or []
     for word in words:
         matches = [
             (ratio, color)
@@ -150,11 +171,30 @@ def _records_from_words(
             if (ratio := _overlap_ratio(word["bbox"], span)) >= 0.35
         ]
         word["color"] = max(matches)[1] if matches else None
-        groups.setdefault((word["block"], word["paragraph"]), []).append(word)
+        center = (word["bbox"].x0 + word["bbox"].x1) / 2, (
+            word["bbox"].y0 + word["bbox"].y1
+        ) / 2
+        cell_index = next(
+            (index for index, cell in enumerate(table_cells) if cell.contains(center)),
+            None,
+        )
+        group_key = (
+            ("table_cell", cell_index)
+            if cell_index is not None
+            else ("paragraph", word["block"], word["paragraph"])
+        )
+        groups.setdefault(group_key, []).append(word)
 
     records: list[dict] = []
     sentence_id = first_sentence_id
-    for group in groups.values():
+    ordered_groups = sorted(
+        groups.values(),
+        key=lambda group: (
+            min(word["bbox"].y0 for word in group),
+            min(word["bbox"].x0 for word in group),
+        ),
+    )
+    for group in ordered_groups:
         group.sort(key=lambda item: (item["line"], item["word"], item["bbox"].x0))
         text = ""
         positioned: list[tuple[dict, int, int]] = []
@@ -248,6 +288,7 @@ def extract_ocr_candidate(
                     words,
                     page_number=index + 1,
                     colored_spans=_native_colored_spans(page, colors),
+                    table_cells=_native_table_cells(page),
                     first_sentence_id=len(records) + 1,
                 )
             )

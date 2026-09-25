@@ -40,6 +40,10 @@ the table itself is unreadable.
 2. Confirm that HEVA reports candidate records for pages 1–4 and a mean OCR confidence.
 3. Confirm that the result says the records remain separate and require researcher review.
 4. Inspect the candidate list, comparing representative colored spans with the source PDF.
+   On table pages, confirm each candidate contains only the relevant source cell (for example,
+   the first candidate is the Franciscan chapel quotation) rather than headers and neighboring
+   Argumentation or Attributes cells. Text outside detected tables must retain normal paragraph
+   grouping.
 5. Confirm that Extraction and Sentence review remain incomplete; creating a candidate must
    not make the document valid or export-ready.
 6. Inspect `.heva/documents/HEVA-DEMO-BROKEN-FONT/ocr-candidate.json` and confirm its status is

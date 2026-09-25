@@ -76,7 +76,7 @@ implementation_evidence:
       delivered: "One accessible top-of-app component with validation and selected Data Package export feedback"
       remains: "Extraction, setup, and sentence-review event integration"
     - feature: "F14.25 rejected-source diagnostics and opt-in assisted extraction"
-      delivered: "Read-only Type3 font-map diagnosis plus explicit Tesseract candidate creation, visual inspection, checksum-safe promotion into pending sentence review, and a no-loop guard against accidentally restarting normal extraction"
+      delivered: "Read-only Type3 font-map diagnosis plus explicit Tesseract candidate creation, table-cell-aware OCR grouping, visual inspection, checksum-safe promotion into pending sentence review, and a no-loop guard against accidentally restarting normal extraction"
       remains: "Background OCR progress and cancellation, page scope, and representative human quality evidence beyond the four-page fixture"
   unstarted:
     - "F14.7-F14.10 remaining intake and usability features"

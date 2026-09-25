@@ -5,20 +5,64 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import shutil
 
+import fitz
 import pytest
 
 from heva.curation.extraction_draft import ExtractionDraftError, run_registered_raw_extraction
 from heva.extraction.pdf_extractor import PDFTextExtractionError, extract_colored_highlights
 from heva.curation.review_queue import list_review_queue
+from heva.extraction.ocr_assistance import _records_from_words
 
 
 FIXTURE = Path(__file__).parents[1] / "fixtures/pdf/broken-type3-font.pdf"
 EXAMPLE = Path(__file__).parents[2] / "examples/source-diagnostics-dummy-project"
 
 
+def ignore_generated_example_state(directory: str, names: list[str]) -> set[str]:
+    ignored = {"annotations.json"} & set(names)
+    if Path(directory).name == ".heva":
+        ignored |= {"documents"} & set(names)
+    return ignored
+
+
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_ocr_groups_detected_table_cells_without_splitting_surrounding_prose() -> None:
+    """Table cells are separate review units; ordinary prose retains paragraph grouping."""
+
+    def word(text: str, x: int, y: int, number: int) -> dict:
+        return {
+            "text": text,
+            "confidence": 95.0,
+            "block": 1,
+            "paragraph": 1,
+            "line": 1,
+            "word": number,
+            "bbox": fitz.Rect(x, y, x + 35, y + 10),
+        }
+
+    words = [
+        word("Quotation", 5, 5, 1),
+        word("Argument", 105, 5, 2),
+        word("Normal", 5, 40, 3),
+        word("prose", 45, 40, 4),
+    ]
+    records = _records_from_words(
+        words,
+        page_number=1,
+        colored_spans=[
+            (fitz.Rect(5, 5, 40, 15), "#FFD300"),
+            (fitz.Rect(5, 40, 40, 50), "#FFD300"),
+        ],
+        table_cells=[fitz.Rect(0, 0, 100, 20), fitz.Rect(100, 0, 200, 20)],
+        first_sentence_id=1,
+    )
+
+    assert [record["sentence"] for record in records] == ["Quotation", "Normal prose"]
 
 
 def test_rejected_broken_unicode_pdf_offers_read_only_source_diagnostics() -> None:
@@ -47,10 +91,16 @@ def test_rejected_broken_unicode_pdf_offers_read_only_source_diagnostics() -> No
     assert file_sha256(FIXTURE) == source_sha256
 
 
-def test_source_diagnostics_example_is_prepared_up_to_extraction() -> None:
+def test_source_diagnostics_example_is_prepared_up_to_extraction(tmp_path: Path) -> None:
     """The manual fixture must isolate extraction as its first incomplete workflow gate."""
 
-    [document] = list_review_queue(EXAMPLE)
+    project = tmp_path / "source-diagnostics-dummy-project"
+    shutil.copytree(
+        EXAMPLE,
+        project,
+        ignore=ignore_generated_example_state,
+    )
+    [document] = list_review_queue(project)
 
     assert document.readiness_gates == {
         "curator": True,
@@ -67,7 +117,7 @@ def test_source_diagnostics_example_is_prepared_up_to_extraction() -> None:
 
     metadata = json.loads(
         (
-            EXAMPLE
+            project
             / "documents/HEVA-DEMO-BROKEN-FONT/metadata.json"
         ).read_text(encoding="utf-8")
     )
