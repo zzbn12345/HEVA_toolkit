@@ -108,4 +108,4 @@ The complete documentation is intentionally limited to six short pages listed in
 ## Licensed under the MIT License.
 Technische Universiteit Delft hereby disclaims all copyright interest in the program “HEVA_toolkit” written by the Author(s). 
 
-Machiel van Dorst, Dean Faculty of Architecture and the Built Environment 
+-- Machiel van Dorst, Dean of Faculty of Architecture and the Built Environment 
