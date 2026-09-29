@@ -274,6 +274,26 @@ def is_header_footer(b, page_rect, rotation):
         return cy < margin or cy > page_rect.height - margin
 
 
+PAGE_NUMBER_PATTERN = re.compile(r"^(?:[-–—]\s*)?\d{1,4}(?:\s*[-–—])?$")
+
+
+def is_page_number_block(b, page_rect, rotation):
+    """Checks if a block is a standalone page number near the top or bottom edge.
+
+    Page numbers often sit further from the edge than the fixed header/footer
+    margin; left in the text they split sentences that continue across pages.
+    """
+    if not PAGE_NUMBER_PATTERN.match(b[4].strip()):
+        return False
+    x0, y0, x1, y1 = b[0], b[1], b[2], b[3]
+    band = 0.15
+    if rotation == 90 or rotation == 270:
+        cx = (x0 + x1) / 2.0
+        return cx < page_rect.width * band or cx > page_rect.width * (1 - band)
+    cy = (y0 + y1) / 2.0
+    return cy < page_rect.height * band or cy > page_rect.height * (1 - band)
+
+
 def iter_sentence_word_spans(sentences, global_word_spans):
     """Yield each non-empty sentence with only its contained word spans.
 
@@ -438,7 +458,12 @@ def extract_colored_highlights(
 
         # 3. Sort blocks
         blocks = page.get_text("blocks", textpage=text_page)
-        blocks = [b for b in blocks if not is_margin_block(b[4]) and not is_header_footer(b, page_rect, page.rotation)]
+        blocks = [
+            b for b in blocks
+            if not is_margin_block(b[4])
+            and not is_header_footer(b, page_rect, page.rotation)
+            and not is_page_number_block(b, page_rect, page.rotation)
+        ]
         blocks, block_metadata = sort_page_blocks(blocks, page_rect, page.rotation)
         words_by_block = group_words_by_block(words)
 

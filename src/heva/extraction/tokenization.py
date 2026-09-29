@@ -54,6 +54,8 @@ def normalize_ligatures(text):
         "\ufb04": "ffl",
         "\ufb05": "ft",
         "\ufb06": "st",
+        # Some PDF fonts map the hyphen glyph to U+0372 (Greek Capital Letter Heta '\u0372').
+        "\u0372": "-",
     }
     for k, v in replacements.items():
         text = text.replace(k, v)
