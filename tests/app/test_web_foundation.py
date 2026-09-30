@@ -13,21 +13,21 @@ import pytest
 
 from heva.app.main import create_app
 from heva.app.routes import project as project_routes
-from heva.workflow.color_mapping import (
+from heva.curation.color_mapping import (
     ColorMappingError,
     confirm_color_configuration,
     propose_color_configuration,
     resolve_color,
     save_color_configuration,
 )
-from heva.workflow.project_registry import register_external_source, sync_registry
-from heva.workflow.package_validator import PackageValidationError
-from heva.workflow.extraction_draft import (
+from heva.curation.project_registry import register_external_source, sync_registry
+from heva.curation.package_validator import PackageValidationError
+from heva.curation.extraction_draft import (
     ExtractionDraftError,
     persist_extraction_draft,
 )
-from heva.workflow.people_registry import PersonRecord, activate_curator, add_person
-from heva.workflow.review_state import initialize_sentence_reviews
+from heva.curation.people_registry import PersonRecord, activate_curator, add_person
+from heva.curation.review_state import initialize_sentence_reviews
 
 
 def test_home_only_offers_project_selection_without_inline_assets() -> None:
