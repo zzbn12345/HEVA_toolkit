@@ -320,3 +320,31 @@ def test_pdf_words_group_by_block_without_changing_order() -> None:
 
     assert [word["text"] for word in grouped[2]] == ["left", "column"]
     assert [word["text"] for word in grouped[1]] == ["heading"]
+
+
+def test_pdf_page_numbers_do_not_split_sentences_across_pages(tmp_path: Path) -> None:
+    source = tmp_path / "page_numbers.pdf"
+    document = fitz.open()
+    first = document.new_page()
+    first.insert_text((70, 120), "The fort structure, provided with five", fontsize=11)
+    # Page numbers above the fixed 70pt footer margin, as in nomination files.
+    first.insert_text((295, 732), "3", fontsize=11)
+    highlighted = first.search_for("fort structure")[0]
+    first.draw_rect(highlighted, fill=(1, 1, 0), color=None, overlay=False)
+    second = document.new_page()
+    second.insert_text((70, 120), "bastions, was laid out as a settlement.", fontsize=11)
+    second.insert_text((295, 732), "4", fontsize=11)
+    document.save(source)
+    document.close()
+
+    records = extract_colored_highlights(source)
+
+    assert [record["sentence"] for record in records] == [
+        "The fort structure, provided with five bastions, was laid out as a settlement."
+    ]
+
+
+def test_normalize_ligatures_replaces_heta_hyphen_glyph() -> None:
+    from heva.extraction.tokenization import normalize_ligatures
+
+    assert normalize_ligatures("shopͲfront") == "shop-front"
