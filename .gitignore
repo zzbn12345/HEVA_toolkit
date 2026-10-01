@@ -90,3 +90,6 @@ Thumbs.db
 **/validation-report.json
 /legacy_data/
 /issues_jose/
+
+# Baseline training runs (metrics, predictions, optional model weights)
+/runs/
