@@ -2,7 +2,7 @@
 
 HEVA turns color-annotated PDF and DOCX documents into a structured, validated heritage
 annotation Data Package. It runs locally so research source documents remain under the
-user's control.
+user's control. 
 
 ## Install and run
 
@@ -32,7 +32,7 @@ troubleshooting details.
 For unreadable PDFs, scans, and complex tables, see
 [Limitations and extraction troubleshooting](docs/LIMITATIONS_AND_TROUBLESHOOTING.md).
 
-## Alpha workflow
+## App workflow overview
 
 1. Open or create a project from a folder containing PDF/DOCX sources.
 2. Review document citation details.
@@ -40,10 +40,6 @@ For unreadable PDFs, scans, and complex tables, see
 4. Extract and review annotated sentences beside the source PDF.
 5. Run validation and resolve the reported findings.
 6. Generate the Data Package when its configured export gates pass.
-
-The alpha is currently evaluated around extraction, supervised mapping, sentence review,
-and validation. Curator approval, data-owner approval, and publication governance remain
-future product decisions rather than steps in the main tutorial.
 
 ## Run validation
 
@@ -104,4 +100,10 @@ python -m pytest
 
 The complete documentation is intentionally limited to six short pages listed in
 [`docs/index.md`](docs/index.md).
+
+## Acknowledgments
+
+We acknowledge the support of the TU Delft Digital Competence Center in advancing this project.
+
+
 
