@@ -120,6 +120,8 @@ def synchronize_review_completion_metadata(
 
     root = Path(project_root).resolve()
     target = document_workspace_directory(root, document_id) / "review-state.json"
+    if not target.exists():
+        return
     review = DocumentReview.model_validate_json(target.read_text(encoding="utf-8"))
     decided_at = max(
         (item.decided_at for item in review.sentences if item.decided_at is not None),

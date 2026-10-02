@@ -1662,7 +1662,7 @@ def test_review_queue_page_exposes_list_columns(tmp_path: Path) -> None:
     assert "Readiness" in response.text
     assert 'data-readiness="incomplete"' in response.text
     assert "Action" in response.text
-    assert 'href="/create">＋ Add document</a>' in response.text
+    assert 'href="/create?section=annotations">＋ Add document</a>' in response.text
     assert 'href="/validate">Validate project</a>' in response.text
     assert 'href="/validate#data-package">Export Data Package</a>' in response.text
 
