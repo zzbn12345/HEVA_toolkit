@@ -8,8 +8,8 @@ from pathlib import Path
 from heva.extraction.pdf_extractor import extract_colored_highlights
 
 
-GENERATOR = Path(__file__).parents[2] / "benchmarks" / "generate_large_pdf.py"
-BENCHMARK = Path(__file__).parents[2] / "benchmarks" / "benchmark_extraction.py"
+GENERATOR = Path(__file__).parents[1] / "benchmarks" / "generate_large_pdf.py"
+BENCHMARK = Path(__file__).parents[1] / "benchmarks" / "benchmark_extraction.py"
 
 
 def _generator_module():
