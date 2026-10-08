@@ -31,7 +31,7 @@ Results go to `runs/baselines/`.
 | `labels.py` | The eight values in fixed order, the 17 BIO tags, label-name normalization (`Aesthetic` → `aesthetical`) | no |
 | `corpus.py` | Loads HEVA Data Packages, structured spreadsheets and Atlas.ti CSV exports into T1/T2 examples, validates and deduplicates them | no (`openpyxl` for `.xlsx`) |
 | `splits.py` | 70/10/20 iterative stratification per collection and split summaries | no |
-| `metrics.py` | T1 multi-label metrics and threshold tuning; T2 exact-match span F1 | no |
+| `metrics.py` | T1 multi-label metrics and threshold tuning; T2 exact-match span, overlap span and token F1 | no |
 | `training.py` | Shared training settings, device choice, early stopping, optimizer schedule, output writing | yes |
 | `t1_classification.py` | T1 model, loss, training loop and evaluation | yes |
 | `t2_span_extraction.py` | T2 model, word/subword alignment, loss, training loop, threshold decoding and evaluation | yes |
@@ -81,7 +81,7 @@ flowchart TD
         L2 --> E2["Each epoch: validation span F1 (argmax)<br/>early stopping, patience 3"]
         E2 --> B2["Best epoch weights"]
         B2 --> TH2["Tune one threshold per value<br/>on validation span F1"]
-        TH2 --> EV2["Test: exact-match span F1<br/>micro/macro/per-value<br/>argmax and tuned thresholds"]
+        TH2 --> EV2["Test: exact-match span F1 (main),<br/>overlap span F1, token F1<br/>argmax and tuned thresholds"]
     end
 
     subgraph OUT["4. Output: runs/baselines/TASK/TIMESTAMP/"]
@@ -179,6 +179,17 @@ with no validation examples keeps 0.5. Ties go to the threshold closest to 0.5.
 **T2**, exact-match span F1: a predicted span counts only if its start, end and value all
 match a gold span. Spans are read with conlleval rules, so an `I-` tag without a
 preceding `B-` still starts a span. Micro, macro and per-value scores are reported.
+This is the main T2 result; epoch selection and threshold tuning use it.
+
+Annotators' highlight boundaries are often arbitrary, so two lenient scores of the same
+predictions are reported as well:
+
+- **Overlap span F1:** a predicted span is correct when it overlaps a gold span of the
+  same value. Spans are paired one-to-one, largest overlap first, so a long prediction
+  covering two gold spans counts once.
+- **Token F1:** per word, ignoring `B-`/`I-`; a word is correct when gold and prediction
+  give it the same value. Words that are `O` on both sides are not counted. Truncated
+  words are predicted `O`, so truncation lowers recall instead of being hidden.
 
 ### 5. Output
 
@@ -202,9 +213,10 @@ Scores in `metrics.json`:
 | `validation_tuned` | validation, tuned thresholds (optimistic: tuned on this data) | same |
 | `test_default_0.5` | test, every threshold 0.5 | — |
 | `test_argmax` | — | test, most probable tag per word |
-| `test_tuned` | test, tuned thresholds (main result) | same |
+| `test_tuned` | test, tuned thresholds (main result) | same (exact-match span F1) |
+| `test_*_overlap` / `test_*_token` | — | overlap span F1 / token F1 of the same predictions |
 | `truncated_texts` / `test_truncated_words` | texts over the length limit, per split | test words cut off |
-| `test_*_by_collection` | the test scores above, computed per collection | same |
+| `test_*_by_collection` | the test scores above, computed per collection | exact, overlap and token scores per collection |
 
 ## Defaults and options
 

@@ -10,7 +10,14 @@ from transformers import AutoModelForTokenClassification, AutoTokenizer
 
 from .corpus import LoadReport, T2Example
 from .labels import BIO_TAGS, TAG_TO_ID, VALUES
-from .metrics import THRESHOLD_GRID, scores_by_collection, span_scores
+from .metrics import (
+    THRESHOLD_GRID,
+    overlap_span_scores,
+    scores_by_collection,
+    span_scores,
+    t2_all_scores,
+    token_scores,
+)
 from .splits import split_examples, split_summary
 from .training import (
     EarlyStopping,
@@ -218,8 +225,14 @@ def run_t2(
         ),
         "test_argmax": span_scores(test_gold, test_argmax),
         "test_tuned": span_scores(test_gold, test_predicted),
-        "test_argmax_by_collection": scores_by_collection(test, test_gold, test_argmax, span_scores),
-        "test_tuned_by_collection": scores_by_collection(test, test_gold, test_predicted, span_scores),
+        # Exact match is the main result; overlap and token scores credit predictions
+        # whose boundaries differ from the annotators' highlights.
+        "test_argmax_overlap": overlap_span_scores(test_gold, test_argmax),
+        "test_tuned_overlap": overlap_span_scores(test_gold, test_predicted),
+        "test_argmax_token": token_scores(test_gold, test_argmax),
+        "test_tuned_token": token_scores(test_gold, test_predicted),
+        "test_argmax_by_collection": scores_by_collection(test, test_gold, test_argmax, t2_all_scores),
+        "test_tuned_by_collection": scores_by_collection(test, test_gold, test_predicted, t2_all_scores),
         "test_truncated_words": truncated_words,
     }
 

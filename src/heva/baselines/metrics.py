@@ -1,4 +1,4 @@
-"""Evaluation for T1 (multi-label F1) and T2 (exact-match span F1)."""
+"""Evaluation for T1 (multi-label F1) and T2 (exact-match span, overlap span and token F1)."""
 
 from __future__ import annotations
 
@@ -152,6 +152,73 @@ def span_scores(
         for *_, value in gold_spans - predicted_spans:
             counts[value][2] += 1
     return _summarize(counts)
+
+
+def token_scores(
+    gold: Sequence[Sequence[str]], predicted: Sequence[Sequence[str]]
+) -> dict:
+    """Token-level precision/recall/F1 per value, ignoring the B-/I- distinction.
+
+    A word is a true positive when gold and prediction give it the same value. Words that
+    are ``O`` on both sides are not counted, so the score is not inflated by them.
+    """
+    counts = {value: [0, 0, 0] for value in VALUES}
+    for gold_tags, predicted_tags in zip(gold, predicted, strict=True):
+        for gold_tag, predicted_tag in zip(gold_tags, predicted_tags, strict=True):
+            g = gold_tag[2:] if gold_tag != "O" else None
+            p = predicted_tag[2:] if predicted_tag != "O" else None
+            if g is not None and g == p:
+                counts[g][0] += 1
+                continue
+            if p is not None:
+                counts[p][1] += 1
+            if g is not None:
+                counts[g][2] += 1
+    return _summarize(counts)
+
+
+def overlap_span_scores(
+    gold: Sequence[Sequence[str]], predicted: Sequence[Sequence[str]]
+) -> dict:
+    """Partial-match span precision/recall/F1: a predicted span is correct when it
+    overlaps a gold span of the same value.
+
+    Spans are paired one-to-one, largest overlap first, so one long prediction that
+    covers two gold spans counts once.
+    """
+    counts = {value: [0, 0, 0] for value in VALUES}
+    for gold_tags, predicted_tags in zip(gold, predicted, strict=True):
+        gold_spans, predicted_spans = bio_spans(gold_tags), bio_spans(predicted_tags)
+        pairs = sorted(
+            (
+                (min(g[1], p[1]) - max(g[0], p[0]), g, p)
+                for g in gold_spans
+                for p in predicted_spans
+                if g[2] == p[2] and min(g[1], p[1]) > max(g[0], p[0])
+            ),
+            key=lambda pair: (-pair[0], pair[1], pair[2]),
+        )
+        matched_gold, matched_predicted = set(), set()
+        for _, g, p in pairs:
+            if g in matched_gold or p in matched_predicted:
+                continue
+            matched_gold.add(g)
+            matched_predicted.add(p)
+            counts[g[2]][0] += 1
+        for *_, value in predicted_spans - matched_predicted:
+            counts[value][1] += 1
+        for *_, value in gold_spans - matched_gold:
+            counts[value][2] += 1
+    return _summarize(counts)
+
+
+def t2_all_scores(gold: Sequence[Sequence[str]], predicted: Sequence[Sequence[str]]) -> dict:
+    """Exact-match span, overlap span and token-level scores of the same predictions."""
+    return {
+        "exact_span": span_scores(gold, predicted),
+        "overlap_span": overlap_span_scores(gold, predicted),
+        "token": token_scores(gold, predicted),
+    }
 
 
 # --- Per collection ---------------------------------------------------------------------

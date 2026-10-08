@@ -303,3 +303,34 @@ def test_scores_by_collection_score_each_collection_separately() -> None:
     assert scores["one"]["micro"]["f1"] == 1.0
     assert scores["two"]["micro"]["f1"] == 0.0
     assert scores["two"]["examples"] == 1
+
+
+def test_token_f1_ignores_bio_prefixes_and_shared_o() -> None:
+    from heva.baselines.metrics import token_scores
+
+    gold = [["B-economic", "I-economic", "I-economic", "O", "O"]]
+    predicted = [["O", "B-economic", "I-economic", "I-economic", "O"]]
+
+    scores = token_scores(gold, predicted)
+
+    # Two words agree, one gold word is missed, one predicted word is extra.
+    assert scores["per_class"]["economic"] == {
+        "precision": 2 / 3, "recall": 2 / 3, "f1": 2 / 3, "support": 3,
+    }
+
+
+def test_overlap_span_f1_credits_shifted_boundaries_once() -> None:
+    from heva.baselines.metrics import overlap_span_scores
+
+    gold = [["B-economic", "I-economic", "I-economic", "O", "B-economic", "O", "B-age"]]
+    predicted = [["O", "B-economic", "I-economic", "I-economic", "I-economic", "O", "B-social"]]
+
+    scores = overlap_span_scores(gold, predicted)
+
+    # The one predicted economic span overlaps both gold economic spans but matches only
+    # one; the social prediction overlaps a gold span of another value and is wrong.
+    assert scores["per_class"]["economic"]["precision"] == 1.0
+    assert scores["per_class"]["economic"]["recall"] == 0.5
+    assert scores["per_class"]["age"]["recall"] == 0.0
+    assert scores["per_class"]["social"]["precision"] == 0.0
+    assert span_scores(gold, predicted)["per_class"]["economic"]["f1"] == 0.0
