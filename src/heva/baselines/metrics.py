@@ -152,3 +152,24 @@ def span_scores(
         for *_, value in gold_spans - predicted_spans:
             counts[value][2] += 1
     return _summarize(counts)
+
+
+# --- Per collection ---------------------------------------------------------------------
+
+
+def scores_by_collection(examples, gold, predicted, score) -> dict:
+    """Apply ``score(gold, predicted)`` to the rows of each collection separately.
+
+    Pooled scores are dominated by the largest collection; these show how each source
+    collection fares on its own.
+    """
+    rows: dict[str, list[int]] = {}
+    for index, example in enumerate(examples):
+        rows.setdefault(getattr(example, "collection", ""), []).append(index)
+    return {
+        name: {
+            "examples": len(indices),
+            **score([gold[i] for i in indices], [predicted[i] for i in indices]),
+        }
+        for name, indices in sorted(rows.items())
+    }

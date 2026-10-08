@@ -276,3 +276,30 @@ def test_t1_combines_structured_spreadsheets_with_packages(tmp_path: Path) -> No
     assert len(t1) == len(packages_only) + 1
     assert report.merged_duplicates == 1
     assert {example.collection for example in t1} == {"release-1", "1_E_2024_Y"}
+
+
+def test_split_keeps_each_collection_in_every_partition() -> None:
+    from heva.baselines.corpus import T1Example
+
+    big = [T1Example(f"big{i}", f"t{i}", ("social",), "structured", "", "big") for i in range(900)]
+    small = [T1Example(f"small{i}", f"s{i}", ("age",), "structured", "", "small") for i in range(100)]
+
+    parts = split_examples(big + small, seed=13)
+
+    for name, expected in (("train", 70), ("validation", 10), ("test", 20)):
+        assert sum(example.collection == "small" for example in parts[name]) == expected
+
+
+def test_scores_by_collection_score_each_collection_separately() -> None:
+    from heva.baselines.corpus import T1Example
+    from heva.baselines.metrics import multilabel_scores, scores_by_collection
+
+    examples = [T1Example("a", "a", (), "s", "", "one"), T1Example("b", "b", (), "s", "", "two")]
+    gold = [encode_values(["social"]), encode_values(["age"])]
+    predicted = [encode_values(["social"]), encode_values([])]
+
+    scores = scores_by_collection(examples, gold, predicted, multilabel_scores)
+
+    assert scores["one"]["micro"]["f1"] == 1.0
+    assert scores["two"]["micro"]["f1"] == 0.0
+    assert scores["two"]["examples"] == 1

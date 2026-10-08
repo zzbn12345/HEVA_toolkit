@@ -73,10 +73,21 @@ def iterative_stratification(
 
 
 def split_examples(examples, seed: int) -> dict[str, list]:
-    """70/10/20 iterative stratification over each example's value set."""
-    assignment = iterative_stratification(
-        [(example.example_id, example.values) for example in examples], seed=seed
-    )
+    """70/10/20 iterative stratification over each example's value set, per collection.
+
+    Each collection is split on its own, so that every collection is represented in each
+    partition in proportion to its size, however dominant other collections are.
+    """
+    collections: dict[str, list] = {}
+    for example in examples:
+        collections.setdefault(getattr(example, "collection", ""), []).append(example)
+    assignment: dict[str, str] = {}
+    for name in sorted(collections):
+        assignment.update(
+            iterative_stratification(
+                [(example.example_id, example.values) for example in collections[name]], seed=seed
+            )
+        )
     parts = {name: [e for e in examples if assignment[e.example_id] == name] for name in PARTITIONS}
     empty = [name for name, part in parts.items() if not part]
     if empty:
@@ -92,6 +103,7 @@ def split_summary(parts: dict[str, list]) -> dict:
         name: {
             "examples": len(part),
             "without_values": sum(1 for example in part if not example.values),
+            "collections": _collection_counts(part),
             "values": {
                 value: count
                 for value, count in sorted(
@@ -101,6 +113,14 @@ def split_summary(parts: dict[str, list]) -> dict:
         }
         for name, part in parts.items()
     }
+
+
+def _collection_counts(examples) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for example in examples:
+        name = getattr(example, "collection", "")
+        counts[name] = counts.get(name, 0) + 1
+    return dict(sorted(counts.items()))
 
 
 def _value_counts(examples) -> dict[str, int]:

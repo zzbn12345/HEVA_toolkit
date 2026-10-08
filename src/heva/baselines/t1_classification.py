@@ -10,7 +10,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from .corpus import LoadReport, T1Example
 from .labels import VALUES, encode_values
-from .metrics import apply_thresholds, multilabel_scores, tune_thresholds
+from .metrics import apply_thresholds, multilabel_scores, scores_by_collection, tune_thresholds
 from .splits import split_examples, split_summary
 from .training import (
     EarlyStopping,
@@ -123,6 +123,7 @@ def run_t1(
     test_probabilities = predict_probabilities(model, tokenizer, test, config, device)
     test_gold = [encode_values(example.values) for example in test]
     test_predicted = apply_thresholds(test_probabilities, thresholds)
+    test_default = apply_thresholds(test_probabilities, [0.5] * len(VALUES))
 
     metrics = {
         "best_epoch": stopper.best_epoch,
@@ -131,10 +132,14 @@ def run_t1(
         "validation_tuned": multilabel_scores(
             validation_gold, apply_thresholds(validation_probabilities, thresholds)
         ),
-        "test_default_0.5": multilabel_scores(
-            test_gold, apply_thresholds(test_probabilities, [0.5] * len(VALUES))
-        ),
+        "test_default_0.5": multilabel_scores(test_gold, test_default),
         "test_tuned": multilabel_scores(test_gold, test_predicted),
+        "test_default_0.5_by_collection": scores_by_collection(
+            test, test_gold, test_default, multilabel_scores
+        ),
+        "test_tuned_by_collection": scores_by_collection(
+            test, test_gold, test_predicted, multilabel_scores
+        ),
         "truncated_texts": {
             name: sum(
                 len(tokenizer(example.text)["input_ids"]) > config.max_length for example in part
@@ -159,6 +164,7 @@ def run_t1(
             {
                 "id": example.example_id,
                 "source": example.source,
+                "collection": example.collection,
                 "text": example.text,
                 "gold": list(example.values),
                 "predicted": [value for value, flag in zip(VALUES, predicted) if flag],

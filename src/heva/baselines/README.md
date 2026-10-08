@@ -30,7 +30,7 @@ Results go to `runs/baselines/`.
 | `cli.py` | Subcommands `inspect`, `t1` and `t2`, and their options | no (imports training lazily) |
 | `labels.py` | The eight values in fixed order, the 17 BIO tags, label-name normalization (`Aesthetic` → `aesthetical`) | no |
 | `corpus.py` | Loads HEVA Data Packages, structured spreadsheets and Atlas.ti CSV exports into T1/T2 examples, validates and deduplicates them | no (`openpyxl` for `.xlsx`) |
-| `splits.py` | 70/10/20 iterative stratification and split summaries | no |
+| `splits.py` | 70/10/20 iterative stratification per collection and split summaries | no |
 | `metrics.py` | T1 multi-label metrics and threshold tuning; T2 exact-match span F1 | no |
 | `training.py` | Shared training settings, device choice, early stopping, optimizer schedule, output writing | yes |
 | `t1_classification.py` | T1 model, loss, training loop and evaluation | yes |
@@ -62,8 +62,8 @@ flowchart TD
     end
 
     subgraph SPLIT["2. Split (splits.py)"]
-        D1 --> S1["Iterative stratification<br/>70 / 10 / 20, seeded"]
-        D2 --> S2["Iterative stratification<br/>70 / 10 / 20, seeded"]
+        D1 --> S1["Iterative stratification per collection<br/>70 / 10 / 20, seeded"]
+        D2 --> S2["Iterative stratification per collection<br/>70 / 10 / 20, seeded"]
     end
 
     subgraph T1["3a. T1 training (t1_classification.py)"]
@@ -136,7 +136,8 @@ Every skipped, merged or conflicting record is counted in a load report, printed
 
 Each task is split 70 / 10 / 20 into train, validation and test with iterative
 stratification (Sechidis, Tsoumakas & Vlahavas, 2011). Rare values are distributed first,
-so each split gets its share of them. The split is at text level and seeded
+so each split gets its share of them. Each collection is split on its own, so a small
+collection keeps its 70 / 10 / 20 share however large the others are. The split is at text level and seeded
 (`--seed`, default 13), and the example ids of each split are saved in `split.json`.
 
 ### 3. Models and training
@@ -203,6 +204,7 @@ Scores in `metrics.json`:
 | `test_argmax` | — | test, most probable tag per word |
 | `test_tuned` | test, tuned thresholds (main result) | same |
 | `truncated_texts` / `test_truncated_words` | texts over the length limit, per split | test words cut off |
+| `test_*_by_collection` | the test scores above, computed per collection | same |
 
 ## Defaults and options
 

@@ -10,7 +10,7 @@ from transformers import AutoModelForTokenClassification, AutoTokenizer
 
 from .corpus import LoadReport, T2Example
 from .labels import BIO_TAGS, TAG_TO_ID, VALUES
-from .metrics import THRESHOLD_GRID, span_scores
+from .metrics import THRESHOLD_GRID, scores_by_collection, span_scores
 from .splits import split_examples, split_summary
 from .training import (
     EarlyStopping,
@@ -206,6 +206,7 @@ def run_t2(
     test_probabilities = predict_word_probabilities(model, tokenizer, test, config, device)
     test_gold = [list(example.tags) for example in test]
     test_predicted = decode_with_thresholds(test_probabilities, thresholds)
+    test_argmax = decode_argmax(test_probabilities)
     truncated_words = sum(p is None for sentence in test_probabilities for p in sentence)
 
     metrics = {
@@ -215,8 +216,10 @@ def run_t2(
         "validation_tuned": span_scores(
             validation_gold, decode_with_thresholds(validation_probabilities, thresholds)
         ),
-        "test_argmax": span_scores(test_gold, decode_argmax(test_probabilities)),
+        "test_argmax": span_scores(test_gold, test_argmax),
         "test_tuned": span_scores(test_gold, test_predicted),
+        "test_argmax_by_collection": scores_by_collection(test, test_gold, test_argmax, span_scores),
+        "test_tuned_by_collection": scores_by_collection(test, test_gold, test_predicted, span_scores),
         "test_truncated_words": truncated_words,
     }
 
@@ -233,7 +236,8 @@ def run_t2(
     write_jsonl(
         run_dir / "test_predictions.jsonl",
         (
-            {"id": example.example_id, "tokens": list(example.tokens), "gold": gold, "predicted": predicted}
+            {"id": example.example_id, "collection": example.collection, "tokens": list(example.tokens),
+             "gold": gold, "predicted": predicted}
             for example, gold, predicted in zip(test, test_gold, test_predicted)
         ),
     )
