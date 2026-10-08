@@ -29,7 +29,7 @@ Results go to `runs/baselines/`.
 | `__main__.py` | Entry point for `python -m heva.baselines` | no |
 | `cli.py` | Subcommands `inspect`, `t1` and `t2`, and their options | no (imports training lazily) |
 | `labels.py` | The eight values in fixed order, the 17 BIO tags, label-name normalization (`Aesthetic` → `aesthetical`) | no |
-| `corpus.py` | Loads HEVA Data Packages and Atlas.ti CSV exports into T1/T2 examples, validates and deduplicates them | no |
+| `corpus.py` | Loads HEVA Data Packages, structured spreadsheets and Atlas.ti CSV exports into T1/T2 examples, validates and deduplicates them | no (`openpyxl` for `.xlsx`) |
 | `splits.py` | 70/10/20 iterative stratification and split summaries | no |
 | `metrics.py` | T1 multi-label metrics and threshold tuning; T2 exact-match span F1 | no |
 | `training.py` | Shared training settings, device choice, early stopping, optimizer schedule, output writing | yes |
@@ -46,7 +46,11 @@ tests use a tiny randomly initialized BERT and are skipped when torch is missing
 flowchart TD
     subgraph INGEST["1. Data ingestion (corpus.py)"]
         H["data/baselines/heva/**/heva-annotations.json<br/>(CSV only if no JSON)"]
+        S["data/baselines/structured/*.xlsx|csv<br/>52-column HEVA spreadsheets"]
         A["data/baselines/atlasti/*.csv<br/>Atlas.ti quotation exports"]
+        S --> SV["Read value columns 1-8<br/>(any cell > 0 is present)"]
+        SV --> T1S["T1 examples: text + value set"]
+        T1S --> D1
         H --> HV["Validate records<br/>tokens and ner_tags align, labels are CVF values"]
         A --> AV["Read 'Value: X - Before/After' codes<br/>from the Codes column"]
         HV --> T1H["T1 examples: sentence + value set"]
@@ -102,11 +106,21 @@ flowchart TD
 | Source | Location | Used for | Labels come from |
 |---|---|---|---|
 | HEVA Data Packages | `data/baselines/heva/<package>/heva-annotations.json` | T1 and T2 | `values` and `ner_tags` |
+| Structured spreadsheets | `data/baselines/structured/*.xlsx` or `*.csv` | T1 only | value columns `1`–`8` |
 | Atlas.ti exports | `data/baselines/atlasti/*.csv` | T1 only | `Value: <name>` codes in the `Codes` column |
 
 - **HEVA:** T1 uses `curated_sentence` when it is set, otherwise `sentence`. T2 uses
   `tokens` and `ner_tags`. Records are skipped and counted when their tags do not line
   up with their tokens or they use unknown labels.
+- **Structured spreadsheets:** the 52-column format of `EXAMPLE.xlsx` (e.g. the `*_3_final`
+  files and `excels combined dataset.xlsx`). The text is `Sentence`, the collection
+  `Folder_ID` and the document `Datasource`. A value is present when its column (`1` social
+  … `8` ecological) is greater than 0, because some files store 2 for a value coded both
+  Before and After. The first sheet with a `Sentence` column and columns `1`–`8` is read.
+  Do not also put the Atlas.ti export of a collection that has a final spreadsheet in
+  `atlasti/`: the two versions of a quotation can differ slightly and escape deduplication.
+- **Collections:** every example records its collection: `Folder_ID` for spreadsheets,
+  the package folder under `heva/` for Data Packages, and the file name for Atlas.ti CSVs.
 - **Atlas.ti:** quotations have value codes for whole text blocks, not token spans, so
   they cannot feed T2. The `Before`/`After` suffix is dropped. Per-value 0/1 columns
   are ignored because they are 0 for quotations coded both Before and After.
@@ -194,7 +208,7 @@ Scores in `metrics.json`:
 
 | Option | Default | Notes |
 |---|---|---|
-| `--data-dir` | `data/baselines` | contains `heva/` and `atlasti/` |
+| `--data-dir` | `data/baselines` | contains `heva/`, `structured/` and `atlasti/` |
 | `--output-dir` | `runs/baselines` | |
 | `--model` | `bert-base-multilingual-cased` | any Hugging Face name or local path |
 | `--epochs` | 20 | maximum; early stopping usually ends sooner |
@@ -212,7 +226,6 @@ Scores in `metrics.json`:
   Atlas.ti attribute codes) are not modeled.
 - The split is at text level, so sentences from one document can appear in both train and
   test.
-- Excel sources are not loaded yet.
 - Texts longer than 512 subword tokens are cut off rather than split into windows.
 - With small validation sets, tuned thresholds can overfit; compare `test_tuned` with
   `test_default_0.5` / `test_argmax`.

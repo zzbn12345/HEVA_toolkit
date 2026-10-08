@@ -5,14 +5,17 @@
 
 ```
 data/baselines/
-├── heva/      HEVA Data Packages, one folder per package
+├── heva/        HEVA Data Packages, one folder per package (= collection)
 │   └── <package>/heva-annotations.json   (heva-annotations.csv is used only if the JSON is missing)
-└── atlasti/   Atlas.ti quotation exports (*.csv)
+├── structured/  Spreadsheets in the 52-column HEVA format (*.xlsx or *.csv), e.g.
+│                2_A_2025_Mastermind.xlsx and "excels combined dataset.xlsx"
+└── atlasti/     Atlas.ti quotation exports (*.csv)
 ```
 
 | Source | T1 sentence values | T2 BIO spans |
 |---|---|---|
 | HEVA Data Packages | yes (`values`, or `curated_sentence` text when set) | yes (`tokens`, `ner_tags`) |
+| Structured spreadsheets | yes (value columns `1`–`8`, any cell > 0) | no: rows have no token spans |
 | Atlas.ti CSV exports | yes (whole quotation) | no: quotations have no token spans |
 
 ## Atlas.ti exports

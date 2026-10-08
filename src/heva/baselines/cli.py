@@ -26,7 +26,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR,
-                        help="Folder with heva/ (Data Packages) and atlasti/ (CSV exports). "
+                        help="Folder with heva/ (Data Packages), structured/ (52-column spreadsheets) "
+                             "and atlasti/ (CSV exports). "
                              f"Default: {DEFAULT_DATA_DIR}")
     common.add_argument("--seed", type=int, default=13, help="Seed for the split and training.")
 
@@ -75,7 +76,8 @@ def main(argv=None) -> int:
     examples, report = loader(args.data_dir)
     if not examples:
         print(f"No {args.command.upper()} examples found under {args.data_dir}. "
-              "Put HEVA Data Packages in heva/ and Atlas.ti CSVs in atlasti/.", file=sys.stderr)
+              "Put HEVA Data Packages in heva/, structured spreadsheets in structured/ "
+              "and Atlas.ti CSVs in atlasti/.", file=sys.stderr)
         return 1
 
     # Imported here so `inspect` works without torch/transformers installed.

@@ -1,12 +1,15 @@
-"""Load baseline training data from HEVA Data Packages and Atlas.ti CSV exports.
+"""Load baseline training data from HEVA Data Packages, structured spreadsheets and
+Atlas.ti CSV exports.
 
-Expected layout under the data directory (both parts optional)::
+Expected layout under the data directory (every part optional)::
 
     <data_dir>/heva/**/heva-annotations.json   (or heva-annotations.csv)
+    <data_dir>/structured/*.xlsx | *.csv        (52-column HEVA spreadsheet format)
     <data_dir>/atlasti/*.csv
 
-HEVA packages feed T1 (sentence values) and T2 (BIO spans). Atlas.ti quotations only
-feed T1: they carry value codes for whole text blocks, not token spans.
+HEVA packages feed T1 (sentence values) and T2 (BIO spans). Structured spreadsheets and
+Atlas.ti quotations only feed T1: they carry values for whole texts, not token spans.
+Every example records its collection, so splits and scores can be made per collection.
 """
 
 from __future__ import annotations
@@ -19,7 +22,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .labels import normalize_value
+from .labels import VALUES, normalize_value
 
 HEVA_JSON = "heva-annotations.json"
 HEVA_CSV = "heva-annotations.csv"
@@ -29,6 +32,14 @@ VALUE_CODE = re.compile(r"Value:\s*([A-Za-z]+)(?:\s*-\s*[A-Za-z]+)?")
 # Column order of the Atlas.ti Quotation Manager export, used when the header row was
 # saved in a localized UI language and can no longer be decoded (e.g. "????").
 QUOTATION_MANAGER_POSITIONS = {"id": 0, "document": 2, "content": 4, "codes": 6}
+
+# Structured spreadsheets (see EXAMPLE.xlsx): one text per row, L1 values in columns
+# "1".."8" in VALUES order. A cell counts as present when it is greater than 0, because
+# some files hold 2 for a value coded twice (e.g. Atlas.ti "Before" and "After").
+STRUCTURED_TEXT = "Sentence"
+STRUCTURED_COLLECTION = "Folder_ID"
+STRUCTURED_DOCUMENT = "Datasource"
+STRUCTURED_VALUE_COLUMNS = tuple(str(code) for code in range(1, len(VALUES) + 1))
 
 
 @dataclass(frozen=True)
@@ -40,6 +51,7 @@ class T1Example:
     values: tuple[str, ...]
     source: str
     document: str
+    collection: str = ""
 
 
 @dataclass(frozen=True)
@@ -50,6 +62,7 @@ class T2Example:
     tokens: tuple[str, ...]
     tags: tuple[str, ...]
     document: str
+    collection: str = ""
 
     @property
     def values(self) -> tuple[str, ...]:
@@ -144,6 +157,8 @@ def load_heva_records(root: Path, report: LoadReport) -> tuple[list[T1Example], 
     seen_ids = set()
     for path in find_heva_package_files(root):
         report.files.append(str(path))
+        # The package folder directly under heva/ names the collection.
+        collection = path.parent.relative_to(root).parts[0] if path.parent != root else root.name
         records = _read_heva_json(path) if path.suffix == ".json" else _read_heva_csv(path)
         for record in records:
             example_id = f"heva:{record.get('document_id')}:{record.get('sentence_id')}"
@@ -169,8 +184,10 @@ def load_heva_records(root: Path, report: LoadReport) -> tuple[list[T1Example], 
             document = str(record.get("document_id"))
             text = (record.get("curated_sentence") or record.get("sentence") or "").strip()
             if text:
-                t1.append(T1Example(example_id, text, tuple(sorted(values)), "heva", document))
-            t2.append(T2Example(example_id, tuple(tokens), tags, document))
+                t1.append(
+                    T1Example(example_id, text, tuple(sorted(values)), "heva", document, collection)
+                )
+            t2.append(T2Example(example_id, tuple(tokens), tags, document, collection))
     return t1, t2
 
 
@@ -237,6 +254,7 @@ def read_atlasti_csv(path: Path, report: LoadReport) -> list[T1Example]:
                 tuple(sorted(values)),
                 "atlasti",
                 row[columns["document"]].strip(),
+                path.stem,
             )
         )
     if rows[1:] and value_codes_found == 0:
@@ -252,6 +270,112 @@ def load_atlasti_records(root: Path, report: LoadReport) -> list[T1Example]:
     for path in sorted(root.rglob("*.csv")):
         report.files.append(str(path))
         examples.extend(read_atlasti_csv(path, report))
+    return examples
+
+
+# --- Structured spreadsheets -----------------------------------------------------------
+
+
+def _cell_text(cell) -> str:
+    if cell is None:
+        return ""
+    if isinstance(cell, float) and cell.is_integer():
+        cell = int(cell)
+    return str(cell).strip()
+
+
+def _is_structured_header(header: list[str]) -> bool:
+    return STRUCTURED_TEXT in header and all(code in header for code in STRUCTURED_VALUE_COLUMNS)
+
+
+def _structured_rows_xlsx(path: Path) -> list[list[str]]:
+    try:
+        from openpyxl import load_workbook
+    except ImportError as error:
+        raise ImportError(
+            f"{path}: reading .xlsx needs openpyxl (pip install -e '.[baselines]'), "
+            "or save the sheet as CSV."
+        ) from error
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    try:
+        for sheet in workbook.worksheets:
+            rows = [[_cell_text(cell) for cell in row] for row in sheet.iter_rows(values_only=True)]
+            if rows and _is_structured_header(rows[0]):
+                return rows
+    finally:
+        workbook.close()
+    raise ValueError(f"{path}: no sheet has a '{STRUCTURED_TEXT}' column and value columns 1-8.")
+
+
+def _structured_rows_csv(path: Path) -> list[list[str]]:
+    text = _decode(path.read_bytes())
+    try:
+        delimiter = csv.Sniffer().sniff(text[:4096], delimiters=";,\t").delimiter
+    except csv.Error:
+        delimiter = ","
+    rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(text), delimiter=delimiter)]
+    if not rows or not _is_structured_header(rows[0]):
+        raise ValueError(f"{path}: no '{STRUCTURED_TEXT}' column and value columns 1-8.")
+    return rows
+
+
+def _present(cell: str, report: LoadReport) -> bool:
+    if not cell:
+        return False
+    try:
+        return float(cell) > 0
+    except ValueError:
+        report.skip("structured_non_numeric_value_cell")
+        return False
+
+
+def read_structured_file(path: Path, report: LoadReport) -> list[T1Example]:
+    """Read one spreadsheet in the 52-column HEVA format (one text per row)."""
+    rows = _structured_rows_xlsx(path) if path.suffix.lower() == ".xlsx" else _structured_rows_csv(path)
+    header = rows[0]
+    column = {name: index for index, name in reversed(list(enumerate(header)))}
+    value_columns = [column[code] for code in STRUCTURED_VALUE_COLUMNS]
+
+    def cell(row: list[str], name: str) -> str:
+        index = column.get(name)
+        return row[index] if index is not None and index < len(row) else ""
+
+    examples = []
+    for row in rows[1:]:
+        if not any(row):
+            continue
+        text = _normalize_text(cell(row, STRUCTURED_TEXT))
+        if not text:
+            report.skip("structured_empty_sentence")
+            continue
+        values = tuple(
+            value
+            for value, index in zip(VALUES, value_columns)
+            if index < len(row) and _present(row[index], report)
+        )
+        examples.append(
+            T1Example(
+                _stable_id("structured", text),
+                text,
+                values,
+                "structured",
+                cell(row, STRUCTURED_DOCUMENT),
+                cell(row, STRUCTURED_COLLECTION) or path.stem,
+            )
+        )
+    return examples
+
+
+def load_structured_records(root: Path, report: LoadReport) -> list[T1Example]:
+    """Read every structured spreadsheet (.xlsx or .csv) under ``root``."""
+    if not root.is_dir():
+        return []
+    examples = []
+    for path in sorted(root.rglob("*")):
+        if path.suffix.lower() not in (".xlsx", ".csv") or path.name.startswith(("~$", ".")):
+            continue
+        report.files.append(str(path))
+        examples.extend(read_structured_file(path, report))
     return examples
 
 
@@ -275,7 +399,9 @@ def deduplicate_t1(examples: list[T1Example], report: LoadReport) -> list[T1Exam
         if set(kept.values) != set(example.values):
             report.conflicting_duplicates += 1
             union = tuple(sorted(set(kept.values) | set(example.values)))
-            merged[key] = T1Example(kept.example_id, kept.text, union, kept.source, kept.document)
+            merged[key] = T1Example(
+                kept.example_id, kept.text, union, kept.source, kept.document, kept.collection
+            )
     return list(merged.values())
 
 
@@ -295,8 +421,9 @@ def deduplicate_t2(examples: list[T2Example], report: LoadReport) -> list[T2Exam
 def load_t1_dataset(data_dir: Path) -> tuple[list[T1Example], LoadReport]:
     report = LoadReport()
     heva_t1, _ = load_heva_records(data_dir / "heva", report)
+    structured = load_structured_records(data_dir / "structured", report)
     atlasti = load_atlasti_records(data_dir / "atlasti", report)
-    return deduplicate_t1(heva_t1 + atlasti, report), report
+    return deduplicate_t1(heva_t1 + structured + atlasti, report), report
 
 
 def load_t2_dataset(data_dir: Path) -> tuple[list[T2Example], LoadReport]:

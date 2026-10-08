@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 import shutil
 from pathlib import Path
@@ -13,6 +14,7 @@ from heva.baselines.corpus import (
     load_t1_dataset,
     load_t2_dataset,
     read_atlasti_csv,
+    read_structured_file,
 )
 from heva.baselines.labels import BIO_TAGS, VALUES, encode_values, normalize_value
 from heva.baselines.metrics import bio_spans, span_scores, tune_thresholds
@@ -192,3 +194,85 @@ def test_hamming_loss_and_jaccard_similarity() -> None:
     assert scores["hamming_loss"] == 3 / 24
     # Per text: 1/2, 1.0 (both empty), 0/2.
     assert scores["jaccard_samples"] == (0.5 + 1.0 + 0.0) / 3
+
+
+STRUCTURED_HEADER = (
+    ["Folder_ID", "Sub_Folder_ID", "Datasource", "Source_type", "Format", "Case_study", "Language",
+     "Sentence", "Page_number", "Date", "Data_collector", "Number_of_L1_labels",
+     "Number_of _L2_labels", "Classification_hierarchy"]
+    + [str(code) for code in range(1, 9)]
+    + [f"{value}-{sub}" for value in range(1, 9) for sub in (1, 2, 3)]
+)
+
+
+def structured_row(folder: str, source: str, sentence: str, values: dict[int, int]) -> list[str]:
+    row = [folder, folder[0] + "_2", source, "Policy", "Excel", "Case", "English", sentence,
+           "1", "2024", "Annotator", str(sum(values.values())), "0", "1"]
+    row += [str(values.get(code, 0)) for code in range(1, 9)]
+    return row + ["0"] * 24
+
+
+def write_structured_csv(path: Path, rows: list[list[str]]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        csv.writer(handle).writerows([STRUCTURED_HEADER] + rows)
+
+
+def test_structured_values_count_any_positive_cell(tmp_path: Path) -> None:
+    """A value coded twice is stored as 2 in some files and must still count once."""
+    source = tmp_path / "final.csv"
+    write_structured_csv(source, [
+        structured_row("2_A_2025_X", "Doc A", "Een oud pand.", {4: 2, 5: 1}),
+        structured_row("2_A_2025_X", "Doc A", "Alleen tekst.", {}),
+        structured_row("2_A_2025_X", "Doc B", "  ", {1: 1}),
+    ])
+    report = LoadReport()
+
+    examples = read_structured_file(source, report)
+
+    assert [example.values for example in examples] == [("historic", "aesthetical"), ()]
+    assert examples[0].collection == "2_A_2025_X"
+    assert examples[0].document == "Doc A"
+    assert examples[0].source == "structured"
+    assert report.skipped == {"structured_empty_sentence": 1}
+
+
+def test_structured_file_without_value_columns_is_rejected(tmp_path: Path) -> None:
+    source = tmp_path / "other.csv"
+    source.write_text("Sentence,Label\nTekst.,social\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="value columns 1-8"):
+        read_structured_file(source, LoadReport())
+
+
+def test_structured_xlsx_is_read_from_the_matching_sheet(tmp_path: Path) -> None:
+    openpyxl = pytest.importorskip("openpyxl")
+    workbook = openpyxl.Workbook()
+    workbook.active.append(["Column_name", "Definition"])
+    data = workbook.create_sheet("Data")
+    header = [int(name) if name.isdigit() and name != "1" else name for name in STRUCTURED_HEADER]
+    data.append(header)
+    row = structured_row("8_E_2014_CL", "Doc", "Founded in 1859.", {1: 1, 8: 1})
+    data.append([int(cell) if cell.isdigit() else cell for cell in row])
+    workbook.save(tmp_path / "combined.xlsx")
+
+    examples = read_structured_file(tmp_path / "combined.xlsx", LoadReport())
+
+    assert examples[0].values == ("social", "ecological")
+    assert examples[0].collection == "8_E_2014_CL"
+
+
+def test_t1_combines_structured_spreadsheets_with_packages(tmp_path: Path) -> None:
+    shutil.copytree(DUMMY_PACKAGE, tmp_path / "heva" / "release-1")
+    shutil.copytree(DUMMY_PACKAGE, tmp_path / "heva-only" / "heva" / "release-1")
+    (tmp_path / "structured").mkdir()
+    write_structured_csv(tmp_path / "structured" / "combined.csv", [
+        structured_row("1_E_2024_Y", "Posts", "the city of windcatchers", {8: 1}),
+        structured_row("1_E_2024_Y", "Posts", "the city of windcatchers", {8: 1}),
+    ])
+
+    packages_only, _ = load_t1_dataset(tmp_path / "heva-only")
+    t1, report = load_t1_dataset(tmp_path)
+
+    assert len(t1) == len(packages_only) + 1
+    assert report.merged_duplicates == 1
+    assert {example.collection for example in t1} == {"release-1", "1_E_2024_Y"}
