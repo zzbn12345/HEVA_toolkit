@@ -11,6 +11,11 @@ from pathlib import Path
 import torch
 from transformers import get_linear_schedule_with_warmup
 
+# Batches are padded to a multiple of this many subwords. Apple's MPS backend compiles and
+# keeps a kernel for every input shape, so padding each batch to its own longest text
+# exhausts memory on texts of very mixed length; a few fixed lengths avoid that.
+PAD_TO_MULTIPLE_OF = 64
+
 
 @dataclass
 class TrainingConfig:

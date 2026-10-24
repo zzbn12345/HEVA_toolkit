@@ -20,6 +20,7 @@ from .metrics import (
 )
 from .splits import split_examples, split_summary
 from .training import (
+    PAD_TO_MULTIPLE_OF,
     EarlyStopping,
     TrainingConfig,
     batches,
@@ -61,6 +62,7 @@ def encode(tokenizer, batch: list[T2Example], max_length: int):
         truncation=True,
         max_length=max_length,
         padding=True,
+        pad_to_multiple_of=PAD_TO_MULTIPLE_OF,
         return_tensors="pt",
     )
     labels, positions = [], []

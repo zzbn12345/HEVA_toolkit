@@ -13,6 +13,7 @@ from .labels import VALUES, encode_values
 from .metrics import apply_thresholds, multilabel_scores, scores_by_collection, tune_thresholds
 from .splits import split_examples, split_summary
 from .training import (
+    PAD_TO_MULTIPLE_OF,
     EarlyStopping,
     TrainingConfig,
     batches,
@@ -46,6 +47,7 @@ def predict_probabilities(model, tokenizer, examples, config, device) -> list[li
                 truncation=True,
                 max_length=config.max_length,
                 padding=True,
+                pad_to_multiple_of=PAD_TO_MULTIPLE_OF,
                 return_tensors="pt",
             ).to(device)
             probabilities.extend(torch.sigmoid(model(**inputs).logits).cpu().tolist())
@@ -92,6 +94,7 @@ def run_t1(
                 truncation=True,
                 max_length=config.max_length,
                 padding=True,
+                pad_to_multiple_of=PAD_TO_MULTIPLE_OF,
                 return_tensors="pt",
             ).to(device)
             targets = torch.tensor(
