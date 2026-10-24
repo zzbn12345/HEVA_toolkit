@@ -127,7 +127,10 @@ flowchart TD
   Quotations without any `Value:` code become examples with no values.
 - **Deduplication:** identical texts are merged so they cannot land in both train and
   test. Several exports of one Atlas.ti project repeat the same quotations; their
-  values are combined.
+  values are combined. For T2, identical sentences combine their spans, because a source
+  may quote one passage several times and highlight different words each time. A span
+  that overlaps one already present keeps the first copy's tags and is counted as a
+  conflicting duplicate, since BIO gives each word a single value.
 
 Every skipped, merged or conflicting record is counted in a load report, printed by
 `inspect` and saved to `data.json`.

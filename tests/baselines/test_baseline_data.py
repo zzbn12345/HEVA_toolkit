@@ -334,3 +334,39 @@ def test_overlap_span_f1_credits_shifted_boundaries_once() -> None:
     assert scores["per_class"]["age"]["recall"] == 0.0
     assert scores["per_class"]["social"]["precision"] == 0.0
     assert span_scores(gold, predicted)["per_class"]["economic"]["f1"] == 0.0
+
+
+def test_duplicate_t2_sentences_combine_their_spans() -> None:
+    """One passage quoted twice with different words highlighted keeps both highlights."""
+    from heva.baselines.corpus import T2Example, deduplicate_t2
+
+    tokens = ("the", "carved", "door", "is", "rich", "in", "symbolism")
+    first = T2Example("a", tokens, ("O", "O", "O", "O", "O", "O", "B-social"), "doc", "c")
+    second = T2Example("b", tokens, ("O", "B-age", "I-age", "O", "O", "O", "O"), "doc", "c")
+    report = LoadReport()
+
+    merged = deduplicate_t2([first, second], report)
+
+    assert [example.tags for example in merged] == [
+        ("O", "B-age", "I-age", "O", "O", "O", "B-social")
+    ]
+    assert merged[0].example_id == "a"
+    assert report.merged_duplicates == 1
+    assert report.conflicting_duplicates == 0
+
+
+def test_overlapping_duplicate_t2_spans_keep_the_first_copy() -> None:
+    from heva.baselines.corpus import T2Example, deduplicate_t2
+
+    tokens = ("the", "carved", "door", "today")
+    first = T2Example("a", tokens, ("O", "B-age", "I-age", "O"), "doc", "c")
+    second = T2Example("b", tokens, ("O", "O", "B-social", "B-economic"), "doc", "c")
+    same = T2Example("c", tokens, ("O", "B-age", "I-age", "O"), "doc", "c")
+    report = LoadReport()
+
+    merged = deduplicate_t2([first, second, same], report)
+
+    # "door" is already age, so social is dropped; the free word "today" gains economic.
+    assert merged[0].tags == ("O", "B-age", "I-age", "B-economic")
+    assert report.merged_duplicates == 2
+    assert report.conflicting_duplicates == 1

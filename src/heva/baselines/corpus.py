@@ -405,16 +405,49 @@ def deduplicate_t1(examples: list[T1Example], report: LoadReport) -> list[T1Exam
     return list(merged.values())
 
 
+def _spans(tags: tuple[str, ...]) -> list[tuple[int, int, str]]:
+    """``(start, end_exclusive, value)`` spans, an ``I-`` without ``B-`` starting a span."""
+    spans, start, current = [], None, None
+    for index, tag in enumerate([*tags, "O"]):
+        prefix, _, value = tag.partition("-")
+        continues = prefix == "I" and value == current
+        if current is not None and not continues:
+            spans.append((start, index, current))
+            start, current = None, None
+        if prefix in ("B", "I") and not continues:
+            start, current = index, value
+    return spans
+
+
 def deduplicate_t2(examples: list[T2Example], report: LoadReport) -> list[T2Example]:
-    """Keep the first of identical token sequences; tag conflicts cannot be merged."""
+    """Merge identical token sequences, combining the value spans of every copy.
+
+    A source may quote one passage several times and highlight different words for
+    different values each time, as the extractor records each highlight as its own span.
+    A later copy's span is added when none of its words is tagged yet. A span that
+    overlaps an existing one keeps the first copy's tags and counts as a conflict, since
+    BIO gives each word a single value.
+    """
     kept: dict[tuple[str, ...], T2Example] = {}
     for example in examples:
-        if example.tokens not in kept:
+        first = kept.get(example.tokens)
+        if first is None:
             kept[example.tokens] = example
             continue
         report.merged_duplicates += 1
-        if kept[example.tokens].tags != example.tags:
+        tags = list(first.tags)
+        conflict = False
+        for start, end, value in _spans(example.tags):
+            covered = tags[start:end]
+            if all(tag == "O" for tag in covered):
+                tags[start:end] = [f"B-{value}"] + [f"I-{value}"] * (end - start - 1)
+            elif covered != [f"B-{value}"] + [f"I-{value}"] * (end - start - 1):
+                conflict = True
+        if conflict:
             report.conflicting_duplicates += 1
+        kept[example.tokens] = T2Example(
+            first.example_id, first.tokens, tuple(tags), first.document, first.collection
+        )
     return list(kept.values())
 
 
