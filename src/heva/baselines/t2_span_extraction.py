@@ -251,9 +251,10 @@ def run_t2(
     write_jsonl(
         run_dir / "test_predictions.jsonl",
         (
+            # Both decision rules are kept so they can be compared on the same sentences.
             {"id": example.example_id, "collection": example.collection, "tokens": list(example.tokens),
-             "gold": gold, "predicted": predicted}
-            for example, gold, predicted in zip(test, test_gold, test_predicted)
+             "gold": gold, "predicted": predicted, "predicted_argmax": argmax}
+            for example, gold, predicted, argmax in zip(test, test_gold, test_predicted, test_argmax)
         ),
     )
     if save_model:

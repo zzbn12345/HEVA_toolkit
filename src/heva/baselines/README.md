@@ -16,6 +16,7 @@ pip install -e ".[baselines]"          # torch + transformers
 python -m heva.baselines inspect       # load the data and show the split; no torch needed
 python -m heva.baselines t1            # train and evaluate T1
 python -m heva.baselines t2            # train and evaluate T2
+python -m heva.baselines significance runs/baselines/t1/<run>   # confidence intervals and tests
 python -m heva.baselines t1 --help     # all options
 ```
 
@@ -27,11 +28,12 @@ Results go to `runs/baselines/`.
 | File | Role | Needs torch |
 |---|---|---|
 | `__main__.py` | Entry point for `python -m heva.baselines` | no |
-| `cli.py` | Subcommands `inspect`, `t1` and `t2`, and their options | no (imports training lazily) |
+| `cli.py` | Subcommands `inspect`, `t1`, `t2` and `significance`, and their options | no (imports training lazily) |
 | `labels.py` | The eight values in fixed order, the 17 BIO tags, label-name normalization (`Aesthetic` → `aesthetical`) | no |
 | `corpus.py` | Loads HEVA Data Packages, structured spreadsheets and Atlas.ti CSV exports into T1/T2 examples, validates and deduplicates them | no (`openpyxl` for `.xlsx`) |
 | `splits.py` | 70/10/20 iterative stratification per collection and split summaries | no |
 | `metrics.py` | T1 multi-label metrics and threshold tuning; T2 exact-match span, overlap span and token F1 | no |
+| `significance.py` | Bootstrap confidence intervals and paired tests from a saved run | no |
 | `training.py` | Shared training settings, device choice, early stopping, optimizer schedule, output writing | yes |
 | `t1_classification.py` | T1 model, loss, training loop and evaluation | yes |
 | `t2_span_extraction.py` | T2 model, word/subword alignment, loss, training loop, threshold decoding and evaluation | yes |
@@ -206,7 +208,8 @@ Each run creates `runs/baselines/<t1|t2>/<YYYYMMDD-HHMMSS>/`:
 | `class_weights.json` | T1 `pos_weight` per value, or T2 weight per BIO tag |
 | `thresholds.json` | Tuned threshold per value |
 | `metrics.json` | Per-epoch history, `best_epoch`, `epochs_trained`, and the scores below |
-| `test_predictions.jsonl` | One line per test example: gold and predicted values (T1, with probabilities) or tags (T2) |
+| `test_predictions.jsonl` | One line per test example: gold and predicted values (T1, with probabilities) or tags (T2: `predicted` with tuned thresholds and `predicted_argmax`) |
+| `significance.json` | Written by `significance`: confidence intervals and paired tests (see below) |
 | `model/` | Fine-tuned model and tokenizer, only with `--save-model` (about 700 MB) |
 
 Scores in `metrics.json`:
@@ -220,6 +223,25 @@ Scores in `metrics.json`:
 | `test_*_overlap` / `test_*_token` | — | overlap span F1 / token F1 of the same predictions |
 | `truncated_texts` / `test_truncated_words` | texts over the length limit, per split | test words cut off |
 | `test_*_by_collection` | the test scores above, computed per collection | exact, overlap and token scores per collection |
+
+### 6. Confidence intervals and significance (`significance.py`)
+
+`python -m heva.baselines significance <run folder> [...]` works from a run's
+`test_predictions.jsonl`, so no model or GPU is needed. It resamples the test examples with
+replacement (`--resamples`, default 1000; `--seed`, default 13) and recomputes every metric
+on each resample:
+
+- **95% confidence intervals** (percentile bootstrap) for every metric and decision rule.
+- **Paired bootstrap test** (Berg-Kirkpatrick, Burkett & Klein, 2012) of tuned thresholds
+  against the untuned rule (T1: threshold 0.5; T2: most probable tag), using the same
+  resamples for both. The two-sided p-value is the share of resamples whose difference
+  deviates from the observed difference by at least the observed difference.
+- **Holm correction** (Holm, 1979) within each family of tests: the headline metrics, and
+  the per-value F1 scores.
+
+T1: micro/macro F1, Hamming loss, Jaccard and per-value F1. T2: micro/macro F1 of exact
+span, overlap span and token matching, and per-value exact span F1. Runs made before T2
+saved `predicted_argmax` get confidence intervals for the tuned rule only.
 
 ## Defaults and options
 

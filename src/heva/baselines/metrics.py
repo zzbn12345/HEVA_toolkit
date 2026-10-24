@@ -16,7 +16,7 @@ def _prf(tp: int, fp: int, fn: int) -> dict[str, float]:
     return {"precision": precision, "recall": recall, "f1": f1}
 
 
-def _summarize(counts: dict[str, list[int]]) -> dict:
+def summarize_counts(counts: dict[str, list[int]]) -> dict:
     """Per-class, micro and macro scores from {class: [tp, fp, fn]}.
 
     Macro averages only classes present in the gold data; absent classes are listed so
@@ -44,6 +44,25 @@ def _summarize(counts: dict[str, list[int]]) -> dict:
 # --- T1 -------------------------------------------------------------------------------
 
 
+def multilabel_example_counts(
+    gold_row: Sequence[int], predicted_row: Sequence[int]
+) -> tuple[dict[str, list[int]], int, float]:
+    """One text's ``{value: [tp, fp, fn]}``, wrong value decisions and Jaccard similarity."""
+    counts = {value: [0, 0, 0] for value in VALUES}
+    wrong_decisions = 0
+    for value, g, p in zip(VALUES, gold_row, predicted_row, strict=True):
+        if g and p:
+            counts[value][0] += 1
+        elif p:
+            counts[value][1] += 1
+        elif g:
+            counts[value][2] += 1
+        wrong_decisions += bool(g) != bool(p)
+    union = sum(1 for g, p in zip(gold_row, predicted_row) if g or p)
+    both = sum(1 for g, p in zip(gold_row, predicted_row) if g and p)
+    return counts, wrong_decisions, both / union if union else 1.0
+
+
 def multilabel_scores(gold: Sequence[Sequence[int]], predicted: Sequence[Sequence[int]]) -> dict:
     """Score 0/1 label vectors in VALUES order.
 
@@ -51,26 +70,30 @@ def multilabel_scores(gold: Sequence[Sequence[int]], predicted: Sequence[Sequenc
     Jaccard similarity (mean |gold ∩ predicted| / |gold ∪ predicted|; 1.0 when both are
     empty, since predicting "no value" for a text without values is fully correct).
     """
-    counts = {value: [0, 0, 0] for value in VALUES}
-    wrong_decisions, jaccard_total = 0, 0.0
-    for gold_row, predicted_row in zip(gold, predicted, strict=True):
-        for value, g, p in zip(VALUES, gold_row, predicted_row, strict=True):
-            if g and p:
-                counts[value][0] += 1
-            elif p:
-                counts[value][1] += 1
-            elif g:
-                counts[value][2] += 1
-            wrong_decisions += bool(g) != bool(p)
-        union = sum(1 for g, p in zip(gold_row, predicted_row) if g or p)
-        both = sum(1 for g, p in zip(gold_row, predicted_row) if g and p)
-        jaccard_total += both / union if union else 1.0
-    rows = len(gold)
+    rows = [multilabel_example_counts(g, p) for g, p in zip(gold, predicted, strict=True)]
+    return summarize_multilabel(rows)
+
+
+def summarize_multilabel(rows: Sequence[tuple[dict[str, list[int]], int, float]]) -> dict:
+    """T1 scores from per-text counts (see ``multilabel_example_counts``)."""
+    n = len(rows)
     return {
-        **_summarize(counts),
-        "hamming_loss": wrong_decisions / (rows * len(VALUES)) if rows else 0.0,
-        "jaccard_samples": jaccard_total / rows if rows else 0.0,
+        **summarize_counts(add_counts(counts for counts, _, _ in rows)),
+        "hamming_loss": sum(wrong for _, wrong, _ in rows) / (n * len(VALUES)) if n else 0.0,
+        "jaccard_samples": sum(jaccard for _, _, jaccard in rows) / n if n else 0.0,
     }
+
+
+def add_counts(per_example) -> dict[str, list[int]]:
+    """Sum ``{value: [tp, fp, fn]}`` dictionaries."""
+    total = {value: [0, 0, 0] for value in VALUES}
+    for counts in per_example:
+        for value, (tp, fp, fn) in counts.items():
+            row = total[value]
+            row[0] += tp
+            row[1] += fp
+            row[2] += fn
+    return total
 
 
 def apply_thresholds(probabilities: Sequence[Sequence[float]], thresholds: Sequence[float]):
@@ -142,16 +165,22 @@ def span_scores(
     gold: Sequence[Sequence[str]], predicted: Sequence[Sequence[str]]
 ) -> dict:
     """Exact-match span precision/recall/F1: boundaries and value must both match."""
+    return summarize_counts(
+        add_counts(span_example_counts(g, p) for g, p in zip(gold, predicted, strict=True))
+    )
+
+
+def span_example_counts(gold_tags: Sequence[str], predicted_tags: Sequence[str]) -> dict:
+    """One sentence's exact-match ``{value: [tp, fp, fn]}``."""
     counts = {value: [0, 0, 0] for value in VALUES}
-    for gold_tags, predicted_tags in zip(gold, predicted, strict=True):
-        gold_spans, predicted_spans = bio_spans(gold_tags), bio_spans(predicted_tags)
-        for *_, value in gold_spans & predicted_spans:
-            counts[value][0] += 1
-        for *_, value in predicted_spans - gold_spans:
-            counts[value][1] += 1
-        for *_, value in gold_spans - predicted_spans:
-            counts[value][2] += 1
-    return _summarize(counts)
+    gold_spans, predicted_spans = bio_spans(gold_tags), bio_spans(predicted_tags)
+    for *_, value in gold_spans & predicted_spans:
+        counts[value][0] += 1
+    for *_, value in predicted_spans - gold_spans:
+        counts[value][1] += 1
+    for *_, value in gold_spans - predicted_spans:
+        counts[value][2] += 1
+    return counts
 
 
 def token_scores(
@@ -162,19 +191,25 @@ def token_scores(
     A word is a true positive when gold and prediction give it the same value. Words that
     are ``O`` on both sides are not counted, so the score is not inflated by them.
     """
+    return summarize_counts(
+        add_counts(token_example_counts(g, p) for g, p in zip(gold, predicted, strict=True))
+    )
+
+
+def token_example_counts(gold_tags: Sequence[str], predicted_tags: Sequence[str]) -> dict:
+    """One sentence's token-level ``{value: [tp, fp, fn]}``."""
     counts = {value: [0, 0, 0] for value in VALUES}
-    for gold_tags, predicted_tags in zip(gold, predicted, strict=True):
-        for gold_tag, predicted_tag in zip(gold_tags, predicted_tags, strict=True):
-            g = gold_tag[2:] if gold_tag != "O" else None
-            p = predicted_tag[2:] if predicted_tag != "O" else None
-            if g is not None and g == p:
-                counts[g][0] += 1
-                continue
-            if p is not None:
-                counts[p][1] += 1
-            if g is not None:
-                counts[g][2] += 1
-    return _summarize(counts)
+    for gold_tag, predicted_tag in zip(gold_tags, predicted_tags, strict=True):
+        g = gold_tag[2:] if gold_tag != "O" else None
+        p = predicted_tag[2:] if predicted_tag != "O" else None
+        if g is not None and g == p:
+            counts[g][0] += 1
+            continue
+        if p is not None:
+            counts[p][1] += 1
+        if g is not None:
+            counts[g][2] += 1
+    return counts
 
 
 def overlap_span_scores(
@@ -186,30 +221,36 @@ def overlap_span_scores(
     Spans are paired one-to-one, largest overlap first, so one long prediction that
     covers two gold spans counts once.
     """
+    return summarize_counts(
+        add_counts(overlap_example_counts(g, p) for g, p in zip(gold, predicted, strict=True))
+    )
+
+
+def overlap_example_counts(gold_tags: Sequence[str], predicted_tags: Sequence[str]) -> dict:
+    """One sentence's overlap-match ``{value: [tp, fp, fn]}``."""
     counts = {value: [0, 0, 0] for value in VALUES}
-    for gold_tags, predicted_tags in zip(gold, predicted, strict=True):
-        gold_spans, predicted_spans = bio_spans(gold_tags), bio_spans(predicted_tags)
-        pairs = sorted(
-            (
-                (min(g[1], p[1]) - max(g[0], p[0]), g, p)
-                for g in gold_spans
-                for p in predicted_spans
-                if g[2] == p[2] and min(g[1], p[1]) > max(g[0], p[0])
-            ),
-            key=lambda pair: (-pair[0], pair[1], pair[2]),
-        )
-        matched_gold, matched_predicted = set(), set()
-        for _, g, p in pairs:
-            if g in matched_gold or p in matched_predicted:
-                continue
-            matched_gold.add(g)
-            matched_predicted.add(p)
-            counts[g[2]][0] += 1
-        for *_, value in predicted_spans - matched_predicted:
-            counts[value][1] += 1
-        for *_, value in gold_spans - matched_gold:
-            counts[value][2] += 1
-    return _summarize(counts)
+    gold_spans, predicted_spans = bio_spans(gold_tags), bio_spans(predicted_tags)
+    pairs = sorted(
+        (
+            (min(g[1], p[1]) - max(g[0], p[0]), g, p)
+            for g in gold_spans
+            for p in predicted_spans
+            if g[2] == p[2] and min(g[1], p[1]) > max(g[0], p[0])
+        ),
+        key=lambda pair: (-pair[0], pair[1], pair[2]),
+    )
+    matched_gold, matched_predicted = set(), set()
+    for _, g, p in pairs:
+        if g in matched_gold or p in matched_predicted:
+            continue
+        matched_gold.add(g)
+        matched_predicted.add(p)
+        counts[g[2]][0] += 1
+    for *_, value in predicted_spans - matched_predicted:
+        counts[value][1] += 1
+    for *_, value in gold_spans - matched_gold:
+        counts[value][2] += 1
+    return counts
 
 
 def t2_all_scores(gold: Sequence[Sequence[str]], predicted: Sequence[Sequence[str]]) -> dict:

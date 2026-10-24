@@ -3,6 +3,7 @@
     python -m heva.baselines inspect            # load data and show the split, no training
     python -m heva.baselines t1 [options]       # sentence-level value classification
     python -m heva.baselines t2 [options]       # value span extraction (BIO)
+    python -m heva.baselines significance RUN   # confidence intervals and paired tests
 """
 
 from __future__ import annotations
@@ -32,6 +33,16 @@ def build_parser() -> argparse.ArgumentParser:
     common.add_argument("--seed", type=int, default=13, help="Seed for the split and training.")
 
     commands.add_parser("inspect", parents=[common], help="Load both datasets and print the split.")
+
+    significance = commands.add_parser(
+        "significance",
+        help="Bootstrap confidence intervals and paired tests for saved runs.",
+    )
+    significance.add_argument("run_dirs", nargs="+", type=Path,
+                              help="Run folders containing test_predictions.jsonl.")
+    significance.add_argument("--resamples", type=int, default=1000,
+                              help="Bootstrap resamples. Default: 1000")
+    significance.add_argument("--seed", type=int, default=13, help="Seed for resampling.")
 
     for task, help_text in (("t1", "Sentence-level value classification."),
                             ("t2", "Value span extraction with BIO tags.")):
@@ -66,11 +77,42 @@ def _inspect(data_dir: Path, seed: int) -> None:
             print(f"split: {error}")
 
 
+def _significance(run_dirs: list[Path], resamples: int, seed: int) -> int:
+    from .significance import analyse_run
+
+    for run_dir in run_dirs:
+        try:
+            result = analyse_run(run_dir, resamples, seed)
+        except (OSError, ValueError) as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(f"== {run_dir} ({result['task'].upper()}, {result['test_examples']} test examples)")
+        for rule, metrics in result["rules"].items():
+            for metric, scores in metrics.items():
+                if "f1/" in metric.replace("/micro_f1", "").replace("/macro_f1", ""):
+                    continue
+                low, high = scores["ci95"]
+                print(f"  {rule:<12} {metric:<18} {scores['value']:.3f}  [{low:.3f}, {high:.3f}]")
+        if "comparison" in result:
+            print(f"  paired test, {result['comparison']['rules']}:")
+            for metric, test in result["comparison"]["tests"].items():
+                if "f1/" in metric.replace("/micro_f1", "").replace("/macro_f1", ""):
+                    continue
+                print(f"    {metric:<18} difference {test['difference']:+.3f}  "
+                      f"p={test['p_value']:.3f}  p_holm={test['p_holm']:.3f}")
+        if "note" in result:
+            print(f"  note: {result['note']}")
+        print(f"  saved {run_dir / 'significance.json'}")
+    return 0
+
+
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "inspect":
         _inspect(args.data_dir, args.seed)
         return 0
+    if args.command == "significance":
+        return _significance(args.run_dirs, args.resamples, args.seed)
 
     loader = load_t1_dataset if args.command == "t1" else load_t2_dataset
     examples, report = loader(args.data_dir)
