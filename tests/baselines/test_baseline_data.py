@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import csv
-import json
-import shutil
 from pathlib import Path
 
 import pytest
@@ -19,8 +17,12 @@ from heva.baselines.corpus import (
 from heva.baselines.labels import BIO_TAGS, VALUES, encode_values, normalize_value
 from heva.baselines.metrics import bio_spans, span_scores, tune_thresholds
 from heva.baselines.splits import iterative_stratification, split_examples
-
-DUMMY_PACKAGE = Path(__file__).parents[2] / "examples/dummy-data-package"
+from tests.baselines.package_fixture import (
+    PACKAGE_RECORDS,
+    package_records,
+    write_package_csv,
+    write_package_json,
+)
 
 ATLASTI_HEADER = "ID;Quotation Name;Document;Document Groups;Quotation Content;Comment;Codes;Reference"
 
@@ -39,38 +41,40 @@ def test_labels_cover_eight_values_and_seventeen_bio_tags() -> None:
 
 
 def test_heva_package_feeds_both_tasks(tmp_path: Path) -> None:
-    shutil.copytree(DUMMY_PACKAGE, tmp_path / "heva" / "release-1")
+    write_package_json(tmp_path / "heva" / "release-1")
+    first = package_records()[0]
 
     t1, _ = load_t1_dataset(tmp_path)
     t2, report = load_t2_dataset(tmp_path)
 
-    assert len(t1) == len(t2) == 92
+    assert len(t1) == len(t2) == PACKAGE_RECORDS
     assert report.files[0].endswith("heva-annotations.json")
-    assert t1[0].values == ("historic", "political")
-    assert t2[0].tags[13:17] == ("B-political", "I-political", "I-political", "I-political")
+    assert [set(example.values) for example in t1 if example.text == first["sentence"]] == [
+        set(first["values"])
+    ]
+    assert {example.tags for example in t2 if example.tokens == tuple(first["tokens"])} == {
+        tuple(first["ner_tags"])
+    }
 
 
 def test_heva_csv_is_used_only_without_json(tmp_path: Path) -> None:
     package = tmp_path / "heva" / "csv-only"
-    package.mkdir(parents=True)
-    shutil.copy(DUMMY_PACKAGE / "heva-annotations.csv", package)
+    write_package_csv(package)
 
     t2, report = load_t2_dataset(tmp_path)
 
     assert report.files == [str(package / "heva-annotations.csv")]
-    assert len(t2) == 92
+    assert len(t2) == PACKAGE_RECORDS
 
 
 def test_heva_records_with_misaligned_tags_are_skipped(tmp_path: Path) -> None:
-    package = json.loads((DUMMY_PACKAGE / "heva-annotations.json").read_text(encoding="utf-8"))
-    package["documents"][0]["records"][0]["ner_tags"].pop()
-    target = tmp_path / "heva" / "broken"
-    target.mkdir(parents=True)
-    (target / "heva-annotations.json").write_text(json.dumps(package), encoding="utf-8")
+    records = package_records()
+    records[0]["ner_tags"].pop()
+    write_package_json(tmp_path / "heva" / "broken", records)
 
     t2, report = load_t2_dataset(tmp_path)
 
-    assert len(t2) == 91
+    assert len(t2) == PACKAGE_RECORDS - 1
     assert report.skipped == {"tokens_tags_length_mismatch": 1}
 
 
@@ -142,7 +146,7 @@ def test_iterative_stratification_is_seeded_and_keeps_rare_labels_in_each_split(
 
 
 def test_split_refuses_too_few_examples(tmp_path: Path) -> None:
-    shutil.copytree(DUMMY_PACKAGE, tmp_path / "heva" / "p")
+    write_package_json(tmp_path / "heva" / "p")
     t2, _ = load_t2_dataset(tmp_path)
 
     with pytest.raises(ValueError, match="too few"):
@@ -262,8 +266,8 @@ def test_structured_xlsx_is_read_from_the_matching_sheet(tmp_path: Path) -> None
 
 
 def test_t1_combines_structured_spreadsheets_with_packages(tmp_path: Path) -> None:
-    shutil.copytree(DUMMY_PACKAGE, tmp_path / "heva" / "release-1")
-    shutil.copytree(DUMMY_PACKAGE, tmp_path / "heva-only" / "heva" / "release-1")
+    write_package_json(tmp_path / "heva" / "release-1")
+    write_package_json(tmp_path / "heva-only" / "heva" / "release-1")
     (tmp_path / "structured").mkdir()
     write_structured_csv(tmp_path / "structured" / "combined.csv", [
         structured_row("1_E_2024_Y", "Posts", "the city of windcatchers", {8: 1}),

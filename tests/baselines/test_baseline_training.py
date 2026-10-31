@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
 
 import pytest
@@ -13,17 +12,17 @@ transformers = pytest.importorskip("transformers")
 
 from heva.baselines.cli import main  # noqa: E402
 from heva.baselines.labels import BIO_TAGS, VALUES  # noqa: E402
-
-DUMMY_PACKAGE = Path(__file__).parents[2] / "examples/dummy-data-package"
-
+from tests.baselines.package_fixture import (  # noqa: E402
+    PACKAGE_RECORDS,
+    package_records,
+    write_package_json,
+)
 
 @pytest.fixture(scope="module")
 def tiny_bert(tmp_path_factory) -> Path:
-    """A 2-layer BERT whose vocabulary is the dummy package's own tokens."""
+    """A 2-layer BERT whose vocabulary is the test package's own tokens."""
     directory = tmp_path_factory.mktemp("tiny-bert")
-    package = json.loads((DUMMY_PACKAGE / "heva-annotations.json").read_text(encoding="utf-8"))
-    words = sorted({token for document in package["documents"]
-                    for record in document["records"] for token in record["tokens"]})
+    words = sorted({token for record in package_records() for token in record["tokens"]})
     vocab = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]", *words]
     (directory / "vocab.txt").write_text("\n".join(vocab) + "\n", encoding="utf-8")
     tokenizer = transformers.BertTokenizerFast(
@@ -40,7 +39,7 @@ def tiny_bert(tmp_path_factory) -> Path:
 
 @pytest.fixture()
 def data_dir(tmp_path: Path) -> Path:
-    shutil.copytree(DUMMY_PACKAGE, tmp_path / "data" / "heva" / "release-1")
+    write_package_json(tmp_path / "data" / "heva" / "release-1")
     return tmp_path / "data"
 
 
@@ -65,7 +64,7 @@ def test_baseline_run_writes_metrics_thresholds_and_predictions(
     assert [row["epoch"] for row in metrics["history"]] == [1, 2]
     assert set(metrics["test_tuned"]["per_class"]) == set(VALUES)
     assert set(thresholds) == set(VALUES)
-    assert sum(len(ids) for ids in split.values()) == 92
+    assert sum(len(ids) for ids in split.values()) == PACKAGE_RECORDS
     assert len(predictions) == len(split["test"])
     if task == "t2":
         first = json.loads(predictions[0])
