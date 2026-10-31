@@ -54,7 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
                          help="Maximum epochs; early stopping usually ends sooner. Default: 20")
         sub.add_argument("--patience", type=int, default=3,
                          help="Stop after this many epochs without validation improvement. Default: 3")
-        sub.add_argument("--batch-size", type=int, default=16)
+        sub.add_argument("--batch-size", type=int, default=8)
         sub.add_argument("--learning-rate", type=float, default=2e-5)
         sub.add_argument("--max-length", type=int, default=512,
                          help="Subword tokens per text, capped at the model's limit (512 for mBERT).")

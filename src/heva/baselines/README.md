@@ -252,7 +252,7 @@ saved `predicted_argmax` get confidence intervals for the tuned rule only.
 | `--model` | `bert-base-multilingual-cased` | any Hugging Face name or local path |
 | `--epochs` | 20 | maximum; early stopping usually ends sooner |
 | `--patience` | 3 | |
-| `--batch-size` | 16 | |
+| `--batch-size` | 8 | |
 | `--learning-rate` | 2e-5 | |
 | `--max-length` | 512 | capped at the model's limit |
 | `--device` | `auto` | CUDA, then Apple MPS, then CPU |

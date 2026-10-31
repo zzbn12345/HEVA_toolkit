@@ -22,7 +22,7 @@ class TrainingConfig:
     model_name: str = "bert-base-multilingual-cased"
     epochs: int = 20  # upper bound; early stopping usually ends training sooner
     patience: int = 3  # stop after this many epochs without a validation improvement
-    batch_size: int = 16
+    batch_size: int = 8
     learning_rate: float = 2e-5
     weight_decay: float = 0.01
     warmup_ratio: float = 0.1
