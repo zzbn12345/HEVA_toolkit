@@ -209,7 +209,9 @@ Each run creates `runs/baselines/<t1|t2>/<YYYYMMDD-HHMMSS>/`:
 | `thresholds.json` | Tuned threshold per value |
 | `metrics.json` | Per-epoch history, `best_epoch`, `epochs_trained`, and the scores below |
 | `test_predictions.jsonl` | One line per test example: gold and predicted values (T1, with probabilities) or tags (T2: `predicted` with tuned thresholds and `predicted_argmax`) |
-| `significance.json` | Written by `significance`: confidence intervals and paired tests (see below) |
+| `validation_predictions.jsonl` | The same for the validation examples |
+| `significance.json` | Written by `significance`: confidence intervals and paired tests on test (see below) |
+| `significance_validation.json` | Written by `significance --split validation`: confidence intervals on validation |
 | `model/` | Fine-tuned model and tokenizer, only with `--save-model` (about 700 MB) |
 
 Scores in `metrics.json`:
@@ -233,7 +235,9 @@ Scores in `metrics.json`:
 `python -m heva.baselines significance <run folder> [...]` works from a run's
 `test_predictions.jsonl`, so no model or GPU is needed. It resamples the test examples with
 replacement (`--resamples`, default 1000; `--seed`, default 13) and recomputes every metric
-on each resample:
+on each resample. With `--split validation` it reads `validation_predictions.jsonl` instead
+and writes `significance_validation.json` with confidence intervals only, since the tuned
+thresholds were fitted on the validation set:
 
 - **95% confidence intervals** (percentile bootstrap) for every metric and decision rule.
 - **Paired bootstrap test** (Berg-Kirkpatrick, Burkett & Klein, 2012) of tuned thresholds

@@ -1,11 +1,13 @@
 """Bootstrap confidence intervals and paired significance tests for saved baseline runs.
 
-Works from a run folder's ``test_predictions.jsonl``, so no model is needed. Test texts
-are resampled with replacement (Efron & Tibshirani, 1993); every metric is recomputed on
-each resample, which gives 95% percentile confidence intervals. The two decision rules
-of a run (T1: threshold 0.5 vs. tuned thresholds; T2: most probable tag vs. tuned
-thresholds) are compared with the paired bootstrap test (Berg-Kirkpatrick, Burkett &
-Klein, 2012), and p-values within a family of tests are adjusted with Holm (1979).
+Works from a run folder's ``test_predictions.jsonl`` (or ``validation_predictions.jsonl``),
+so no model is needed. Texts are resampled with replacement (Efron & Tibshirani, 1993);
+every metric is recomputed on each resample, which gives 95% percentile confidence
+intervals. On test, the two decision rules of a run (T1: threshold 0.5 vs. tuned
+thresholds; T2: most probable tag vs. tuned thresholds) are compared with the paired
+bootstrap test (Berg-Kirkpatrick, Burkett & Klein, 2012), and p-values within a family of
+tests are adjusted with Holm (1979). On validation, where the thresholds were tuned, only
+confidence intervals are computed.
 """
 
 from __future__ import annotations
@@ -139,7 +141,7 @@ def bootstrap(
                 samples[name][metric].append(value)
 
     result = {
-        "test_examples": n,
+        "examples": n,
         "resamples": resamples,
         "seed": seed,
         "rules": {
@@ -179,27 +181,43 @@ def bootstrap(
     return result
 
 
-def analyse_run(run_dir: Path, resamples: int = DEFAULT_RESAMPLES, seed: int = 13) -> dict:
-    """Bootstrap a saved T1 or T2 run and write ``significance.json`` into it."""
+SPLITS = ("test", "validation")
+
+
+def significance_path(run_dir: Path, split: str = "test") -> Path:
+    return run_dir / ("significance.json" if split == "test" else f"significance_{split}.json")
+
+
+def analyse_run(
+    run_dir: Path, resamples: int = DEFAULT_RESAMPLES, seed: int = 13, split: str = "test"
+) -> dict:
+    """Bootstrap one split of a saved T1 or T2 run and write the result into the run.
+
+    The test split is written to ``significance.json`` and includes the paired test of the
+    two decision rules; the validation split, on which the thresholds were tuned, gets
+    confidence intervals only, in ``significance_validation.json``.
+    """
+    if split not in SPLITS:
+        raise ValueError(f"Unknown split {split!r}; use one of {', '.join(SPLITS)}.")
+    path = run_dir / f"{split}_predictions.jsonl"
+    if not path.exists():
+        raise ValueError(f"{run_dir}: {path.name} not found; re-run the task to save it.")
     predictions = [
-        json.loads(line)
-        for line in (run_dir / "test_predictions.jsonl").read_text(encoding="utf-8").splitlines()
-        if line.strip()
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
     if not predictions:
-        raise ValueError(f"{run_dir}: test_predictions.jsonl is empty.")
+        raise ValueError(f"{run_dir}: {path.name} is empty.")
     if "probabilities" in predictions[0]:
-        task, rules = "t1", _t1_rows(predictions)
-        result = bootstrap(rules, _t1_metrics, ("tuned", "default_0.5"), resamples, seed)
+        task, rules, metric_fn, compare = "t1", _t1_rows(predictions), _t1_metrics, ("tuned", "default_0.5")
     else:
-        task, rules = "t2", _t2_rows(predictions)
-        result = bootstrap(rules, _t2_metrics, ("tuned", "argmax"), resamples, seed)
-        if "argmax" not in rules:
-            result["note"] = (
-                "This run saved only tuned predictions; re-run T2 to compare decision rules."
-            )
-    result = {"task": task, **result}
-    (run_dir / "significance.json").write_text(
+        task, rules, metric_fn, compare = "t2", _t2_rows(predictions), _t2_metrics, ("tuned", "argmax")
+    result = bootstrap(rules, metric_fn, compare if split == "test" else None, resamples, seed)
+    if task == "t2" and "argmax" not in rules:
+        result["note"] = (
+            "This run saved only tuned predictions; re-run T2 to compare decision rules."
+        )
+    result = {"task": task, "split": split, **result}
+    significance_path(run_dir, split).write_text(
         json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     return result

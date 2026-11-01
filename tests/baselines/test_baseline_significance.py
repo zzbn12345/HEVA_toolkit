@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from heva.baselines.labels import VALUES
 from heva.baselines.significance import analyse_run, holm
 
@@ -52,6 +54,29 @@ def test_a_clearly_better_rule_is_significant(tmp_path: Path) -> None:
     assert test["difference"] == 1.0
     assert test["p_value"] < 0.01
     assert "p_holm" in result["comparison"]["tests"]["f1/social"]
+
+
+def test_validation_split_gets_intervals_without_paired_tests(tmp_path: Path) -> None:
+    rows = [t1_row(["social"], ["social"], []) for _ in range(40)]
+    (tmp_path / "validation_predictions.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8"
+    )
+
+    result = analyse_run(tmp_path, resamples=100, split="validation")
+
+    assert result["split"] == "validation"
+    assert result["examples"] == 40
+    assert result["rules"]["default_0.5"]["micro_f1"]["value"] == 0.0
+    assert "comparison" not in result
+    assert (tmp_path / "significance_validation.json").exists()
+    assert not (tmp_path / "significance.json").exists()
+
+
+def test_runs_without_validation_predictions_ask_for_a_rerun(tmp_path: Path) -> None:
+    write_predictions(tmp_path, [t1_row(["social"], ["social"], ["social"])] * 5)
+
+    with pytest.raises(ValueError, match="re-run"):
+        analyse_run(tmp_path, split="validation")
 
 
 def test_t2_runs_without_argmax_predictions_get_intervals_only(tmp_path: Path) -> None:
