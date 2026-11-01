@@ -93,7 +93,7 @@ flowchart TD
         O4["class_weights.json"]
         O5["thresholds.json"]
         O6["metrics.json: history, best epoch, scores"]
-        O7["test_predictions.jsonl"]
+        O7["validation_ and test_predictions.jsonl"]
         O8["model/ (only with --save-model)"]
     end
 
@@ -216,7 +216,11 @@ Scores in `metrics.json`:
 
 | Key | T1 | T2 |
 |---|---|---|
+| `validation_default_0.5` | validation, every threshold 0.5 | — |
+| `validation_argmax` | — | validation, most probable tag per word |
 | `validation_tuned` | validation, tuned thresholds (optimistic: tuned on this data) | same |
+| `validation_argmax_overlap` / `validation_argmax_token` | — | overlap span F1 / token F1 on validation |
+| `validation_*_by_collection` | the untuned validation scores, per collection | exact, overlap and token scores per collection |
 | `test_default_0.5` | test, every threshold 0.5 | — |
 | `test_argmax` | — | test, most probable tag per word |
 | `test_tuned` | test, tuned thresholds (main result) | same (exact-match span F1) |

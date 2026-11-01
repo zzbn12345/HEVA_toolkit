@@ -216,14 +216,22 @@ def run_t2(
     test_gold = [list(example.tags) for example in test]
     test_predicted = decode_with_thresholds(test_probabilities, thresholds)
     test_argmax = decode_argmax(test_probabilities)
+    validation_predicted = decode_with_thresholds(validation_probabilities, thresholds)
+    validation_argmax = decode_argmax(validation_probabilities)
     truncated_words = sum(p is None for sentence in test_probabilities for p in sentence)
 
     metrics = {
         "best_epoch": stopper.best_epoch,
         "epochs_trained": len(history),
         "history": history,
-        "validation_tuned": span_scores(
-            validation_gold, decode_with_thresholds(validation_probabilities, thresholds)
+        # The tuned thresholds were fitted on validation, so only the most probable tag
+        # gives an unbiased validation score.
+        "validation_argmax": span_scores(validation_gold, validation_argmax),
+        "validation_tuned": span_scores(validation_gold, validation_predicted),
+        "validation_argmax_overlap": overlap_span_scores(validation_gold, validation_argmax),
+        "validation_argmax_token": token_scores(validation_gold, validation_argmax),
+        "validation_argmax_by_collection": scores_by_collection(
+            validation, validation_gold, validation_argmax, t2_all_scores
         ),
         "test_argmax": span_scores(test_gold, test_argmax),
         "test_tuned": span_scores(test_gold, test_predicted),
@@ -248,15 +256,19 @@ def run_t2(
     write_json(run_dir / "thresholds.json", thresholds)
     write_json(run_dir / "class_weights.json", dict(zip(BIO_TAGS, weights)))
     write_json(run_dir / "metrics.json", metrics)
-    write_jsonl(
-        run_dir / "test_predictions.jsonl",
-        (
-            # Both decision rules are kept so they can be compared on the same sentences.
-            {"id": example.example_id, "collection": example.collection, "tokens": list(example.tokens),
-             "gold": gold, "predicted": predicted, "predicted_argmax": argmax}
-            for example, gold, predicted, argmax in zip(test, test_gold, test_predicted, test_argmax)
-        ),
-    )
+    for name, part, gold_rows, predicted_rows, argmax_rows in (
+        ("validation", validation, validation_gold, validation_predicted, validation_argmax),
+        ("test", test, test_gold, test_predicted, test_argmax),
+    ):
+        write_jsonl(
+            run_dir / f"{name}_predictions.jsonl",
+            (
+                # Both decision rules are kept so they can be compared on the same sentences.
+                {"id": example.example_id, "collection": example.collection, "tokens": list(example.tokens),
+                 "gold": gold, "predicted": predicted, "predicted_argmax": argmax}
+                for example, gold, predicted, argmax in zip(part, gold_rows, predicted_rows, argmax_rows)
+            ),
+        )
     if save_model:
         model.save_pretrained(run_dir / "model")
         tokenizer.save_pretrained(run_dir / "model")

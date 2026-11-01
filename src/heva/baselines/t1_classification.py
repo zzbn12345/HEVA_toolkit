@@ -127,13 +127,19 @@ def run_t1(
     test_gold = [encode_values(example.values) for example in test]
     test_predicted = apply_thresholds(test_probabilities, thresholds)
     test_default = apply_thresholds(test_probabilities, [0.5] * len(VALUES))
+    validation_predicted = apply_thresholds(validation_probabilities, thresholds)
+    validation_default = apply_thresholds(validation_probabilities, [0.5] * len(VALUES))
 
     metrics = {
         "best_epoch": stopper.best_epoch,
         "epochs_trained": len(history),
         "history": history,
-        "validation_tuned": multilabel_scores(
-            validation_gold, apply_thresholds(validation_probabilities, thresholds)
+        # The tuned thresholds were fitted on validation, so only the 0.5 rule gives an
+        # unbiased validation score.
+        "validation_default_0.5": multilabel_scores(validation_gold, validation_default),
+        "validation_tuned": multilabel_scores(validation_gold, validation_predicted),
+        "validation_default_0.5_by_collection": scores_by_collection(
+            validation, validation_gold, validation_default, multilabel_scores
         ),
         "test_default_0.5": multilabel_scores(test_gold, test_default),
         "test_tuned": multilabel_scores(test_gold, test_predicted),
@@ -161,21 +167,25 @@ def run_t1(
     write_json(run_dir / "thresholds.json", dict(zip(VALUES, thresholds)))
     write_json(run_dir / "class_weights.json", dict(zip(VALUES, pos_weight)))
     write_json(run_dir / "metrics.json", metrics)
-    write_jsonl(
-        run_dir / "test_predictions.jsonl",
-        (
-            {
-                "id": example.example_id,
-                "source": example.source,
-                "collection": example.collection,
-                "text": example.text,
-                "gold": list(example.values),
-                "predicted": [value for value, flag in zip(VALUES, predicted) if flag],
-                "probabilities": dict(zip(VALUES, (round(p, 4) for p in probabilities))),
-            }
-            for example, predicted, probabilities in zip(test, test_predicted, test_probabilities)
-        ),
-    )
+    for name, part, predicted_rows, probability_rows in (
+        ("validation", validation, validation_predicted, validation_probabilities),
+        ("test", test, test_predicted, test_probabilities),
+    ):
+        write_jsonl(
+            run_dir / f"{name}_predictions.jsonl",
+            (
+                {
+                    "id": example.example_id,
+                    "source": example.source,
+                    "collection": example.collection,
+                    "text": example.text,
+                    "gold": list(example.values),
+                    "predicted": [value for value, flag in zip(VALUES, predicted) if flag],
+                    "probabilities": dict(zip(VALUES, (round(p, 4) for p in probabilities))),
+                }
+                for example, predicted, probabilities in zip(part, predicted_rows, probability_rows)
+            ),
+        )
     if save_model:
         model.save_pretrained(run_dir / "model")
         tokenizer.save_pretrained(run_dir / "model")

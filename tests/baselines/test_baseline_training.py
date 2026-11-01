@@ -66,6 +66,11 @@ def test_baseline_run_writes_metrics_thresholds_and_predictions(
     assert set(thresholds) == set(VALUES)
     assert sum(len(ids) for ids in split.values()) == PACKAGE_RECORDS
     assert len(predictions) == len(split["test"])
+    validation_predictions = (run_dir / "validation_predictions.jsonl").read_text().splitlines()
+    assert len(validation_predictions) == len(split["validation"])
+    untuned = "validation_default_0.5" if task == "t1" else "validation_argmax"
+    assert set(metrics[untuned]["per_class"]) == set(VALUES)
+    assert f"{untuned}_by_collection" in metrics
     if task == "t2":
         first = json.loads(predictions[0])
         assert len(first["predicted"]) == len(first["tokens"])
