@@ -1,0 +1,72 @@
+{
+  "load_report": {
+    "files": [
+      "data/baselines/heva/3_P_2011_AS/heva-annotations.json",
+      "data/baselines/heva/4_P_2011_RB_RF/heva-annotations.json",
+      "data/baselines/heva/5_P_2011_BM_YV/heva-annotations.json"
+    ],
+    "skipped": {},
+    "merged_duplicates": 56,
+    "conflicting_duplicates": 28,
+    "unknown_value_codes": {}
+  },
+  "split": {
+    "train": {
+      "examples": 680,
+      "without_values": 0,
+      "collections": {
+        "3_P_2011_AS": 501,
+        "4_P_2011_RB_RF": 20,
+        "5_P_2011_BM_YV": 159
+      },
+      "values": {
+        "economic": 206,
+        "social": 185,
+        "political": 135,
+        "historic": 128,
+        "age": 62,
+        "aesthetical": 58,
+        "ecological": 39,
+        "scientific": 20
+      }
+    },
+    "validation": {
+      "examples": 92,
+      "without_values": 0,
+      "collections": {
+        "3_P_2011_AS": 66,
+        "4_P_2011_RB_RF": 2,
+        "5_P_2011_BM_YV": 24
+      },
+      "values": {
+        "economic": 29,
+        "social": 26,
+        "historic": 19,
+        "political": 18,
+        "aesthetical": 9,
+        "age": 9,
+        "ecological": 6,
+        "scientific": 2
+      }
+    },
+    "test": {
+      "examples": 189,
+      "without_values": 0,
+      "collections": {
+        "3_P_2011_AS": 139,
+        "4_P_2011_RB_RF": 6,
+        "5_P_2011_BM_YV": 44
+      },
+      "values": {
+        "economic": 59,
+        "social": 53,
+        "political": 39,
+        "historic": 37,
+        "aesthetical": 18,
+        "age": 18,
+        "ecological": 11,
+        "scientific": 5
+      }
+    }
+  }
+}
