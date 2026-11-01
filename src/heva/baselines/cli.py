@@ -31,7 +31,10 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Folder with heva/ (Data Packages), structured/ (52-column spreadsheets) "
                              "and atlasti/ (CSV exports). "
                              f"Default: {DEFAULT_DATA_DIR}")
-    common.add_argument("--seed", type=int, default=13, help="Seed for the split and training.")
+    common.add_argument("--seed", type=int, default=13, help="Seed for training (and the split, unless --split-seed is given).")
+    common.add_argument("--split-seed", type=int, default=None,
+                        help="Seed for the train/validation/test split. Default: --seed. "
+                             "Fix it to repeat training with several --seed values on one split.")
 
     commands.add_parser("inspect", parents=[common], help="Load both datasets and print the split.")
 
@@ -112,7 +115,7 @@ def _significance(run_dirs: list[Path], resamples: int, seed: int, split: str) -
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "inspect":
-        _inspect(args.data_dir, args.seed)
+        _inspect(args.data_dir, args.seed if args.split_seed is None else args.split_seed)
         return 0
     if args.command == "significance":
         return _significance(args.run_dirs, args.resamples, args.seed, args.split)
@@ -136,6 +139,7 @@ def main(argv=None) -> int:
         learning_rate=args.learning_rate,
         max_length=args.max_length,
         seed=args.seed,
+        split_seed=args.split_seed,
         device=args.device,
     )
     if args.command == "t1":

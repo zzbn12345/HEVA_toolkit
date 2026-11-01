@@ -64,7 +64,7 @@ def run_t1(
     """Fine-tune, select the best epoch on validation, tune thresholds, score test."""
     set_seed(config.seed)
     device = resolve_device(config.device)
-    parts = split_examples(examples, config.seed)
+    parts = split_examples(examples, config.effective_split_seed)
     train, validation, test = parts["train"], parts["validation"], parts["test"]
 
     tokenizer = AutoTokenizer.from_pretrained(config.model_name)

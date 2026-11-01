@@ -264,7 +264,8 @@ saved `predicted_argmax` get confidence intervals for the tuned rule only.
 | `--learning-rate` | 2e-5 | |
 | `--max-length` | 512 | capped at the model's limit |
 | `--device` | `auto` | CUDA, then Apple MPS, then CPU |
-| `--seed` | 13 | fixes the split and training |
+| `--seed` | 13 | fixes training, and the split unless `--split-seed` is given |
+| `--split-seed` | `--seed` | fixes the split; keep it constant to train several seeds on one split |
 | `--save-model` | off | |
 
 ## Limitations

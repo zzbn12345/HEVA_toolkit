@@ -28,10 +28,17 @@ class TrainingConfig:
     warmup_ratio: float = 0.1
     max_length: int = 512  # BERT's position-embedding limit
     seed: int = 13
+    # Seed of the train/validation/test split; None reuses ``seed``. Fixing it while
+    # varying ``seed`` repeats training on the same split.
+    split_seed: int | None = None
     device: str = "auto"
 
+    @property
+    def effective_split_seed(self) -> int:
+        return self.seed if self.split_seed is None else self.split_seed
+
     def as_dict(self) -> dict:
-        return asdict(self)
+        return {**asdict(self), "split_seed": self.effective_split_seed}
 
 
 class EarlyStopping:

@@ -77,6 +77,24 @@ def test_baseline_run_writes_metrics_thresholds_and_predictions(
         assert set(first["predicted"]) <= set(BIO_TAGS)
 
 
+def test_split_seed_keeps_the_split_across_training_seeds(
+    tiny_bert: Path, data_dir: Path, tmp_path: Path
+) -> None:
+    splits = []
+    for seed in (13, 14):
+        output = tmp_path / f"runs-{seed}"
+        assert main([
+            "t1", "--data-dir", str(data_dir), "--output-dir", str(output), "--model", str(tiny_bert),
+            "--epochs", "1", "--device", "cpu", "--seed", str(seed), "--split-seed", "13",
+        ]) == 0
+        (run_dir,) = (output / "t1").iterdir()
+        config = json.loads((run_dir / "config.json").read_text())
+        assert (config["seed"], config["split_seed"]) == (seed, 13)
+        splits.append(json.loads((run_dir / "split.json").read_text()))
+
+    assert splits[0] == splits[1]
+
+
 def test_training_reports_missing_data(tmp_path: Path, capsys) -> None:
     assert main(["t1", "--data-dir", str(tmp_path / "empty")]) == 1
     assert "No T1 examples found" in capsys.readouterr().err
