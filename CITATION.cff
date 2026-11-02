@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use HEVA, please cite it as below."
+title: "HEVA: A Dataset, Toolkit and Benchmark for Heritage Value Extraction"
+type: software
+license: MIT
+repository-code: "https://github.com/zzbn12345/HEVA_toolkit"
+authors:
+  - family-names: Andreas
+    given-names: Chrysovalantis Konstantinos
+    orcid: "https://orcid.org/0009-0009-9472-3106"
+  - family-names: Zhou
+    given-names: Yan
+    orcid: "https://orcid.org/0009-0008-6923-5429"
+  - family-names: Urra Llanusa
+    given-names: Jose Carlos
+    orcid: "https://orcid.org/0000-0002-9334-3998"
+  - family-names: Yin
+    given-names: Jingze
+    orcid: "https://orcid.org/0009-0001-1252-0922"
+  - family-names: Bai
+    given-names: Nan
+    orcid: "https://orcid.org/0000-0001-7637-3629"

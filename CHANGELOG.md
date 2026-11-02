@@ -10,6 +10,8 @@
 
 ### Changed
 
+- Added a landing page for the HEVA resource. The app's guide moved to `app/README.md`, and the
+  benchmark's description and results to `benchmark/`. Baseline runs now go to `benchmark/results/`.
 - Added the managed PDF import foundation for researchers who want a portable project copy
   instead of an external source binding. Imports verify copied bytes, reuse identical content,
   avoid filename overwrites, and roll back when the registry cannot be updated. A PDF-only

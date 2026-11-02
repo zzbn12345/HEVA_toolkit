@@ -97,5 +97,5 @@ Reviewers check that the contribution:
 - includes or updates tests when behaviour changes; and
 - is explained clearly enough for a non-programmer project owner to follow.
 
-For setup and everyday use of HEVA, see the [README](README.md) and the
+For setup and everyday use of HEVA, see the [app README](app/README.md) and the
 [tutorial](docs/TUTORIAL.md).
