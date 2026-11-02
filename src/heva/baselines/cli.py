@@ -18,7 +18,7 @@ from .corpus import load_t1_dataset, load_t2_dataset
 from .splits import split_examples, split_summary
 
 DEFAULT_DATA_DIR = Path("data/baselines")
-DEFAULT_OUTPUT_DIR = Path("runs/baselines")
+DEFAULT_OUTPUT_DIR = Path("benchmark/results")
 
 
 def build_parser() -> argparse.ArgumentParser:

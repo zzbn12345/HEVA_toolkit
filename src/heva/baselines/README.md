@@ -16,12 +16,12 @@ pip install -e ".[baselines]"          # torch + transformers
 python -m heva.baselines inspect       # load the data and show the split; no torch needed
 python -m heva.baselines t1            # train and evaluate T1
 python -m heva.baselines t2            # train and evaluate T2
-python -m heva.baselines significance runs/baselines/t1/<run>   # confidence intervals and tests
+python -m heva.baselines significance benchmark/results/t1/<run>   # confidence intervals and tests
 python -m heva.baselines t1 --help     # all options
 ```
 
 Input data goes in `data/baselines/` (see [its README](../../../data/baselines/README.md)).
-Results go to `runs/baselines/`.
+Results go to `benchmark/results/`.
 
 ## Folder structure
 
@@ -86,7 +86,7 @@ flowchart TD
         TH2 --> EV2["Test: exact-match span F1 (main),<br/>overlap span F1, token F1<br/>argmax and tuned thresholds"]
     end
 
-    subgraph OUT["4. Output: runs/baselines/TASK/TIMESTAMP/"]
+    subgraph OUT["4. Output: benchmark/results/TASK/TIMESTAMP/"]
         O1["config.json: settings, device"]
         O2["data.json: load report, split counts"]
         O3["split.json: example ids per partition"]
@@ -198,7 +198,7 @@ predictions are reported as well:
 
 ### 5. Output
 
-Each run creates `runs/baselines/<t1|t2>/<YYYYMMDD-HHMMSS>/`:
+Each run creates `benchmark/results/<t1|t2>/<YYYYMMDD-HHMMSS>/`:
 
 | File | Content |
 |---|---|
@@ -256,7 +256,7 @@ saved `predicted_argmax` get confidence intervals for the tuned rule only.
 | Option | Default | Notes |
 |---|---|---|
 | `--data-dir` | `data/baselines` | contains `heva/`, `structured/` and `atlasti/` |
-| `--output-dir` | `runs/baselines` | |
+| `--output-dir` | `benchmark/results` | |
 | `--model` | `bert-base-multilingual-cased` | any Hugging Face name or local path |
 | `--epochs` | 20 | maximum; early stopping usually ends sooner |
 | `--patience` | 3 | |

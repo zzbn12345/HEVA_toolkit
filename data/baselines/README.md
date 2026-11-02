@@ -38,6 +38,6 @@ python -m heva.baselines t1        # sentence-level value classification
 python -m heva.baselines t2        # value span extraction
 ```
 
-Each run writes `runs/baselines/<task>/<timestamp>/` with `metrics.json`,
+Each run writes `benchmark/results/<task>/<timestamp>/` with `metrics.json`,
 `thresholds.json`, `split.json`, `data.json`, `class_weights.json`, `config.json` and
 `test_predictions.jsonl`.
