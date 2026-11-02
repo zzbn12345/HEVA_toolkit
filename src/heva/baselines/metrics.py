@@ -1,0 +1,283 @@
+"""Evaluation for T1 (multi-label F1) and T2 (exact-match span, overlap span and token F1)."""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from .labels import VALUES
+
+THRESHOLD_GRID = tuple(round(0.05 * step, 2) for step in range(1, 20))
+
+
+def _prf(tp: int, fp: int, fn: int) -> dict[str, float]:
+    precision = tp / (tp + fp) if tp + fp else 0.0
+    recall = tp / (tp + fn) if tp + fn else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    return {"precision": precision, "recall": recall, "f1": f1}
+
+
+def summarize_counts(counts: dict[str, list[int]]) -> dict:
+    """Per-class, micro and macro scores from {class: [tp, fp, fn]}.
+
+    Macro averages only classes present in the gold data; absent classes are listed so
+    a missing value is visible instead of silently scoring 0.
+    """
+    per_class = {
+        name: {**_prf(tp, fp, fn), "support": tp + fn} for name, (tp, fp, fn) in counts.items()
+    }
+    totals = [sum(column) for column in zip(*counts.values())] if counts else [0, 0, 0]
+    present = [name for name, scores in per_class.items() if scores["support"] > 0]
+    macro = (
+        {key: sum(per_class[name][key] for name in present) / len(present)
+         for key in ("precision", "recall", "f1")}
+        if present
+        else {"precision": 0.0, "recall": 0.0, "f1": 0.0}
+    )
+    return {
+        "micro": _prf(*totals),
+        "macro": macro,
+        "per_class": per_class,
+        "classes_without_support": [name for name in counts if name not in present],
+    }
+
+
+# --- T1 -------------------------------------------------------------------------------
+
+
+def multilabel_example_counts(
+    gold_row: Sequence[int], predicted_row: Sequence[int]
+) -> tuple[dict[str, list[int]], int, float]:
+    """One text's ``{value: [tp, fp, fn]}``, wrong value decisions and Jaccard similarity."""
+    counts = {value: [0, 0, 0] for value in VALUES}
+    wrong_decisions = 0
+    for value, g, p in zip(VALUES, gold_row, predicted_row, strict=True):
+        if g and p:
+            counts[value][0] += 1
+        elif p:
+            counts[value][1] += 1
+        elif g:
+            counts[value][2] += 1
+        wrong_decisions += bool(g) != bool(p)
+    union = sum(1 for g, p in zip(gold_row, predicted_row) if g or p)
+    both = sum(1 for g, p in zip(gold_row, predicted_row) if g and p)
+    return counts, wrong_decisions, both / union if union else 1.0
+
+
+def multilabel_scores(gold: Sequence[Sequence[int]], predicted: Sequence[Sequence[int]]) -> dict:
+    """Score 0/1 label vectors in VALUES order.
+
+    Besides F1, reports Hamming loss (share of wrong value decisions) and example-based
+    Jaccard similarity (mean |gold ∩ predicted| / |gold ∪ predicted|; 1.0 when both are
+    empty, since predicting "no value" for a text without values is fully correct).
+    """
+    rows = [multilabel_example_counts(g, p) for g, p in zip(gold, predicted, strict=True)]
+    return summarize_multilabel(rows)
+
+
+def summarize_multilabel(rows: Sequence[tuple[dict[str, list[int]], int, float]]) -> dict:
+    """T1 scores from per-text counts (see ``multilabel_example_counts``)."""
+    n = len(rows)
+    return {
+        **summarize_counts(add_counts(counts for counts, _, _ in rows)),
+        "hamming_loss": sum(wrong for _, wrong, _ in rows) / (n * len(VALUES)) if n else 0.0,
+        "jaccard_samples": sum(jaccard for _, _, jaccard in rows) / n if n else 0.0,
+    }
+
+
+def add_counts(per_example) -> dict[str, list[int]]:
+    """Sum ``{value: [tp, fp, fn]}`` dictionaries."""
+    total = {value: [0, 0, 0] for value in VALUES}
+    for counts in per_example:
+        for value, (tp, fp, fn) in counts.items():
+            row = total[value]
+            row[0] += tp
+            row[1] += fp
+            row[2] += fn
+    return total
+
+
+def apply_thresholds(probabilities: Sequence[Sequence[float]], thresholds: Sequence[float]):
+    return [
+        [1 if p >= t else 0 for p, t in zip(row, thresholds, strict=True)]
+        for row in probabilities
+    ]
+
+
+def tune_thresholds(
+    gold: Sequence[Sequence[int]],
+    probabilities: Sequence[Sequence[float]],
+    grid: Sequence[float] = THRESHOLD_GRID,
+    default: float = 0.5,
+) -> list[float]:
+    """Pick, per class, the threshold maximizing that class's F1 on validation data.
+
+    Classes without validation positives keep ``default``; ties keep the threshold
+    closest to ``default``.
+    """
+    thresholds = []
+    for column in range(len(VALUES)):
+        gold_column = [row[column] for row in gold]
+        if not any(gold_column):
+            thresholds.append(default)
+            continue
+        scores = [column_row[column] for column_row in probabilities]
+        best = max(
+            grid,
+            key=lambda threshold: (
+                _f1_at(gold_column, scores, threshold),
+                -abs(threshold - default),
+            ),
+        )
+        thresholds.append(best)
+    return thresholds
+
+
+def _f1_at(gold: Sequence[int], scores: Sequence[float], threshold: float) -> float:
+    tp = sum(1 for g, s in zip(gold, scores) if g and s >= threshold)
+    fp = sum(1 for g, s in zip(gold, scores) if not g and s >= threshold)
+    fn = sum(1 for g, s in zip(gold, scores) if g and s < threshold)
+    return _prf(tp, fp, fn)["f1"]
+
+
+# --- T2 -------------------------------------------------------------------------------
+
+
+def bio_spans(tags: Sequence[str]) -> set[tuple[int, int, str]]:
+    """Return ``(start, end_exclusive, value)`` spans using conlleval chunking rules.
+
+    An ``I-x`` that does not continue a span of ``x`` starts a new span, so predictions
+    with a missing ``B-`` are still scored rather than dropped.
+    """
+    spans = set()
+    start, current = None, None
+    for index, tag in enumerate([*tags, "O"]):
+        prefix, _, value = tag.partition("-")
+        continues = prefix == "I" and value == current
+        if current is not None and not continues:
+            spans.add((start, index, current))
+            start, current = None, None
+        if prefix in ("B", "I") and not continues:
+            start, current = index, value
+    return spans
+
+
+def span_scores(
+    gold: Sequence[Sequence[str]], predicted: Sequence[Sequence[str]]
+) -> dict:
+    """Exact-match span precision/recall/F1: boundaries and value must both match."""
+    return summarize_counts(
+        add_counts(span_example_counts(g, p) for g, p in zip(gold, predicted, strict=True))
+    )
+
+
+def span_example_counts(gold_tags: Sequence[str], predicted_tags: Sequence[str]) -> dict:
+    """One sentence's exact-match ``{value: [tp, fp, fn]}``."""
+    counts = {value: [0, 0, 0] for value in VALUES}
+    gold_spans, predicted_spans = bio_spans(gold_tags), bio_spans(predicted_tags)
+    for *_, value in gold_spans & predicted_spans:
+        counts[value][0] += 1
+    for *_, value in predicted_spans - gold_spans:
+        counts[value][1] += 1
+    for *_, value in gold_spans - predicted_spans:
+        counts[value][2] += 1
+    return counts
+
+
+def token_scores(
+    gold: Sequence[Sequence[str]], predicted: Sequence[Sequence[str]]
+) -> dict:
+    """Token-level precision/recall/F1 per value, ignoring the B-/I- distinction.
+
+    A word is a true positive when gold and prediction give it the same value. Words that
+    are ``O`` on both sides are not counted, so the score is not inflated by them.
+    """
+    return summarize_counts(
+        add_counts(token_example_counts(g, p) for g, p in zip(gold, predicted, strict=True))
+    )
+
+
+def token_example_counts(gold_tags: Sequence[str], predicted_tags: Sequence[str]) -> dict:
+    """One sentence's token-level ``{value: [tp, fp, fn]}``."""
+    counts = {value: [0, 0, 0] for value in VALUES}
+    for gold_tag, predicted_tag in zip(gold_tags, predicted_tags, strict=True):
+        g = gold_tag[2:] if gold_tag != "O" else None
+        p = predicted_tag[2:] if predicted_tag != "O" else None
+        if g is not None and g == p:
+            counts[g][0] += 1
+            continue
+        if p is not None:
+            counts[p][1] += 1
+        if g is not None:
+            counts[g][2] += 1
+    return counts
+
+
+def overlap_span_scores(
+    gold: Sequence[Sequence[str]], predicted: Sequence[Sequence[str]]
+) -> dict:
+    """Partial-match span precision/recall/F1: a predicted span is correct when it
+    overlaps a gold span of the same value.
+
+    Spans are paired one-to-one, largest overlap first, so one long prediction that
+    covers two gold spans counts once.
+    """
+    return summarize_counts(
+        add_counts(overlap_example_counts(g, p) for g, p in zip(gold, predicted, strict=True))
+    )
+
+
+def overlap_example_counts(gold_tags: Sequence[str], predicted_tags: Sequence[str]) -> dict:
+    """One sentence's overlap-match ``{value: [tp, fp, fn]}``."""
+    counts = {value: [0, 0, 0] for value in VALUES}
+    gold_spans, predicted_spans = bio_spans(gold_tags), bio_spans(predicted_tags)
+    pairs = sorted(
+        (
+            (min(g[1], p[1]) - max(g[0], p[0]), g, p)
+            for g in gold_spans
+            for p in predicted_spans
+            if g[2] == p[2] and min(g[1], p[1]) > max(g[0], p[0])
+        ),
+        key=lambda pair: (-pair[0], pair[1], pair[2]),
+    )
+    matched_gold, matched_predicted = set(), set()
+    for _, g, p in pairs:
+        if g in matched_gold or p in matched_predicted:
+            continue
+        matched_gold.add(g)
+        matched_predicted.add(p)
+        counts[g[2]][0] += 1
+    for *_, value in predicted_spans - matched_predicted:
+        counts[value][1] += 1
+    for *_, value in gold_spans - matched_gold:
+        counts[value][2] += 1
+    return counts
+
+
+def t2_all_scores(gold: Sequence[Sequence[str]], predicted: Sequence[Sequence[str]]) -> dict:
+    """Exact-match span, overlap span and token-level scores of the same predictions."""
+    return {
+        "exact_span": span_scores(gold, predicted),
+        "overlap_span": overlap_span_scores(gold, predicted),
+        "token": token_scores(gold, predicted),
+    }
+
+
+# --- Per collection ---------------------------------------------------------------------
+
+
+def scores_by_collection(examples, gold, predicted, score) -> dict:
+    """Apply ``score(gold, predicted)`` to the rows of each collection separately.
+
+    Pooled scores are dominated by the largest collection; these show how each source
+    collection fares on its own.
+    """
+    rows: dict[str, list[int]] = {}
+    for index, example in enumerate(examples):
+        rows.setdefault(getattr(example, "collection", ""), []).append(index)
+    return {
+        name: {
+            "examples": len(indices),
+            **score([gold[i] for i in indices], [predicted[i] for i in indices]),
+        }
+        for name, indices in sorted(rows.items())
+    }

@@ -1,0 +1,89 @@
+{
+  "load_report": {
+    "files": [
+      "data/baselines/heva/3_P_2011_AS/heva-annotations.json",
+      "data/baselines/heva/4_P_2011_RB_RF/heva-annotations.json",
+      "data/baselines/heva/5_P_2011_BM_YV/heva-annotations.json",
+      "data/baselines/structured/2_A_2025_Mastermind.xlsx",
+      "data/baselines/structured/excels combined dataset.xlsx"
+    ],
+    "skipped": {},
+    "merged_duplicates": 1044,
+    "conflicting_duplicates": 36,
+    "unknown_value_codes": {}
+  },
+  "split": {
+    "train": {
+      "examples": 3696,
+      "without_values": 829,
+      "collections": {
+        "1_E_2024_MF": 1942,
+        "2_A_2025_Mastermind": 211,
+        "3_P_2011_AS": 501,
+        "4_P_2011_RB_RF": 20,
+        "5_P_2011_BM_YV": 153,
+        "6_E_2026_QL": 266,
+        "7_E_2023_EL": 264,
+        "8_E_2014_CL": 339
+      },
+      "values": {
+        "ecological": 1009,
+        "social": 793,
+        "historic": 665,
+        "economic": 643,
+        "aesthetical": 551,
+        "age": 475,
+        "scientific": 369,
+        "political": 290
+      }
+    },
+    "validation": {
+      "examples": 521,
+      "without_values": 129,
+      "collections": {
+        "1_E_2024_MF": 278,
+        "2_A_2025_Mastermind": 30,
+        "3_P_2011_AS": 66,
+        "4_P_2011_RB_RF": 2,
+        "5_P_2011_BM_YV": 22,
+        "6_E_2026_QL": 38,
+        "7_E_2023_EL": 38,
+        "8_E_2014_CL": 47
+      },
+      "values": {
+        "ecological": 148,
+        "social": 112,
+        "historic": 95,
+        "economic": 93,
+        "aesthetical": 79,
+        "age": 68,
+        "scientific": 51,
+        "political": 40
+      }
+    },
+    "test": {
+      "examples": 1063,
+      "without_values": 249,
+      "collections": {
+        "1_E_2024_MF": 555,
+        "2_A_2025_Mastermind": 60,
+        "3_P_2011_AS": 139,
+        "4_P_2011_RB_RF": 6,
+        "5_P_2011_BM_YV": 49,
+        "6_E_2026_QL": 76,
+        "7_E_2023_EL": 76,
+        "8_E_2014_CL": 102
+      },
+      "values": {
+        "ecological": 293,
+        "social": 229,
+        "historic": 191,
+        "economic": 184,
+        "aesthetical": 159,
+        "age": 135,
+        "scientific": 105,
+        "political": 83
+      }
+    }
+  }
+}
