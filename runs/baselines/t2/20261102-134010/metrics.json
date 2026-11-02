@@ -1,0 +1,2498 @@
+{
+  "best_epoch": 20,
+  "epochs_trained": 20,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.816142634784474,
+      "validation_span_f1": 0.007058823529411764
+    },
+    {
+      "epoch": 2,
+      "train_loss": 2.4148688863305483,
+      "validation_span_f1": 0.03467297084318361
+    },
+    {
+      "epoch": 3,
+      "train_loss": 1.6974415386424344,
+      "validation_span_f1": 0.043029259896729774
+    },
+    {
+      "epoch": 4,
+      "train_loss": 1.1390788751489975,
+      "validation_span_f1": 0.05316223648029331
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.7878813603345085,
+      "validation_span_f1": 0.0709812108559499
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.5677256177453434,
+      "validation_span_f1": 0.09448818897637795
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.4342229915015838,
+      "validation_span_f1": 0.1348973607038123
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.3471585161545697,
+      "validation_span_f1": 0.1317365269461078
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.26584381215712605,
+      "validation_span_f1": 0.13354037267080746
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.2122534172499881,
+      "validation_span_f1": 0.15798319327731092
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.17032992883640177,
+      "validation_span_f1": 0.2040816326530612
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.14249514490365983,
+      "validation_span_f1": 0.19875776397515527
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.11272619248313062,
+      "validation_span_f1": 0.23059866962305986
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.10567053392091218,
+      "validation_span_f1": 0.22869955156950675
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.08848694551955251,
+      "validation_span_f1": 0.26570048309178745
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.07124459276742795,
+      "validation_span_f1": 0.285
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.07061833259375656,
+      "validation_span_f1": 0.28717948717948716
+    },
+    {
+      "epoch": 18,
+      "train_loss": 0.060995207957046875,
+      "validation_span_f1": 0.2871536523929471
+    },
+    {
+      "epoch": 19,
+      "train_loss": 0.05501719428335919,
+      "validation_span_f1": 0.29533678756476683
+    },
+    {
+      "epoch": 20,
+      "train_loss": 0.04809423566741102,
+      "validation_span_f1": 0.2992125984251968
+    }
+  ],
+  "validation_argmax": {
+    "micro": {
+      "precision": 0.2375,
+      "recall": 0.40425531914893614,
+      "f1": 0.2992125984251968
+    },
+    "macro": {
+      "precision": 0.1900911436092673,
+      "recall": 0.31123737373737376,
+      "f1": 0.2341068854352315
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.19402985074626866,
+        "recall": 0.3611111111111111,
+        "f1": 0.25242718446601947,
+        "support": 36
+      },
+      "economic": {
+        "precision": 0.3673469387755102,
+        "recall": 0.5454545454545454,
+        "f1": 0.43902439024390244,
+        "support": 33
+      },
+      "political": {
+        "precision": 0.1891891891891892,
+        "recall": 0.35,
+        "f1": 0.24561403508771934,
+        "support": 20
+      },
+      "historic": {
+        "precision": 0.23076923076923078,
+        "recall": 0.5,
+        "f1": 0.3157894736842105,
+        "support": 24
+      },
+      "aesthetical": {
+        "precision": 0.2727272727272727,
+        "recall": 0.3333333333333333,
+        "f1": 0.3,
+        "support": 9
+      },
+      "scientific": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 2
+      },
+      "age": {
+        "precision": 0.26666666666666666,
+        "recall": 0.4,
+        "f1": 0.32,
+        "support": 10
+      },
+      "ecological": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 7
+      }
+    },
+    "classes_without_support": []
+  },
+  "validation_tuned": {
+    "micro": {
+      "precision": 0.2714285714285714,
+      "recall": 0.40425531914893614,
+      "f1": 0.32478632478632474
+    },
+    "macro": {
+      "precision": 0.22723645617667357,
+      "recall": 0.31123737373737376,
+      "f1": 0.2581511394060275
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.23214285714285715,
+        "recall": 0.3611111111111111,
+        "f1": 0.28260869565217395,
+        "support": 36
+      },
+      "economic": {
+        "precision": 0.391304347826087,
+        "recall": 0.5454545454545454,
+        "f1": 0.4556962025316456,
+        "support": 33
+      },
+      "political": {
+        "precision": 0.2692307692307692,
+        "recall": 0.35,
+        "f1": 0.3043478260869565,
+        "support": 20
+      },
+      "historic": {
+        "precision": 0.23076923076923078,
+        "recall": 0.5,
+        "f1": 0.3157894736842105,
+        "support": 24
+      },
+      "aesthetical": {
+        "precision": 0.25,
+        "recall": 0.3333333333333333,
+        "f1": 0.28571428571428575,
+        "support": 9
+      },
+      "scientific": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 2
+      },
+      "age": {
+        "precision": 0.4444444444444444,
+        "recall": 0.4,
+        "f1": 0.4210526315789474,
+        "support": 10
+      },
+      "ecological": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 7
+      }
+    },
+    "classes_without_support": []
+  },
+  "validation_argmax_overlap": {
+    "micro": {
+      "precision": 0.42916666666666664,
+      "recall": 0.7304964539007093,
+      "f1": 0.5406824146981627
+    },
+    "macro": {
+      "precision": 0.38783990661655904,
+      "recall": 0.6205221861471861,
+      "f1": 0.47325515088633263
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.40298507462686567,
+        "recall": 0.75,
+        "f1": 0.5242718446601942,
+        "support": 36
+      },
+      "economic": {
+        "precision": 0.4897959183673469,
+        "recall": 0.7272727272727273,
+        "f1": 0.5853658536585367,
+        "support": 33
+      },
+      "political": {
+        "precision": 0.43243243243243246,
+        "recall": 0.8,
+        "f1": 0.5614035087719298,
+        "support": 20
+      },
+      "historic": {
+        "precision": 0.36538461538461536,
+        "recall": 0.7916666666666666,
+        "f1": 0.5,
+        "support": 24
+      },
+      "aesthetical": {
+        "precision": 0.5454545454545454,
+        "recall": 0.6666666666666666,
+        "f1": 0.6,
+        "support": 9
+      },
+      "scientific": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 2
+      },
+      "age": {
+        "precision": 0.5333333333333333,
+        "recall": 0.8,
+        "f1": 0.64,
+        "support": 10
+      },
+      "ecological": {
+        "precision": 0.3333333333333333,
+        "recall": 0.42857142857142855,
+        "f1": 0.375,
+        "support": 7
+      }
+    },
+    "classes_without_support": []
+  },
+  "validation_argmax_token": {
+    "micro": {
+      "precision": 0.48114630467571645,
+      "recall": 0.5940409683426443,
+      "f1": 0.5316666666666667
+    },
+    "macro": {
+      "precision": 0.4331428056446171,
+      "recall": 0.49733797228924664,
+      "f1": 0.44648327242114855
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.44242424242424244,
+        "recall": 0.73,
+        "f1": 0.5509433962264151,
+        "support": 100
+      },
+      "economic": {
+        "precision": 0.5882352941176471,
+        "recall": 0.5769230769230769,
+        "f1": 0.5825242718446602,
+        "support": 104
+      },
+      "political": {
+        "precision": 0.5333333333333333,
+        "recall": 0.6349206349206349,
+        "f1": 0.5797101449275363,
+        "support": 63
+      },
+      "historic": {
+        "precision": 0.4449760765550239,
+        "recall": 0.7045454545454546,
+        "f1": 0.5454545454545454,
+        "support": 132
+      },
+      "aesthetical": {
+        "precision": 0.2978723404255319,
+        "recall": 0.5384615384615384,
+        "f1": 0.3835616438356164,
+        "support": 26
+      },
+      "scientific": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 8
+      },
+      "age": {
+        "precision": 0.7297297297297297,
+        "recall": 0.5869565217391305,
+        "f1": 0.6506024096385542,
+        "support": 46
+      },
+      "ecological": {
+        "precision": 0.42857142857142855,
+        "recall": 0.20689655172413793,
+        "f1": 0.2790697674418604,
+        "support": 58
+      }
+    },
+    "classes_without_support": []
+  },
+  "validation_argmax_by_collection": {
+    "3_P_2011_AS": {
+      "examples": 66,
+      "exact_span": {
+        "micro": {
+          "precision": 0.2934131736526946,
+          "recall": 0.44954128440366975,
+          "f1": 0.35507246376811596
+        },
+        "macro": {
+          "precision": 0.26651231737881287,
+          "recall": 0.3497850529100529,
+          "f1": 0.293562624140967
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.2894736842105263,
+            "recall": 0.4074074074074074,
+            "f1": 0.3384615384615384,
+            "support": 27
+          },
+          "economic": {
+            "precision": 0.3902439024390244,
+            "recall": 0.5714285714285714,
+            "f1": 0.463768115942029,
+            "support": 28
+          },
+          "political": {
+            "precision": 0.2,
+            "recall": 0.3888888888888889,
+            "f1": 0.2641509433962264,
+            "support": 18
+          },
+          "historic": {
+            "precision": 0.2857142857142857,
+            "recall": 0.5555555555555556,
+            "f1": 0.3773584905660377,
+            "support": 18
+          },
+          "aesthetical": {
+            "precision": 0.6666666666666666,
+            "recall": 0.5,
+            "f1": 0.5714285714285715,
+            "support": 4
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.3,
+            "recall": 0.375,
+            "f1": 0.33333333333333326,
+            "support": 8
+          },
+          "ecological": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 5
+          }
+        },
+        "classes_without_support": []
+      },
+      "overlap_span": {
+        "micro": {
+          "precision": 0.49101796407185627,
+          "recall": 0.7522935779816514,
+          "f1": 0.5942028985507247
+        },
+        "macro": {
+          "precision": 0.48671602787456447,
+          "recall": 0.632010582010582,
+          "f1": 0.5347726924429139
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.5,
+            "recall": 0.7037037037037037,
+            "f1": 0.5846153846153846,
+            "support": 27
+          },
+          "economic": {
+            "precision": 0.5365853658536586,
+            "recall": 0.7857142857142857,
+            "f1": 0.6376811594202899,
+            "support": 28
+          },
+          "political": {
+            "precision": 0.4,
+            "recall": 0.7777777777777778,
+            "f1": 0.5283018867924528,
+            "support": 18
+          },
+          "historic": {
+            "precision": 0.45714285714285713,
+            "recall": 0.8888888888888888,
+            "f1": 0.6037735849056604,
+            "support": 18
+          },
+          "aesthetical": {
+            "precision": 1.0,
+            "recall": 0.75,
+            "f1": 0.8571428571428571,
+            "support": 4
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.6,
+            "recall": 0.75,
+            "f1": 0.6666666666666665,
+            "support": 8
+          },
+          "ecological": {
+            "precision": 0.4,
+            "recall": 0.4,
+            "f1": 0.4000000000000001,
+            "support": 5
+          }
+        },
+        "classes_without_support": []
+      },
+      "token": {
+        "micro": {
+          "precision": 0.5747800586510264,
+          "recall": 0.6426229508196721,
+          "f1": 0.6068111455108359
+        },
+        "macro": {
+          "precision": 0.48698076703112736,
+          "recall": 0.5260916938770509,
+          "f1": 0.4995134735725311
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.5633802816901409,
+            "recall": 0.6451612903225806,
+            "f1": 0.6015037593984963,
+            "support": 62
+          },
+          "economic": {
+            "precision": 0.6388888888888888,
+            "recall": 0.7931034482758621,
+            "f1": 0.7076923076923076,
+            "support": 58
+          },
+          "political": {
+            "precision": 0.5285714285714286,
+            "recall": 0.6271186440677966,
+            "f1": 0.5736434108527132,
+            "support": 59
+          },
+          "historic": {
+            "precision": 0.5697674418604651,
+            "recall": 0.7424242424242424,
+            "f1": 0.6447368421052633,
+            "support": 66
+          },
+          "aesthetical": {
+            "precision": 0.5,
+            "recall": 0.6,
+            "f1": 0.5454545454545454,
+            "support": 5
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 4
+          },
+          "age": {
+            "precision": 0.7619047619047619,
+            "recall": 0.5925925925925926,
+            "f1": 0.6666666666666666,
+            "support": 27
+          },
+          "ecological": {
+            "precision": 0.3333333333333333,
+            "recall": 0.20833333333333334,
+            "f1": 0.25641025641025644,
+            "support": 24
+          }
+        },
+        "classes_without_support": []
+      }
+    },
+    "4_P_2011_RB_RF": {
+      "examples": 2,
+      "exact_span": {
+        "micro": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "macro": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "economic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "political": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "historic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "aesthetical": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "age": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "ecological": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          }
+        },
+        "classes_without_support": [
+          "social",
+          "economic",
+          "scientific",
+          "age"
+        ]
+      },
+      "overlap_span": {
+        "micro": {
+          "precision": 0.2857142857142857,
+          "recall": 0.5,
+          "f1": 0.36363636363636365
+        },
+        "macro": {
+          "precision": 0.375,
+          "recall": 0.5,
+          "f1": 0.41666666666666663
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "economic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "political": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1
+          },
+          "historic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "aesthetical": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "age": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "ecological": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666,
+            "support": 1
+          }
+        },
+        "classes_without_support": [
+          "social",
+          "economic",
+          "scientific",
+          "age"
+        ]
+      },
+      "token": {
+        "micro": {
+          "precision": 0.45,
+          "recall": 0.21951219512195122,
+          "f1": 0.29508196721311475
+        },
+        "macro": {
+          "precision": 0.375,
+          "recall": 0.3173076923076923,
+          "f1": 0.2727272727272727
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "economic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "political": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666,
+            "support": 2
+          },
+          "historic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 8
+          },
+          "aesthetical": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 5
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "age": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "ecological": {
+            "precision": 1.0,
+            "recall": 0.2692307692307692,
+            "f1": 0.42424242424242425,
+            "support": 26
+          }
+        },
+        "classes_without_support": [
+          "social",
+          "economic",
+          "scientific",
+          "age"
+        ]
+      }
+    },
+    "5_P_2011_BM_YV": {
+      "examples": 24,
+      "exact_span": {
+        "micro": {
+          "precision": 0.12121212121212122,
+          "recall": 0.2857142857142857,
+          "f1": 0.1702127659574468
+        },
+        "macro": {
+          "precision": 0.09866071428571427,
+          "recall": 0.22152777777777777,
+          "f1": 0.13483846049635523
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.07142857142857142,
+            "recall": 0.2222222222222222,
+            "f1": 0.10810810810810811,
+            "support": 9
+          },
+          "economic": {
+            "precision": 0.25,
+            "recall": 0.4,
+            "f1": 0.3076923076923077,
+            "support": 5
+          },
+          "political": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "historic": {
+            "precision": 0.14285714285714285,
+            "recall": 0.4,
+            "f1": 0.21052631578947364,
+            "support": 5
+          },
+          "aesthetical": {
+            "precision": 0.125,
+            "recall": 0.25,
+            "f1": 0.16666666666666666,
+            "support": 4
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.2,
+            "recall": 0.5,
+            "f1": 0.28571428571428575,
+            "support": 2
+          },
+          "ecological": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          }
+        },
+        "classes_without_support": []
+      },
+      "overlap_span": {
+        "micro": {
+          "precision": 0.2878787878787879,
+          "recall": 0.6785714285714286,
+          "f1": 0.40425531914893625
+        },
+        "macro": {
+          "precision": 0.315625,
+          "recall": 0.5798611111111112,
+          "f1": 0.3909178481546903
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.2857142857142857,
+            "recall": 0.8888888888888888,
+            "f1": 0.43243243243243246,
+            "support": 9
+          },
+          "economic": {
+            "precision": 0.25,
+            "recall": 0.4,
+            "f1": 0.3076923076923077,
+            "support": 5
+          },
+          "political": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1
+          },
+          "historic": {
+            "precision": 0.21428571428571427,
+            "recall": 0.6,
+            "f1": 0.3157894736842105,
+            "support": 5
+          },
+          "aesthetical": {
+            "precision": 0.375,
+            "recall": 0.75,
+            "f1": 0.5,
+            "support": 4
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.4,
+            "recall": 1.0,
+            "f1": 0.5714285714285715,
+            "support": 2
+          },
+          "ecological": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          }
+        },
+        "classes_without_support": []
+      },
+      "token": {
+        "micro": {
+          "precision": 0.37748344370860926,
+          "recall": 0.5968586387434555,
+          "f1": 0.4624746450304259
+        },
+        "macro": {
+          "precision": 0.3949883443653862,
+          "recall": 0.46222961709934507,
+          "f1": 0.38276392178433993
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.3548387096774194,
+            "recall": 0.868421052631579,
+            "f1": 0.5038167938931298,
+            "support": 38
+          },
+          "economic": {
+            "precision": 0.4666666666666667,
+            "recall": 0.30434782608695654,
+            "f1": 0.3684210526315789,
+            "support": 46
+          },
+          "political": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "support": 2
+          },
+          "historic": {
+            "precision": 0.3826086956521739,
+            "recall": 0.7586206896551724,
+            "f1": 0.5086705202312138,
+            "support": 58
+          },
+          "aesthetical": {
+            "precision": 0.2682926829268293,
+            "recall": 0.6875,
+            "f1": 0.38596491228070173,
+            "support": 16
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 4
+          },
+          "age": {
+            "precision": 0.6875,
+            "recall": 0.5789473684210527,
+            "f1": 0.6285714285714286,
+            "support": 19
+          },
+          "ecological": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 8
+          }
+        },
+        "classes_without_support": []
+      }
+    }
+  },
+  "test_argmax": {
+    "micro": {
+      "precision": 0.2431865828092243,
+      "recall": 0.4027777777777778,
+      "f1": 0.3032679738562091
+    },
+    "macro": {
+      "precision": 0.21059201315920384,
+      "recall": 0.32059324161266933,
+      "f1": 0.25178337491281627
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.28431372549019607,
+        "recall": 0.4915254237288136,
+        "f1": 0.3602484472049689,
+        "support": 59
+      },
+      "economic": {
+        "precision": 0.41379310344827586,
+        "recall": 0.5647058823529412,
+        "f1": 0.4776119402985075,
+        "support": 85
+      },
+      "political": {
+        "precision": 0.07058823529411765,
+        "recall": 0.14634146341463414,
+        "f1": 0.09523809523809523,
+        "support": 41
+      },
+      "historic": {
+        "precision": 0.18518518518518517,
+        "recall": 0.3191489361702128,
+        "f1": 0.23437499999999997,
+        "support": 47
+      },
+      "aesthetical": {
+        "precision": 0.1891891891891892,
+        "recall": 0.3888888888888889,
+        "f1": 0.2545454545454546,
+        "support": 18
+      },
+      "scientific": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 5
+      },
+      "age": {
+        "precision": 0.2916666666666667,
+        "recall": 0.3684210526315789,
+        "f1": 0.32558139534883723,
+        "support": 19
+      },
+      "ecological": {
+        "precision": 0.25,
+        "recall": 0.2857142857142857,
+        "f1": 0.26666666666666666,
+        "support": 14
+      }
+    },
+    "classes_without_support": []
+  },
+  "test_tuned": {
+    "micro": {
+      "precision": 0.27889447236180903,
+      "recall": 0.3854166666666667,
+      "f1": 0.32361516034985427
+    },
+    "macro": {
+      "precision": 0.24228722779580622,
+      "recall": 0.30175070127966297,
+      "f1": 0.2629202261003758
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.3076923076923077,
+        "recall": 0.4067796610169492,
+        "f1": 0.35036496350364965,
+        "support": 59
+      },
+      "economic": {
+        "precision": 0.4375,
+        "recall": 0.5764705882352941,
+        "f1": 0.49746192893401014,
+        "support": 85
+      },
+      "political": {
+        "precision": 0.1568627450980392,
+        "recall": 0.1951219512195122,
+        "f1": 0.17391304347826086,
+        "support": 41
+      },
+      "historic": {
+        "precision": 0.1728395061728395,
+        "recall": 0.2978723404255319,
+        "f1": 0.21875,
+        "support": 47
+      },
+      "aesthetical": {
+        "precision": 0.21212121212121213,
+        "recall": 0.3888888888888889,
+        "f1": 0.27450980392156865,
+        "support": 18
+      },
+      "scientific": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 5
+      },
+      "age": {
+        "precision": 0.38461538461538464,
+        "recall": 0.2631578947368421,
+        "f1": 0.3125,
+        "support": 19
+      },
+      "ecological": {
+        "precision": 0.26666666666666666,
+        "recall": 0.2857142857142857,
+        "f1": 0.2758620689655172,
+        "support": 14
+      }
+    },
+    "classes_without_support": []
+  },
+  "test_argmax_overlap": {
+    "micro": {
+      "precision": 0.4612159329140461,
+      "recall": 0.7638888888888888,
+      "f1": 0.5751633986928104
+    },
+    "macro": {
+      "precision": 0.4484832829787191,
+      "recall": 0.7603158328323681,
+      "f1": 0.551983035817794
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.4215686274509804,
+        "recall": 0.7288135593220338,
+        "f1": 0.5341614906832298,
+        "support": 59
+      },
+      "economic": {
+        "precision": 0.6379310344827587,
+        "recall": 0.8705882352941177,
+        "f1": 0.736318407960199,
+        "support": 85
+      },
+      "political": {
+        "precision": 0.35294117647058826,
+        "recall": 0.7317073170731707,
+        "f1": 0.47619047619047616,
+        "support": 41
+      },
+      "historic": {
+        "precision": 0.4074074074074074,
+        "recall": 0.7021276595744681,
+        "f1": 0.5156249999999999,
+        "support": 47
+      },
+      "aesthetical": {
+        "precision": 0.35135135135135137,
+        "recall": 0.7222222222222222,
+        "f1": 0.4727272727272727,
+        "support": 18
+      },
+      "scientific": {
+        "precision": 0.3125,
+        "recall": 1.0,
+        "f1": 0.47619047619047616,
+        "support": 5
+      },
+      "age": {
+        "precision": 0.5416666666666666,
+        "recall": 0.6842105263157895,
+        "f1": 0.6046511627906976,
+        "support": 19
+      },
+      "ecological": {
+        "precision": 0.5625,
+        "recall": 0.6428571428571429,
+        "f1": 0.6000000000000001,
+        "support": 14
+      }
+    },
+    "classes_without_support": []
+  },
+  "test_tuned_overlap": {
+    "micro": {
+      "precision": 0.5050251256281407,
+      "recall": 0.6979166666666666,
+      "f1": 0.5860058309037901
+    },
+    "macro": {
+      "precision": 0.4859306429772116,
+      "recall": 0.6497949911567015,
+      "f1": 0.538140158532033
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.48717948717948717,
+        "recall": 0.6440677966101694,
+        "f1": 0.5547445255474452,
+        "support": 59
+      },
+      "economic": {
+        "precision": 0.6607142857142857,
+        "recall": 0.8705882352941177,
+        "f1": 0.751269035532995,
+        "support": 85
+      },
+      "political": {
+        "precision": 0.47058823529411764,
+        "recall": 0.5853658536585366,
+        "f1": 0.5217391304347826,
+        "support": 41
+      },
+      "historic": {
+        "precision": 0.38271604938271603,
+        "recall": 0.6595744680851063,
+        "f1": 0.48437500000000006,
+        "support": 47
+      },
+      "aesthetical": {
+        "precision": 0.3939393939393939,
+        "recall": 0.7222222222222222,
+        "f1": 0.5098039215686274,
+        "support": 18
+      },
+      "scientific": {
+        "precision": 0.2,
+        "recall": 0.6,
+        "f1": 0.3,
+        "support": 5
+      },
+      "age": {
+        "precision": 0.6923076923076923,
+        "recall": 0.47368421052631576,
+        "f1": 0.5625,
+        "support": 19
+      },
+      "ecological": {
+        "precision": 0.6,
+        "recall": 0.6428571428571429,
+        "f1": 0.6206896551724138,
+        "support": 14
+      }
+    },
+    "classes_without_support": []
+  },
+  "test_argmax_token": {
+    "micro": {
+      "precision": 0.5243328100470958,
+      "recall": 0.5656223539373413,
+      "f1": 0.5441955193482689
+    },
+    "macro": {
+      "precision": 0.5116101915570912,
+      "recall": 0.5596966791177987,
+      "f1": 0.5256905433045225
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.544,
+        "recall": 0.7083333333333334,
+        "f1": 0.6153846153846153,
+        "support": 192
+      },
+      "economic": {
+        "precision": 0.58203125,
+        "recall": 0.7376237623762376,
+        "f1": 0.6506550218340611,
+        "support": 202
+      },
+      "political": {
+        "precision": 0.4052631578947368,
+        "recall": 0.44,
+        "f1": 0.42191780821917807,
+        "support": 175
+      },
+      "historic": {
+        "precision": 0.5811320754716981,
+        "recall": 0.5273972602739726,
+        "f1": 0.5529622980251346,
+        "support": 292
+      },
+      "aesthetical": {
+        "precision": 0.3490566037735849,
+        "recall": 0.3217391304347826,
+        "f1": 0.334841628959276,
+        "support": 115
+      },
+      "scientific": {
+        "precision": 0.3442622950819672,
+        "recall": 0.65625,
+        "f1": 0.4516129032258065,
+        "support": 32
+      },
+      "age": {
+        "precision": 0.6338028169014085,
+        "recall": 0.5294117647058824,
+        "f1": 0.576923076923077,
+        "support": 85
+      },
+      "ecological": {
+        "precision": 0.6533333333333333,
+        "recall": 0.5568181818181818,
+        "f1": 0.6012269938650308,
+        "support": 88
+      }
+    },
+    "classes_without_support": []
+  },
+  "test_tuned_token": {
+    "micro": {
+      "precision": 0.5523202911737943,
+      "recall": 0.5139712108382727,
+      "f1": 0.5324561403508772
+    },
+    "macro": {
+      "precision": 0.5414309580669601,
+      "recall": 0.48815319152472697,
+      "f1": 0.5003306837281545
+    },
+    "per_class": {
+      "social": {
+        "precision": 0.5686274509803921,
+        "recall": 0.6041666666666666,
+        "f1": 0.5858585858585857,
+        "support": 192
+      },
+      "economic": {
+        "precision": 0.5983935742971888,
+        "recall": 0.7376237623762376,
+        "f1": 0.6607538802660754,
+        "support": 202
+      },
+      "political": {
+        "precision": 0.5,
+        "recall": 0.30857142857142855,
+        "f1": 0.38162544169611307,
+        "support": 175
+      },
+      "historic": {
+        "precision": 0.5730337078651685,
+        "recall": 0.523972602739726,
+        "f1": 0.5474060822898031,
+        "support": 292
+      },
+      "aesthetical": {
+        "precision": 0.36,
+        "recall": 0.3130434782608696,
+        "f1": 0.33488372093023255,
+        "support": 115
+      },
+      "scientific": {
+        "precision": 0.2692307692307692,
+        "recall": 0.4375,
+        "f1": 0.33333333333333337,
+        "support": 32
+      },
+      "age": {
+        "precision": 0.8,
+        "recall": 0.4235294117647059,
+        "f1": 0.5538461538461539,
+        "support": 85
+      },
+      "ecological": {
+        "precision": 0.6621621621621622,
+        "recall": 0.5568181818181818,
+        "f1": 0.6049382716049383,
+        "support": 88
+      }
+    },
+    "classes_without_support": []
+  },
+  "test_argmax_by_collection": {
+    "3_P_2011_AS": {
+      "examples": 139,
+      "exact_span": {
+        "micro": {
+          "precision": 0.2886297376093295,
+          "recall": 0.44,
+          "f1": 0.3485915492957746
+        },
+        "macro": {
+          "precision": 0.24895601863886072,
+          "recall": 0.3687299953364531,
+          "f1": 0.2924940265020098
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.4126984126984127,
+            "recall": 0.5652173913043478,
+            "f1": 0.4770642201834862,
+            "support": 46
+          },
+          "economic": {
+            "precision": 0.44680851063829785,
+            "recall": 0.5675675675675675,
+            "f1": 0.5,
+            "support": 74
+          },
+          "political": {
+            "precision": 0.08571428571428572,
+            "recall": 0.17647058823529413,
+            "f1": 0.11538461538461539,
+            "support": 34
+          },
+          "historic": {
+            "precision": 0.18032786885245902,
+            "recall": 0.3142857142857143,
+            "f1": 0.22916666666666669,
+            "support": 35
+          },
+          "aesthetical": {
+            "precision": 0.2631578947368421,
+            "recall": 0.625,
+            "f1": 0.37037037037037035,
+            "support": 8
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 3
+          },
+          "age": {
+            "precision": 0.35294117647058826,
+            "recall": 0.42857142857142855,
+            "f1": 0.3870967741935484,
+            "support": 14
+          },
+          "ecological": {
+            "precision": 0.25,
+            "recall": 0.2727272727272727,
+            "f1": 0.2608695652173913,
+            "support": 11
+          }
+        },
+        "classes_without_support": []
+      },
+      "overlap_span": {
+        "micro": {
+          "precision": 0.5160349854227405,
+          "recall": 0.7866666666666666,
+          "f1": 0.6232394366197183
+        },
+        "macro": {
+          "precision": 0.49803198390646863,
+          "recall": 0.7977832667090979,
+          "f1": 0.6012598080453047
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.5555555555555556,
+            "recall": 0.7608695652173914,
+            "f1": 0.6422018348623854,
+            "support": 46
+          },
+          "economic": {
+            "precision": 0.6808510638297872,
+            "recall": 0.8648648648648649,
+            "f1": 0.7619047619047619,
+            "support": 74
+          },
+          "political": {
+            "precision": 0.34285714285714286,
+            "recall": 0.7058823529411765,
+            "f1": 0.46153846153846156,
+            "support": 34
+          },
+          "historic": {
+            "precision": 0.4426229508196721,
+            "recall": 0.7714285714285715,
+            "f1": 0.5625,
+            "support": 35
+          },
+          "aesthetical": {
+            "precision": 0.42105263157894735,
+            "recall": 1.0,
+            "f1": 0.5925925925925926,
+            "support": 8
+          },
+          "scientific": {
+            "precision": 0.42857142857142855,
+            "recall": 1.0,
+            "f1": 0.6,
+            "support": 3
+          },
+          "age": {
+            "precision": 0.5294117647058824,
+            "recall": 0.6428571428571429,
+            "f1": 0.5806451612903226,
+            "support": 14
+          },
+          "ecological": {
+            "precision": 0.5833333333333334,
+            "recall": 0.6363636363636364,
+            "f1": 0.6086956521739131,
+            "support": 11
+          }
+        },
+        "classes_without_support": []
+      },
+      "token": {
+        "micro": {
+          "precision": 0.5683760683760684,
+          "recall": 0.5955223880597015,
+          "f1": 0.5816326530612246
+        },
+        "macro": {
+          "precision": 0.5462675660863907,
+          "recall": 0.6132087693061069,
+          "f1": 0.567500692591653
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.5714285714285714,
+            "recall": 0.6741573033707865,
+            "f1": 0.6185567010309277,
+            "support": 89
+          },
+          "economic": {
+            "precision": 0.6363636363636364,
+            "recall": 0.725925925925926,
+            "f1": 0.6782006920415226,
+            "support": 135
+          },
+          "political": {
+            "precision": 0.4195804195804196,
+            "recall": 0.4444444444444444,
+            "f1": 0.4316546762589928,
+            "support": 135
+          },
+          "historic": {
+            "precision": 0.6643835616438356,
+            "recall": 0.6024844720496895,
+            "f1": 0.6319218241042346,
+            "support": 161
+          },
+          "aesthetical": {
+            "precision": 0.46153846153846156,
+            "recall": 0.8571428571428571,
+            "f1": 0.6,
+            "support": 14
+          },
+          "scientific": {
+            "precision": 0.3888888888888889,
+            "recall": 0.5833333333333334,
+            "f1": 0.4666666666666666,
+            "support": 24
+          },
+          "age": {
+            "precision": 0.5666666666666667,
+            "recall": 0.4857142857142857,
+            "f1": 0.523076923076923,
+            "support": 35
+          },
+          "ecological": {
+            "precision": 0.6612903225806451,
+            "recall": 0.5324675324675324,
+            "f1": 0.5899280575539568,
+            "support": 77
+          }
+        },
+        "classes_without_support": []
+      }
+    },
+    "4_P_2011_RB_RF": {
+      "examples": 6,
+      "exact_span": {
+        "micro": {
+          "precision": 0.05,
+          "recall": 0.09090909090909091,
+          "f1": 0.06451612903225806
+        },
+        "macro": {
+          "precision": 0.14285714285714285,
+          "recall": 0.14285714285714285,
+          "f1": 0.14285714285714285
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "economic": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1
+          },
+          "political": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 4
+          },
+          "historic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "aesthetical": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 2
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "ecological": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          }
+        },
+        "classes_without_support": [
+          "age"
+        ]
+      },
+      "overlap_span": {
+        "micro": {
+          "precision": 0.35,
+          "recall": 0.6363636363636364,
+          "f1": 0.45161290322580644
+        },
+        "macro": {
+          "precision": 0.3333333333333333,
+          "recall": 0.5714285714285714,
+          "f1": 0.4047619047619047
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "economic": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1
+          },
+          "political": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666,
+            "support": 4
+          },
+          "historic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "aesthetical": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 2
+          },
+          "scientific": {
+            "precision": 0.3333333333333333,
+            "recall": 1.0,
+            "f1": 0.5,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "ecological": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666,
+            "support": 1
+          }
+        },
+        "classes_without_support": [
+          "age"
+        ]
+      },
+      "token": {
+        "micro": {
+          "precision": 0.5,
+          "recall": 0.45454545454545453,
+          "f1": 0.47619047619047616
+        },
+        "macro": {
+          "precision": 0.3113095238095238,
+          "recall": 0.3361904761904762,
+          "f1": 0.3048780487804878
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "economic": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "political": {
+            "precision": 0.8125,
+            "recall": 0.52,
+            "f1": 0.6341463414634146,
+            "support": 25
+          },
+          "historic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "aesthetical": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 7
+          },
+          "scientific": {
+            "precision": 0.16666666666666666,
+            "recall": 0.5,
+            "f1": 0.25,
+            "support": 2
+          },
+          "age": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "ecological": {
+            "precision": 0.2,
+            "recall": 0.3333333333333333,
+            "f1": 0.25,
+            "support": 3
+          }
+        },
+        "classes_without_support": [
+          "age"
+        ]
+      }
+    },
+    "5_P_2011_BM_YV": {
+      "examples": 44,
+      "exact_span": {
+        "micro": {
+          "precision": 0.14035087719298245,
+          "recall": 0.3076923076923077,
+          "f1": 0.19277108433734938
+        },
+        "macro": {
+          "precision": 0.1618550051599587,
+          "recall": 0.25795454545454544,
+          "f1": 0.1929466941203386
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.08571428571428572,
+            "recall": 0.25,
+            "f1": 0.1276595744680851,
+            "support": 12
+          },
+          "economic": {
+            "precision": 0.23809523809523808,
+            "recall": 0.5,
+            "f1": 0.3225806451612903,
+            "support": 10
+          },
+          "political": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 3
+          },
+          "historic": {
+            "precision": 0.21052631578947367,
+            "recall": 0.36363636363636365,
+            "f1": 0.26666666666666666,
+            "support": 11
+          },
+          "aesthetical": {
+            "precision": 0.11764705882352941,
+            "recall": 0.25,
+            "f1": 0.15999999999999998,
+            "support": 8
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.14285714285714285,
+            "recall": 0.2,
+            "f1": 0.16666666666666666,
+            "support": 5
+          },
+          "ecological": {
+            "precision": 0.5,
+            "recall": 0.5,
+            "f1": 0.5,
+            "support": 2
+          }
+        },
+        "classes_without_support": []
+      },
+      "overlap_span": {
+        "micro": {
+          "precision": 0.3157894736842105,
+          "recall": 0.6923076923076923,
+          "f1": 0.43373493975903615
+        },
+        "macro": {
+          "precision": 0.3488574377119269,
+          "recall": 0.7129734848484849,
+          "f1": 0.446681455698271
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.22857142857142856,
+            "recall": 0.6666666666666666,
+            "f1": 0.3404255319148936,
+            "support": 12
+          },
+          "economic": {
+            "precision": 0.42857142857142855,
+            "recall": 0.9,
+            "f1": 0.5806451612903225,
+            "support": 10
+          },
+          "political": {
+            "precision": 0.2857142857142857,
+            "recall": 0.6666666666666666,
+            "f1": 0.4,
+            "support": 3
+          },
+          "historic": {
+            "precision": 0.3157894736842105,
+            "recall": 0.5454545454545454,
+            "f1": 0.39999999999999997,
+            "support": 11
+          },
+          "aesthetical": {
+            "precision": 0.29411764705882354,
+            "recall": 0.625,
+            "f1": 0.4,
+            "support": 8
+          },
+          "scientific": {
+            "precision": 0.16666666666666666,
+            "recall": 1.0,
+            "f1": 0.2857142857142857,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.5714285714285714,
+            "recall": 0.8,
+            "f1": 0.6666666666666666,
+            "support": 5
+          },
+          "ecological": {
+            "precision": 0.5,
+            "recall": 0.5,
+            "f1": 0.5,
+            "support": 2
+          }
+        },
+        "classes_without_support": []
+      },
+      "token": {
+        "micro": {
+          "precision": 0.4680451127819549,
+          "recall": 0.5331905781584583,
+          "f1": 0.4984984984984985
+        },
+        "macro": {
+          "precision": 0.47797718298583397,
+          "recall": 0.6116398968779213,
+          "f1": 0.5126075486928898
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.5390070921985816,
+            "recall": 0.7450980392156863,
+            "f1": 0.6255144032921811,
+            "support": 102
+          },
+          "economic": {
+            "precision": 0.4742268041237113,
+            "recall": 0.7419354838709677,
+            "f1": 0.578616352201258,
+            "support": 62
+          },
+          "political": {
+            "precision": 0.12903225806451613,
+            "recall": 0.26666666666666666,
+            "f1": 0.17391304347826086,
+            "support": 15
+          },
+          "historic": {
+            "precision": 0.49137931034482757,
+            "recall": 0.43846153846153846,
+            "f1": 0.46341463414634143,
+            "support": 130
+          },
+          "aesthetical": {
+            "precision": 0.31645569620253167,
+            "recall": 0.26595744680851063,
+            "f1": 0.28901734104046245,
+            "support": 94
+          },
+          "scientific": {
+            "precision": 0.3157894736842105,
+            "recall": 1.0,
+            "f1": 0.4799999999999999,
+            "support": 6
+          },
+          "age": {
+            "precision": 0.6829268292682927,
+            "recall": 0.56,
+            "f1": 0.6153846153846154,
+            "support": 50
+          },
+          "ecological": {
+            "precision": 0.875,
+            "recall": 0.875,
+            "f1": 0.875,
+            "support": 8
+          }
+        },
+        "classes_without_support": []
+      }
+    }
+  },
+  "test_tuned_by_collection": {
+    "3_P_2011_AS": {
+      "examples": 139,
+      "exact_span": {
+        "micro": {
+          "precision": 0.3240418118466899,
+          "recall": 0.41333333333333333,
+          "f1": 0.36328125
+        },
+        "macro": {
+          "precision": 0.27104510073260074,
+          "recall": 0.33382802632323094,
+          "f1": 0.2908505808576272
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.4666666666666667,
+            "recall": 0.45652173913043476,
+            "f1": 0.46153846153846156,
+            "support": 46
+          },
+          "economic": {
+            "precision": 0.4725274725274725,
+            "recall": 0.581081081081081,
+            "f1": 0.5212121212121211,
+            "support": 74
+          },
+          "political": {
+            "precision": 0.16666666666666666,
+            "recall": 0.23529411764705882,
+            "f1": 0.19512195121951217,
+            "support": 34
+          },
+          "historic": {
+            "precision": 0.16666666666666666,
+            "recall": 0.2857142857142857,
+            "f1": 0.2105263157894737,
+            "support": 35
+          },
+          "aesthetical": {
+            "precision": 0.3125,
+            "recall": 0.625,
+            "f1": 0.4166666666666667,
+            "support": 8
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 3
+          },
+          "age": {
+            "precision": 0.3333333333333333,
+            "recall": 0.21428571428571427,
+            "f1": 0.2608695652173913,
+            "support": 14
+          },
+          "ecological": {
+            "precision": 0.25,
+            "recall": 0.2727272727272727,
+            "f1": 0.2608695652173913,
+            "support": 11
+          }
+        },
+        "classes_without_support": []
+      },
+      "overlap_span": {
+        "micro": {
+          "precision": 0.5714285714285714,
+          "recall": 0.7288888888888889,
+          "f1": 0.640625
+        },
+        "macro": {
+          "precision": 0.5410370879120879,
+          "recall": 0.7012481309156502,
+          "f1": 0.592443160518173
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.6666666666666666,
+            "recall": 0.6521739130434783,
+            "f1": 0.6593406593406593,
+            "support": 46
+          },
+          "economic": {
+            "precision": 0.7032967032967034,
+            "recall": 0.8648648648648649,
+            "f1": 0.7757575757575758,
+            "support": 74
+          },
+          "political": {
+            "precision": 0.4583333333333333,
+            "recall": 0.6470588235294118,
+            "f1": 0.5365853658536585,
+            "support": 34
+          },
+          "historic": {
+            "precision": 0.4166666666666667,
+            "recall": 0.7142857142857143,
+            "f1": 0.5263157894736842,
+            "support": 35
+          },
+          "aesthetical": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666,
+            "support": 8
+          },
+          "scientific": {
+            "precision": 0.3333333333333333,
+            "recall": 0.6666666666666666,
+            "f1": 0.4444444444444444,
+            "support": 3
+          },
+          "age": {
+            "precision": 0.6666666666666666,
+            "recall": 0.42857142857142855,
+            "f1": 0.5217391304347826,
+            "support": 14
+          },
+          "ecological": {
+            "precision": 0.5833333333333334,
+            "recall": 0.6363636363636364,
+            "f1": 0.6086956521739131,
+            "support": 11
+          }
+        },
+        "classes_without_support": []
+      },
+      "token": {
+        "micro": {
+          "precision": 0.6241379310344828,
+          "recall": 0.5402985074626866,
+          "f1": 0.5792
+        },
+        "macro": {
+          "precision": 0.6111509828056824,
+          "recall": 0.5441574104327525,
+          "f1": 0.5499575812542433
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.618421052631579,
+            "recall": 0.5280898876404494,
+            "f1": 0.5696969696969697,
+            "support": 89
+          },
+          "economic": {
+            "precision": 0.6533333333333333,
+            "recall": 0.725925925925926,
+            "f1": 0.6877192982456142,
+            "support": 135
+          },
+          "political": {
+            "precision": 0.5974025974025974,
+            "recall": 0.34074074074074073,
+            "f1": 0.43396226415094336,
+            "support": 135
+          },
+          "historic": {
+            "precision": 0.6575342465753424,
+            "recall": 0.5962732919254659,
+            "f1": 0.6254071661237786,
+            "support": 161
+          },
+          "aesthetical": {
+            "precision": 0.5217391304347826,
+            "recall": 0.8571428571428571,
+            "f1": 0.6486486486486486,
+            "support": 14
+          },
+          "scientific": {
+            "precision": 0.3333333333333333,
+            "recall": 0.4583333333333333,
+            "f1": 0.38596491228070173,
+            "support": 24
+          },
+          "age": {
+            "precision": 0.8461538461538461,
+            "recall": 0.3142857142857143,
+            "f1": 0.45833333333333337,
+            "support": 35
+          },
+          "ecological": {
+            "precision": 0.6612903225806451,
+            "recall": 0.5324675324675324,
+            "f1": 0.5899280575539568,
+            "support": 77
+          }
+        },
+        "classes_without_support": []
+      }
+    },
+    "4_P_2011_RB_RF": {
+      "examples": 6,
+      "exact_span": {
+        "micro": {
+          "precision": 0.08333333333333333,
+          "recall": 0.09090909090909091,
+          "f1": 0.08695652173913043
+        },
+        "macro": {
+          "precision": 0.14285714285714285,
+          "recall": 0.14285714285714285,
+          "f1": 0.14285714285714285
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "economic": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1
+          },
+          "political": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 4
+          },
+          "historic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "aesthetical": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 2
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "ecological": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          }
+        },
+        "classes_without_support": [
+          "age"
+        ]
+      },
+      "overlap_span": {
+        "micro": {
+          "precision": 0.3333333333333333,
+          "recall": 0.36363636363636365,
+          "f1": 0.34782608695652173
+        },
+        "macro": {
+          "precision": 0.35714285714285715,
+          "recall": 0.35714285714285715,
+          "f1": 0.3333333333333333
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "economic": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 1
+          },
+          "political": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "support": 4
+          },
+          "historic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "aesthetical": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 2
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "ecological": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666,
+            "support": 1
+          }
+        },
+        "classes_without_support": [
+          "age"
+        ]
+      },
+      "token": {
+        "micro": {
+          "precision": 0.4666666666666667,
+          "recall": 0.3181818181818182,
+          "f1": 0.3783783783783784
+        },
+        "macro": {
+          "precision": 0.31428571428571433,
+          "recall": 0.2361904761904762,
+          "f1": 0.24783549783549783
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "economic": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "political": {
+            "precision": 1.0,
+            "recall": 0.32,
+            "f1": 0.48484848484848486,
+            "support": 25
+          },
+          "historic": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "aesthetical": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 7
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 2
+          },
+          "age": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "ecological": {
+            "precision": 0.2,
+            "recall": 0.3333333333333333,
+            "f1": 0.25,
+            "support": 3
+          }
+        },
+        "classes_without_support": [
+          "age"
+        ]
+      }
+    },
+    "5_P_2011_BM_YV": {
+      "examples": 44,
+      "exact_span": {
+        "micro": {
+          "precision": 0.1717171717171717,
+          "recall": 0.3269230769230769,
+          "f1": 0.22516556291390727
+        },
+        "macro": {
+          "precision": 0.271875,
+          "recall": 0.28295454545454546,
+          "f1": 0.25150409626216075
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.1,
+            "recall": 0.25,
+            "f1": 0.14285714285714288,
+            "support": 12
+          },
+          "economic": {
+            "precision": 0.25,
+            "recall": 0.5,
+            "f1": 0.3333333333333333,
+            "support": 10
+          },
+          "political": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 3
+          },
+          "historic": {
+            "precision": 0.2,
+            "recall": 0.36363636363636365,
+            "f1": 0.25806451612903225,
+            "support": 11
+          },
+          "aesthetical": {
+            "precision": 0.125,
+            "recall": 0.25,
+            "f1": 0.16666666666666666,
+            "support": 8
+          },
+          "scientific": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.5,
+            "recall": 0.4,
+            "f1": 0.4444444444444445,
+            "support": 5
+          },
+          "ecological": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "support": 2
+          }
+        },
+        "classes_without_support": []
+      },
+      "overlap_span": {
+        "micro": {
+          "precision": 0.3333333333333333,
+          "recall": 0.6346153846153846,
+          "f1": 0.4370860927152318
+        },
+        "macro": {
+          "precision": 0.4027529761904762,
+          "recall": 0.6046401515151515,
+          "f1": 0.42100614439324113
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.26666666666666666,
+            "recall": 0.6666666666666666,
+            "f1": 0.3809523809523809,
+            "support": 12
+          },
+          "economic": {
+            "precision": 0.45,
+            "recall": 0.9,
+            "f1": 0.6,
+            "support": 10
+          },
+          "political": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 3
+          },
+          "historic": {
+            "precision": 0.3,
+            "recall": 0.5454545454545454,
+            "f1": 0.3870967741935483,
+            "support": 11
+          },
+          "aesthetical": {
+            "precision": 0.3125,
+            "recall": 0.625,
+            "f1": 0.4166666666666667,
+            "support": 8
+          },
+          "scientific": {
+            "precision": 0.14285714285714285,
+            "recall": 1.0,
+            "f1": 0.25,
+            "support": 1
+          },
+          "age": {
+            "precision": 0.75,
+            "recall": 0.6,
+            "f1": 0.6666666666666665,
+            "support": 5
+          },
+          "ecological": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "support": 2
+          }
+        },
+        "classes_without_support": []
+      },
+      "token": {
+        "micro": {
+          "precision": 0.4723926380368098,
+          "recall": 0.49464668094218417,
+          "f1": 0.48326359832635984
+        },
+        "macro": {
+          "precision": 0.47946721719440144,
+          "recall": 0.49839834493799634,
+          "f1": 0.4728491120734637
+        },
+        "per_class": {
+          "social": {
+            "precision": 0.552,
+            "recall": 0.6764705882352942,
+            "f1": 0.6079295154185023,
+            "support": 102
+          },
+          "economic": {
+            "precision": 0.48936170212765956,
+            "recall": 0.7419354838709677,
+            "f1": 0.5897435897435898,
+            "support": 62
+          },
+          "political": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 15
+          },
+          "historic": {
+            "precision": 0.4830508474576271,
+            "recall": 0.43846153846153846,
+            "f1": 0.45967741935483863,
+            "support": 130
+          },
+          "aesthetical": {
+            "precision": 0.3157894736842105,
+            "recall": 0.2553191489361702,
+            "f1": 0.28235294117647053,
+            "support": 94
+          },
+          "scientific": {
+            "precision": 0.21428571428571427,
+            "recall": 0.5,
+            "f1": 0.3,
+            "support": 6
+          },
+          "age": {
+            "precision": 0.78125,
+            "recall": 0.5,
+            "f1": 0.6097560975609756,
+            "support": 50
+          },
+          "ecological": {
+            "precision": 1.0,
+            "recall": 0.875,
+            "f1": 0.9333333333333333,
+            "support": 8
+          }
+        },
+        "classes_without_support": []
+      }
+    }
+  },
+  "test_truncated_words": 0
+}

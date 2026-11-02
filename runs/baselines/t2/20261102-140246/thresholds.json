@@ -1,0 +1,10 @@
+{
+  "social": 0.6,
+  "economic": 0.9,
+  "political": 0.95,
+  "historic": 0.5,
+  "aesthetical": 0.95,
+  "scientific": 0.5,
+  "age": 0.7,
+  "ecological": 0.5
+}
