@@ -1,0 +1,28 @@
+# AI Declaration Format (aidecl)
+# Use a role or team name rather than personal name if this file will be public
+
+schema_version: 1.0.0
+project:
+  name: jscircuit
+  repository: git@github.com:zzbn12345/HEVA_toolkit.git
+  content_type: software
+ai_usage:
+  used: true
+  summary: The developer defined the architecture, design constraints, and quality criteria, and reviewed the final result. AI assisted with code completion, implementation, debugging, documentation, and review under that human guidance.
+  level: significant
+  tools:
+  - name: ChatGPT
+    vendor: OpenAI
+    type: assistant
+    purpose:
+    - ux design
+    - code generation
+    - code review
+    - documentation assistance
+    - guided implementation
+    - debugging
+  scope:
+    code_completion: true
+declaration:
+  date: '2026-09-24'
+  declared_by: Developer
