@@ -44,11 +44,23 @@ Training on Apple's MPS backend isn't bit-for-bit reproducible, so rerunning giv
 scores. Use the trained models below to reproduce the reported ones exactly. See the
 [baselines guide](../src/heva/baselines/README.md) for all options.
 
-**Trained models.** Each run's tokenizer and model configuration are in
-`results/<task>/<run>/model/`. The weights (`model.safetensors`, about 680 MB each) are hosted
-separately; links will be added here.
+**Trained models.** The six trained models are on
+[Hugging Face](https://huggingface.co/ValantisAndreas/heva-baselines) (about 700 MB each), in the same
+folders as their runs here. This folder keeps each run's tokenizer and model configuration, but not
+the weights.
 
-| Task | Seed | Run |
+```python
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+repo = "ValantisAndreas/heva-baselines"
+folder = "t1/20261102-144928/model"
+tokenizer = AutoTokenizer.from_pretrained(repo, subfolder=folder)
+model = AutoModelForSequenceClassification.from_pretrained(repo, subfolder=folder)
+```
+
+For T2, use `AutoModelForTokenClassification` with a `t2/...` folder.
+
+| Task | Seed | Run (the model is in `<run>/model`) |
 |---|---|---|
 | T1 | 13 | `results/t1/20261102-144928` |
 | T1 | 14 | `results/t1/20261102-152545` |
