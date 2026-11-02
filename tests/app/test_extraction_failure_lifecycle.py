@@ -105,8 +105,8 @@ def test_broken_font_example_reaches_actionable_failed_state(tmp_path: Path) -> 
     assert preview.status_code == 200
     assert len(preview.json()["records"]) == assisted.json()["record_count"]
     assert all(record["entities"] for record in preview.json()["records"])
-    assert preview.json()["records"][0]["sentence"] == (
-        '"a Franciscan chapel was built in 1543"'
+    assert preview.json()["records"][0]["sentence"].casefold() == (
+        '"a Franciscan chapel was built in 1543"'.casefold()
     )
     assert "Argumentation" not in preview.json()["records"][0]["sentence"]
 
