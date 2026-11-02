@@ -13,22 +13,24 @@ Framework (CVF) values: `social`, `economic`, `political`, `historic`, `aestheti
 
 ```bash
 pip install -e ".[baselines]"          # torch + transformers
-python -m heva.baselines inspect       # load the data and show the split; no torch needed
-python -m heva.baselines t1            # train and evaluate T1
-python -m heva.baselines t2            # train and evaluate T2
+python -m heva.baselines inspect       # show the released split; no torch needed
+python -m heva.baselines t1            # train and evaluate T1 on the released split
+python -m heva.baselines t2            # train and evaluate T2 on the released split
 python -m heva.baselines significance benchmark/results/t1/<run>   # confidence intervals and tests
 python -m heva.baselines t1 --help     # all options
 ```
 
-Input data goes in `data/baselines/` (see [its README](../../../data/baselines/README.md)).
-Results go to `benchmark/results/`.
+Training reads the released split files in [`benchmark/`](../../../benchmark/README.md). Results go
+to `benchmark/results/`. To build examples and a split from raw inputs instead, or to regenerate
+the released files, see [Raw inputs and export](#raw-inputs-and-export).
 
 ## Folder structure
 
 | File | Role | Needs torch |
 |---|---|---|
 | `__main__.py` | Entry point for `python -m heva.baselines` | no |
-| `cli.py` | Subcommands `inspect`, `t1`, `t2` and `significance`, and their options | no (imports training lazily) |
+| `cli.py` | Subcommands `inspect`, `export`, `t1`, `t2` and `significance`, and their options | no (imports training lazily) |
+| `release.py` | Writes and loads the released split files | no |
 | `labels.py` | The eight values in fixed order, the 17 BIO tags, label-name normalization (`Aesthetic` → `aesthetical`) | no |
 | `corpus.py` | Loads HEVA Data Packages, structured spreadsheets and Atlas.ti CSV exports into T1/T2 examples, validates and deduplicates them | no (`openpyxl` for `.xlsx`) |
 | `splits.py` | 70/10/20 iterative stratification per collection and split summaries | no |
@@ -47,9 +49,9 @@ tests use a tiny randomly initialized BERT and are skipped when torch is missing
 ```mermaid
 flowchart TD
     subgraph INGEST["1. Data ingestion (corpus.py)"]
-        H["data/baselines/heva/**/heva-annotations.json<br/>(CSV only if no JSON)"]
-        S["data/baselines/structured/*.xlsx|csv<br/>52-column HEVA spreadsheets"]
-        A["data/baselines/atlasti/*.csv<br/>Atlas.ti quotation exports"]
+        H["DATA_DIR/heva/**/heva-annotations.json<br/>(CSV only if no JSON)"]
+        S["DATA_DIR/structured/*.xlsx|csv<br/>52-column HEVA spreadsheets"]
+        A["DATA_DIR/atlasti/*.csv<br/>Atlas.ti quotation exports"]
         S --> SV["Read value columns 1-8<br/>(any cell > 0 is present)"]
         SV --> T1S["T1 examples: text + value set"]
         T1S --> D1
@@ -107,9 +109,9 @@ flowchart TD
 
 | Source | Location | Used for | Labels come from |
 |---|---|---|---|
-| HEVA Data Packages | `data/baselines/heva/<package>/heva-annotations.json` | T1 and T2 | `values` and `ner_tags` |
-| Structured spreadsheets | `data/baselines/structured/*.xlsx` or `*.csv` | T1 only | value columns `1`–`8` |
-| Atlas.ti exports | `data/baselines/atlasti/*.csv` | T1 only | `Value: <name>` codes in the `Codes` column |
+| HEVA Data Packages | `DATA_DIR/heva/<package>/heva-annotations.json` | T1 and T2 | `values` and `ner_tags` |
+| Structured spreadsheets | `DATA_DIR/structured/*.xlsx` or `*.csv` | T1 only | value columns `1`–`8` |
+| Atlas.ti exports | `DATA_DIR/atlasti/*.csv` | T1 only | `Value: <name>` codes in the `Codes` column |
 
 - **HEVA:** T1 uses `curated_sentence` when it is set, otherwise `sentence`. T2 uses
   `tokens` and `ner_tags`. Records are skipped and counted when their tags do not line
@@ -255,7 +257,8 @@ saved `predicted_argmax` get confidence intervals for the tuned rule only.
 
 | Option | Default | Notes |
 |---|---|---|
-| `--data-dir` | `data/baselines` | contains `heva/`, `structured/` and `atlasti/` |
+| `--benchmark-dir` | `benchmark` | holds the released `t1/` and `t2/` split files |
+| `--data-dir` | none | raw inputs (`heva/`, `structured/`, `atlasti/`), used instead of the released split |
 | `--output-dir` | `benchmark/results` | |
 | `--model` | `bert-base-multilingual-cased` | any Hugging Face name or local path |
 | `--epochs` | 20 | maximum; early stopping usually ends sooner |
@@ -277,3 +280,29 @@ saved `predicted_argmax` get confidence intervals for the tuned rule only.
 - Texts longer than 512 subword tokens are cut off rather than split into windows.
 - With small validation sets, tuned thresholds can overfit; compare `test_tuned` with
   `test_default_0.5` / `test_argmax`.
+
+## Raw inputs and export
+
+`--data-dir` points at a folder such as `data/`, with:
+
+```
+DATA_DIR/
+├── heva/        HEVA Data Packages, one folder per collection
+│   └── <collection>/heva-annotations.json   (heva-annotations.csv only if the JSON is missing)
+├── structured/  Spreadsheets in the 52-column HEVA format (*.xlsx or *.csv)
+└── atlasti/     Atlas.ti quotation exports (*.csv)
+```
+
+Atlas.ti exports:
+
+- Labels are read from the `Codes` column (`Value: Economic - Before` becomes `economic`). The
+  per-value 0/1 columns of processed exports are ignored because they are 0 for quotations coded
+  both Before and After.
+- Quotations without any `Value:` code are kept as examples with no values.
+- Identical quotations across several exports of one project are merged; their values are combined.
+- Semicolon, comma or tab separated; UTF-8 or Windows-1252. A Quotation Manager export whose header
+  row is unreadable (`????`) is read by Atlas.ti's column order.
+
+`python -m heva.baselines export --data-dir data` regenerates the six `benchmark/{t1,t2}/*.jsonl` files.
+It takes the split from the `split.json` of the runs in `benchmark/results/` and writes nothing if the
+inputs disagree with those runs. It needs the Data Packages in `data/heva/`.

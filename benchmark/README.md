@@ -1,7 +1,6 @@
 # The HEVA benchmark
 
-Two tasks over the eight CVF values, with mBERT baselines and their results. The data files will be
-added with the dataset.
+Two tasks over the eight CVF values, with fixed splits, mBERT baselines and their results.
 
 ## 1. Tasks and data
 
@@ -20,7 +19,36 @@ merged, so that none appears in both training and test data.
 | T2 sentences | 680 | 92 | 189 | 961 |
 
 The two tasks are split separately, so a highlighted sentence can be in T1's training set and T2's
-test set.
+test set, so don't combine the two tasks' splits when training one model on both.
+
+**Loading a split:**
+
+```python
+from datasets import load_dataset  # pip install datasets
+
+t1 = load_dataset("json", data_files={
+    "train": "benchmark/t1/train.jsonl",
+    "validation": "benchmark/t1/validation.jsonl",
+    "test": "benchmark/t1/test.jsonl",
+})
+```
+
+Or without any dependency:
+
+```python
+import json
+
+def load_split(task, split):
+    with open(f"benchmark/{task}/{split}.jsonl", encoding="utf-8") as lines:
+        return [json.loads(line) for line in lines]
+
+test = load_split("t2", "test")
+```
+
+**Fields:**
+
+- T1: `{"id", "text", "values", "source", "document", "collection"}`, where `values` may be `[]`.
+- T2: `{"id", "tokens", "tags", "document", "collection"}`, with one tag per token.
 
 ## 2. Metrics and models
 
@@ -36,8 +64,8 @@ probable tag.
 
 ```bash
 pip install -e ".[baselines]"
-python -m heva.baselines t1 --seed 13 --split-seed 13 --save-model
-python -m heva.baselines t2 --seed 13 --split-seed 13 --save-model
+python -m heva.baselines t1 --seed 13 --save-model
+python -m heva.baselines t2 --seed 13 --save-model
 ```
 
 Training on Apple's MPS backend isn't bit-for-bit reproducible, so rerunning gives slightly different

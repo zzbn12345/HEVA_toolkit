@@ -80,6 +80,7 @@ Thumbs.db
 *.xlsx
 *.ppt
 *.pptx
+!data/structured/*.xlsx
 
 # Reproducible or machine-local HEVA state
 **/.heva/cache/

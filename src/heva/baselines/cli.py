@@ -1,8 +1,9 @@
 """Command line for the T1/T2 baselines.
 
-    python -m heva.baselines inspect            # load data and show the split, no training
+    python -m heva.baselines inspect            # show the released split, no training
     python -m heva.baselines t1 [options]       # sentence-level value classification
     python -m heva.baselines t2 [options]       # value span extraction (BIO)
+    python -m heva.baselines export --data-dir DIR   # write the benchmark split files
     python -m heva.baselines significance RUN   # confidence intervals and paired tests
     python -m heva.baselines significance RUN --split validation   # intervals on validation
 """
@@ -15,9 +16,15 @@ import sys
 from pathlib import Path
 
 from .corpus import load_t1_dataset, load_t2_dataset
+from .release import (
+    RELEASED_SPLIT_SEED,
+    export_release,
+    has_released_split,
+    load_released_split,
+)
 from .splits import split_examples, split_summary
 
-DEFAULT_DATA_DIR = Path("data/baselines")
+DEFAULT_BENCHMARK_DIR = Path("benchmark")
 DEFAULT_OUTPUT_DIR = Path("benchmark/results")
 
 
@@ -27,16 +34,30 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
 
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR,
-                        help="Folder with heva/ (Data Packages), structured/ (52-column spreadsheets) "
-                             "and atlasti/ (CSV exports). "
-                             f"Default: {DEFAULT_DATA_DIR}")
+    common.add_argument("--benchmark-dir", type=Path, default=DEFAULT_BENCHMARK_DIR,
+                        help="Folder with the released t1/ and t2/ split files, used unless "
+                             f"--data-dir is given. Default: {DEFAULT_BENCHMARK_DIR}")
+    common.add_argument("--data-dir", type=Path, default=None,
+                        help="Build the examples and split from raw inputs instead: a folder with "
+                             "heva/ (Data Packages), structured/ (52-column spreadsheets) "
+                             "and atlasti/ (CSV exports).")
     common.add_argument("--seed", type=int, default=13, help="Seed for training (and the split, unless --split-seed is given).")
     common.add_argument("--split-seed", type=int, default=None,
                         help="Seed for the train/validation/test split. Default: --seed. "
                              "Fix it to repeat training with several --seed values on one split.")
 
     commands.add_parser("inspect", parents=[common], help="Load both datasets and print the split.")
+
+    export = commands.add_parser(
+        "export", help="Write the released benchmark split files from raw inputs."
+    )
+    export.add_argument("--data-dir", type=Path, required=True,
+                        help="Folder with heva/ and structured/ inputs.")
+    export.add_argument("--results-dir", type=Path, default=DEFAULT_OUTPUT_DIR,
+                        help="Published runs, whose split.json gives the split. "
+                             f"Default: {DEFAULT_OUTPUT_DIR}")
+    export.add_argument("--benchmark-dir", type=Path, default=DEFAULT_BENCHMARK_DIR,
+                        help=f"Receives the split files. Default: {DEFAULT_BENCHMARK_DIR}")
 
     significance = commands.add_parser(
         "significance",
@@ -70,8 +91,18 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _inspect(data_dir: Path, seed: int) -> None:
+def _inspect(data_dir: Path | None, benchmark_dir: Path, seed: int) -> None:
     for name, loader in (("T1", load_t1_dataset), ("T2", load_t2_dataset)):
+        if data_dir is None:
+            task = name.lower()
+            if not has_released_split(benchmark_dir, task):
+                print(f"== {name}: no released split under {benchmark_dir}")
+                continue
+            parts, report = load_released_split(benchmark_dir, task)
+            print(f"== {name}: {sum(len(part) for part in parts.values())} examples")
+            print(json.dumps(report.as_dict(), indent=2, ensure_ascii=False))
+            print(json.dumps(split_summary(parts), indent=2))
+            continue
         examples, report = loader(data_dir)
         print(f"== {name}: {len(examples)} examples")
         print(json.dumps(report.as_dict(), indent=2, ensure_ascii=False))
@@ -115,18 +146,44 @@ def _significance(run_dirs: list[Path], resamples: int, seed: int, split: str) -
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "inspect":
-        _inspect(args.data_dir, args.seed if args.split_seed is None else args.split_seed)
+        _inspect(
+            args.data_dir, args.benchmark_dir,
+            args.seed if args.split_seed is None else args.split_seed,
+        )
+        return 0
+    if args.command == "export":
+        try:
+            written = export_release(args.data_dir, args.results_dir, args.benchmark_dir)
+        except (OSError, ValueError) as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(json.dumps(written, indent=2))
         return 0
     if args.command == "significance":
         return _significance(args.run_dirs, args.resamples, args.seed, args.split)
 
-    loader = load_t1_dataset if args.command == "t1" else load_t2_dataset
-    examples, report = loader(args.data_dir)
-    if not examples:
-        print(f"No {args.command.upper()} examples found under {args.data_dir}. "
-              "Put HEVA Data Packages in heva/, structured spreadsheets in structured/ "
-              "and Atlas.ti CSVs in atlasti/.", file=sys.stderr)
-        return 1
+    parts = None
+    split_seed = args.split_seed
+    if args.data_dir is None:
+        if not has_released_split(args.benchmark_dir, args.command):
+            print(f"No released {args.command.upper()} split under {args.benchmark_dir}. "
+                  "Give --data-dir to build one from raw inputs.", file=sys.stderr)
+            return 1
+        if args.split_seed not in (None, RELEASED_SPLIT_SEED):
+            print(f"The released split uses split seed {RELEASED_SPLIT_SEED}. "
+                  "Give --data-dir to make another split.", file=sys.stderr)
+            return 1
+        split_seed = RELEASED_SPLIT_SEED
+        parts, report = load_released_split(args.benchmark_dir, args.command)
+        examples = [example for part in parts.values() for example in part]
+    else:
+        loader = load_t1_dataset if args.command == "t1" else load_t2_dataset
+        examples, report = loader(args.data_dir)
+        if not examples:
+            print(f"No {args.command.upper()} examples found under {args.data_dir}. "
+                  "Put HEVA Data Packages in heva/, structured spreadsheets in structured/ "
+                  "and Atlas.ti CSVs in atlasti/.", file=sys.stderr)
+            return 1
 
     # Imported here so `inspect` works without torch/transformers installed.
     from .training import TrainingConfig
@@ -139,7 +196,7 @@ def main(argv=None) -> int:
         learning_rate=args.learning_rate,
         max_length=args.max_length,
         seed=args.seed,
-        split_seed=args.split_seed,
+        split_seed=split_seed,
         device=args.device,
     )
     if args.command == "t1":
@@ -147,7 +204,9 @@ def main(argv=None) -> int:
     else:
         from .t2_span_extraction import run_t2 as run
     try:
-        run_dir = run(examples, report, config, args.output_dir, save_model=args.save_model)
+        run_dir = run(
+            examples, report, config, args.output_dir, save_model=args.save_model, parts=parts
+        )
     except ValueError as error:
         print(error, file=sys.stderr)
         return 1

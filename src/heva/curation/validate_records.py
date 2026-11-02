@@ -1,9 +1,9 @@
 """Command-line validator for HEVA extracted records.
 
 Usage examples:
-- python -m heva.curation.validate_records --file data/Galle_P127_extracted.json
+- python -m heva.curation.validate_records --file tests/fixtures/contract-examples/Galle_P127_extracted.json
 - python -m heva.curation.validate_records --all
-- python -m heva.curation.validate_records --glob "data/*_extracted.json"
+- python -m heva.curation.validate_records --glob "tests/fixtures/contract-examples/*_extracted.json"
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ def _iter_targets(file_path: str | None, all_files: bool, glob_pattern: str | No
     if glob_pattern:
         return sorted(Path().glob(glob_pattern))
     if all_files:
-        return sorted(Path("data").glob("*_extracted.json"))
+        return sorted(Path("tests/fixtures/contract-examples").glob("*_extracted.json"))
     return []
 
 
@@ -59,8 +59,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate HEVA extracted JSON records.")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--file", help="Validate one JSON file.")
-    group.add_argument("--all", action="store_true", help="Validate data/*_extracted.json.")
-    group.add_argument("--glob", help='Validate files matching a glob pattern, e.g. "data/*_extracted.json".')
+    group.add_argument("--all", action="store_true", help="Validate tests/fixtures/contract-examples/*_extracted.json.")
+    group.add_argument("--glob", help='Validate files matching a glob pattern, e.g. "tests/fixtures/contract-examples/*_extracted.json".')
     parser.add_argument(
         "--max-issues",
         type=int,

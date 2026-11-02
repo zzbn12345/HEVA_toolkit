@@ -10,11 +10,22 @@ It accompanies the paper *HEVA: A Dataset, Toolkit and Benchmark for Heritage Va
 
 | Part | What it is | Start here |
 |---|---|---|
-| **1. Dataset** | 6,324 text units from 8 collections and 197 sources in English, Dutch and Chinese; 1,017 sentences also have token-level value spans | To be added |
-| **2. Benchmark** | Value classification (T1) and value span extraction (T2), with mBERT baselines and results | [`benchmark/`](benchmark/README.md) |
+| **1. Dataset** | 6,324 text units from 8 collections and 197 sources in English, Dutch and Chinese; 1,017 sentences also have token-level value spans | [`data/`](data/README.md) |
+| **2. Benchmark** | Value classification (T1) and value span extraction (T2), with fixed splits, mBERT baselines and results | [`benchmark/`](benchmark/README.md) |
 | **3. Annotation app** | Local software that turns colour-highlighted PDF and Word documents into validated, provenance-preserving Data Packages | [`app/`](app/README.md) |
 
 ## Quick start
+
+Load the benchmark splits with no installation beyond Python:
+
+```python
+import json
+
+with open("benchmark/t1/train.jsonl", encoding="utf-8") as lines:
+    train = [json.loads(line) for line in lines]
+
+print(train[0]["text"], train[0]["values"])
+```
 
 Start the app:
 
@@ -29,7 +40,8 @@ See [`benchmark/`](benchmark/README.md) for how to run the baselines.
 ## Repository layout
 
 ```
-benchmark/  tasks and baseline results
+data/       collections and documents tables, spreadsheets, Data Packages
+benchmark/  T1 and T2 split files, baseline results
 app/        guide to the annotation app
 src/heva/   code: app, curation, extraction, baselines
 docs/       toolkit documentation          schemas/   JSON schemas
@@ -38,7 +50,8 @@ examples/   dummy projects and packages    tests/     test suite
 
 ## Citation and licences
 
-See [`CITATION.cff`](CITATION.cff). The code is released under the [MIT licence](LICENSE).
+See [`CITATION.cff`](CITATION.cff). The code is released under the [MIT licence](LICENSE) and the
+data under [CC BY 4.0](data/LICENSE). Source documents are not redistributed.
 
 ## Acknowledgments
 

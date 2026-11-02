@@ -10,6 +10,11 @@
 
 ### Changed
 
+- Reorganised `data/` as the released dataset, with its spreadsheets and reference tables, and added
+  fixed T1 and T2 split files in `benchmark/`. Baselines now train on those files by default;
+  `--data-dir data` builds examples from the raw inputs, and the new `export` command regenerates the
+  split files. The pilot project was removed; the examples its tests use moved to
+  `tests/fixtures/contract-examples/`.
 - Added a landing page for the HEVA resource. The app's guide moved to `app/README.md`, and the
   benchmark's description and results to `benchmark/`. Baseline runs now go to `benchmark/results/`.
 - Added the managed PDF import foundation for researchers who want a portable project copy

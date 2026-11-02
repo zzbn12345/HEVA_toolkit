@@ -161,11 +161,15 @@ def run_t2(
     config: TrainingConfig,
     output_dir: Path,
     save_model: bool = False,
+    parts: dict[str, list] | None = None,
 ) -> Path:
-    """Fine-tune, select the best epoch on validation, tune thresholds, score test."""
+    """Fine-tune, select the best epoch on validation, tune thresholds, score test.
+
+    ``parts`` gives a ready train/validation/test split; otherwise ``examples`` are split.
+    """
     set_seed(config.seed)
     device = resolve_device(config.device)
-    parts = split_examples(examples, config.effective_split_seed)
+    parts = parts or split_examples(examples, config.effective_split_seed)
     train, validation, test = parts["train"], parts["validation"], parts["test"]
 
     tokenizer = AutoTokenizer.from_pretrained(config.model_name)
