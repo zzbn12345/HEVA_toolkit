@@ -16,17 +16,6 @@ It accompanies the paper *HEVA: A Dataset, Toolkit and Benchmark for Heritage Va
 
 ## Quick start
 
-Load the benchmark splits with no installation beyond Python:
-
-```python
-import json
-
-with open("benchmark/t1/train.jsonl", encoding="utf-8") as lines:
-    train = [json.loads(line) for line in lines]
-
-print(train[0]["text"], train[0]["values"])
-```
-
 Start the app:
 
 ```bash

@@ -91,3 +91,4 @@ Thumbs.db
 **/validation-report.json
 /legacy_data/
 /issues_jose/
+benchmark/results/**/model.safetensors

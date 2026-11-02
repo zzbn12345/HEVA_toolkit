@@ -10,7 +10,7 @@ model or silently rewrite extraction evidence.
 ## Install and start
 
 ```bash
-python -m pip install -e ".[app]"
+python -m pip install -e ".[app,extraction]"
 python -m heva.app
 ```
 
