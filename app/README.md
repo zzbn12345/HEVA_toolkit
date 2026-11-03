@@ -98,7 +98,7 @@ python -m pip install -e ".[dev]"
 python -m pytest
 ```
 
-The complete documentation is intentionally limited to six short pages listed in
+The app's documentation is six short pages listed in
 [`docs/index.md`](../docs/index.md).
 
 ## Acknowledgments
