@@ -10,6 +10,16 @@
 
 ### Changed
 
+- Reorganised `data/` as the released dataset, with its spreadsheets and reference tables, and added
+  fixed T1 and T2 split files in `benchmark/`. Baselines now train on those files by default;
+  `--data-dir data` builds examples from the raw inputs, and the new `export` command regenerates the
+  split files. The pilot project was removed; the examples its tests use moved to
+  `tests/fixtures/contract-examples/`.
+- Added the Data Packages of Willemstad, Galle and Stone Town to `data/heva/`. Baselines now read HEVA
+  records in document-ID order, so `--data-dir data` and `export` reproduce the released split
+  whatever order a package lists its documents in.
+- Added a landing page for the HEVA resource. The app's guide moved to `app/README.md`, and the
+  benchmark's description and results to `benchmark/`. Baseline runs now go to `benchmark/results/`.
 - Added the managed PDF import foundation for researchers who want a portable project copy
   instead of an external source binding. Imports verify copied bytes, reuse identical content,
   avoid filename overwrites, and roll back when the registry cannot be updated. A PDF-only

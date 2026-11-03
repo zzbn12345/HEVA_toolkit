@@ -95,6 +95,39 @@ def test_split_seed_keeps_the_split_across_training_seeds(
     assert splits[0] == splits[1]
 
 
+@pytest.mark.parametrize("task", ["t1", "t2"])
+def test_training_from_released_split_keeps_it_and_records_its_seed(
+    task: str, tiny_bert: Path, data_dir: Path, tmp_path: Path
+) -> None:
+    from heva.baselines.corpus import load_t1_dataset, load_t2_dataset
+    from heva.baselines.release import _row_from_example, split_path
+    from heva.baselines.splits import split_examples
+
+    examples, _ = (load_t1_dataset if task == "t1" else load_t2_dataset)(data_dir)
+    parts = split_examples(examples, 13)
+    benchmark = tmp_path / "benchmark"
+    for name, part in parts.items():
+        path = split_path(benchmark, task, name)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "".join(json.dumps(_row_from_example(task, example)) + "\n" for example in part),
+            encoding="utf-8",
+        )
+    output = tmp_path / "runs"
+
+    assert main([
+        task, "--benchmark-dir", str(benchmark), "--output-dir", str(output), "--model", str(tiny_bert),
+        "--epochs", "1", "--device", "cpu", "--seed", "14",
+    ]) == 0
+
+    (run_dir,) = (output / task).iterdir()
+    config = json.loads((run_dir / "config.json").read_text())
+    assert (config["seed"], config["split_seed"]) == (14, 13)
+    assert json.loads((run_dir / "split.json").read_text()) == {
+        name: [example.example_id for example in part] for name, part in parts.items()
+    }
+
+
 def test_training_reports_missing_data(tmp_path: Path, capsys) -> None:
     assert main(["t1", "--data-dir", str(tmp_path / "empty")]) == 1
     assert "No T1 examples found" in capsys.readouterr().err

@@ -3,7 +3,7 @@
 
 schema_version: 1.0.0
 project:
-  name: jscircuit
+  name: heva-toolkit
   repository: git@github.com:zzbn12345/HEVA_toolkit.git
   content_type: software
 ai_usage:

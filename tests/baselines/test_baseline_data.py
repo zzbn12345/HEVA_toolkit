@@ -67,6 +67,22 @@ def test_heva_csv_is_used_only_without_json(tmp_path: Path) -> None:
     assert len(t2) == PACKAGE_RECORDS
 
 
+def test_heva_example_order_ignores_the_package_document_order(tmp_path: Path) -> None:
+    records = package_records()
+    for index, record in enumerate(records):
+        record["document_id"] = f"HEVA-{index % 2}"
+    write_package_json(tmp_path / "ascending" / "heva" / "package", records)
+    write_package_json(
+        tmp_path / "descending" / "heva" / "package",
+        sorted(records, key=lambda record: record["document_id"], reverse=True),
+    )
+
+    for loader in (load_t1_dataset, load_t2_dataset):
+        ascending, _ = loader(tmp_path / "ascending")
+        descending, _ = loader(tmp_path / "descending")
+        assert [e.example_id for e in ascending] == [e.example_id for e in descending]
+
+
 def test_heva_records_with_misaligned_tags_are_skipped(tmp_path: Path) -> None:
     records = package_records()
     records[0]["ner_tags"].pop()

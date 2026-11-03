@@ -1,0 +1,64 @@
+{
+  "contributors": [
+    {
+      "role": "creator",
+      "title": "R. Boxem"
+    },
+    {
+      "role": "creator",
+      "title": "R. Fuhren"
+    },
+    {
+      "role": "contributor",
+      "title": "Valantis Andreas"
+    },
+    {
+      "role": "contributor",
+      "title": "Yan Zhou"
+    },
+    {
+      "role": "contributor",
+      "title": "Jose Urra Llanusa"
+    },
+    {
+      "role": "contributor",
+      "title": "Jingze Yin"
+    },
+    {
+      "role": "contributor",
+      "title": "Nan Bai"
+    }
+  ],
+  "description": "2011\tEnglish\tOld Town of Galle and its Fortifications, Sri Lanka\nBoxem and Fuhren (2011), Cultural Heritage and Sustainability: Galle as a Case Study, master's thesis, Eindhoven University of Technology",
+  "licenses": [
+    {
+      "name": "CC-BY-4.0"
+    }
+  ],
+  "name": "4-p-2011-rb-rf",
+  "profile": "data-package",
+  "resources": [
+    {
+      "bytes": 64027,
+      "hash": "sha256:8d9d287cfc7ddcb2b584fac2fa3b7d8662e26975bb3c52eefb609b94dd66b8b5",
+      "mediatype": "application/json",
+      "name": "heva-annotations-json",
+      "path": "heva-annotations.json"
+    },
+    {
+      "bytes": 27588,
+      "hash": "sha256:23781d87d6deff3003da40bfaf0b405e3089fe9c4514ae2f0532f50535ec9430",
+      "mediatype": "text/csv",
+      "name": "heva-annotations-csv",
+      "path": "heva-annotations.csv"
+    },
+    {
+      "bytes": 529,
+      "hash": "sha256:519eaab96ad5ca33645b8b60d1f7f8c2f859f50be85afa1d396a1fdf3793e4d3",
+      "mediatype": "application/json",
+      "name": "build-log",
+      "path": "build-log.json"
+    }
+  ],
+  "title": "Galle"
+}

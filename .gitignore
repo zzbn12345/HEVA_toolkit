@@ -80,6 +80,8 @@ Thumbs.db
 *.xlsx
 *.ppt
 *.pptx
+!data/structured/*.xlsx
+!examples/EXAMPLE.xlsx
 
 # Reproducible or machine-local HEVA state
 **/.heva/cache/
@@ -90,3 +92,4 @@ Thumbs.db
 **/validation-report.json
 /legacy_data/
 /issues_jose/
+benchmark/results/**/model.safetensors

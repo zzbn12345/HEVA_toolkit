@@ -18,7 +18,7 @@ from heva.curation.contract import (
 
 
 ROOT = Path(__file__).parents[2]
-DATA = ROOT / "data"
+DATA = ROOT / "tests" / "fixtures" / "contract-examples"
 
 
 def representative_record() -> dict[str, object]:

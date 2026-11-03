@@ -1,0 +1,2 @@
+# Data Package hashes cover these exact bytes, so git must never change their line endings.
+data/heva/** -text

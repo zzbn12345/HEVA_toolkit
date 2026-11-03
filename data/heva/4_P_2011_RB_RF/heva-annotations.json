@@ -1,0 +1,2438 @@
+{
+  "dataset": {
+    "contributors": [
+      "Valantis Andreas",
+      "Yan Zhou",
+      "Jose Urra Llanusa",
+      "Jingze Yin",
+      "Nan Bai"
+    ],
+    "creators": [
+      "R. Boxem",
+      "R. Fuhren"
+    ],
+    "description": "2011\tEnglish\tOld Town of Galle and its Fortifications, Sri Lanka\nBoxem and Fuhren (2011), Cultural Heritage and Sustainability: Galle as a Case Study, master's thesis, Eindhoven University of Technology",
+    "known_limitations": [
+      "TBD"
+    ],
+    "license": "CC-BY-4.0",
+    "name": "4-p-2011-rb-rf",
+    "rights": "Technische Universiteit Delft hereby disclaims all copyright interest in the program “HEVA_toolkit” written by the Author(s). \n-- Machiel van Dorst, Dean of Faculty of Architecture and the Built Environment \nCopyright (c) 2024 Nan Bai, Jose Carlos Urra, Valantis Andreas, Yan Zhou",
+    "title": "Galle"
+  },
+  "document_count": 1,
+  "documents": [
+    {
+      "annotations_checksum_sha256": "d4734320326dc4ee5e0d6c1e362b5e07b16052eb61e26d358500614acfd8443a",
+      "citation": "s030970. Verslag_final_version.indd.",
+      "document_id": "HEVA-7B61903295DC",
+      "original_annotators": [
+        {
+          "affiliation": "TU Delft",
+          "name": "Nan",
+          "orcid": null,
+          "person_id": "PERSON-11C989ACEA96"
+        }
+      ],
+      "record_count": 28,
+      "records": [
+        {
+          "entities": [
+            {
+              "color": "#A8D200",
+              "end": 16,
+              "label": "ecological",
+              "start": 0,
+              "text": "The bay of Galle"
+            },
+            {
+              "color": "#A8D200",
+              "end": 90,
+              "label": "ecological",
+              "start": 60,
+              "text": "sheltered by a rocky peninsula"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "B-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "The bay of Galle lies off the southwest coast of Sri Lanka, sheltered by a rocky peninsula.",
+          "sentence_id": 1,
+          "tokens": [
+            "The",
+            "bay",
+            "of",
+            "Galle",
+            "lies",
+            "off",
+            "the",
+            "southwest",
+            "coast",
+            "of",
+            "Sri",
+            "Lanka",
+            ",",
+            "sheltered",
+            "by",
+            "a",
+            "rocky",
+            "peninsula"
+          ],
+          "values": [
+            "ecological"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FF40FF",
+              "end": 131,
+              "label": "historic",
+              "start": 77,
+              "text": "one of the most ancient “ports of call of the levant.”"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "Mentioned as early as 545 in the cosmography of Cosmas Indicopleustes, it is one of the most ancient “ports of call of the levant.”",
+          "sentence_id": 2,
+          "tokens": [
+            "Mentioned",
+            "as",
+            "early",
+            "as",
+            "545",
+            "in",
+            "the",
+            "cosmography",
+            "of",
+            "Cosmas",
+            "Indicopleustes",
+            ",",
+            "it",
+            "is",
+            "one",
+            "of",
+            "the",
+            "most",
+            "ancient",
+            "“",
+            "ports",
+            "of",
+            "call",
+            "of",
+            "the",
+            "levant",
+            ".",
+            "”"
+          ],
+          "values": [
+            "historic"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#D7AEFF",
+              "end": 73,
+              "label": "economic",
+              "start": 45,
+              "text": "the principal port of Ceylon"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "When Ibn Batuta landed there in 1344, it was the principal port of Ceylon.",
+          "sentence_id": 3,
+          "tokens": [
+            "When",
+            "Ibn",
+            "Batuta",
+            "landed",
+            "there",
+            "in",
+            "1344",
+            ",",
+            "it",
+            "was",
+            "the",
+            "principal",
+            "port",
+            "of",
+            "Ceylon",
+            "."
+          ],
+          "values": [
+            "economic"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFFC00",
+              "end": 94,
+              "label": "political",
+              "start": 56,
+              "text": "a rampart and three bastions to defend"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "At the end of the 16th century they hastily constructed a rampart and three bastions to defend the peninsula on the northern landside.",
+          "sentence_id": 4,
+          "tokens": [
+            "At",
+            "the",
+            "end",
+            "of",
+            "the",
+            "16th",
+            "century",
+            "they",
+            "hastily",
+            "constructed",
+            "a",
+            "rampart",
+            "and",
+            "three",
+            "bastions",
+            "to",
+            "defend",
+            "the",
+            "peninsula",
+            "on",
+            "the",
+            "northern",
+            "landside",
+            "."
+          ],
+          "values": [
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFD300",
+              "end": 110,
+              "label": "social",
+              "start": 93,
+              "text": "Franciscan chapel"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-social",
+            "I-social",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "Few vestiges subsist from this phase of Portuguese occupation during which, in particular, a Franciscan chapel was built in 1543.",
+          "sentence_id": 5,
+          "tokens": [
+            "Few",
+            "vestiges",
+            "subsist",
+            "from",
+            "this",
+            "phase",
+            "of",
+            "Portuguese",
+            "occupation",
+            "during",
+            "which",
+            ",",
+            "in",
+            "particular",
+            ",",
+            "a",
+            "Franciscan",
+            "chapel",
+            "was",
+            "built",
+            "in",
+            "1543",
+            "."
+          ],
+          "values": [
+            "social"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFFC00",
+              "end": 23,
+              "label": "political",
+              "start": 9,
+              "text": "fortified town"
+            },
+            {
+              "color": "#FFFC00",
+              "end": 176,
+              "label": "political",
+              "start": 95,
+              "text": "precarious Portuguese defenses constituted partially of palisades and earth banks"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "B-political",
+            "I-political",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "When the fortified town fell into the hands of the Dutch in 1640, they decided tot replace the precarious Portuguese defenses constituted partially of palisades and earth banks.",
+          "sentence_id": 6,
+          "tokens": [
+            "When",
+            "the",
+            "fortified",
+            "town",
+            "fell",
+            "into",
+            "the",
+            "hands",
+            "of",
+            "the",
+            "Dutch",
+            "in",
+            "1640",
+            ",",
+            "they",
+            "decided",
+            "tot",
+            "replace",
+            "the",
+            "precarious",
+            "Portuguese",
+            "defenses",
+            "constituted",
+            "partially",
+            "of",
+            "palisades",
+            "and",
+            "earth",
+            "banks",
+            "."
+          ],
+          "values": [
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#A8D200",
+              "end": 41,
+              "label": "ecological",
+              "start": 28,
+              "text": "the peninsula"
+            },
+            {
+              "color": "#FFFC00",
+              "end": 69,
+              "label": "political",
+              "start": 47,
+              "text": "a bastioned stone wall"
+            },
+            {
+              "color": "#FF40FF",
+              "end": 216,
+              "label": "historic",
+              "start": 113,
+              "text": "English, French, Danish, Spanish, and Portuguese fleets vying with Holland for the supremacy of the sea"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-ecological",
+            "I-ecological",
+            "O",
+            "B-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "They encircled the whole of the peninsula with a bastioned stone wall so as to render it impregnable against the English, French, Danish, Spanish, and Portuguese fleets vying with Holland for the supremacy of the sea.",
+          "sentence_id": 7,
+          "tokens": [
+            "They",
+            "encircled",
+            "the",
+            "whole",
+            "of",
+            "the",
+            "peninsula",
+            "with",
+            "a",
+            "bastioned",
+            "stone",
+            "wall",
+            "so",
+            "as",
+            "to",
+            "render",
+            "it",
+            "impregnable",
+            "against",
+            "the",
+            "English",
+            ",",
+            "French",
+            ",",
+            "Danish",
+            ",",
+            "Spanish",
+            ",",
+            "and",
+            "Portuguese",
+            "fleets",
+            "vying",
+            "with",
+            "Holland",
+            "for",
+            "the",
+            "supremacy",
+            "of",
+            "the",
+            "sea",
+            "."
+          ],
+          "values": [
+            "ecological",
+            "historic",
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFFC00",
+              "end": 44,
+              "label": "political",
+              "start": 11,
+              "text": "fortified city built by the Dutch"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "B-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "It is this fortified city built by the Dutch which exist today with but few changes.",
+          "sentence_id": 8,
+          "tokens": [
+            "It",
+            "is",
+            "this",
+            "fortified",
+            "city",
+            "built",
+            "by",
+            "the",
+            "Dutch",
+            "which",
+            "exist",
+            "today",
+            "with",
+            "but",
+            "few",
+            "changes",
+            "."
+          ],
+          "values": [
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFFC00",
+              "end": 70,
+              "label": "political",
+              "start": 59,
+              "text": "14 bastions"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-political",
+            "I-political",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "It has an area of 52 hectares inside the walls defended by 14 bastions.",
+          "sentence_id": 9,
+          "tokens": [
+            "It",
+            "has",
+            "an",
+            "area",
+            "of",
+            "52",
+            "hectares",
+            "inside",
+            "the",
+            "walls",
+            "defended",
+            "by",
+            "14",
+            "bastions",
+            "."
+          ],
+          "values": [
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFFC00",
+              "end": 52,
+              "label": "political",
+              "start": 0,
+              "text": "The majority of the curtain walls were built in 1663"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "B-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "The majority of the curtain walls were built in 1663.",
+          "sentence_id": 10,
+          "tokens": [
+            "The",
+            "majority",
+            "of",
+            "the",
+            "curtain",
+            "walls",
+            "were",
+            "built",
+            "in",
+            "1663",
+            "."
+          ],
+          "values": [
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFFC00",
+              "end": 87,
+              "label": "political",
+              "start": 0,
+              "text": "The northern fortified gate, protected by a drawbridge and a ditch, bears the date 1669"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "B-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "The northern fortified gate, protected by a drawbridge and a ditch, bears the date 1669.",
+          "sentence_id": 11,
+          "tokens": [
+            "The",
+            "northern",
+            "fortified",
+            "gate",
+            ",",
+            "protected",
+            "by",
+            "a",
+            "drawbridge",
+            "and",
+            "a",
+            "ditch",
+            ",",
+            "bears",
+            "the",
+            "date",
+            "1669",
+            "."
+          ],
+          "values": [
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#00D5FF",
+              "end": 52,
+              "label": "aesthetical",
+              "start": 27,
+              "text": "on a regular grid pattern"
+            },
+            {
+              "color": "#A8D200",
+              "end": 194,
+              "label": "ecological",
+              "start": 53,
+              "text": "adapted to the configuration of the terrain (north-south peripheral streets are parallel to the ramparts and not to the central traffic axed)"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "B-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "Much of the city, laid out on a regular grid pattern adapted to the configuration of the terrain (north-south peripheral streets are parallel to the ramparts and not to the central traffic axed), dates from this period.",
+          "sentence_id": 12,
+          "tokens": [
+            "Much",
+            "of",
+            "the",
+            "city",
+            ",",
+            "laid",
+            "out",
+            "on",
+            "a",
+            "regular",
+            "grid",
+            "pattern",
+            "adapted",
+            "to",
+            "the",
+            "configuration",
+            "of",
+            "the",
+            "terrain",
+            "(",
+            "north",
+            "-",
+            "south",
+            "peripheral",
+            "streets",
+            "are",
+            "parallel",
+            "to",
+            "the",
+            "ramparts",
+            "and",
+            "not",
+            "to",
+            "the",
+            "central",
+            "traffic",
+            "axed",
+            ")",
+            ",",
+            "dates",
+            "from",
+            "this",
+            "period",
+            "."
+          ],
+          "values": [
+            "aesthetical",
+            "ecological"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FF40FF",
+              "end": 23,
+              "label": "historic",
+              "start": 0,
+              "text": "During the 18th century"
+            },
+            {
+              "color": "#FFFC00",
+              "end": 65,
+              "label": "political",
+              "start": 25,
+              "text": "protected by a sea wall finished in 1729"
+            },
+            {
+              "color": "#FF40FF",
+              "end": 99,
+              "label": "historic",
+              "start": 66,
+              "text": "the city reached full development"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "B-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "O",
+            "B-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "B-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "During the 18th century, protected by a sea wall finished in 1729 the city reached full development.",
+          "sentence_id": 13,
+          "tokens": [
+            "During",
+            "the",
+            "18th",
+            "century",
+            ",",
+            "protected",
+            "by",
+            "a",
+            "sea",
+            "wall",
+            "finished",
+            "in",
+            "1729",
+            "the",
+            "city",
+            "reached",
+            "full",
+            "development",
+            "."
+          ],
+          "values": [
+            "historic",
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFD300",
+              "end": 22,
+              "label": "social",
+              "start": 3,
+              "text": "housed 500 families"
+            },
+            {
+              "color": "#D7AEFF",
+              "end": 124,
+              "label": "economic",
+              "start": 46,
+              "text": "public administrations, trade establishments and warehouses were located there"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "B-social",
+            "I-social",
+            "I-social",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "It housed 500 families, and a large number of public administrations, trade establishments and warehouses were located there.",
+          "sentence_id": 14,
+          "tokens": [
+            "It",
+            "housed",
+            "500",
+            "families",
+            ",",
+            "and",
+            "a",
+            "large",
+            "number",
+            "of",
+            "public",
+            "administrations",
+            ",",
+            "trade",
+            "establishments",
+            "and",
+            "warehouses",
+            "were",
+            "located",
+            "there",
+            "."
+          ],
+          "values": [
+            "economic",
+            "social"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFD300",
+              "end": 12,
+              "label": "social",
+              "start": 2,
+              "text": "Protestant"
+            },
+            {
+              "color": "#00D5FF",
+              "end": 27,
+              "label": "aesthetical",
+              "start": 14,
+              "text": "baroque-style"
+            },
+            {
+              "color": "#FFD300",
+              "end": 34,
+              "label": "social",
+              "start": 28,
+              "text": "church"
+            },
+            {
+              "color": "#FFD300",
+              "end": 111,
+              "label": "social",
+              "start": 93,
+              "text": "European colonists"
+            },
+            {
+              "color": "#FFD300",
+              "end": 140,
+              "label": "social",
+              "start": 118,
+              "text": "few Christina converts"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "B-social",
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "B-social",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-social",
+            "I-social",
+            "O",
+            "O",
+            "B-social",
+            "I-social",
+            "I-social",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "A Protestant, baroque-style church, the oldest in Sri Lanka, was constructed in 1775 for the European colonists and a few Christina converts from plans drawn up by Abraham Anthonisz.",
+          "sentence_id": 15,
+          "tokens": [
+            "A",
+            "Protestant",
+            ",",
+            "baroque",
+            "-",
+            "style",
+            "church",
+            ",",
+            "the",
+            "oldest",
+            "in",
+            "Sri",
+            "Lanka",
+            ",",
+            "was",
+            "constructed",
+            "in",
+            "1775",
+            "for",
+            "the",
+            "European",
+            "colonists",
+            "and",
+            "a",
+            "few",
+            "Christina",
+            "converts",
+            "from",
+            "plans",
+            "drawn",
+            "up",
+            "by",
+            "Abraham",
+            "Anthonisz",
+            "."
+          ],
+          "values": [
+            "aesthetical",
+            "social"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFFC00",
+              "end": 48,
+              "label": "political",
+              "start": 36,
+              "text": "a stronghold"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-political",
+            "I-political",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "However, Galle remained essentially a stronghold.",
+          "sentence_id": 16,
+          "tokens": [
+            "However",
+            ",",
+            "Galle",
+            "remained",
+            "essentially",
+            "a",
+            "stronghold",
+            "."
+          ],
+          "values": [
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#00D5FF",
+              "end": 25,
+              "label": "aesthetical",
+              "start": 3,
+              "text": "the layout of the city"
+            },
+            {
+              "color": "#FFFC00",
+              "end": 110,
+              "label": "political",
+              "start": 26,
+              "text": "the Commandant’s residence, the arsenal and the powder house were prominent features"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "B-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "In the layout of the city the Commandant’s residence, the arsenal and the powder house were prominent features.",
+          "sentence_id": 17,
+          "tokens": [
+            "In",
+            "the",
+            "layout",
+            "of",
+            "the",
+            "city",
+            "the",
+            "Commandant",
+            "’s",
+            "residence",
+            ",",
+            "the",
+            "arsenal",
+            "and",
+            "the",
+            "powder",
+            "house",
+            "were",
+            "prominent",
+            "features",
+            "."
+          ],
+          "values": [
+            "aesthetical",
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#D7AEFF",
+              "end": 45,
+              "label": "economic",
+              "start": 0,
+              "text": "The forge, carpentry and ropemaking workshops"
+            },
+            {
+              "color": "#FFFC00",
+              "end": 81,
+              "label": "political",
+              "start": 47,
+              "text": "the naval guardhouse, and barracks"
+            },
+            {
+              "color": "#D7AEFF",
+              "end": 139,
+              "label": "economic",
+              "start": 123,
+              "text": "prosperous trade"
+            },
+            {
+              "color": "#FFFC00",
+              "end": 160,
+              "label": "political",
+              "start": 143,
+              "text": "military security"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "B-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "O",
+            "B-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "I-political",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-economic",
+            "I-economic",
+            "O",
+            "B-political",
+            "I-political",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "The forge, carpentry and ropemaking workshops, the naval guardhouse, and barracks rounded out a system that closely linked prosperous trade to military security.",
+          "sentence_id": 18,
+          "tokens": [
+            "The",
+            "forge",
+            ",",
+            "carpentry",
+            "and",
+            "ropemaking",
+            "workshops",
+            ",",
+            "the",
+            "naval",
+            "guardhouse",
+            ",",
+            "and",
+            "barracks",
+            "rounded",
+            "out",
+            "a",
+            "system",
+            "that",
+            "closely",
+            "linked",
+            "prosperous",
+            "trade",
+            "to",
+            "military",
+            "security",
+            "."
+          ],
+          "values": [
+            "economic",
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FF40FF",
+              "end": 73,
+              "label": "historic",
+              "start": 0,
+              "text": "The fort of Galle was handed over to the English only on 23 February 1796"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "B-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "The fort of Galle was handed over to the English only on 23 February 1796, one week after the surrender of Colombo.",
+          "sentence_id": 19,
+          "tokens": [
+            "The",
+            "fort",
+            "of",
+            "Galle",
+            "was",
+            "handed",
+            "over",
+            "to",
+            "the",
+            "English",
+            "only",
+            "on",
+            "23",
+            "February",
+            "1796",
+            ",",
+            "one",
+            "week",
+            "after",
+            "the",
+            "surrender",
+            "of",
+            "Colombo",
+            "."
+          ],
+          "values": [
+            "historic"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#D7AEFF",
+              "end": 90,
+              "label": "economic",
+              "start": 46,
+              "text": "administrative centre of the south of Ceylon"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "I-economic",
+            "O"
+          ],
+          "page": 1,
+          "schema_version": "1.0",
+          "sentence": "As a British protectorate, Galle remained the administrative centre of the south of Ceylon.",
+          "sentence_id": 20,
+          "tokens": [
+            "As",
+            "a",
+            "British",
+            "protectorate",
+            ",",
+            "Galle",
+            "remained",
+            "the",
+            "administrative",
+            "centre",
+            "of",
+            "the",
+            "south",
+            "of",
+            "Ceylon",
+            "."
+          ],
+          "values": [
+            "economic"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#00D5FF",
+              "end": 130,
+              "label": "aesthetical",
+              "start": 112,
+              "text": "original city plan"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "O"
+          ],
+          "page": 2,
+          "schema_version": "1.0",
+          "sentence": "Taken together these alterations, few in number, as can be seen from the above, have not seriously modified the original city plan.",
+          "sentence_id": 21,
+          "tokens": [
+            "Taken",
+            "together",
+            "these",
+            "alterations",
+            ",",
+            "few",
+            "in",
+            "number",
+            ",",
+            "as",
+            "can",
+            "be",
+            "seen",
+            "from",
+            "the",
+            "above",
+            ",",
+            "have",
+            "not",
+            "seriously",
+            "modified",
+            "the",
+            "original",
+            "city",
+            "plan",
+            "."
+          ],
+          "values": [
+            "aesthetical"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FFFC00",
+              "end": 50,
+              "label": "political",
+              "start": 36,
+              "text": "fortified city"
+            },
+            {
+              "color": "#FF40FF",
+              "end": 97,
+              "label": "historic",
+              "start": 51,
+              "text": "build by Europeans in South and Southeast Asia"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-political",
+            "I-political",
+            "B-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "O"
+          ],
+          "page": 2,
+          "schema_version": "1.0",
+          "sentence": "Galle remains the best example of a fortified city build by Europeans in South and Southeast Asia.",
+          "sentence_id": 22,
+          "tokens": [
+            "Galle",
+            "remains",
+            "the",
+            "best",
+            "example",
+            "of",
+            "a",
+            "fortified",
+            "city",
+            "build",
+            "by",
+            "Europeans",
+            "in",
+            "South",
+            "and",
+            "Southeast",
+            "Asia",
+            "."
+          ],
+          "values": [
+            "historic",
+            "political"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FF40FF",
+              "end": 37,
+              "label": "historic",
+              "start": 15,
+              "text": "an outstanding example"
+            },
+            {
+              "color": "#00D5FF",
+              "end": 58,
+              "label": "aesthetical",
+              "start": 44,
+              "text": "urban ensemble"
+            },
+            {
+              "color": "#FF40FF",
+              "end": 80,
+              "label": "historic",
+              "start": 59,
+              "text": "which illustrates the"
+            },
+            {
+              "color": "#FFD300",
+              "end": 92,
+              "label": "social",
+              "start": 81,
+              "text": "interaction"
+            },
+            {
+              "color": "#00D5FF",
+              "end": 117,
+              "label": "aesthetical",
+              "start": 96,
+              "text": "European architecture"
+            },
+            {
+              "color": "#FF7C00",
+              "end": 144,
+              "label": "scientific",
+              "start": 122,
+              "text": "South Asian traditions"
+            },
+            {
+              "color": "#FF40FF",
+              "end": 182,
+              "label": "historic",
+              "start": 145,
+              "text": "from the 16th to the 19 the centuries"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "B-historic",
+            "I-historic",
+            "I-historic",
+            "O",
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "B-historic",
+            "I-historic",
+            "I-historic",
+            "B-social",
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "O",
+            "B-scientific",
+            "I-scientific",
+            "I-scientific",
+            "B-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "I-historic",
+            "O"
+          ],
+          "page": 2,
+          "schema_version": "1.0",
+          "sentence": "Galle provides an outstanding example of an urban ensemble which illustrates the interaction of European architecture and South Asian traditions from the 16th to the 19 the centuries.",
+          "sentence_id": 23,
+          "tokens": [
+            "Galle",
+            "provides",
+            "an",
+            "outstanding",
+            "example",
+            "of",
+            "an",
+            "urban",
+            "ensemble",
+            "which",
+            "illustrates",
+            "the",
+            "interaction",
+            "of",
+            "European",
+            "architecture",
+            "and",
+            "South",
+            "Asian",
+            "traditions",
+            "from",
+            "the",
+            "16th",
+            "to",
+            "the",
+            "19",
+            "the",
+            "centuries",
+            "."
+          ],
+          "values": [
+            "aesthetical",
+            "historic",
+            "scientific",
+            "social"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FF7C00",
+              "end": 128,
+              "label": "scientific",
+              "start": 85,
+              "text": "original sewer system from the 17th century"
+            },
+            {
+              "color": "#A8D200",
+              "end": 152,
+              "label": "ecological",
+              "start": 130,
+              "text": "flushed with sea water"
+            },
+            {
+              "color": "#FFFC00",
+              "end": 239,
+              "label": "political",
+              "start": 225,
+              "text": "Triton bastion"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "O",
+            "B-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-political",
+            "I-political",
+            "O"
+          ],
+          "page": 2,
+          "schema_version": "1.0",
+          "sentence": "Among the characteristics which make this an urban group of exceptional value is the original sewer system from the 17th century, flushed with sea water controlled by a pumping station formerly activated by a windmill on the Triton bastion.",
+          "sentence_id": 24,
+          "tokens": [
+            "Among",
+            "the",
+            "characteristics",
+            "which",
+            "make",
+            "this",
+            "an",
+            "urban",
+            "group",
+            "of",
+            "exceptional",
+            "value",
+            "is",
+            "the",
+            "original",
+            "sewer",
+            "system",
+            "from",
+            "the",
+            "17th",
+            "century",
+            ",",
+            "flushed",
+            "with",
+            "sea",
+            "water",
+            "controlled",
+            "by",
+            "a",
+            "pumping",
+            "station",
+            "formerly",
+            "activated",
+            "by",
+            "a",
+            "windmill",
+            "on",
+            "the",
+            "Triton",
+            "bastion",
+            "."
+          ],
+          "values": [
+            "ecological",
+            "political",
+            "scientific"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#00D5FF",
+              "end": 60,
+              "label": "aesthetical",
+              "start": 38,
+              "text": "use of European models"
+            },
+            {
+              "color": "#FF7C00",
+              "end": 86,
+              "label": "scientific",
+              "start": 72,
+              "text": "local manpower"
+            },
+            {
+              "color": "#A8D200",
+              "end": 114,
+              "label": "ecological",
+              "start": 94,
+              "text": "geological, climatic"
+            },
+            {
+              "color": "#FF40FF",
+              "end": 124,
+              "label": "historic",
+              "start": 116,
+              "text": "historic"
+            },
+            {
+              "color": "#FFD300",
+              "end": 137,
+              "label": "social",
+              "start": 129,
+              "text": "cultural"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "O",
+            "O",
+            "B-scientific",
+            "I-scientific",
+            "O",
+            "O",
+            "B-ecological",
+            "I-ecological",
+            "I-ecological",
+            "O",
+            "B-historic",
+            "O",
+            "B-social",
+            "O",
+            "O",
+            "O",
+            "O",
+            "O"
+          ],
+          "page": 2,
+          "schema_version": "1.0",
+          "sentence": "However, the most salient fact is the use of European models adapted by local manpower to the geological, climatic, historic and cultural conditions of Sri Lanka.",
+          "sentence_id": 25,
+          "tokens": [
+            "However",
+            ",",
+            "the",
+            "most",
+            "salient",
+            "fact",
+            "is",
+            "the",
+            "use",
+            "of",
+            "European",
+            "models",
+            "adapted",
+            "by",
+            "local",
+            "manpower",
+            "to",
+            "the",
+            "geological",
+            ",",
+            "climatic",
+            ",",
+            "historic",
+            "and",
+            "cultural",
+            "conditions",
+            "of",
+            "Sri",
+            "Lanka",
+            "."
+          ],
+          "values": [
+            "aesthetical",
+            "ecological",
+            "historic",
+            "scientific",
+            "social"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#FF7C00",
+              "end": 19,
+              "label": "scientific",
+              "start": 0,
+              "text": "In the structure of"
+            },
+            {
+              "color": "#FFFC00",
+              "end": 32,
+              "label": "political",
+              "start": 20,
+              "text": "the ramparts"
+            },
+            {
+              "color": "#FF7C00",
+              "end": 77,
+              "label": "scientific",
+              "start": 34,
+              "text": "coral is frequently used along with granite"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "B-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "B-political",
+            "I-political",
+            "O",
+            "B-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "O"
+          ],
+          "page": 2,
+          "schema_version": "1.0",
+          "sentence": "In the structure of the ramparts, coral is frequently used along with granite.",
+          "sentence_id": 26,
+          "tokens": [
+            "In",
+            "the",
+            "structure",
+            "of",
+            "the",
+            "ramparts",
+            ",",
+            "coral",
+            "is",
+            "frequently",
+            "used",
+            "along",
+            "with",
+            "granite",
+            "."
+          ],
+          "values": [
+            "political",
+            "scientific"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#00D5FF",
+              "end": 20,
+              "label": "aesthetical",
+              "start": 7,
+              "text": "ground layout"
+            },
+            {
+              "color": "#FF7C00",
+              "end": 99,
+              "label": "scientific",
+              "start": 21,
+              "text": "all the measures of length, width and height conform to the regional metrology"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "B-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "I-scientific",
+            "O"
+          ],
+          "page": 2,
+          "schema_version": "1.0",
+          "sentence": "In the ground layout all the measures of length, width and height conform to the regional metrology.",
+          "sentence_id": 27,
+          "tokens": [
+            "In",
+            "the",
+            "ground",
+            "layout",
+            "all",
+            "the",
+            "measures",
+            "of",
+            "length",
+            ",",
+            "width",
+            "and",
+            "height",
+            "conform",
+            "to",
+            "the",
+            "regional",
+            "metrology",
+            "."
+          ],
+          "values": [
+            "aesthetical",
+            "scientific"
+          ]
+        },
+        {
+          "entities": [
+            {
+              "color": "#00D5FF",
+              "end": 36,
+              "label": "aesthetical",
+              "start": 4,
+              "text": "wide streets, planted with grass"
+            },
+            {
+              "color": "#A8D200",
+              "end": 58,
+              "label": "ecological",
+              "start": 37,
+              "text": "and shaded by suriyas"
+            },
+            {
+              "color": "#00D5FF",
+              "end": 149,
+              "label": "aesthetical",
+              "start": 60,
+              "text": "are lined with houses, each with its own garden and an open verandah supported by columns"
+            },
+            {
+              "color": "#00D5FF",
+              "end": 246,
+              "label": "aesthetical",
+              "start": 171,
+              "text": "acculturation of an architecture which is European only in its basic design"
+            }
+          ],
+          "mapping_provenance": {
+            "config_id": "project-palette@1",
+            "method": "project_configuration",
+            "status": "approved"
+          },
+          "ner_tags": [
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "B-ecological",
+            "I-ecological",
+            "I-ecological",
+            "I-ecological",
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "O",
+            "O",
+            "O",
+            "O",
+            "B-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "I-aesthetical",
+            "O"
+          ],
+          "page": 2,
+          "schema_version": "1.0",
+          "sentence": "The wide streets, planted with grass and shaded by suriyas, are lined with houses, each with its own garden and an open verandah supported by columns -another sign of the acculturation of an architecture which is European only in its basic design.",
+          "sentence_id": 28,
+          "tokens": [
+            "The",
+            "wide",
+            "streets",
+            ",",
+            "planted",
+            "with",
+            "grass",
+            "and",
+            "shaded",
+            "by",
+            "suriyas",
+            ",",
+            "are",
+            "lined",
+            "with",
+            "houses",
+            ",",
+            "each",
+            "with",
+            "its",
+            "own",
+            "garden",
+            "and",
+            "an",
+            "open",
+            "verandah",
+            "supported",
+            "by",
+            "columns",
+            "-another",
+            "sign",
+            "of",
+            "the",
+            "acculturation",
+            "of",
+            "an",
+            "architecture",
+            "which",
+            "is",
+            "European",
+            "only",
+            "in",
+            "its",
+            "basic",
+            "design",
+            "."
+          ],
+          "values": [
+            "aesthetical",
+            "ecological"
+          ]
+        }
+      ],
+      "source_checksum_sha256": "63cfd4a1659d3f0c97c12d793cba0c3a5f93b403cfbbba49a46e7b323b8ce829",
+      "source_creators": [
+        "s030970"
+      ],
+      "source_not_findable_reason": "null",
+      "source_reference": null
+    }
+  ],
+  "excluded_project_document_ids": [],
+  "membership": [
+    "HEVA-7B61903295DC"
+  ],
+  "record_count": 28,
+  "release_version": "1.0",
+  "schema_version": "1.0",
+  "toolkit_version": "0.1.0"
+}
