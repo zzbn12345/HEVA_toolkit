@@ -10,6 +10,8 @@ from typing import Iterable
 
 
 MARKDOWN_LINK = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)")
+PAGE_HEADING = re.compile(r"^#\s+(.+)$", re.MULTILINE)
+REPOSITORY_URL = "https://github.com/zzbn12345/HEVA_toolkit"
 
 
 def page_slug(relative_path: PurePosixPath) -> str:
@@ -88,49 +90,58 @@ def build_wiki(docs_root: str | Path, output_directory: str | Path) -> list[Path
     output.mkdir(parents=True)
     pages = discover_pages(source_root)
     written: list[Path] = []
+    titles: dict[PurePosixPath, str] = {}
     for relative, slug in pages.items():
         source = source_root / Path(relative.as_posix())
         content = rewrite_links(source.read_text(encoding="utf-8"), relative, pages)
+        titles[relative] = _page_title(relative, slug, content)
         destination = output / f"{slug}.md"
         destination.write_text(content.rstrip() + "\n", encoding="utf-8")
         written.append(destination)
     sidebar = output / "_Sidebar.md"
-    sidebar.write_text(_sidebar(pages), encoding="utf-8")
+    sidebar.write_text(_sidebar(pages, titles), encoding="utf-8")
     footer = output / "_Footer.md"
     footer.write_text(
-        "Generated from the private `heva-toolkit` repository. Edit `docs/`, not the Wiki.\n",
+        f"Generated from the [`HEVA_toolkit` repository]({REPOSITORY_URL}). "
+        "Edit `docs/`, not the Wiki.\n",
         encoding="utf-8",
     )
     return [*written, sidebar, footer]
 
 
-def _sidebar(pages: dict[PurePosixPath, str]) -> str:
+def _sidebar(pages: dict[PurePosixPath, str], titles: dict[PurePosixPath, str]) -> str:
     """Create compact Wiki navigation grouped by documentation purpose."""
 
-    groups = {"Start": [], "Guides": [], "Reference": [], "Concepts": []}
+    groups = {"Start": [], "Guides": [], "Reference": [], "Concepts": [], "Decisions": []}
     for path, slug in pages.items():
-        if path.as_posix() in {"index.md", "INSTALLATION.md"}:
+        if path.as_posix() in {"index.md", "INSTALLATION.md", "TUTORIAL.md"}:
             group = "Start"
         elif path.parts[0] == "guides":
             group = "Guides"
         elif path.parts[0] == "reference":
             group = "Reference"
+        elif path.parts[0] == "adr":
+            group = "Decisions"
         else:
             group = "Concepts"
-        title = _page_title(path, slug)
-        groups[group].append((title, slug))
+        groups[group].append((titles[path], slug))
     lines: list[str] = []
     for group, entries in groups.items():
+        if not entries:
+            continue
         lines.extend((f"### {group}", ""))
         lines.extend(f"- [{title}]({slug})" for title, slug in sorted(entries))
         lines.append("")
     return "\n".join(lines)
 
 
-def _page_title(path: PurePosixPath, fallback: str) -> str:
-    """Return the canonical home title or a readable page slug."""
+def _page_title(path: PurePosixPath, slug: str, markdown: str) -> str:
+    """Return the canonical home title, the page's first heading, or a readable slug."""
 
-    return "HEVA Toolkit documentation" if path.as_posix() == "index.md" else fallback.replace("-", " ")
+    if path.as_posix() == "index.md":
+        return "HEVA Toolkit documentation"
+    heading = PAGE_HEADING.search(markdown)
+    return heading.group(1).strip() if heading else slug.replace("-", " ")
 
 
 def main(argv: Iterable[str] | None = None) -> int:

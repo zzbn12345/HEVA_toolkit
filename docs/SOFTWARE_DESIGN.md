@@ -6,11 +6,14 @@ therefore run without opening the web app.
 ## Repository structure
 
 ```text
-heva-toolkit/
-├── src/heva/       application source code
+HEVA_toolkit/
+├── data/           the released dataset
+├── benchmark/      T1 and T2 split files, baseline results and their guide
+├── app/            guide to the annotation app
+├── src/heva/       source code
 ├── schemas/        machine-readable HEVA rules and vocabulary
 ├── examples/       finished and incomplete teaching datasets
-├── docs/           the six short documentation pages
+├── docs/           the annotation app's documentation
 ├── tests/          automated checks of expected behaviour
 └── environment.yml Conda installation definition
 ```
@@ -22,6 +25,7 @@ src/heva/
 ├── extraction/   reads PDF/DOCX text, highlights, and colors
 ├── curation/     stores curation state, validates it, and builds Data Packages
 ├── app/          presents the curation workflow through FastAPI and the browser
+├── baselines/    trains and evaluates the T1 and T2 benchmark models
 └── doctor.py     checks whether the installation is ready
 ```
 

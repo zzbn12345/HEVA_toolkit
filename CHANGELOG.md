@@ -10,6 +10,9 @@
 
 ### Changed
 
+- Corrected the documentation for the public repository layout: the Wiki footer, the docs home page and
+  the repository structure now cover the dataset and benchmark. The Wiki sidebar uses page headings,
+  lists the tutorial under Start and separates decision records.
 - Reorganised `data/` as the released dataset, with its spreadsheets and reference tables, and added
   fixed T1 and T2 split files in `benchmark/`. Baselines now train on those files by default;
   `--data-dir data` builds examples from the raw inputs, and the new `export` command regenerates the

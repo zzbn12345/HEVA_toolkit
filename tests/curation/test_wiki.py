@@ -1,4 +1,4 @@
-"""Acceptance tests for deterministic private Wiki documentation builds."""
+"""Acceptance tests for deterministic Wiki documentation builds."""
 
 from __future__ import annotations
 
@@ -39,3 +39,45 @@ def test_repository_documentation_has_unique_wiki_page_names() -> None:
 
     assert pages
     assert pages[next(path for path in pages if path.as_posix() == "index.md")] == "Home"
+
+
+def _build_documentation_with_every_group(tmp_path: Path) -> Path:
+    docs = tmp_path / "docs"
+    (docs / "adr").mkdir(parents=True)
+    (docs / "index.md").write_text("# Toolkit\n", encoding="utf-8")
+    (docs / "INSTALLATION.md").write_text("# Install and run HEVA\n", encoding="utf-8")
+    (docs / "TUTORIAL.md").write_text("# Tutorial: repair an example\n", encoding="utf-8")
+    (docs / "DATA_PACKAGE.md").write_text("# What is a Data Package?\n", encoding="utf-8")
+    (docs / "NO_HEADING.md").write_text("Text without a heading.\n", encoding="utf-8")
+    (docs / "adr" / "ADR-001-choice.md").write_text("# ADR-001: A choice\n", encoding="utf-8")
+    build_wiki(docs, tmp_path / "wiki")
+    return tmp_path / "wiki"
+
+
+def test_wiki_sidebar_uses_page_headings_and_omits_empty_groups(tmp_path: Path) -> None:
+    sidebar = (_build_documentation_with_every_group(tmp_path) / "_Sidebar.md").read_text()
+
+    assert "- [What is a Data Package?](Data-Package)" in sidebar
+    assert "- [No Heading](No-Heading)" in sidebar
+    assert "### Guides" not in sidebar
+    assert "### Reference" not in sidebar
+
+
+def test_wiki_sidebar_starts_with_the_tutorial_and_separates_decision_records(
+    tmp_path: Path,
+) -> None:
+    sidebar = (_build_documentation_with_every_group(tmp_path) / "_Sidebar.md").read_text()
+
+    start, rest = sidebar.split("### Concepts")
+    concepts, decisions = rest.split("### Decisions")
+    assert "(Tutorial)" in start
+    assert "(Data-Package)" in concepts
+    assert "(Adr-Adr-001-Choice)" in decisions
+    assert "(Adr-Adr-001-Choice)" not in concepts
+
+
+def test_wiki_footer_names_the_public_repository(tmp_path: Path) -> None:
+    footer = (_build_documentation_with_every_group(tmp_path) / "_Footer.md").read_text()
+
+    assert "private" not in footer
+    assert "https://github.com/zzbn12345/HEVA_toolkit" in footer
