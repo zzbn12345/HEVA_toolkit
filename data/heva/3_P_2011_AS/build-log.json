@@ -1,0 +1,53 @@
+{
+  "build_version": "1.0",
+  "excluded_project_document_ids": [],
+  "excluded_working_evidence": [
+    "source documents",
+    "review-state.json",
+    "curation-state.json",
+    "credentials"
+  ],
+  "membership": [
+    {
+      "annotations_checksum_sha256": "ffa20ba9f7095259bfae06c99b9b65851ad555c288d84d1bcdea283f27ce57dc",
+      "document_id": "HEVA-2A49E7E20ED2",
+      "source_checksum_sha256": "bbc109480422ce364a72f65c46ab1d2859f7ef1d1569f43cafacc7513145e0b9"
+    },
+    {
+      "annotations_checksum_sha256": "9e31bcc63c0f5ac5ba4a67b8b117755bd83d7e7723ebbbcbc69f073c27ad073a",
+      "document_id": "HEVA-4652F9CF0970",
+      "source_checksum_sha256": "0e7d10ec5714885482cb7c1804a31c4644092773a80997bad9cda517b0a91dd0"
+    },
+    {
+      "annotations_checksum_sha256": "96a5b01e9455f19b5d7f5e0fca9cb3e8aee10cb863598a2fb3746995b1ecad26",
+      "document_id": "HEVA-FD396C403437",
+      "source_checksum_sha256": "62f23b1f300457b8b6e6f3f0070261bfdc8caf3637f4884e4beeba5884ab87d2"
+    },
+    {
+      "annotations_checksum_sha256": "2c1c40d96598d9a51590ea68f621bedf5ca6ce3ec30f913570b55de5ec846219",
+      "document_id": "HEVA-8BCE2A69CBE5",
+      "source_checksum_sha256": "6b5159dabf2d648fe6a60a674cbb8db8c241d1ac839b27120ca9ac97824bc7a8"
+    },
+    {
+      "annotations_checksum_sha256": "4a99cffbff423f7c6cdfce37c850730c49c9d4c4a4b80bb6b7a98ba640ff4d71",
+      "document_id": "HEVA-31EF7F8A8634",
+      "source_checksum_sha256": "c6469a96ef548171b158c4a6f5d7f27c06961518012b8052d14e0f723ac3fcd5"
+    },
+    {
+      "annotations_checksum_sha256": "fe6f0f0bd0ffe9062c94552587381b5302636d065558bedf0053879cb6ceb48b",
+      "document_id": "HEVA-9D6A0E3AAAD2",
+      "source_checksum_sha256": "f9935d878b9f807c104de69fccdff3532927c32d82f6abed080c5255ce39e47e"
+    },
+    {
+      "annotations_checksum_sha256": "30bf649fe3485f40baa0a4d372435b229540bcfaa209e18e2828c5ec0bf2e922",
+      "document_id": "HEVA-5ADCAC9556E7",
+      "source_checksum_sha256": "fb25d2476bb6c2f593d3f1017ad3a9488673ec26cde9f99418864d098a580ad5"
+    },
+    {
+      "annotations_checksum_sha256": "6e55afd25051103f6f009c267941d87dfabbeba9928ddd6f3a816c43af1758a3",
+      "document_id": "HEVA-D75525B90B77",
+      "source_checksum_sha256": "28ee00f4224cfd0bb66e7258f0796917b5a7d22b745e5b1648b12df66c0b5ab0"
+    }
+  ],
+  "toolkit_version": "0.1.0"
+}

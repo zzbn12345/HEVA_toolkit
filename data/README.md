@@ -54,7 +54,9 @@ Documents processed with the HEVA app also have a `document_id` such as `HEVA-2A
 
 A unit whose eight value columns are all 0 was read by the annotators and judged to express no value.
 
-**Data Packages:** see [What is a HEVA Data Package?](../docs/DATA_PACKAGE.md).
+**Data Packages:** each folder holds `heva-annotations.json` (metadata and annotations by document),
+`heva-annotations.csv` (one row per sentence), `datapackage.json` (the file list with hashes) and
+`build-log.json`. See [What is a HEVA Data Package?](../docs/DATA_PACKAGE.md).
 
 ## 3. Loading
 

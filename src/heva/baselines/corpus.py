@@ -160,7 +160,8 @@ def load_heva_records(root: Path, report: LoadReport) -> tuple[list[T1Example], 
         # The package folder directly under heva/ names the collection.
         collection = path.parent.relative_to(root).parts[0] if path.parent != root else root.name
         records = _read_heva_json(path) if path.suffix == ".json" else _read_heva_csv(path)
-        for record in records:
+        # Duplicates resolve to the first example, so the order must not depend on the export.
+        for record in sorted(records, key=lambda record: str(record.get("document_id"))):
             example_id = f"heva:{record.get('document_id')}:{record.get('sentence_id')}"
             if example_id in seen_ids:
                 report.skip("duplicate_record_id")

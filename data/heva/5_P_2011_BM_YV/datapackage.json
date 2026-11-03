@@ -1,0 +1,64 @@
+{
+  "contributors": [
+    {
+      "role": "creator",
+      "title": "B. A. T. Moor"
+    },
+    {
+      "role": "creator",
+      "title": "Y. G. J. Vroomen"
+    },
+    {
+      "role": "contributor",
+      "title": "Valantis Andreas"
+    },
+    {
+      "role": "contributor",
+      "title": "Yan Zhou"
+    },
+    {
+      "role": "contributor",
+      "title": "Jose Carlos Urra"
+    },
+    {
+      "role": "contributor",
+      "title": "Jingze Yin"
+    },
+    {
+      "role": "contributor",
+      "title": "Nan Bai"
+    }
+  ],
+  "description": "2011\tEnglish\tStone Town of Zanzibar, Tanzania\nMoor and Vroomen (2012), Cultural Heritage & Sustainability: Stone Town as Case Study, master's thesis, Eindhoven University of Technology",
+  "licenses": [
+    {
+      "name": "CC-BY-4.0"
+    }
+  ],
+  "name": "5-p-2011-bm-yv",
+  "profile": "data-package",
+  "resources": [
+    {
+      "bytes": 732001,
+      "hash": "sha256:ffccc075902272b87256e4ae4145401f1c122a41b88bdc103db815b5751bbcfb",
+      "mediatype": "application/json",
+      "name": "heva-annotations-json",
+      "path": "heva-annotations.json"
+    },
+    {
+      "bytes": 321483,
+      "hash": "sha256:6e60a8f4de1ed691d97bd30335b41179e903ee82847dac464fbbbd7fbfdfc0ba",
+      "mediatype": "text/csv",
+      "name": "heva-annotations-csv",
+      "path": "heva-annotations.csv"
+    },
+    {
+      "bytes": 529,
+      "hash": "sha256:583263d6cc3e496b20e5381d05fc8c17669cf1d16089c6f32e64bca23cdcf372",
+      "mediatype": "application/json",
+      "name": "build-log",
+      "path": "build-log.json"
+    }
+  ],
+  "title": "Stone Town"
+}

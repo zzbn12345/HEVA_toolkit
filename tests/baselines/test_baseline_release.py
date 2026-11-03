@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from heva.baselines.release import (
     export_release,
     has_released_split,
     load_released_split,
+    split_path,
 )
 from heva.baselines.splits import PARTITIONS, split_examples
 from tests.baselines.package_fixture import PACKAGE_RECORDS, write_package_json
@@ -134,3 +136,43 @@ def test_released_splits_match_the_published_runs(task: str, sizes: dict[str, in
     for path in (benchmark / "results" / task).glob("*/split.json"):
         published = json.loads(path.read_text(encoding="utf-8"))
         assert {name: [e.example_id for e in part] for name, part in parts.items()} == published
+
+
+def test_released_data_packages_match_their_manifests_and_reference_tables() -> None:
+    packages = sorted((ROOT / "data" / "heva").glob("*/datapackage.json"))
+    if not packages:
+        pytest.skip("The Data Packages are not in this checkout.")
+    documents = {row["document_id"]: row for row in read_table("documents.csv") if row["document_id"]}
+
+    records = 0
+    for manifest_path in packages:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for resource in manifest["resources"]:
+            content = (manifest_path.parent / resource["path"]).read_bytes()
+            assert len(content) == resource["bytes"], resource["path"]
+            assert f"sha256:{hashlib.sha256(content).hexdigest()}" == resource["hash"], resource["path"]
+        package = json.loads(
+            (manifest_path.parent / "heva-annotations.json").read_text(encoding="utf-8")
+        )
+        for document in package["documents"]:
+            listed = documents[document["document_id"]]
+            assert listed["collection"] == manifest_path.parent.name
+            assert int(listed["units"]) == len(document["records"])
+            records += len(document["records"])
+
+    assert len(packages) == 3
+    assert records == 1017
+
+
+def test_export_from_released_data_reproduces_the_split_files(tmp_path: Path) -> None:
+    pytest.importorskip("openpyxl")
+    benchmark = ROOT / "benchmark"
+    if not list((ROOT / "data" / "heva").glob("*/heva-annotations.json")):
+        pytest.skip("The Data Packages are not in this checkout.")
+
+    export_release(ROOT / "data", benchmark / "results", tmp_path)
+
+    for task in ("t1", "t2"):
+        for name in PARTITIONS:
+            written = split_path(tmp_path, task, name).read_text(encoding="utf-8")
+            assert written == split_path(benchmark, task, name).read_text(encoding="utf-8")

@@ -1,0 +1,60 @@
+{
+  "contributors": [
+    {
+      "role": "creator",
+      "title": "A. H. Speckens"
+    },
+    {
+      "role": "contributor",
+      "title": "Valantis Andreas"
+    },
+    {
+      "role": "contributor",
+      "title": "Yan Zhou"
+    },
+    {
+      "role": "contributor",
+      "title": "Jose Urra Llanusa"
+    },
+    {
+      "role": "contributor",
+      "title": "Jingze Yin"
+    },
+    {
+      "role": "contributor",
+      "title": "Nan Bai"
+    }
+  ],
+  "description": "2011\tDutch/English\tHistoric Area of Willemstad, Curaçao\nSpeckens (2011), Revising World Heritage Willemstad: Enhancing Outstanding Universal Value Assessment Practices, master's thesis, Eindhoven University of Technology",
+  "licenses": [
+    {
+      "name": "CC-BY-4.0"
+    }
+  ],
+  "name": "3-p-2011-as",
+  "profile": "data-package",
+  "resources": [
+    {
+      "bytes": 1296904,
+      "hash": "sha256:9093504aedf6cbc897cda50d2d9a3665a7ed95a6602e939b8697d55a36c10faf",
+      "mediatype": "application/json",
+      "name": "heva-annotations-json",
+      "path": "heva-annotations.json"
+    },
+    {
+      "bytes": 512522,
+      "hash": "sha256:3dc0f5e9c28079d4e97728c97b0aad65ae2a87f16c91455d7987bdc9f56d7b4d",
+      "mediatype": "text/csv",
+      "name": "heva-annotations-csv",
+      "path": "heva-annotations.csv"
+    },
+    {
+      "bytes": 2377,
+      "hash": "sha256:2303c189c958c045c4bab15b90f8e3452acede09dd2bea686cc23ba978b305d6",
+      "mediatype": "application/json",
+      "name": "build-log",
+      "path": "build-log.json"
+    }
+  ],
+  "title": "Willemstad"
+}

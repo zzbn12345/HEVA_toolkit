@@ -1,0 +1,18 @@
+{
+  "build_version": "1.0",
+  "excluded_project_document_ids": [],
+  "excluded_working_evidence": [
+    "source documents",
+    "review-state.json",
+    "curation-state.json",
+    "credentials"
+  ],
+  "membership": [
+    {
+      "annotations_checksum_sha256": "d4734320326dc4ee5e0d6c1e362b5e07b16052eb61e26d358500614acfd8443a",
+      "document_id": "HEVA-7B61903295DC",
+      "source_checksum_sha256": "63cfd4a1659d3f0c97c12d793cba0c3a5f93b403cfbbba49a46e7b323b8ce829"
+    }
+  ],
+  "toolkit_version": "0.1.0"
+}

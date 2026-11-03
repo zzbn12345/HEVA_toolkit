@@ -305,4 +305,4 @@ Atlas.ti exports:
 
 `python -m heva.baselines export --data-dir data` regenerates the six `benchmark/{t1,t2}/*.jsonl` files.
 It takes the split from the `split.json` of the runs in `benchmark/results/` and writes nothing if the
-inputs disagree with those runs. It needs the Data Packages in `data/heva/`.
+inputs disagree with those runs. Run on `data/` as released, it reproduces the files exactly.
