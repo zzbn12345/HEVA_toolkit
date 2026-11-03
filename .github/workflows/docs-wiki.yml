@@ -66,7 +66,7 @@ jobs:
           WIKI_TOKEN: ${{ secrets.WIKI_TOKEN }}
         run: |
           if [ -z "$WIKI_TOKEN" ]; then
-            echo "Add a WIKI_TOKEN repository secret with permission to write this private repository."
+            echo "Add a WIKI_TOKEN repository secret with permission to write to this repository's Wiki."
             exit 1
           fi
       - name: Clone initialized Wiki
