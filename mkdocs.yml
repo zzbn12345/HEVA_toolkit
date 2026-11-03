@@ -1,6 +1,6 @@
 site_name: HEVA Toolkit
 site_description: Create and validate heritage-value annotation Data Packages.
-repo_url: https://github.com/jurra/heva-toolkit
+repo_url: https://github.com/zzbn12345/HEVA_toolkit
 edit_uri: edit/main/docs/
 
 theme:

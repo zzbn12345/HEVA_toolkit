@@ -62,7 +62,7 @@ flowchart TD
         AV --> T1A["T1 examples: quotation + value set"]
         T1H --> D1["Merge identical texts<br/>(union of values)"]
         T1A --> D1
-        T2H --> D2["Drop identical token sequences"]
+        T2H --> D2["Merge identical token sequences<br/>(combine spans)"]
     end
 
     subgraph SPLIT["2. Split (splits.py)"]
@@ -116,8 +116,8 @@ flowchart TD
 - **HEVA:** T1 uses `curated_sentence` when it is set, otherwise `sentence`. T2 uses
   `tokens` and `ner_tags`. Records are skipped and counted when their tags do not line
   up with their tokens or they use unknown labels.
-- **Structured spreadsheets:** the 52-column format of `EXAMPLE.xlsx` (e.g. the `*_3_final`
-  files and `excels combined dataset.xlsx`). The text is `Sentence`, the collection
+- **Structured spreadsheets:** the 52-column format of
+  [`EXAMPLE.xlsx`](../../../examples/EXAMPLE.xlsx), as in `data/structured/`. The text is `Sentence`, the collection
   `Folder_ID` and the document `Datasource`. A value is present when its column (`1` social
   … `8` ecological) is greater than 0, because some files store 2 for a value coded both
   Before and After. The first sheet with a `Sentence` column and columns `1`–`8` is read.
@@ -225,9 +225,9 @@ Scores in `metrics.json`:
 | `validation_tuned` | validation, tuned thresholds (optimistic: tuned on this data) | same |
 | `validation_argmax_overlap` / `validation_argmax_token` | — | overlap span F1 / token F1 on validation |
 | `validation_*_by_collection` | the untuned validation scores, per collection | exact, overlap and token scores per collection |
-| `test_default_0.5` | test, every threshold 0.5 | — |
-| `test_argmax` | — | test, most probable tag per word |
-| `test_tuned` | test, tuned thresholds (main result) | same (exact-match span F1) |
+| `test_default_0.5` | test, every threshold 0.5 (the reported result) | — |
+| `test_argmax` | — | test, most probable tag per word (the reported result) |
+| `test_tuned` | test, tuned thresholds | same (exact-match span F1) |
 | `test_*_overlap` / `test_*_token` | — | overlap span F1 / token F1 of the same predictions |
 | `truncated_texts` / `test_truncated_words` | texts over the length limit, per split | test words cut off |
 | `test_*_by_collection` | the test scores above, computed per collection | exact, overlap and token scores per collection |

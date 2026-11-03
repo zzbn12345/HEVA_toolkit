@@ -33,7 +33,7 @@ VALUE_CODE = re.compile(r"Value:\s*([A-Za-z]+)(?:\s*-\s*[A-Za-z]+)?")
 # saved in a localized UI language and can no longer be decoded (e.g. "????").
 QUOTATION_MANAGER_POSITIONS = {"id": 0, "document": 2, "content": 4, "codes": 6}
 
-# Structured spreadsheets (see EXAMPLE.xlsx): one text per row, L1 values in columns
+# Structured spreadsheets (see examples/EXAMPLE.xlsx): one text per row, L1 values in columns
 # "1".."8" in VALUES order. A cell counts as present when it is greater than 0, because
 # some files hold 2 for a value coded twice (e.g. Atlas.ti "Before" and "After").
 STRUCTURED_TEXT = "Sentence"

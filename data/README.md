@@ -48,8 +48,9 @@ Documents processed with the HEVA app also have a `document_id` such as `HEVA-2A
   `Date`, `Data_collector`.
 - *Content:* `Case_study`, `Language`, `Sentence` (the text), `Page_number`.
 - *Label counts:* `Number_of_L1_labels`, `Number_of _L2_labels`, `Classification_hierarchy`.
-- *Values:* `1` to `8` are 1 when the unit expresses the value: 1 social, 2 economic, 3 political,
-  4 historic, 5 aesthetical, 6 scientific, 7 age, 8 ecological.
+- *Values:* `1` to `8` are greater than 0 when the unit expresses the value: 1 social, 2 economic,
+  3 political, 4 historic, 5 aesthetical, 6 scientific, 7 age, 8 ecological. A few V&D Amsterdam cells
+  are 2, for a value coded both Before and After, and `Number_of_L1_labels` counts these twice.
 - *Sub-values:* `1-1` to `8-3`. No unit has sub-value labels in this release.
 
 A unit whose eight value columns are all 0 was read by the annotators and judged to express no value.
