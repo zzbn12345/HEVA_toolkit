@@ -26,6 +26,7 @@ markdown_extensions:
 nav:
   - Start: index.md
   - Install and run: INSTALLATION.md
+  - User guide: USER_GUIDE.md
   - HEVA and validation: HEVA_AND_VALIDATION.md
   - What is a Data Package?: DATA_PACKAGE.md
   - Tutorial: TUTORIAL.md

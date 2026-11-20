@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1270" width="100%" role="img" aria-labelledby="ex-title ex-desc" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+  <title id="ex-title">How HEVA reads highlights</title>
+  <desc id="ex-desc">Two input lanes merge into shared steps. PDF lane (PyMuPDF): read the text layer word by word; find each word's color, first from a colored shape behind the word (reader highlights or filled rectangles, at least 10 percent overlap, largest overlap wins), otherwise from a clearly colorful font color; clean the text (drop headers, footers, page numbers and margin codes, fix ligatures, reorder columns, join hyphenated words); readability check: if fewer than 15 percent of characters are letters, extraction stops with text layer not readable, which leads to OCR-assisted extraction. DOCX lane (python-docx): read the paragraphs (not tables, headers or text boxes); each text run's color is the Word highlight color, for example YELLOW becomes #FFFF00, otherwise the colored font color; page numbers are approximate. Shared steps: split into sentences with the spaCy sentence splitter (English or Dutch, no trained model); consecutive words with the same color become one highlighted span; keep only sentences with at least one highlight; tokens get BIO tags. Output: a raw extraction draft where labels are still colors, saved as extraction-draft.json. Worked example: The old harbour of Port Aldmere was built in 1742, with old harbour in yellow and built in 1742 in pink. Raw tags: O, B-#FFFF00, I-#FFFF00, O, O, O, O, B-#FF40FF, I-#FF40FF, I-#FF40FF. After color mapping: O, B-economic, I-economic, O, O, O, O, B-historic, I-historic, I-historic.</desc>
+  <defs>
+    <marker id="ex-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="ex-arrow-violet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="1270" rx="16" fill="#ffffff"/>
+
+  <!-- Header -->
+  <text x="40" y="50" font-size="22" font-weight="700" fill="#0f172a">How HEVA reads highlights</text>
+  <text x="40" y="76" font-size="13" fill="#475569">PDF and DOCX files are read in different ways, then share the same steps. Nothing in your source file is changed.</text>
+
+  <!-- ============ PDF lane ============ -->
+  <rect x="40" y="100" width="680" height="74" rx="12" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+  <text x="60" y="128" font-size="15" font-weight="600" fill="#0f172a">PDF file</text>
+  <text x="60" y="150" font-size="13" fill="#475569">Read with <tspan font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#334155">PyMuPDF</tspan>. It needs a real text layer, not a scanned image.</text>
+  <path d="M380,174 V197" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <rect x="40" y="198" width="680" height="48" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <text x="60" y="228" font-size="15" font-weight="600" fill="#0f172a">Read the text layer, word by word</text>
+  <path d="M380,246 V267" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <rect x="40" y="268" width="680" height="172" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <text x="60" y="296" font-size="15" font-weight="600" fill="#0f172a">Find each word's color</text>
+  <rect x="56" y="312" width="310" height="112" rx="8" fill="#ffffff" stroke="#a5b4fc"/>
+  <rect x="70" y="322" width="14" height="14" rx="3" fill="#FFFF00" stroke="#94a3b8"/>
+  <text x="92" y="334" font-size="13" font-weight="700" fill="#0f172a">a. Colored shape behind the word</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="70" y="356">Highlights made with a PDF reader's</tspan>
+    <tspan x="70" dy="18">highlight tool, and filled rectangles.</tspan>
+    <tspan x="70" dy="18">The word needs at least 10% overlap;</tspan>
+    <tspan x="70" dy="18">the largest overlap wins.</tspan>
+  </text>
+  <path d="M366,368 H401" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+  <rect x="402" y="312" width="302" height="112" rx="8" fill="#ffffff" stroke="#a5b4fc"/>
+  <text x="416" y="334" font-size="13" font-weight="700" fill="#0f172a">b. Otherwise: <tspan fill="#c026d3">colored text</tspan></text>
+  <text font-size="13" fill="#475569">
+    <tspan x="416" y="356">The font color, if it is clearly</tspan>
+    <tspan x="416" dy="18">colorful (not black, gray or white).</tspan>
+  </text>
+  <path d="M380,440 V461" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <rect x="40" y="462" width="680" height="84" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <text x="60" y="490" font-size="15" font-weight="600" fill="#0f172a">Clean the text</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="60" y="514">Drop headers and footers, page numbers and margin codes; fix ligatures;</tspan>
+    <tspan x="60" dy="18">reorder multi-column layouts; join hyphenated words.</tspan>
+  </text>
+  <path d="M230,546 V567" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <rect x="40" y="568" width="380" height="96" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <text x="60" y="596" font-size="15" font-weight="600" fill="#0f172a">Readability check</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="60" y="620">Are at least 15% of the characters</tspan>
+    <tspan x="60" dy="18">letters? Then continue.</tspan>
+  </text>
+  <path d="M420,616 H479" fill="none" stroke="#7c3aed" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ex-arrow-violet)"/>
+  <text x="450" y="606" font-size="12" font-weight="700" fill="#6d28d9" text-anchor="middle">No</text>
+
+  <rect x="480" y="568" width="240" height="96" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="496" y="592" font-size="13" font-weight="700" fill="#0f172a">Stop: text layer not readable</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="496" y="612">Continue with OCR-assisted</tspan>
+    <tspan x="496" dy="18">extraction (separate diagram).</tspan>
+  </text>
+  <text x="496" y="652" font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#5b21b6">pdf_text_unreadable</text>
+
+  <!-- ============ DOCX lane ============ -->
+  <rect x="780" y="100" width="380" height="74" rx="12" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+  <text x="800" y="128" font-size="15" font-weight="600" fill="#0f172a">DOCX file</text>
+  <text x="800" y="150" font-size="13" fill="#475569">Read with <tspan font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#334155">python-docx</tspan>. Page numbers are approximate.</text>
+  <path d="M970,174 V197" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <rect x="780" y="198" width="380" height="64" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <text x="800" y="224" font-size="15" font-weight="600" fill="#0f172a">Read the paragraphs</text>
+  <text x="800" y="246" font-size="13" fill="#475569">Tables, headers and text boxes are not read.</text>
+  <path d="M970,262 V283" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <rect x="780" y="284" width="380" height="110" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <text x="800" y="312" font-size="15" font-weight="600" fill="#0f172a">Find each text run's color</text>
+  <text x="800" y="336" font-size="13" fill="#475569">The Word highlight color, for example</text>
+  <text x="800" y="356" font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#3730a3">YELLOW → #FFFF00</text>
+  <rect x="932" y="345" width="14" height="14" rx="3" fill="#FFFF00" stroke="#94a3b8"/>
+  <text x="800" y="376" font-size="13" fill="#475569">otherwise the colored font color.</text>
+
+  <!-- ============ Merge ============ -->
+  <path d="M230,664 V694 H600" fill="none" stroke="#475569" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M970,394 V694 H600" fill="none" stroke="#475569" stroke-width="2" stroke-linejoin="round"/>
+  <text x="240" y="684" font-size="12" font-weight="700" fill="#475569">Yes</text>
+  <path d="M600,694 V717" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <!-- ============ Shared steps ============ -->
+  <rect x="40" y="718" width="1120" height="190" rx="14" fill="#f8fafc" stroke="#a5b4fc" stroke-width="1.5"/>
+  <text x="60" y="744" font-size="15" font-weight="600" fill="#0f172a">Shared steps for both file types</text>
+
+  <rect x="56" y="760" width="245" height="130" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <circle cx="80" cy="784" r="12" fill="#4f46e5"/>
+  <text x="80" y="789" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+  <text x="100" y="789" font-size="15" font-weight="600" fill="#0f172a">Split into sentences</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="70" y="816">With the <tspan font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#334155">spaCy</tspan> sentence splitter,</tspan>
+    <tspan x="70" dy="18">English or Dutch. No trained</tspan>
+    <tspan x="70" dy="18">model is needed.</tspan>
+  </text>
+  <path d="M301,825 H336" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <rect x="337" y="760" width="245" height="130" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <circle cx="361" cy="784" r="12" fill="#4f46e5"/>
+  <text x="361" y="789" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+  <text x="381" y="789" font-size="15" font-weight="600" fill="#0f172a">Group into spans</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="351" y="816">Consecutive words with the</tspan>
+    <tspan x="351" dy="18">same color become one</tspan>
+    <tspan x="351" dy="18">highlighted span (“entity”).</tspan>
+  </text>
+  <path d="M582,825 H617" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <rect x="618" y="760" width="245" height="130" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <circle cx="642" cy="784" r="12" fill="#4f46e5"/>
+  <text x="642" y="789" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+  <text x="662" y="789" font-size="15" font-weight="600" fill="#0f172a">Filter sentences</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="632" y="816">Keep only sentences that</tspan>
+    <tspan x="632" dy="18">contain at least one</tspan>
+    <tspan x="632" dy="18">highlight.</tspan>
+  </text>
+  <path d="M863,825 H898" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+
+  <rect x="899" y="760" width="245" height="130" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <circle cx="923" cy="784" r="12" fill="#4f46e5"/>
+  <text x="923" y="789" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+  <text x="943" y="789" font-size="15" font-weight="600" fill="#0f172a">Tokens and BIO tags</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="913" y="816">First token of a span:</tspan>
+    <tspan x="913" dy="18">Following tokens in it:</tspan>
+    <tspan x="913" dy="18">All other tokens:</tspan>
+  </text>
+  <text font-size="12" font-weight="700" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#3730a3">
+    <tspan x="1084" y="816">B-</tspan>
+    <tspan x="1084" dy="18">I-</tspan>
+    <tspan x="1084" dy="18">O</tspan>
+  </text>
+
+  <!-- ============ Output ============ -->
+  <path d="M600,908 V935" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ex-arrow)"/>
+  <rect x="280" y="936" width="640" height="74" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="300" y="964" font-size="15" font-weight="600" fill="#0f172a">Raw extraction draft <tspan font-size="13" font-weight="400" fill="#475569">· labels are still colors</tspan></text>
+  <text x="300" y="990" font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#065f46">.heva/documents/&lt;ID&gt;/extraction-draft.json</text>
+
+  <!-- ============ Worked example ============ -->
+  <rect x="40" y="1040" width="1120" height="176" rx="14" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="60" y="1068" font-size="15" font-weight="600" fill="#0f172a">Worked example</text>
+  <text x="60" y="1090" font-size="13" fill="#475569">“old harbour” is highlighted yellow and “built in 1742” pink. The color mapping (the next step, in Color configuration) turns yellow into economic and pink into historic.</text>
+
+  <!-- highlight backgrounds -->
+  <rect x="316" y="1108" width="176" height="26" rx="4" fill="#FFFF00"/>
+  <rect x="868" y="1108" width="268" height="26" rx="4" fill="#FF40FF"/>
+
+  <text x="60" y="1126" font-size="12" font-weight="700" fill="#475569">Sentence</text>
+  <text y="1126" font-size="14" fill="#0f172a" text-anchor="middle">
+    <tspan x="266">The</tspan><tspan x="358">old</tspan><tspan x="450">harbour</tspan><tspan x="542">of</tspan><tspan x="634">Port</tspan><tspan x="726">Aldmere</tspan><tspan x="818">was</tspan><tspan x="910">built</tspan><tspan x="1002">in</tspan><tspan x="1094">1742</tspan>
+  </text>
+  <path d="M60,1144 H1140" stroke="#e2e8f0"/>
+
+  <text x="60" y="1166" font-size="12" font-weight="700" fill="#475569">Raw tags</text>
+  <text y="1166" font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#0f172a" text-anchor="middle">
+    <tspan x="266">O</tspan><tspan x="358">B-#FFFF00</tspan><tspan x="450">I-#FFFF00</tspan><tspan x="542">O</tspan><tspan x="634">O</tspan><tspan x="726">O</tspan><tspan x="818">O</tspan><tspan x="910">B-#FF40FF</tspan><tspan x="1002">I-#FF40FF</tspan><tspan x="1094">I-#FF40FF</tspan>
+  </text>
+  <path d="M60,1178 H1140" stroke="#e2e8f0"/>
+
+  <text x="60" y="1200" font-size="12" font-weight="700" fill="#475569">After color mapping</text>
+  <text y="1200" font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#065f46" text-anchor="middle">
+    <tspan x="266">O</tspan><tspan x="358">B-economic</tspan><tspan x="450">I-economic</tspan><tspan x="542">O</tspan><tspan x="634">O</tspan><tspan x="726">O</tspan><tspan x="818">O</tspan><tspan x="910">B-historic</tspan><tspan x="1002">I-historic</tspan><tspan x="1094">I-historic</tspan>
+  </text>
+
+  <!-- Legend -->
+  <text x="40" y="1250" font-size="12" font-weight="700" fill="#0f172a">Legend</text>
+  <rect x="110" y="1238" width="24" height="16" rx="4" fill="#e2e8f0" stroke="#64748b"/>
+  <text x="142" y="1250" font-size="12" fill="#475569">Your source file</text>
+  <rect x="290" y="1238" width="24" height="16" rx="4" fill="#e0e7ff" stroke="#4f46e5"/>
+  <text x="322" y="1250" font-size="12" fill="#475569">HEVA works automatically</text>
+  <rect x="520" y="1238" width="24" height="16" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-dasharray="4 3"/>
+  <text x="552" y="1250" font-size="12" fill="#475569">OCR path (only when needed)</text>
+  <rect x="770" y="1238" width="24" height="16" rx="4" fill="#d1fae5" stroke="#059669"/>
+  <text x="802" y="1250" font-size="12" fill="#475569">Saved file</text>
+</svg>

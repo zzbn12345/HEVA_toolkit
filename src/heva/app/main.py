@@ -48,6 +48,7 @@ def create_app(
             or path == "/api/project"
             or path == "/guide"
             or path.startswith("/guide/")
+            or path.startswith("/guide-assets/")
             or path.startswith("/api/folders/")
             or path.startswith("/api/projects/")
             or path.startswith("/static/")

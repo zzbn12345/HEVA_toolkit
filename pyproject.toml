@@ -57,6 +57,8 @@ include = ["heva*"]
 
 [tool.setuptools.data-files]
 "share/heva/docs" = ["docs/*.md"]
+"share/heva/docs/images/user-guide" = ["docs/images/user-guide/*.png"]
+"share/heva/docs/images/diagrams" = ["docs/images/diagrams/*.svg"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

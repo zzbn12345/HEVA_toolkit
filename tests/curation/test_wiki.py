@@ -32,6 +32,43 @@ def test_wiki_builder_flattens_pages_and_rewrites_document_links(tmp_path: Path)
     ).read_text()
 
 
+def test_wiki_builder_copies_images_and_rewrites_image_links(tmp_path: Path) -> None:
+    docs = tmp_path / "docs"
+    (docs / "images" / "user-guide").mkdir(parents=True)
+    (docs / "images" / "diagrams").mkdir(parents=True)
+    (docs / "guides").mkdir()
+    (docs / "index.md").write_text(
+        "# Home\n\n"
+        "![Home screen](images/user-guide/01-home.png \"Home\")\n\n"
+        "![Badge](https://example.org/badge.png)\n\n"
+        "![Missing](images/user-guide/missing.png)\n",
+        encoding="utf-8",
+    )
+    (docs / "guides" / "get-started.md").write_text(
+        "# Get started\n\n![Flow](../images/diagrams/flow.svg)\n", encoding="utf-8"
+    )
+    (docs / "images" / "user-guide" / "01-home.png").write_bytes(b"png")
+    (docs / "images" / "diagrams" / "flow.svg").write_text("<svg/>", encoding="utf-8")
+    (docs / "images" / "notes.txt").write_text("not an image", encoding="utf-8")
+
+    written = build_wiki(docs, tmp_path / "wiki")
+
+    wiki = tmp_path / "wiki"
+    assert (wiki / "images/user-guide/01-home.png").read_bytes() == b"png"
+    assert (wiki / "images/diagrams/flow.svg").read_text() == "<svg/>"
+    assert not (wiki / "images/notes.txt").exists()
+    assert {wiki / "images/user-guide/01-home.png", wiki / "images/diagrams/flow.svg"} <= set(
+        written
+    )
+    home = (wiki / "Home.md").read_text()
+    assert '![Home screen](images/user-guide/01-home.png "Home")' in home
+    assert "![Badge](https://example.org/badge.png)" in home
+    assert "![Missing](images/user-guide/missing.png)" in home
+    assert "![Flow](images/diagrams/flow.svg)" in (
+        wiki / "Guides-Get-Started.md"
+    ).read_text()
+
+
 def test_repository_documentation_has_unique_wiki_page_names() -> None:
     docs = Path(__file__).parents[2] / "docs"
 
