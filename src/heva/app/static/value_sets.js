@@ -141,7 +141,7 @@ form.addEventListener("submit", async (event) => {
     return;
   }
   await loadValueSets(result);
-  showStatus("success", `${result.name} version ${result.version} was created without changing earlier versions. Create a project palette version to map colors to it.`);
+  showStatus("success", `${result.name} version ${result.version} was created without changing earlier versions. Choose it under “Assign colors to” on a document’s color step.`);
 });
 
 loadValueSets();

@@ -231,6 +231,20 @@ fieldset { margin: 1rem 0; padding: 0; border: 0; }
   font: inherit;
 }
 
+.color-value-set-field { display: block; margin: 1rem 0; font-weight: 700; }
+.color-value-set-field select {
+  display: block;
+  width: 100%;
+  margin-top: .4rem;
+  padding: .72rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+}
+.color-value-set-field small { display: block; margin-top: .4rem; font-weight: 400; }
+
 .color-evidence { margin: .55rem 0 0; color: var(--muted); line-height: 1.45; }
 .color-occurrences {
   margin-top: .8rem;
