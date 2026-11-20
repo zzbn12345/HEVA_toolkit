@@ -57,6 +57,14 @@ The controlled label vocabulary is stored in `schemas/heritage-values.csv`. The 
 interface uses its eight top-level labels. Color-to-label decisions are stored with the project
 and exported as document evidence; they are not defined by the vocabulary file.
 
+Projects that annotate other kinds of datasets can define their own **value sets** on the
+**Value sets** page, for example `physical`, `mental` and `social-support` for a health study.
+Value sets are versioned in `.heva/value-sets.json` (see `schemas/heva-value-sets.schema.json`);
+a change appends a new version. Each project palette version names the value set its colors
+map to, and palettes without one keep using the eight heritage values. Validation checks each
+document against the value set of its palette. This change is recorded in
+[HEVA-ADR-003](adr/HEVA-ADR-003-project-value-sets.md).
+
 The visual guide used by the app is stored in
 `src/heva/app/static/heva-reference-palette.json`. It records the reference color, subcategories,
 and historical source shown in the HEVA reference chart. It is guidance rather than a rule that
@@ -66,7 +74,7 @@ rejects nearby shades.
 
 Validation checks that required files and fields are present and that relationships are
 coherent—for example, entity offsets point to the recorded text, labels belong to the HEVA
-vocabulary, and BIO tags align with tokens. A passing report means the package follows the
+vocabulary or to the document's value set, and BIO tags align with tokens. A passing report means the package follows the
 current HEVA specification. It does not establish scholarly correctness or extractor recall.
 
 ## Explore the dummy package

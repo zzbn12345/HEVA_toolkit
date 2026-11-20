@@ -48,7 +48,7 @@ python -m heva.curation.package_validator /path/to/project validate
 Compile carefully edited CSV records back into a package:
 
 ```bash
-python -m heva.curation.package_compiler /path/to/project DOCUMENT_ID annotations.csv
+python -m heva.curation.package_compiler /path/to/project --csv annotations.csv
 ```
 
 Command-line execution is an interoperability layer rather than a separate CLI product.

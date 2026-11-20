@@ -40,11 +40,16 @@ Return home, choose **Create from source folder**, and select a small folder of 
 or DOCX files. For each document:
 
 1. review its citation;
-2. discover its colors and assign HEVA labels;
+2. discover its colors and assign HEVA labels, or the values of your own value set;
 3. extract the annotated sentences;
 4. approve, correct, or exclude every sentence.
 
 Run validation again. Resolve the reported findings before generating the Data Package.
+
+If your annotations do not use the HEVA heritage values—for example, a health dataset—open
+**Value sets** from the color step, create a value set with your own values, then create a
+project palette version that maps your colors to that value set and select it. The color step
+then offers your values instead of the heritage labels.
 
 ## 5. Add a document to an existing project
 

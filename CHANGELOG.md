@@ -105,6 +105,14 @@
 
 ### Added
 
+- Added project **value sets**, so researchers can name the values their colors are assigned
+  to, for example the values of a health dataset. A new **Value sets** page creates versioned
+  value sets, and each project palette version names the value set its colors map to. The
+  eight HEVA heritage values remain the built-in default; projects without value sets are
+  unchanged. Validation reports `label_outside_value_set` when a document mixes vocabularies.
+  The CSV compiler accepts the project's value sets. Accepted in HEVA-ADR-003. Command-line
+  tools that run without a project (`evaluation`, `validate_records`) and the benchmark
+  baselines still use the heritage values only.
 - Added honest PDF page progress to the shared extractor, web background job, and command-line
   adapter. During source reading the app reports completed pages against the actual total,
   then returns to explicit compiling and persistence stages without implying resumability.
