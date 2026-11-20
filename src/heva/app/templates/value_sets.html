@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Value sets · HEVA Toolkit</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/annotator.css?v=2">
+  <script src="/static/value_sets.js?v=1" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="home-link" href="/">← HEVA home</a><nav class="topbar-links"><a class="guide-link" href="/guide/TUTORIAL">Tutorial</a><a class="button secondary" href="/project-colors">Project palettes</a><a class="button secondary" href="/create">Prepare a document</a></nav></header>
+  <main class="annotator-page">
+    <header class="annotator-heading"><div><p class="eyebrow">Project configuration</p><h1>Value sets</h1><p class="lead">Name the values that annotation colors can be assigned to, for example the values of a health dataset. Value sets are versioned; earlier versions remain reproducible. A project palette chooses which value set its colors map to.</p></div><button id="new-value-set" class="button" type="button">＋ Create version</button></header>
+    <div id="value-set-status" class="notice neutral" aria-live="polite">Loading value sets…</div>
+    <div class="annotator-workspace">
+      <aside class="annotator-list-panel"><label for="value-set-filter">Filter versions</label><input id="value-set-filter" type="search" placeholder="Name, ID, value…"><div id="value-set-list" class="annotator-list"></div></aside>
+      <section class="json-editor">
+        <header class="editor-header"><div><p class="eyebrow">Immutable version</p><h2 id="value-set-title">Create value set version</h2></div><span id="built-in-badge" class="active-badge" hidden>Built into HEVA</span></header>
+        <form id="value-set-form" class="editor-panel active">
+          <label>Value set ID <span aria-hidden="true">*</span><input name="value_set_id" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="health-values" required></label>
+          <label>Name <span aria-hidden="true">*</span><input name="name" placeholder="Health values" required></label>
+          <label>Description <small>(optional)</small><textarea name="description" rows="2"></textarea></label>
+          <fieldset><legend>Values</legend><div id="value-set-values"></div><button id="add-value" class="button secondary" type="button">＋ Add value</button></fieldset>
+          <div class="form-actions"><button id="save-value-set" class="button" type="submit">Create immutable version</button></div>
+          <p class="profile-help">Write each value in lowercase letters and digits, joined by hyphens, for example <code>mental</code> or <code>social-support</code>. Creating a version with an existing ID appends the next version.</p>
+        </form>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

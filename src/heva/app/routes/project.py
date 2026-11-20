@@ -32,6 +32,7 @@ from heva.curation.automatic_color_proposal import (
 )
 from heva.curation.document_metadata import (
     AnnotatorMetadata,
+    ColorConfigurationMetadata,
     RightsMetadata,
 )
 from heva.curation.document_contributors import (
@@ -54,10 +55,19 @@ from heva.curation.color_mapping import (
 from heva.curation.color_configuration_registry import (
     ProjectColorConfigurationError,
     create_color_configuration_version,
+    document_value_set,
     load_color_configuration_registry,
     select_color_configuration,
+    selected_value_set,
 )
-from heva.curation.contract import HEVA_LABELS
+from heva.curation.value_sets import (
+    ProjectValueSet,
+    ValueSetError,
+    create_value_set_version,
+    get_value_set,
+    heritage_value_set,
+    list_value_sets,
+)
 from heva.curation.document_citation import (
     CitationDraft,
     CitationError,
@@ -159,6 +169,9 @@ class ColorReviewInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     decisions: list[ColorDecisionInput]
+    # The value set chosen on the color step; omitted means the document's current one.
+    value_set_id: str | None = None
+    value_set_version: int | None = None
 
 
 class DocumentAnnotatorAssignment(BaseModel):
@@ -208,6 +221,28 @@ class ProjectPaletteInput(BaseModel):
     name: str
     description: str | None = None
     mappings: list[ProjectPaletteMappingInput]
+    value_set_id: str | None = None
+    value_set_version: int | None = None
+
+
+class ValueDefinitionInput(BaseModel):
+    """One safe form row in a project value set."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    description: str | None = None
+
+
+class ValueSetInput(BaseModel):
+    """Fields required to append one immutable project value set version."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    value_set_id: str
+    name: str
+    description: str | None = None
+    values: list[ValueDefinitionInput]
 
 
 class ProjectPaletteSelectionInput(BaseModel):
@@ -267,6 +302,10 @@ def create_project_router(
     @router.get("/project-colors", response_class=HTMLResponse)
     def project_colors_page() -> str:
         return template("project_colors.html")
+
+    @router.get("/value-sets", response_class=HTMLResponse)
+    def value_sets_page() -> str:
+        return template("value_sets.html")
 
     @router.get("/dataset-metadata", response_class=HTMLResponse)
     def dataset_metadata_page() -> str:
@@ -665,12 +704,34 @@ def create_project_router(
         except (AnnotatorRegistryError, PeopleRegistryError, CitationError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
 
+    def color_value_set(configuration: ColorConfigurationMetadata) -> ProjectValueSet:
+        """Use the document's own palette once mapped, otherwise the selected palette.
+
+        Unresolvable references fall back to the HEVA heritage values, so the color page
+        keeps working; palette problems are reported by validation and palette routes.
+        """
+
+        if configuration.configuration_id is not None:
+            try:
+                return document_value_set(root, configuration)
+            except (ProjectColorConfigurationError, ValueSetError):
+                pass
+        try:
+            return selected_value_set(root)
+        except (ProjectColorConfigurationError, ValueSetError):
+            return heritage_value_set()
+
     @router.get("/api/documents/{document_id}/colors")
     def color_status(document_id: str):
         try:
             configuration = load_color_configuration(root, document_id)
         except ColorMappingError as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
+        value_set = color_value_set(configuration)
+        try:
+            available = list_value_sets(root)
+        except ValueSetError:
+            available = [heritage_value_set()]
         occurrences: dict[str, list[dict[str, object]]] = {
             color.hex: [] for color in configuration.colors
         }
@@ -693,7 +754,23 @@ def create_project_router(
                     )
         return {
             "document_id": document_id,
-            "labels": sorted(HEVA_LABELS),
+            "labels": sorted(value_set.labels),
+            "value_set": {
+                "value_set_id": value_set.value_set_id,
+                "version": value_set.version,
+                "name": value_set.name,
+                "built_in": value_set.built_in,
+            },
+            "value_sets": [
+                {
+                    "value_set_id": item.value_set_id,
+                    "version": item.version,
+                    "name": item.name,
+                    "built_in": item.built_in,
+                    "labels": sorted(item.labels),
+                }
+                for item in available
+            ],
             "configuration": configuration.model_dump(mode="json"),
             "occurrences": occurrences,
             "automatic_proposal_available": (
@@ -774,20 +851,32 @@ def create_project_router(
         """Confirm color semantics and immediately promote any saved raw evidence."""
 
         try:
+            value_set = (
+                get_value_set(root, payload.value_set_id, payload.value_set_version)
+                if payload.value_set_id is not None
+                else color_value_set(load_color_configuration(root, document_id))
+            )
             configuration = review_and_confirm_color_configuration(
                 root,
                 document_id,
                 [decision.model_dump() for decision in payload.decisions],
                 confirmed_by=active_curator_name(),
+                labels=value_set.labels,
             )
             values = {
                 color.hex: color.label
                 for color in configuration.colors
                 if color.status == "approved" and color.label is not None
             }
+            value_set_reference = (value_set.value_set_id, value_set.version)
             project_registry = load_color_configuration_registry(root)
             reusable = next(
-                (item for item in project_registry.configurations if item.values == values),
+                (
+                    item
+                    for item in project_registry.configurations
+                    if item.values == values
+                    and item.value_set_reference == value_set_reference
+                ),
                 None,
             )
             if reusable is None:
@@ -803,12 +892,20 @@ def create_project_router(
                         {"label": label, "hexes": hexes}
                         for label, hexes in sorted(by_label.items())
                     ],
+                    value_set_id=value_set.value_set_id,
+                    value_set_version=value_set.version,
                 )
             select_color_configuration(root, reusable.configuration_id, reusable.version)
             configuration.configuration_id = reusable.configuration_id
             configuration.configuration_version = reusable.version
             save_color_configuration(root, document_id, configuration)
-        except (AnnotatorRegistryError, PeopleRegistryError, ColorMappingError, ProjectColorConfigurationError) as error:
+        except (
+            AnnotatorRegistryError,
+            PeopleRegistryError,
+            ColorMappingError,
+            ProjectColorConfigurationError,
+            ValueSetError,
+        ) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         response = configuration.model_dump(mode="json")
         try:
@@ -1545,6 +1642,8 @@ def create_project_router(
                 name=payload.name,
                 description=payload.description,
                 mappings=[mapping.model_dump() for mapping in payload.mappings],
+                value_set_id=payload.value_set_id,
+                value_set_version=payload.value_set_version,
             ).model_dump(mode="json")
         except (ValueError, ProjectColorConfigurationError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
@@ -1559,6 +1658,35 @@ def create_project_router(
             )
             return selected.model_dump(mode="json")
         except ProjectColorConfigurationError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.get("/api/value-sets")
+    def project_value_sets():
+        """List the built-in heritage values and every immutable project value set."""
+
+        try:
+            return {
+                "value_sets": [
+                    {**value_set.model_dump(mode="json"), "built_in": value_set.built_in}
+                    for value_set in list_value_sets(root)
+                ]
+            }
+        except ValueSetError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @router.post("/api/value-sets", status_code=201)
+    def create_project_value_set(payload: ValueSetInput):
+        """Append a curator-attributed value set version without editing prior versions."""
+
+        try:
+            return create_value_set_version(
+                root,
+                value_set_id=payload.value_set_id,
+                name=payload.name,
+                description=payload.description,
+                values=[value.model_dump() for value in payload.values],
+            ).model_dump(mode="json")
+        except (ValueError, ValueSetError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
 
     @router.put("/api/annotator")

@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/create.css?v=15">
   <script src="/static/notifications.js?v=1" defer></script>
-  <script src="/static/create.js?v=32" defer></script>
+  <script src="/static/create.js?v=34" defer></script>
 </head>
 <body class="create-body">
   <div id="create-app" class="create-app">
@@ -79,8 +79,12 @@
       <section class="create-step" data-step="3">
         <p class="eyebrow">Document readiness</p>
         <h1>Color configuration</h1>
-        <p><a class="button secondary" href="/project-colors">Manage project palette versions</a></p>
+        <p><a class="button secondary" href="/project-colors">Manage project palette versions</a> <a class="button secondary" href="/value-sets">Manage value sets</a></p>
         <p class="lead">Review the color meanings used by this document before extracting its annotations.</p>
+        <label class="color-value-set-field">Assign colors to
+          <select id="color-value-set"></select>
+          <small class="profile-help">Choose the HEVA heritage values or a value set created under <a href="/value-sets">Manage value sets</a>. Confirming saves this choice in the project palette.</small>
+        </label>
         <div id="color-status" class="notice neutral" aria-live="polite">
           Select a registered document to load its observed colors.
         </div>

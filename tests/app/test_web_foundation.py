@@ -445,7 +445,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert "Document citation" in response.text
     assert "<span>Citation</span>" in response.text
     assert 'src="/static/notifications.js?v=1"' in response.text
-    assert 'src="/static/create.js?v=32"' in response.text
+    assert 'src="/static/create.js?v=34"' in response.text
     assert 'href="/static/create.css?v=15"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
