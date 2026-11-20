@@ -11,7 +11,10 @@ from typing import Any, Callable, Literal, Sequence
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from heva.extraction.errors import ExtractionCancelled
-from heva.curation.color_configuration_registry import selected_color_configuration
+from heva.curation.color_configuration_registry import (
+    palette_value_set,
+    selected_color_configuration,
+)
 from heva.curation.contract import CURRENT_SCHEMA_VERSION, HEX_COLOR, validate_record
 from heva.curation.people_registry import load_people_registry
 from heva.curation.project_registry import (
@@ -276,6 +279,7 @@ def compile_extraction_draft(
         raise ExtractionDraftError("The extraction draft is stale because the source changed.")
     configuration = selected_color_configuration(root)
     mapping = configuration.values
+    labels = palette_value_set(root, configuration).labels
     from heva.curation.color_mapping import load_color_configuration
 
     document_configuration = load_color_configuration(root, document_id)
@@ -329,7 +333,7 @@ def compile_extraction_draft(
                 "config_id": f"{configuration.configuration_id}@{configuration.version}",
             },
         }
-        result = validate_record(record)
+        result = validate_record(record, labels=labels)
         if not result.valid or result.record is None:
             detail = "; ".join(f"{issue.path}: {issue.message}" for issue in result.issues)
             raise ExtractionDraftError(f"Resolved extraction violates the HEVA contract: {detail}")

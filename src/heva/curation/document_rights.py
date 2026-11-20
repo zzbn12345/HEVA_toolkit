@@ -16,6 +16,7 @@ from heva.curation.project_registry import (
     DocumentEntry,
     ProjectRegistry,
 )
+from heva.curation.value_sets import label_validation_context
 
 
 class DocumentRightsError(ValueError):
@@ -46,7 +47,8 @@ def _metadata_entry(
     )
     try:
         metadata = PackageMetadata.model_validate_json(
-            metadata_path.read_text(encoding="utf-8")
+            metadata_path.read_text(encoding="utf-8"),
+            context=label_validation_context(root),
         )
     except (OSError, ValidationError) as error:
         raise DocumentRightsError(f"Cannot load document metadata: {error}") from error

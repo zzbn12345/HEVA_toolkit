@@ -11,7 +11,7 @@ from typing import Any, Iterable, Literal, Mapping, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from heva.curation.contract import validate_record
+from heva.curation.contract import HEVA_LABELS, validate_record
 from heva.curation.project_registry import (
     DEFAULT_REGISTRY_PATH,
     ProjectRegistry,
@@ -43,8 +43,13 @@ _SUSPICIOUS = re.compile(r"[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFD]")
 def assess_record(
     record: Mapping[str, Any],
     thresholds: QualityThresholds | None = None,
+    *,
+    labels: frozenset[str] = HEVA_LABELS,
 ) -> tuple[QualityFlag, ...]:
-    """Return flags without modifying, relabeling, or excluding the record."""
+    """Return flags without modifying, relabeling, or excluding the record.
+
+    ``labels`` is the document's value set; HEVA heritage values by default.
+    """
 
     config = thresholds or QualityThresholds()
     flags: list[QualityFlag] = []
@@ -113,7 +118,7 @@ def assess_record(
                     {"tokens": len(tokens), "maximum": config.maximum_tokens},
                 )
             )
-    for issue in validate_record(record).issues:
+    for issue in validate_record(record, labels=labels).issues:
         flags.append(
             QualityFlag(
                 code=issue.code,

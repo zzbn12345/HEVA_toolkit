@@ -20,6 +20,8 @@ from heva.curation.project_registry import (
     document_workspace_directory,
     load_project_registry,
 )
+from heva.curation.color_configuration_registry import document_label_vocabulary
+from heva.curation.value_sets import label_validation_context
 
 
 ReviewStatus = Literal["pending", "approved", "needs_correction", "excluded"]
@@ -95,7 +97,10 @@ def _synchronize_review_completion_metadata(
         return
     from heva.curation.document_metadata import PackageMetadata, save_package_metadata
 
-    metadata = PackageMetadata.model_validate_json(metadata_path.read_text(encoding="utf-8"))
+    metadata = PackageMetadata.model_validate_json(
+        metadata_path.read_text(encoding="utf-8"),
+        context=label_validation_context(root),
+    )
     completed = all(
         item.status in {"approved", "excluded"} for item in review.sentences
     )
@@ -263,8 +268,9 @@ def accept_quality_warning(
         raise ReviewError(f"Unknown sentence ID: {sentence_id}")
     from heva.curation.quality_flags import assess_record
 
+    labels = document_label_vocabulary(root, document_id)
     warning = next(
-        (flag for flag in assess_record(record) if flag.code == code),
+        (flag for flag in assess_record(record, labels=labels) if flag.code == code),
         None,
     )
     if warning is None:
@@ -316,6 +322,7 @@ def accept_all_quality_warnings(
     )
     from heva.curation.quality_flags import assess_record
 
+    labels = document_label_vocabulary(root, document_id)
     target = document_workspace_directory(root, document_id) / "review-state.json"
     review = DocumentReview.model_validate_json(target.read_text(encoding="utf-8"))
     decisions = {item.sentence_id: item for item in review.sentences}
@@ -326,7 +333,7 @@ def accept_all_quality_warnings(
         decision = decisions.get(sentence_id)
         if decision is None:
             raise ReviewError(f"Unknown sentence ID: {sentence_id}")
-        for warning in assess_record(record):
+        for warning in assess_record(record, labels=labels):
             if (
                 warning.severity != "warning"
                 or warning.code in decision.accepted_warning_codes
@@ -364,7 +371,10 @@ def replace_sentence_record(
 ) -> None:
     """Persist curated text and annotation corrections while retaining source evidence."""
 
-    result = validate_record(replacement)
+    result = validate_record(
+        replacement,
+        labels=document_label_vocabulary(project_root, document_id),
+    )
     if not result.valid or result.record is None:
         details = "; ".join(
             f"{issue.path}: {issue.message}" for issue in result.issues

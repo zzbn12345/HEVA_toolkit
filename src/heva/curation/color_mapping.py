@@ -10,12 +10,14 @@ from typing import Any, Mapping, Sequence
 
 from pydantic import ValidationError
 
+from heva.curation.contract import HEVA_LABELS
 from heva.curation.document_metadata import (
     ColorConfigurationMetadata,
     ColorMappingMetadata,
     PackageMetadata,
 )
 from heva.curation.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
+from heva.curation.value_sets import label_validation_context
 
 
 class ColorMappingError(ValueError):
@@ -82,7 +84,8 @@ def load_color_configuration(
         )
     try:
         metadata = PackageMetadata.model_validate_json(
-            (root / entry.metadata_path).read_text(encoding="utf-8")
+            (root / entry.metadata_path).read_text(encoding="utf-8"),
+            context=label_validation_context(root),
         )
     except (OSError, ValidationError) as error:
         raise ColorMappingError("The document package metadata cannot be read.") from error
@@ -95,8 +98,12 @@ def review_and_confirm_color_configuration(
     decisions: Sequence[Mapping[str, str | None]],
     *,
     confirmed_by: str,
+    labels: frozenset[str] = HEVA_LABELS,
 ) -> ColorConfigurationMetadata:
-    """Apply explicit label/ignore decisions and atomically persist confirmation."""
+    """Apply explicit label/ignore decisions and atomically persist confirmation.
+
+    ``labels`` is the value set the decisions must come from; HEVA heritage values by default.
+    """
 
     configuration = load_color_configuration(project_root, document_id)
     expected = {item.hex for item in configuration.colors}
@@ -115,6 +122,7 @@ def review_and_confirm_color_configuration(
             color,
             label=str(label) if label else None,
             ignore_reason=str(ignore_reason) if ignore_reason else None,
+            labels=labels,
         )
     updated.shared_from_document_id = None
     updated = confirm_color_configuration(updated, confirmed_by=confirmed_by)
@@ -247,6 +255,7 @@ def resolve_color(
     *,
     label: str | None = None,
     ignore_reason: str | None = None,
+    labels: frozenset[str] = HEVA_LABELS,
 ) -> ColorConfigurationMetadata:
     """Return a copy with one color explicitly approved or ignored by a person."""
 
@@ -259,7 +268,16 @@ def resolve_color(
         raise ColorMappingError(f"Color {normalized} is not present in this document.")
     entry = matches[0]
     if label is not None:
-        validated = ColorMappingMetadata(hex=normalized, label=label)
+        try:
+            validated = ColorMappingMetadata.model_validate(
+                {"hex": normalized, "label": label},
+                context={"labels": labels},
+            )
+        except ValidationError as error:
+            raise ColorMappingError(
+                f"Expected a controlled HEVA label or a value of the selected value set "
+                f"for {normalized}; received {label!r}."
+            ) from error
         entry.label = validated.label
         entry.status = "approved"
         entry.ignore_reason = None
@@ -454,7 +472,10 @@ def save_color_configuration(
         raise ColorMappingError(f"Document {document_id} has no package metadata path.")
     metadata_file = root / entry.metadata_path
     try:
-        metadata = PackageMetadata.model_validate_json(metadata_file.read_text(encoding="utf-8"))
+        metadata = PackageMetadata.model_validate_json(
+            metadata_file.read_text(encoding="utf-8"),
+            context=label_validation_context(root),
+        )
     except (OSError, ValidationError) as error:
         raise ColorMappingError(f"Cannot load package metadata {metadata_file}: {error}") from error
     metadata.color_configuration = configuration
@@ -494,7 +515,10 @@ def write_automatic_color_proposals(
         raise ColorMappingError(f"Document {document_id} has no package metadata path.")
     metadata_file = root / metadata_path
     try:
-        metadata = PackageMetadata.model_validate_json(metadata_file.read_text(encoding="utf-8"))
+        metadata = PackageMetadata.model_validate_json(
+            metadata_file.read_text(encoding="utf-8"),
+            context=label_validation_context(root),
+        )
     except (OSError, ValidationError) as error:
         raise ColorMappingError(f"Cannot load package metadata {metadata_file}: {error}") from error
     if metadata.color_configuration.colors:
@@ -551,7 +575,10 @@ def load_confirmed_color_mapping(
         raise ColorMappingError(f"Document {document_id} has no package metadata path.")
     metadata_file = root / metadata_path
     try:
-        metadata = PackageMetadata.model_validate_json(metadata_file.read_text(encoding="utf-8"))
+        metadata = PackageMetadata.model_validate_json(
+            metadata_file.read_text(encoding="utf-8"),
+            context=label_validation_context(root),
+        )
     except (OSError, ValidationError) as error:
         raise ColorMappingError(f"Cannot load package metadata {metadata_file}: {error}") from error
     configuration = metadata.color_configuration
@@ -584,7 +611,8 @@ def load_extraction_color_mapping(
     if not matches or matches[0].metadata_path is None:
         raise ColorMappingError(f"Document {document_id} has no package color configuration.")
     metadata = PackageMetadata.model_validate_json(
-        (root / matches[0].metadata_path).read_text(encoding="utf-8")
+        (root / matches[0].metadata_path).read_text(encoding="utf-8"),
+        context=label_validation_context(root),
     )
     configuration = metadata.color_configuration
     if configuration.human_confirmed:

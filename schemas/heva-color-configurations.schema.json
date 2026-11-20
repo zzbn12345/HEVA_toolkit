@@ -36,16 +36,9 @@
       "required": ["label", "hexes"],
       "properties": {
         "label": {
-          "enum": [
-            "social",
-            "economic",
-            "political",
-            "historic",
-            "aesthetical",
-            "scientific",
-            "age",
-            "ecological"
-          ]
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "description": "A value of the configuration's value set. Without value_set_id this is one of the eight HEVA heritage values (social, economic, political, historic, aesthetical, scientific, age, ecological)."
         },
         "hexes": {
           "type": "array",
@@ -81,7 +74,13 @@
           "items": {"$ref": "#/$defs/mapping"}
         },
         "created_by": {"type": "string", "pattern": "^PERSON-[A-Z0-9]+$"},
-        "created_at": {"type": "string", "format": "date-time"}
+        "created_at": {"type": "string", "format": "date-time"},
+        "value_set_id": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "description": "Project value set the colors map to (see heva-value-sets.schema.json). Absent or null means the built-in HEVA heritage values."
+        },
+        "value_set_version": {"type": ["integer", "null"], "minimum": 1}
       }
     }
   }

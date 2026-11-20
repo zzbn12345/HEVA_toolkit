@@ -21,6 +21,8 @@ from heva.curation.project_registry import (
 from heva.curation.people_registry import PeopleRegistryError, load_people_registry
 from heva.curation.quality_flags import assess_record
 from heva.curation.review_state import DocumentReview
+from heva.curation.color_configuration_registry import document_label_vocabulary
+from heva.curation.value_sets import label_validation_context
 
 
 class ReviewQueueError(ValueError):
@@ -77,6 +79,7 @@ def _readiness(
     records: list[dict[str, Any]],
     review: DocumentReview | None,
     curator_ready: bool,
+    label_context: dict[str, Any] | None = None,
 ) -> tuple[dict[str, bool], list[str]]:
     """Project researcher-facing gates from persisted package evidence."""
 
@@ -85,7 +88,8 @@ def _readiness(
         reasons.append("Select an active project curator.")
     try:
         metadata = PackageMetadata.model_validate_json(
-            (package / "metadata.json").read_text(encoding="utf-8")
+            (package / "metadata.json").read_text(encoding="utf-8"),
+            context=label_context,
         )
     except (OSError, ValueError):
         metadata = None
@@ -165,6 +169,7 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
         curator_ready = load_people_registry(root).active_curator() is not None
     except PeopleRegistryError:
         curator_ready = False
+    label_context = label_validation_context(root)
     for entry in sorted(_registry(root).documents, key=lambda item: item.source_path):
         package = root / entry.package_path
         annotations_path = package / "annotations.json"
@@ -175,7 +180,7 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
             initialize_sentence_reviews(root, entry.document_id)
         if not annotations_path.exists() or not review_path.exists():
             records = _load_records(package) if annotations_path.exists() else []
-            gates, reasons = _readiness(package, records, None, curator_ready)
+            gates, reasons = _readiness(package, records, None, curator_ready, label_context)
             items.append(
                 ReviewQueueItem(
                     document_id=entry.document_id,
@@ -199,8 +204,9 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
             )
             continue
         records = _load_records(package)
+        labels = document_label_vocabulary(root, entry.document_id)
         review = DocumentReview.model_validate_json(review_path.read_text(encoding="utf-8"))
-        gates, reasons = _readiness(package, records, review, curator_ready)
+        gates, reasons = _readiness(package, records, review, curator_ready, label_context)
         states = {item.sentence_id: item.status for item in review.sentences}
         accepted = {
             item.sentence_id: set(item.accepted_warning_codes)
@@ -209,7 +215,7 @@ def list_review_queue(project_root: str | Path) -> list[ReviewQueueItem]:
         flagged = sum(
             any(
                 flag.code not in accepted.get(record["sentence_id"], set())
-                for flag in assess_record(record)
+                for flag in assess_record(record, labels=labels)
             )
             for record in records
         )
@@ -266,6 +272,7 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
     if entry is None:
         raise ReviewQueueError(f"Document {document_id} is not registered.")
     package = root / entry.package_path
+    labels = document_label_vocabulary(root, document_id)
     draft_only = False
     try:
         records = _load_records(package)
@@ -349,7 +356,7 @@ def load_review_document(project_root: str | Path, document_id: str) -> dict[str
             }]
         else:
             accepted_codes = set(decision.accepted_warning_codes)
-            for flag in assess_record(record):
+            for flag in assess_record(record, labels=labels):
                 serialized = {
                     "code": flag.code,
                     "severity": flag.severity,
@@ -477,7 +484,8 @@ def submit_review_document(
     package = _package_for_document(root, document_id)
     try:
         metadata = PackageMetadata.model_validate_json(
-            (package / "metadata.json").read_text(encoding="utf-8")
+            (package / "metadata.json").read_text(encoding="utf-8"),
+            context=label_validation_context(root),
         )
     except (OSError, ValueError) as error:
         raise ReviewQueueError(f"Cannot update annotation-process metadata: {error}") from error

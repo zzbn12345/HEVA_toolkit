@@ -9,6 +9,7 @@ from typing import Any, Iterable
 
 from pydantic import ValidationError
 
+from heva.curation.color_configuration_registry import document_label_vocabulary
 from heva.curation.contract import ContractIssue, validate_record
 from heva.curation.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
 
@@ -61,7 +62,8 @@ def build_collection(
         if not isinstance(decoded, list):
             all_issues.append(f"{entry.document_id}: annotations must be a JSON array")
             continue
-        results = [validate_record(record) for record in decoded]
+        labels = document_label_vocabulary(root, entry.document_id)
+        results = [validate_record(record, labels=labels) for record in decoded]
         issues: list[ContractIssue] = [
             issue for result in results for issue in result.issues
         ]

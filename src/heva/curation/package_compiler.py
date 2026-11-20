@@ -14,7 +14,7 @@ from heva.curation.color_mapping import (
     ColorMappingError,
     load_confirmed_color_mapping,
 )
-from heva.curation.contract import validate_record
+from heva.curation.contract import HEVA_LABELS, validate_record
 from heva.curation.extraction_session import (
     ExtractionSessionError,
     persist_extraction_results,
@@ -24,6 +24,7 @@ from heva.curation.project_registry import (
     ProjectRegistry,
     document_workspace_directory,
 )
+from heva.curation.value_sets import label_validation_context
 
 
 CSV_FIELDS = (
@@ -45,7 +46,11 @@ class PackageCompileError(ValueError):
     """Raised when edited CSV cannot safely replace working annotations."""
 
 
-def _decode_row(row: dict[str, str], row_number: int) -> tuple[str, dict[str, Any]]:
+def _decode_row(
+    row: dict[str, str],
+    row_number: int,
+    labels: frozenset[str] = HEVA_LABELS,
+) -> tuple[str, dict[str, Any]]:
     document_id = (row.get("document_id") or "").strip()
     if not document_id:
         raise PackageCompileError(f"CSV row {row_number}: document_id is required.")
@@ -75,7 +80,7 @@ def _decode_row(row: dict[str, str], row_number: int) -> tuple[str, dict[str, An
             decoded[field] = value or None
         else:
             decoded[field] = value
-    result = validate_record(decoded)
+    result = validate_record(decoded, labels=labels)
     if not result.valid or result.record is None:
         issues = "; ".join(
             f"{issue.code} {issue.path}: {issue.message}" for issue in result.issues
@@ -84,8 +89,15 @@ def _decode_row(row: dict[str, str], row_number: int) -> tuple[str, dict[str, An
     return document_id, result.record.to_dict()
 
 
-def load_compilation_rows(csv_path: str | Path) -> dict[str, list[dict[str, Any]]]:
-    """Parse and validate every CSV row before any document package is changed."""
+def load_compilation_rows(
+    csv_path: str | Path,
+    *,
+    labels: frozenset[str] = HEVA_LABELS,
+) -> dict[str, list[dict[str, Any]]]:
+    """Parse and validate every CSV row before any document package is changed.
+
+    ``labels`` is the vocabulary rows may use; HEVA heritage values by default.
+    """
 
     path = Path(csv_path)
     try:
@@ -102,7 +114,7 @@ def load_compilation_rows(csv_path: str | Path) -> dict[str, list[dict[str, Any]
             grouped: dict[str, list[dict[str, Any]]] = {}
             identities: set[tuple[str, int]] = set()
             for row_number, row in enumerate(reader, start=2):
-                document_id, record = _decode_row(row, row_number)
+                document_id, record = _decode_row(row, row_number, labels)
                 identity = (document_id, record["sentence_id"])
                 if identity in identities:
                     raise PackageCompileError(
@@ -127,7 +139,12 @@ def compile_csv_packages(
     """Compile a release-shaped CSV after a complete project and mapping preflight."""
 
     root = Path(project_root).resolve()
-    grouped = load_compilation_rows(csv_path)
+    # Rows may use any label the project's value sets define; each document's own value
+    # set is checked again when its records are persisted.
+    grouped = load_compilation_rows(
+        csv_path,
+        labels=label_validation_context(root)["labels"],
+    )
     try:
         registry = ProjectRegistry.model_validate_json(
             (root / DEFAULT_REGISTRY_PATH).read_text(encoding="utf-8")

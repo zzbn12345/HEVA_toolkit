@@ -34,6 +34,8 @@ from heva.curation.project_registry import (
     document_workspace_directory,
     require_current_document_source,
 )
+from heva.curation.color_configuration_registry import document_label_vocabulary
+from heva.curation.value_sets import label_validation_context
 
 
 TOOLKIT_VERSION = "0.1.0"
@@ -178,7 +180,8 @@ def archive_and_reset_extraction(
     metadata_file = root / entry.metadata_path
     try:
         metadata = PackageMetadata.model_validate_json(
-            metadata_file.read_text(encoding="utf-8")
+            metadata_file.read_text(encoding="utf-8"),
+            context=label_validation_context(root),
         )
     except (OSError, ValidationError) as error:
         raise ExtractionSessionError(f"Cannot load document metadata: {error}") from error
@@ -263,7 +266,8 @@ def persist_extraction_results(
             "No annotation records were extracted. Check that the document contains "
             "colored annotations covered by its confirmed color configuration."
         )
-    results = [validate_record(record) for record in records]
+    labels = document_label_vocabulary(root, document_id)
+    results = [validate_record(record, labels=labels) for record in records]
     issues = tuple(issue for result in results for issue in result.issues)
     if issues:
         raise ExtractionValidationError(issues)
@@ -272,7 +276,10 @@ def persist_extraction_results(
     if entry.metadata_path is None:
         raise ExtractionSessionError(f"Document {document_id} has no package metadata.")
     metadata_file = root / entry.metadata_path
-    metadata = PackageMetadata.model_validate_json(metadata_file.read_text(encoding="utf-8"))
+    metadata = PackageMetadata.model_validate_json(
+        metadata_file.read_text(encoding="utf-8"),
+        context=label_validation_context(root),
+    )
     package = root / entry.package_path
     annotations_file = package / "annotations.json"
     session_file = document_workspace_directory(root, document_id) / "extraction-session.json"
@@ -639,7 +646,8 @@ def main(argv: Iterable[str] | None = None) -> int:
             if entry is None or entry.metadata_path is None:
                 continue
             metadata = PackageMetadata.model_validate_json(
-                (root / entry.metadata_path).read_text(encoding="utf-8")
+                (root / entry.metadata_path).read_text(encoding="utf-8"),
+                context=label_validation_context(root),
             )
             configuration: ColorConfigurationMetadata = metadata.color_configuration
             if configuration.human_confirmed or configuration.use_for_extraction:

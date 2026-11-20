@@ -15,6 +15,10 @@ from heva.curation.color_mapping import (
     load_color_configuration,
     save_color_configuration,
 )
+from heva.curation.color_configuration_registry import (
+    ProjectColorConfigurationError,
+    selected_value_set,
+)
 from heva.curation.contract import HEVA_LABELS
 from heva.curation.review_queue import ReviewQueueError, registered_source_path
 
@@ -59,15 +63,18 @@ def _group_color_evidence(records: list[Mapping[str, Any]]) -> dict[str, list[st
     return {color: sorted(values)[:25] for color, values in sorted(groups.items())}
 
 
-def _prompt(groups: Mapping[str, list[str]]) -> str:
+def _prompt(
+    groups: Mapping[str, list[str]],
+    labels: frozenset[str] = HEVA_LABELS,
+) -> str:
     evidence = "\n\n".join(
         f"{color}:\n" + "\n".join(f"- {text}" for text in texts)
         for color, texts in groups.items()
     )
-    labels = ", ".join(sorted(HEVA_LABELS))
+    subject = "heritage-annotation" if labels == HEVA_LABELS else "annotation"
     return (
-        "Classify highlighted heritage-annotation text by color. "
-        f"Use exactly one of these controlled labels: {labels}.\n\n"
+        f"Classify highlighted {subject} text by color. "
+        f"Use exactly one of these controlled labels: {', '.join(sorted(labels))}.\n\n"
         f"{evidence}\n\n"
         'Return JSON with two objects: "mapping" maps every hex color to one label; '
         '"reasoning" maps every hex color to a short explanation. '
@@ -160,8 +167,12 @@ def generate_automatic_color_proposals(
             f"No highlighted text evidence was extracted for: {missing}."
         )
     selected_groups = {color: groups[color] for color in sorted(unresolved)}
+    try:
+        labels = selected_value_set(project_root).labels
+    except ProjectColorConfigurationError as error:
+        raise AutomaticColorProposalError(str(error)) from error
     result = _query_ollama(
-        _prompt(selected_groups),
+        _prompt(selected_groups, labels),
         host=host,
         model=model,
         timeout_seconds=timeout_seconds,
@@ -193,10 +204,14 @@ def generate_automatic_color_proposals(
             color.reasoning = str(normalized_reasoning[color.hex]).strip() or None
             color.method = "ollama"
         updated.detection_method = "automatic"
-        updated = type(updated).model_validate(updated.model_dump(mode="json"))
+        updated = type(updated).model_validate(
+            updated.model_dump(mode="json"),
+            context={"labels": labels},
+        )
     except ValidationError as error:
         raise AutomaticColorProposalError(
-            "Ollama proposed a label outside the controlled HEVA specification."
+            "Ollama proposed a label outside the controlled HEVA specification "
+            "or the selected value set."
         ) from error
     try:
         save_color_configuration(project_root, document_id, updated)

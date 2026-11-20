@@ -16,6 +16,12 @@ from heva.curation.document_metadata import (
     PackageMetadata,
     validate_review_readiness,
 )
+from heva.curation.color_configuration_registry import (
+    ProjectColorConfigurationError,
+    document_label_vocabulary,
+    get_color_configuration,
+    palette_value_set,
+)
 from heva.curation.contract import validate_record
 from heva.curation.project_registry import (
     DEFAULT_REGISTRY_PATH,
@@ -25,6 +31,7 @@ from heva.curation.project_registry import (
     require_current_document_source,
 )
 from heva.curation.review_state import DocumentReview
+from heva.curation.value_sets import label_validation_context
 
 
 REPORT_VERSION = "1.0"
@@ -240,6 +247,64 @@ def _read_json(
     return None
 
 
+def _check_value_set(
+    root: Path,
+    document_id: str,
+    metadata: PackageMetadata,
+    issues: list[ValidationIssue],
+    fallback: frozenset[str],
+) -> frozenset[str]:
+    """Check approved colors against the value set of the document's palette.
+
+    Returns the labels the document's records may use. Documents without a resolvable
+    project palette keep the fallback vocabulary, as before value sets existed.
+    """
+
+    configuration = metadata.color_configuration
+    if configuration.configuration_id is None or configuration.configuration_version is None:
+        return fallback
+    try:
+        palette = get_color_configuration(
+            root,
+            configuration.configuration_id,
+            configuration.configuration_version,
+        )
+    except ProjectColorConfigurationError:
+        return fallback
+    try:
+        value_set = palette_value_set(root, palette)
+    except ProjectColorConfigurationError as error:
+        issues.append(
+            _issue(
+                document_id,
+                "value_set_unresolved",
+                "$.package_metadata.color_configuration.configuration_id",
+                str(error),
+                "Restore the value set named by the document's project palette, "
+                "or map the document with another palette.",
+            )
+        )
+        return fallback
+    for index, color in enumerate(configuration.colors):
+        if (
+            color.status == "approved"
+            and color.label is not None
+            and color.label not in value_set.labels
+        ):
+            issues.append(
+                _issue(
+                    document_id,
+                    "label_outside_value_set",
+                    f"$.package_metadata.color_configuration.colors[{index}].label",
+                    f"Color {color.hex} is labeled {color.label!r}, which is not a value of "
+                    f"{value_set.name} version {value_set.version}.",
+                    "Confirm the document colors again using the values of its "
+                    "palette's value set.",
+                )
+            )
+    return value_set.labels
+
+
 def validate_document_package(
     project_root: str | Path,
     document_id: str,
@@ -298,9 +363,15 @@ def validate_document_package(
         issues,
     )
     metadata: PackageMetadata | None = None
+    # Records are checked against the document's own value set when it can be resolved,
+    # otherwise against every label the project defines.
+    labels = label_validation_context(root)["labels"]
     if metadata_value is not None:
         try:
-            metadata = PackageMetadata.model_validate(metadata_value)
+            metadata = PackageMetadata.model_validate(
+                metadata_value,
+                context=label_validation_context(root),
+            )
         except ValidationError as error:
             for item in error.errors():
                 suffix = "".join(
@@ -345,6 +416,7 @@ def validate_document_package(
                         item.severity,
                     )
                 )
+            labels = _check_value_set(root, document_id, metadata, issues, labels)
 
     annotations_value = _read_json(
         package / "annotations.json",
@@ -367,7 +439,7 @@ def validate_document_package(
         else:
             seen_ids: set[int] = set()
             for index, value in enumerate(annotations_value):
-                result = validate_record(value)
+                result = validate_record(value, labels=labels)
                 sentence_id = (
                     value.get("sentence_id")
                     if isinstance(value, dict) and isinstance(value.get("sentence_id"), int)
@@ -725,13 +797,15 @@ def build_release(
         package_metadata = PackageMetadata.model_validate_json(
             (root / (entry.metadata_path or f"{entry.package_path}/metadata.json")).read_text(
                 encoding="utf-8"
-            )
+            ),
+            context=label_validation_context(root),
         )
         included = {
             item.sentence_id for item in reviews.sentences if item.status == "approved"
         }
+        labels = document_label_vocabulary(root, entry.document_id)
         canonical = [
-            validate_record(item).record.to_dict()
+            validate_record(item, labels=labels).record.to_dict()
             for item in annotations
             if item["sentence_id"] in included
         ]
