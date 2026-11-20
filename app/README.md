@@ -98,8 +98,8 @@ python -m pip install -e ".[dev]"
 python -m pytest
 ```
 
-The app's documentation is six short pages listed in
-[`docs/index.md`](../docs/index.md).
+The app's documentation, including the step-by-step
+[user guide](../docs/USER_GUIDE.md), is listed in [`docs/index.md`](../docs/index.md).
 
 ## Acknowledgments
 
