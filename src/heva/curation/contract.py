@@ -222,12 +222,15 @@ def _parse_mapping(
 
 
 def _parse_entities(
-    value: Sequence[EntityInput], sentence: str, issues: list[ContractIssue]
+    value: Sequence[EntityInput],
+    sentence: str,
+    issues: list[ContractIssue],
+    labels: frozenset[str] = HEVA_LABELS,
 ) -> tuple[Entity, ...]:
     entities: list[Entity] = []
     for index, candidate in enumerate(value):
         path = f"$.entities[{index}]"
-        if candidate.label not in HEVA_LABELS:
+        if candidate.label not in labels:
             issues.append(
                 _issue("unknown_label", f"{path}.label", f"Unknown HEVA label: {candidate.label}")
             )
@@ -257,7 +260,11 @@ def _parse_entities(
     return tuple(entities)
 
 
-def _validate_bio(tags: Sequence[str], issues: list[ContractIssue]) -> set[str]:
+def _validate_bio(
+    tags: Sequence[str],
+    issues: list[ContractIssue],
+    labels: frozenset[str] = HEVA_LABELS,
+) -> set[str]:
     """Validate BIO syntax and return the controlled labels represented by the tags."""
 
     previous_prefix = "O"
@@ -273,7 +280,7 @@ def _validate_bio(tags: Sequence[str], issues: list[ContractIssue]) -> set[str]:
             previous_prefix, previous_label = "O", None
             continue
         prefix, label = tag.split("-", 1)
-        if prefix not in {"B", "I"} or label not in HEVA_LABELS:
+        if prefix not in {"B", "I"} or label not in labels:
             issues.append(_issue("invalid_bio_tag", path, f"Invalid BIO tag: {tag}"))
         else:
             represented_labels.add(label)
@@ -291,8 +298,12 @@ def _validate_bio(tags: Sequence[str], issues: list[ContractIssue]) -> set[str]:
     return represented_labels
 
 
-def validate_record(value: Any) -> ValidationResult:
-    """Validate one decoded JSON value and return typed data plus stable issues."""
+def validate_record(value: Any, *, labels: frozenset[str] = HEVA_LABELS) -> ValidationResult:
+    """Validate one decoded JSON value and return typed data plus stable issues.
+
+    ``labels`` is the controlled vocabulary the record's values must come from. It defaults
+    to the HEVA heritage values; project callers pass the value set of the document's palette.
+    """
 
     parsed, structural_issues = _parse_structural_record(value)
     if parsed is None:
@@ -317,7 +328,7 @@ def validate_record(value: Any) -> ValidationResult:
     tokens = tuple(parsed.tokens)
     values = tuple(parsed.values)
     ner_tags = tuple(parsed.ner_tags)
-    entities = _parse_entities(parsed.entities, effective_sentence, issues)
+    entities = _parse_entities(parsed.entities, effective_sentence, issues, labels)
     schema_version = parsed.schema_version
     if sentence_id < 1:
         issues.append(_issue("invalid_type", "$.sentence_id", "Expected an integer greater than zero."))
@@ -334,7 +345,7 @@ def validate_record(value: Any) -> ValidationResult:
     mapping = _parse_mapping(parsed.mapping_provenance, issues)
 
     for index, label in enumerate(values):
-        if label not in HEVA_LABELS:
+        if label not in labels:
             issues.append(_issue("unknown_label", f"$.values[{index}]", f"Unknown HEVA label: {label}"))
     if len(tokens) != len(ner_tags):
         issues.append(
@@ -344,7 +355,7 @@ def validate_record(value: Any) -> ValidationResult:
                 f"Found {len(tokens)} tokens and {len(ner_tags)} BIO tags.",
             )
         )
-    bio_labels = _validate_bio(ner_tags, issues)
+    bio_labels = _validate_bio(ner_tags, issues, labels)
     entity_labels = {entity.label for entity in entities}
     if set(values) != entity_labels:
         issues.append(
@@ -378,7 +389,11 @@ def validate_record(value: Any) -> ValidationResult:
     return ValidationResult(record=record, issues=tuple(issues))
 
 
-def load_records(path: str | Path) -> list[ValidationResult]:
+def load_records(
+    path: str | Path,
+    *,
+    labels: frozenset[str] = HEVA_LABELS,
+) -> list[ValidationResult]:
     """Load a JSON array and validate every HEVA record without modifying the source."""
 
     source = Path(path)
@@ -393,4 +408,4 @@ def load_records(path: str | Path) -> list[ValidationResult]:
                 issues=(_issue("invalid_document", "$", "Expected an array of HEVA records."),),
             )
         ]
-    return [validate_record(value) for value in decoded]
+    return [validate_record(value, labels=labels) for value in decoded]

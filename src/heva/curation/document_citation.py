@@ -17,6 +17,7 @@ from heva.curation.document_metadata import (
     save_package_metadata,
 )
 from heva.curation.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry, resolve_document_source
+from heva.curation.value_sets import label_validation_context
 
 
 class CitationDraft(BaseModel):
@@ -83,7 +84,8 @@ def _context(project_root: str | Path, document_id: str):
         metadata = PackageMetadata.model_validate_json(
             (root / (entry.metadata_path or f"{entry.package_path}/metadata.json")).read_text(
                 encoding="utf-8"
-            )
+            ),
+            context=label_validation_context(root),
         )
     except (OSError, ValidationError) as error:
         raise CitationError("The document package metadata cannot be read.") from error

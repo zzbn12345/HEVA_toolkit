@@ -37,7 +37,9 @@ tool, not as a multi-user internet service.
 The currently selected project exists only in memory for the running application and is
 not restored after restart. Citation, annotator, color,
 extraction, review, validation, and curation changes are persisted by `heva.curation` in
-the selected project's JSON package files. Browser state is never the authoritative copy.
+the selected project's JSON package files. Project palettes and value sets are stored in
+`.heva/color-configurations.json` and `.heva/value-sets.json`. Browser state is never the
+authoritative copy.
 
 The application does not upload or distribute source documents. Researchers can either
 register an external PDF/DOCX without copying it or explicitly import a PDF into managed

@@ -1,10 +1,12 @@
-const HEVA_LABELS = ["social", "economic", "political", "historic", "aesthetical", "scientific", "age", "ecological"];
+const HERITAGE_VALUE_SET_ID = "heva-heritage-values";
 const statusBox = document.getElementById("palette-status");
 const list = document.getElementById("palette-list");
 const filter = document.getElementById("palette-filter");
 const form = document.getElementById("palette-form");
 const mappings = document.getElementById("palette-mappings");
+const valueSetSelect = form.elements.value_set;
 let registry = {selected: null, configurations: []};
+let valueSets = [];
 let current = null;
 
 function showStatus(kind, message) {
@@ -12,20 +14,59 @@ function showStatus(kind, message) {
   statusBox.textContent = message;
 }
 
+/** A palette without a value-set reference maps colors to the built-in heritage values. */
+function valueSetKey(configuration) {
+  return configuration?.value_set_id
+    ? `${configuration.value_set_id}@${configuration.value_set_version}`
+    : `${HERITAGE_VALUE_SET_ID}@1`;
+}
+
+function valueSetFor(configuration) {
+  return valueSets.find((valueSet) => `${valueSet.value_set_id}@${valueSet.version}` === valueSetKey(configuration));
+}
+
+function valueSetName(configuration) {
+  const valueSet = valueSetFor(configuration);
+  return valueSet ? `${valueSet.name} · v${valueSet.version}` : valueSetKey(configuration);
+}
+
+function chosenLabels() {
+  const valueSet = valueSets.find((item) => `${item.value_set_id}@${item.version}` === valueSetSelect.value);
+  return valueSet ? valueSet.values.map((value) => value.label) : [];
+}
+
+function renderValueSetOptions(selectedKey) {
+  valueSetSelect.replaceChildren(...valueSets.map((valueSet) => {
+    const option = document.createElement("option");
+    option.value = `${valueSet.value_set_id}@${valueSet.version}`;
+    option.textContent = `${valueSet.name} · v${valueSet.version}`;
+    return option;
+  }));
+  if (selectedKey && !valueSets.some((valueSet) => `${valueSet.value_set_id}@${valueSet.version}` === selectedKey)) {
+    const missing = document.createElement("option");
+    missing.value = selectedKey;
+    missing.textContent = `${selectedKey} (unavailable)`;
+    valueSetSelect.appendChild(missing);
+  }
+  valueSetSelect.value = selectedKey;
+}
+
 function isSelected(configuration) {
   return registry.selected?.configuration_id === configuration.configuration_id
     && registry.selected?.version === configuration.version;
 }
 
-function mappingRow(mapping = {label: "historic", hexes: []}, readOnly = false) {
+function mappingRow(mapping = {label: "", hexes: []}, readOnly = false) {
   const row = document.createElement("div");
   row.className = "generated-fields";
   const label = document.createElement("label");
-  label.textContent = "HEVA label";
+  label.textContent = "Value";
   const select = document.createElement("select");
   select.name = "mapping_label";
   select.disabled = readOnly;
-  HEVA_LABELS.forEach((value) => {
+  const labels = chosenLabels();
+  if (mapping.label && !labels.includes(mapping.label)) labels.push(mapping.label);
+  labels.forEach((value) => {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = value;
@@ -50,6 +91,7 @@ function renderList() {
   const query = filter.value.trim().toLowerCase();
   const visible = registry.configurations.filter((configuration) =>
     [configuration.configuration_id, configuration.name, configuration.description,
+      valueSetName(configuration),
       ...configuration.mappings.map((mapping) => `${mapping.label} ${mapping.hexes.join(" ")}`)]
       .filter(Boolean).join(" ").toLowerCase().includes(query),
   );
@@ -67,7 +109,7 @@ function renderList() {
     const name = document.createElement("strong");
     name.textContent = `${configuration.name} · v${configuration.version}${isSelected(configuration) ? " ●" : ""}`;
     const detail = document.createElement("small");
-    detail.textContent = configuration.configuration_id;
+    detail.textContent = `${configuration.configuration_id} · ${valueSetName(configuration)}`;
     button.append(name, detail);
     button.addEventListener("click", () => showConfiguration(configuration));
     return button;
@@ -85,7 +127,10 @@ function showConfiguration(configuration) {
   form.elements.configuration_id.readOnly = readOnly;
   form.elements.name.readOnly = readOnly;
   form.elements.description.readOnly = readOnly;
-  (configuration?.mappings || [{label: "historic", hexes: []}]).forEach((mapping) => mappingRow(mapping, readOnly));
+  const selectedPalette = registry.configurations.find(isSelected);
+  renderValueSetOptions(valueSetKey(configuration || selectedPalette));
+  valueSetSelect.disabled = readOnly;
+  (configuration?.mappings || [{label: "", hexes: []}]).forEach((mapping) => mappingRow(mapping, readOnly));
   document.getElementById("palette-title").textContent = configuration
     ? `${configuration.name} · version ${configuration.version}`
     : "Create palette version";
@@ -97,12 +142,21 @@ function showConfiguration(configuration) {
 }
 
 async function loadPalettes(preferred = current) {
-  const response = await fetch("/api/project-colors");
+  const [response, valueSetResponse] = await Promise.all([
+    fetch("/api/project-colors"),
+    fetch("/api/value-sets"),
+  ]);
   const result = await response.json();
+  const valueSetResult = await valueSetResponse.json();
   if (!response.ok) {
     showStatus("error", result.detail || "Project palettes could not be loaded.");
     return;
   }
+  if (!valueSetResponse.ok) {
+    showStatus("error", valueSetResult.detail || "Value sets could not be loaded.");
+    return;
+  }
+  valueSets = valueSetResult.value_sets;
   registry = result;
   const selected = registry.configurations.find(isSelected);
   const matching = preferred && registry.configurations.find((item) =>
@@ -118,6 +172,12 @@ async function loadPalettes(preferred = current) {
 }
 
 document.getElementById("add-palette-mapping").addEventListener("click", () => mappingRow());
+valueSetSelect.addEventListener("change", () => {
+  // Values of another set cannot be kept, so start the color meanings again.
+  const count = Math.max(mappings.children.length, 1);
+  mappings.replaceChildren();
+  for (let index = 0; index < count; index += 1) mappingRow();
+});
 document.getElementById("new-palette").addEventListener("click", () => showConfiguration(null));
 filter.addEventListener("input", renderList);
 
@@ -126,7 +186,10 @@ form.addEventListener("submit", async (event) => {
   if (!form.reportValidity()) return;
   const labels = [...form.querySelectorAll("[name='mapping_label']")];
   const hexFields = [...form.querySelectorAll("[name='mapping_hexes']")];
+  const valueSet = valueSets.find((item) => `${item.value_set_id}@${item.version}` === valueSetSelect.value);
   const payload = {
+    value_set_id: valueSet?.value_set_id ?? null,
+    value_set_version: valueSet?.version ?? null,
     configuration_id: form.elements.configuration_id.value.trim(),
     name: form.elements.name.value.trim(),
     description: form.elements.description.value.trim() || null,

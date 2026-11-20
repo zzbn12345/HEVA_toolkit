@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://heva.example.org/schemas/heva-value-sets.schema.json",
+  "title": "HEVA project value-set registry",
+  "description": "Curator-defined, versioned sets of values that annotation colors can be mapped to. Stored in .heva/value-sets.json. The built-in HEVA heritage values (heva-heritage-values, version 1) are never stored here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "value_sets"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "value_sets": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/value_set"}
+    }
+  },
+  "$defs": {
+    "value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "description"],
+      "properties": {
+        "label": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "description": {"type": ["string", "null"]}
+      }
+    },
+    "value_set": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value_set_id",
+        "version",
+        "name",
+        "description",
+        "values",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "value_set_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "not": {"const": "heva-heritage-values"}
+        },
+        "version": {"type": "integer", "minimum": 1},
+        "name": {"type": "string", "minLength": 1},
+        "description": {"type": ["string", "null"]},
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/value"}
+        },
+        "created_by": {"type": "string", "pattern": "^PERSON-[A-Z0-9]+$"},
+        "created_at": {"type": "string", "format": "date-time"}
+      }
+    }
+  }
+}

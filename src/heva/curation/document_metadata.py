@@ -25,6 +25,7 @@ from pydantic import (
     StrictBool,
     StrictInt,
     ValidationError,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
@@ -192,7 +193,7 @@ class AnnotationProcessMetadata(BaseModel):
 
 
 class ColorMappingMetadata(BaseModel):
-    """One observed document color and its supervised HEVA interpretation."""
+    """One observed document color and its supervised value-set interpretation."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -224,10 +225,17 @@ class ColorMappingMetadata(BaseModel):
 
     @field_validator("label", "suggested_label")
     @classmethod
-    def validate_label(cls, value: str | None) -> str | None:
+    def validate_label(cls, value: str | None, info: ValidationInfo) -> str | None:
+        """Accept the heritage values, or the project's value-set labels when given.
+
+        Callers that know the project pass ``context={"labels": ...}``; without a context
+        the controlled HEVA heritage vocabulary applies, as before.
+        """
+
         if value is None:
             return None
-        if value not in HEVA_LABELS:
+        allowed = (info.context or {}).get("labels", HEVA_LABELS)
+        if value not in allowed:
             raise ValueError(f"Expected a controlled HEVA label; received {value!r}.")
         return value
 

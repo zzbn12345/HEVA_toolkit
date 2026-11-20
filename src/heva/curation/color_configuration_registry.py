@@ -12,6 +12,7 @@ from pydantic import (
     ConfigDict,
     Field,
     ValidationError,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
@@ -23,15 +24,26 @@ from heva.curation.color_mapping import (
     save_color_configuration,
 )
 from heva.curation.contract import HEVA_LABELS
-from heva.curation.document_metadata import ColorMappingMetadata
+from heva.curation.document_metadata import (
+    ColorConfigurationMetadata,
+    ColorMappingMetadata,
+)
 from heva.curation.people_registry import load_people_registry
+from heva.curation.value_sets import (
+    HERITAGE_VALUE_SET_ID,
+    HERITAGE_VALUE_SET_VERSION,
+    ProjectValueSet,
+    ValueSetError,
+    get_value_set,
+    label_validation_context,
+)
 
 
 COLOR_CONFIGURATIONS_PATH = Path(".heva/color-configurations.json")
 
 
 class ProjectColorMapping(BaseModel):
-    """One controlled HEVA category represented by one or more source hex values."""
+    """One value-set category represented by one or more source hex values."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -40,10 +52,10 @@ class ProjectColorMapping(BaseModel):
 
     @field_validator("label")
     @classmethod
-    def controlled_label(cls, label: str) -> str:
-        """Reject project mappings outside the versioned HEVA vocabulary."""
+    def controlled_label(cls, label: str, info: ValidationInfo) -> str:
+        """Reject mappings outside the vocabulary; heritage values unless a context is given."""
 
-        if label not in HEVA_LABELS:
+        if label not in (info.context or {}).get("labels", HEVA_LABELS):
             raise ValueError(f"Expected a controlled HEVA label; received {label!r}.")
         return label
 
@@ -70,6 +82,10 @@ class ProjectColorConfiguration(BaseModel):
     mappings: list[ProjectColorMapping] = Field(min_length=1)
     created_by: str = Field(pattern=r"^PERSON-[A-Z0-9]+$")
     created_at: datetime
+    # No value-set reference means the built-in HEVA heritage values, so palettes saved
+    # before value sets existed keep their meaning.
+    value_set_id: str | None = None
+    value_set_version: int | None = Field(default=None, ge=1)
 
     @field_validator("name", "description", mode="before")
     @classmethod
@@ -98,6 +114,14 @@ class ProjectColorConfiguration(BaseModel):
                     )
                 assigned[color] = mapping.label
         return mappings
+
+    @property
+    def value_set_reference(self) -> tuple[str, int]:
+        """Return the exact value set version this palette maps colors to."""
+
+        if self.value_set_id is None:
+            return HERITAGE_VALUE_SET_ID, HERITAGE_VALUE_SET_VERSION
+        return self.value_set_id, self.value_set_version or HERITAGE_VALUE_SET_VERSION
 
     @property
     def values(self) -> dict[str, str]:
@@ -171,7 +195,10 @@ def load_color_configuration_registry(
 
     path = Path(project_root) / COLOR_CONFIGURATIONS_PATH
     try:
-        return ColorConfigurationRegistry.model_validate_json(path.read_text(encoding="utf-8"))
+        return ColorConfigurationRegistry.model_validate_json(
+            path.read_text(encoding="utf-8"),
+            context=label_validation_context(project_root),
+        )
     except FileNotFoundError:
         return ColorConfigurationRegistry()
     except (OSError, ValidationError) as error:
@@ -198,10 +225,20 @@ def create_color_configuration_version(
     name: str,
     mappings: Sequence[ProjectColorMapping | dict[str, object]],
     description: str | None = None,
+    value_set_id: str | None = None,
+    value_set_version: int | None = None,
 ) -> ProjectColorConfiguration:
-    """Append the next immutable version of a named project configuration."""
+    """Append the next immutable version of a named project configuration.
+
+    The mappings may only use labels of the named value set; without one, the HEVA
+    heritage values apply.
+    """
 
     root = Path(project_root)
+    try:
+        value_set = get_value_set(root, value_set_id, value_set_version)
+    except ValueSetError as error:
+        raise ProjectColorConfigurationError(str(error)) from error
     registry = load_color_configuration_registry(root)
     versions = [
         item.version
@@ -214,9 +251,17 @@ def create_color_configuration_version(
         version=version,
         name=name,
         description=description,
-        mappings=[ProjectColorMapping.model_validate(item) for item in mappings],
+        mappings=[
+            ProjectColorMapping.model_validate(
+                item.model_dump() if isinstance(item, ProjectColorMapping) else item,
+                context={"labels": value_set.labels},
+            )
+            for item in mappings
+        ],
         created_by=_active_curator_id(root),
         created_at=datetime.now(timezone.utc),
+        value_set_id=None if value_set.built_in else value_set.value_set_id,
+        value_set_version=None if value_set.built_in else value_set.version,
     )
     registry.configurations.append(configuration)
     _write(root / COLOR_CONFIGURATIONS_PATH, registry)
@@ -323,3 +368,59 @@ def apply_selected_configuration_to_document(
         save_color_configuration(root, document_id, updated)
     except ColorMappingError as error:
         raise ProjectColorConfigurationError(str(error)) from error
+
+
+def palette_value_set(
+    project_root: str | Path,
+    configuration: ProjectColorConfiguration,
+) -> ProjectValueSet:
+    """Resolve the exact value set version a palette maps colors to."""
+
+    value_set_id, version = configuration.value_set_reference
+    try:
+        return get_value_set(project_root, value_set_id, version)
+    except ValueSetError as error:
+        raise ProjectColorConfigurationError(str(error)) from error
+
+
+def selected_value_set(project_root: str | Path) -> ProjectValueSet:
+    """Return the value set of the selected palette, or the heritage values if none is selected."""
+
+    registry = load_color_configuration_registry(project_root)
+    if registry.selected is None:
+        return get_value_set(project_root, None, None)
+    return palette_value_set(project_root, selected_color_configuration(project_root))
+
+
+def document_value_set(
+    project_root: str | Path,
+    configuration: ColorConfigurationMetadata,
+) -> ProjectValueSet:
+    """Return the value set of the palette a document was mapped with.
+
+    Documents mapped before value sets existed, or not yet mapped with a project palette,
+    use the HEVA heritage values.
+    """
+
+    if configuration.configuration_id is None or configuration.configuration_version is None:
+        return get_value_set(project_root, None, None)
+    palette = get_color_configuration(
+        project_root,
+        configuration.configuration_id,
+        configuration.configuration_version,
+    )
+    return palette_value_set(project_root, palette)
+
+
+def document_label_vocabulary(project_root: str | Path, document_id: str) -> frozenset[str]:
+    """Return the labels a registered document's records may use.
+
+    When the document's palette cannot be resolved, every label known to the project is
+    accepted here so that the dedicated validation finding explains the problem instead.
+    """
+
+    try:
+        configuration = load_color_configuration(project_root, document_id)
+        return document_value_set(project_root, configuration).labels
+    except (ColorMappingError, ProjectColorConfigurationError, ValueSetError):
+        return label_validation_context(project_root)["labels"]

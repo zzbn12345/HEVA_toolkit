@@ -11,6 +11,7 @@ from heva.curation.document_metadata import (
 )
 from heva.curation.people_registry import PersonRecord, load_people_registry
 from heva.curation.project_registry import DEFAULT_REGISTRY_PATH, ProjectRegistry
+from heva.curation.value_sets import label_validation_context
 
 
 class DocumentContributorError(ValueError):
@@ -26,7 +27,10 @@ def _metadata(root: Path, document_id: str) -> PackageMetadata:
         )
         entry = next(item for item in registry.documents if item.document_id == document_id)
         path = root / (entry.metadata_path or f"{entry.package_path}/metadata.json")
-        return PackageMetadata.model_validate_json(path.read_text(encoding="utf-8"))
+        return PackageMetadata.model_validate_json(
+            path.read_text(encoding="utf-8"),
+            context=label_validation_context(root),
+        )
     except (OSError, ValueError, StopIteration) as error:
         raise DocumentContributorError(
             f"Document {document_id} metadata cannot be loaded."

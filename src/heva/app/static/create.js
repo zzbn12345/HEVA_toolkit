@@ -431,9 +431,43 @@ async function loadReferenceColorCode() {
  * Model reasoning remains provenance data and is not presented as a fixed specification.
  * @param {object} result
  */
-function renderColorConfiguration(result) {
+let lastColorResult = null;
+
+function valueSetKey(valueSet) {
+  return valueSet ? `${valueSet.value_set_id}@${valueSet.version}` : "";
+}
+
+/** The value set chosen on the color step; the API's current value set until changed. */
+function chosenValueSet(result) {
+  const select = document.getElementById("color-value-set");
+  const sets = result.value_sets || [];
+  return sets.find((item) => valueSetKey(item) === select.value)
+    || sets.find((item) => valueSetKey(item) === valueSetKey(result.value_set))
+    || {...result.value_set, labels: result.labels};
+}
+
+function renderValueSetChoice(result, preferredKey) {
+  const select = document.getElementById("color-value-set");
+  const sets = result.value_sets?.length ? result.value_sets : [{...result.value_set, labels: result.labels}];
+  select.replaceChildren(...sets.map((item) => {
+    const option = document.createElement("option");
+    option.value = valueSetKey(item);
+    option.textContent = item.built_in ? `${item.name} (built in)` : `${item.name} · v${item.version}`;
+    return option;
+  }));
+  const keys = sets.map(valueSetKey);
+  select.value = keys.includes(preferredKey) ? preferredKey : valueSetKey(result.value_set);
+}
+
+function renderColorConfiguration(result, preferredValueSetKey = null) {
+  lastColorResult = result;
+  renderValueSetChoice(result, preferredValueSetKey);
+  const activeValueSet = chosenValueSet(result);
+  const labels = activeValueSet.labels || result.labels;
   const configuration = result.configuration;
   const list = document.getElementById("color-list");
+  const customValueSet = activeValueSet.built_in === false ? activeValueSet : null;
+  document.querySelector(".reference-color-code").hidden = Boolean(customValueSet);
   list.replaceChildren(...configuration.colors.map((color) => {
     const record = document.createElement("article");
     record.className = "color-record";
@@ -448,12 +482,14 @@ function renderColorConfiguration(result) {
     const fields = document.createElement("div");
     fields.className = "color-fields";
     const label = document.createElement("label");
-    label.textContent = "HEVA label or ignore decision";
+    label.textContent = customValueSet
+      ? `Value from ${customValueSet.name} or ignore decision`
+      : "HEVA label or ignore decision";
     const select = document.createElement("select");
     const undecided = document.createElement("option");
     undecided.value = "";
     undecided.textContent = "Choose a decision…";
-    select.append(undecided, ...result.labels.map((value) => {
+    select.append(undecided, ...labels.map((value) => {
       const option = document.createElement("option");
       option.value = value;
       option.textContent = value;
@@ -463,12 +499,12 @@ function renderColorConfiguration(result) {
     ignore.value = "__ignore__";
     ignore.textContent = "Ignore this color";
     select.append(ignore);
-    if (color.status === "approved") select.value = color.label;
+    if (color.status === "approved" && labels.includes(color.label)) select.value = color.label;
     if (color.status === "ignored") select.value = "__ignore__";
     if (
       color.status === "pending_review"
       && color.suggested_label
-      && result.labels.includes(color.suggested_label)
+      && labels.includes(color.suggested_label)
     ) {
       select.value = color.suggested_label;
     }
@@ -739,7 +775,11 @@ async function confirmColors() {
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ decisions }),
+      body: JSON.stringify({
+        decisions,
+        value_set_id: chosenValueSet(lastColorResult).value_set_id,
+        value_set_version: chosenValueSet(lastColorResult).version,
+      }),
     },
   );
   const result = await response.json();
@@ -1309,4 +1349,10 @@ document.querySelectorAll("[name='processing-mode']").forEach((radio) => radio.a
 }));
 restoreAnnotator();
 loadReferenceColorCode();
+document.getElementById("color-value-set").addEventListener("change", (event) => {
+  if (!lastColorResult) return;
+  // Decisions made with another value set's labels no longer apply; review them again.
+  renderColorConfiguration(lastColorResult, event.target.value);
+  document.getElementById("mapping-confirmed").checked = false;
+});
 loadSelectedDocument();
