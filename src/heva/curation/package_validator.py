@@ -13,12 +13,12 @@ from typing import Any, Iterable, Literal, Sequence
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from heva.curation.document_metadata import (
+    ColorConfigurationMetadata,
     PackageMetadata,
     validate_review_readiness,
 )
 from heva.curation.color_configuration_registry import (
     ProjectColorConfigurationError,
-    document_label_vocabulary,
     get_color_configuration,
     palette_value_set,
 )
@@ -31,7 +31,11 @@ from heva.curation.project_registry import (
     require_current_document_source,
 )
 from heva.curation.review_state import DocumentReview
-from heva.curation.value_sets import label_validation_context
+from heva.curation.value_sets import (
+    ProjectValueSet,
+    heritage_value_set,
+    label_validation_context,
+)
 
 
 REPORT_VERSION = "1.0"
@@ -247,22 +251,19 @@ def _read_json(
     return None
 
 
-def _check_value_set(
+def _document_value_set(
     root: Path,
-    document_id: str,
-    metadata: PackageMetadata,
-    issues: list[ValidationIssue],
-    fallback: frozenset[str],
-) -> frozenset[str]:
-    """Check approved colors against the value set of the document's palette.
+    configuration: ColorConfigurationMetadata,
+) -> ProjectValueSet:
+    """Return the value set a document's labels belong to, as released.
 
-    Returns the labels the document's records may use. Documents without a resolvable
-    project palette keep the fallback vocabulary, as before value sets existed.
+    This is the value set of the document's project palette. A document without a project
+    palette reference, or whose palette no longer exists, uses the HEVA heritage values.
+    Raises ``ProjectColorConfigurationError`` when the palette's value set is missing.
     """
 
-    configuration = metadata.color_configuration
     if configuration.configuration_id is None or configuration.configuration_version is None:
-        return fallback
+        return heritage_value_set()
     try:
         palette = get_color_configuration(
             root,
@@ -270,9 +271,39 @@ def _check_value_set(
             configuration.configuration_version,
         )
     except ProjectColorConfigurationError:
-        return fallback
+        return heritage_value_set()
+    return palette_value_set(root, palette)
+
+
+def _value_set_description(value_set: ProjectValueSet) -> dict[str, Any]:
+    """Describe a value set for release consumers without internal attribution."""
+
+    return {
+        "value_set_id": value_set.value_set_id,
+        "version": value_set.version,
+        "name": value_set.name,
+        "description": value_set.description,
+        "built_in": value_set.built_in,
+        "values": [value.model_dump(mode="json") for value in value_set.values],
+    }
+
+
+def _check_value_set(
+    root: Path,
+    document_id: str,
+    metadata: PackageMetadata,
+    issues: list[ValidationIssue],
+    fallback: frozenset[str],
+) -> frozenset[str]:
+    """Check approved colors against the value set the document will be released with.
+
+    Returns the labels the document's records may use, so a released document never
+    contains a label its declared value set does not define.
+    """
+
+    configuration = metadata.color_configuration
     try:
-        value_set = palette_value_set(root, palette)
+        value_set = _document_value_set(root, configuration)
     except ProjectColorConfigurationError as error:
         issues.append(
             _issue(
@@ -779,6 +810,7 @@ def build_release(
         raise PackageValidationError("No registered documents are available for export.")
     rows: list[dict[str, Any]] = []
     documents: list[dict[str, Any]] = []
+    used_value_sets: dict[tuple[str, int], ProjectValueSet] = {}
     for entry in documents_to_export:
         report = validate_document_package(root, entry.document_id)
         if not report.release_ready:
@@ -803,7 +835,9 @@ def build_release(
         included = {
             item.sentence_id for item in reviews.sentences if item.status == "approved"
         }
-        labels = document_label_vocabulary(root, entry.document_id)
+        value_set = _document_value_set(root, package_metadata.color_configuration)
+        used_value_sets[(value_set.value_set_id, value_set.version)] = value_set
+        labels = value_set.labels
         canonical = [
             validate_record(item, labels=labels).record.to_dict()
             for item in annotations
@@ -833,12 +867,19 @@ def build_release(
                     item.model_dump(mode="json")
                     for item in package_metadata.original_annotators
                 ],
+                "value_set": {
+                    "value_set_id": value_set.value_set_id,
+                    "version": value_set.version,
+                },
                 "record_count": len(canonical),
                 "records": canonical,
             }
         )
         rows.extend({"document_id": entry.document_id, **item} for item in canonical)
 
+    value_sets = [
+        _value_set_description(used_value_sets[key]) for key in sorted(used_value_sets)
+    ]
     target = root / Path(output_directory)
     target.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -850,6 +891,7 @@ def build_release(
         "record_count": len(rows),
         "membership": [document["document_id"] for document in documents],
         "excluded_project_document_ids": sorted(registered_ids - selected),
+        "value_sets": value_sets,
         "documents": documents,
     }
     _write_json(target / "heva-annotations.json", payload)
@@ -912,6 +954,9 @@ def build_release(
                 ),
             ],
             "resources": resources,
+            # The vocabularies the annotation labels come from; each document in
+            # heva-annotations.json names the value set it uses.
+            "value_sets": value_sets,
         },
     )
     return target

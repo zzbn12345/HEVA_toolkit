@@ -12,6 +12,7 @@ import pytest
 from heva.curation.citation_import import import_citation_row
 from heva.curation.color_configuration_registry import (
     ProjectColorConfigurationError,
+    apply_selected_configuration_to_document,
     create_color_configuration_version,
     document_label_vocabulary,
     load_color_configuration_registry,
@@ -19,6 +20,7 @@ from heva.curation.color_configuration_registry import (
     selected_value_set,
 )
 from heva.curation.color_mapping import (
+    apply_shared_color_mapping,
     load_color_configuration,
     propose_color_configuration,
     resolve_color,
@@ -35,7 +37,11 @@ from heva.curation.package_compiler import (
     compile_csv_packages,
     load_compilation_rows,
 )
-from heva.curation.package_validator import build_release, validate_document_package
+from heva.curation.package_validator import (
+    PackageValidationError,
+    build_release,
+    validate_document_package,
+)
 from heva.curation.people_registry import PersonRecord, activate_curator, add_person
 from heva.curation.project_registry import load_project_registry, sync_registry
 from heva.curation.review_state import record_decisions
@@ -248,8 +254,11 @@ def test_color_decisions_use_the_given_value_set() -> None:
     assert resolved.colors[0].label == "physical"
 
 
-def _health_project(tmp_path: Path) -> tuple[Path, str]:
-    """Build a one-document project annotated with a custom health value set."""
+def _health_project(tmp_path: Path, *, heritage: bool = False) -> tuple[Path, str]:
+    """Build a one-document project annotated with a custom health value set.
+
+    With ``heritage=True`` the same document is mapped to the built-in heritage values.
+    """
 
     project = tmp_path / "health-dataset"
     project.mkdir()
@@ -300,18 +309,29 @@ def _health_project(tmp_path: Path) -> tuple[Path, str]:
         document_id,
         propose_color_configuration(["#FFFF00", "#00FFFF"]),
     )
-    health = _health_value_set(project)
-    palette = create_color_configuration_version(
-        project,
-        configuration_id="health-palette",
-        name="Health palette",
-        mappings=[
-            {"label": "physical", "hexes": ["#FFFF00"]},
-            {"label": "mental", "hexes": ["#00FFFF"]},
-        ],
-        value_set_id=health.value_set_id,
-        value_set_version=health.version,
-    )
+    if heritage:
+        palette = create_color_configuration_version(
+            project,
+            configuration_id="heritage-palette",
+            name="Heritage palette",
+            mappings=[
+                {"label": "social", "hexes": ["#FFFF00"]},
+                {"label": "historic", "hexes": ["#00FFFF"]},
+            ],
+        )
+    else:
+        health = _health_value_set(project)
+        palette = create_color_configuration_version(
+            project,
+            configuration_id="health-palette",
+            name="Health palette",
+            mappings=[
+                {"label": "physical", "hexes": ["#FFFF00"]},
+                {"label": "mental", "hexes": ["#00FFFF"]},
+            ],
+            value_set_id=health.value_set_id,
+            value_set_version=health.version,
+        )
     select_color_configuration(project, palette.configuration_id, palette.version)
     promote_extraction_draft(project, document_id)
     record_decisions(project, document_id, [1], status="approved", reviewer=curator.name)
@@ -357,6 +377,99 @@ def test_custom_value_set_document_validates_and_exports(tmp_path: Path) -> None
     )
     configuration = load_color_configuration(project, document_id)
     assert {color.label for color in configuration.colors} == {"physical", "mental"}
+
+
+def test_release_describes_the_value_set_of_every_document(tmp_path: Path) -> None:
+    """Released labels can be interpreted without access to the project files."""
+
+    project, document_id = _health_project(tmp_path)
+
+    release = build_release(project)
+    descriptor = json.loads((release / "datapackage.json").read_text())
+    payload = json.loads((release / "heva-annotations.json").read_text())
+
+    health = {
+        "value_set_id": "health-values",
+        "version": 1,
+        "name": "Health values",
+        "description": None,
+        "built_in": False,
+        "values": [
+            {"label": "physical", "description": "Bodily health and functioning"},
+            {"label": "mental", "description": None},
+            {"label": "social-support", "description": None},
+        ],
+    }
+    assert descriptor["value_sets"] == [health]
+    assert payload["value_sets"] == [health]
+    assert payload["documents"][0]["value_set"] == {
+        "value_set_id": "health-values",
+        "version": 1,
+    }
+    assert "PERSON-" not in (release / "datapackage.json").read_text()
+
+
+def test_heritage_release_names_the_built_in_value_set(tmp_path: Path) -> None:
+    project, _ = _health_project(tmp_path, heritage=True)
+
+    release = build_release(project)
+    descriptor = json.loads((release / "datapackage.json").read_text())
+    payload = json.loads((release / "heva-annotations.json").read_text())
+
+    assert [item["value_set_id"] for item in descriptor["value_sets"]] == [HERITAGE_VALUE_SET_ID]
+    assert descriptor["value_sets"][0]["built_in"] is True
+    assert {value["label"] for value in descriptor["value_sets"][0]["values"]} == HEVA_LABELS
+    assert payload["documents"][0]["value_set"]["value_set_id"] == HERITAGE_VALUE_SET_ID
+    assert payload["documents"][0]["records"][0]["values"] == ["historic", "social"]
+
+
+def test_custom_labels_without_palette_reference_cannot_be_released(tmp_path: Path) -> None:
+    """A document never claims the heritage values while carrying other labels."""
+
+    project, document_id = _health_project(tmp_path)
+    metadata_path = project / f"documents/{document_id}/metadata.json"
+    metadata = json.loads(metadata_path.read_text())
+    metadata["color_configuration"]["configuration_id"] = None
+    metadata["color_configuration"]["configuration_version"] = None
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    report = validate_document_package(project, document_id)
+
+    assert "label_outside_value_set" in {issue.code for issue in report.issues}
+    with pytest.raises(PackageValidationError, match="label_outside_value_set"):
+        build_release(project)
+
+
+def test_batch_sharing_keeps_the_source_palette_reference(tmp_path: Path) -> None:
+    """Documents that receive a shared mapping record which value set the labels use."""
+
+    _curator(tmp_path)
+    sources = tmp_path / "sources"
+    sources.mkdir()
+    (sources / "a.pdf").write_bytes(b"a")
+    (sources / "b.pdf").write_bytes(b"b")
+    sync_registry(tmp_path, source_dir="sources")
+    source_id, target_id = [item.document_id for item in load_project_registry(tmp_path).documents]
+    for document_id in (source_id, target_id):
+        save_color_configuration(tmp_path, document_id, propose_color_configuration(["#FFFF00"]))
+    health = _health_value_set(tmp_path)
+    palette = create_color_configuration_version(
+        tmp_path,
+        configuration_id="health-palette",
+        name="Health palette",
+        mappings=[{"label": "mental", "hexes": ["#FFFF00"]}],
+        value_set_id=health.value_set_id,
+        value_set_version=health.version,
+    )
+    select_color_configuration(tmp_path, palette.configuration_id, palette.version)
+    apply_selected_configuration_to_document(tmp_path, source_id)
+
+    apply_shared_color_mapping(tmp_path, source_id, [target_id], confirmed_by="Project Curator")
+    target = load_color_configuration(tmp_path, target_id)
+
+    assert target.colors[0].label == "mental"
+    assert (target.configuration_id, target.configuration_version) == ("health-palette", 1)
+    assert document_label_vocabulary(tmp_path, target_id) == health.labels
 
 
 def test_label_outside_document_value_set_is_reported(tmp_path: Path) -> None:

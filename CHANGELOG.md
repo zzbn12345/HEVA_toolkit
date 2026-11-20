@@ -110,6 +110,8 @@
   value sets, and each project palette version names the value set its colors map to. The
   eight HEVA heritage values remain the built-in default; projects without value sets are
   unchanged. Validation reports `label_outside_value_set` when a document mixes vocabularies.
+  Data Packages list the value sets they use, with their values, in `datapackage.json` and
+  `heva-annotations.json`, and each document names its value set.
   The CSV compiler accepts the project's value sets. Accepted in HEVA-ADR-003. Command-line
   tools that run without a project (`evaluation`, `validate_records`) and the benchmark
   baselines still use the heritage values only.

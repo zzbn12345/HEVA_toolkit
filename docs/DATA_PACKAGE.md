@@ -32,7 +32,8 @@ and are not included in the standard Data Package. HEVA does not export source P
 - **CSV is a derivative.** It is convenient for inspection, statistics, spreadsheets, and
   machine-learning adapters. It can always be regenerated from validated JSON.
 - **`datapackage.json` is the manifest.** It describes the dataset and points to the files a
-  program or researcher can reuse.
+  program or researcher can reuse. Its `value_sets` list defines every value the annotation
+  labels can take; each document in `heva-annotations.json` names its value set.
 
 ## Document and sentence evidence
 

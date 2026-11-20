@@ -430,6 +430,10 @@ def apply_shared_color_mapping(
             color.status = shared.status
             color.ignore_reason = shared.ignore_reason
         updated.shared_from_document_id = source_document_id
+        # The shared labels come from the source's palette, so record the same palette
+        # version; it identifies the value set the labels belong to.
+        updated.configuration_id = source.configuration_id
+        updated.configuration_version = source.configuration_version
         prospective[document_id] = confirm_color_configuration(
             updated,
             confirmed_by=confirmed_by,
