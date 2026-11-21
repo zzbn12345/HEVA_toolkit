@@ -45,7 +45,7 @@ Three principles run through the whole tool:
   and every sentence. Automatic suggestions are only suggestions, and every decision is attributed
   to the person who made it.
 - **Nothing is overwritten silently.** Palettes and value sets are versioned, re-extraction keeps
-  a backup, and validation only reads your data.
+  a backup, and validation never changes your annotations or decisions.
 
 ## 2. Words used in this guide
 
@@ -143,7 +143,10 @@ HEVA reads the highlights that already exist in your documents. Before you start
   pages without a text layer are not supported.
 - **DOCX files:** Word highlight colors and colored font text in the main body are detected.
   Text in tables, headers, footers and text boxes is not read, and page numbers are approximate.
-- **Black, gray and white are never treated as annotations**, so normal text is ignored.
+- **Black, gray and white text is ignored**, so normal text is not mistaken for an annotation.
+  A shaded box behind text is a different matter: in a PDF, any filled shape except pure white
+  counts as a highlight, so gray shading in a table or callout appears as a color on the color
+  step. Choose **Ignore this color** for it there.
 - **Put all source documents for one project in one folder** (subfolders are fine).
 
 ## 5. Create or open a project
@@ -256,9 +259,9 @@ This step decides what each highlight color means.
 
 #### 7.3.1 Discover the colors
 
-When you open this step for the first time, HEVA reads the document and lists every highlight
-color it finds. (You can repeat this with **Discover colors**.) Each color starts as
-*pending review*: nothing is decided yet.
+The first time you open a document, HEVA reads it and lists every highlight color it finds on
+this step. (You can repeat this with **Discover colors**.) Each color starts as *pending review*:
+nothing is decided yet.
 
 ![Step 3: the observed colors and the "Assign colors to" choice](images/user-guide/08-colors-discovered.png)
 
@@ -360,18 +363,23 @@ Confirming does three things:
 
 ![Step 4: the annotations step with the embedded sentence review](images/user-guide/15-annotations-step.png)
 
-Once the colors are confirmed, this step shows how many sentence records exist and embeds the
-sentence review (section 8).
+Once the document has been read, this step embeds the sentence review (section 8). Until the
+colors are confirmed, it shows the raw sentences with their colors, but review decisions stay
+locked. After you confirm the colors, it shows the sentence records with their values.
 
-- **Extract annotations**: for a document that has not been read yet, HEVA reads it, page by page
-  for PDFs, and shows its progress. **Cancel extraction** stops it without losing earlier work.
-- **Page scope**: for a long PDF, enter a **First PDF page** and **Last PDF page** to extract only
-  those pages. Leave both blank for the whole document.
+- **Extract annotations**: for a document that has not been read yet (for example one you just
+  added), HEVA reads it, page by page for PDFs, and shows its progress. **Cancel extraction**
+  stops it without losing earlier work.
+- **Page scope**: to read only part of a long PDF, enter the first and last page, under **PDF page
+  scope** for a new document or under **Extraction scope and re-extraction** (**First PDF page**,
+  **Last PDF page**) for a document that has already been read. Leave both blank for the whole
+  document.
 - **Re-extract annotations** / **Rebuild extraction**: reads the document again, for example
   after changing the page scope. This resets the current annotations and review decisions, so HEVA
   asks for confirmation and keeps a backup in `.heva/documents/<ID>/extraction-history/`.
-- **Build canonical annotations**: shown when a raw draft is saved but the colors were not yet
-  confirmed; confirm the colors first, then use this button.
+- **Build canonical annotations**: appears when a raw draft is saved and the colors are confirmed,
+  but the sentence records were not built yet (for example because building failed when you
+  confirmed). Click it to build them.
 
 **Adding a new document:** in the review queue, click **＋ Add document**, then either:
 
@@ -444,13 +452,15 @@ warnings**) if it is fine. Errors cannot be dismissed and must be corrected.
 ### 8.3 Audit trail
 
 HEVA keeps a history for every sentence: each decision, edit and accepted warning, who made it and
-when. If a sentence's record changes (for example after a correction or a re-extraction), its
-earlier decision is reset to pending, so nothing is approved by accident.
+when. An earlier decision never carries over to a changed record, so nothing is approved by
+accident: after a correction the sentence is marked **Needs correction**, and if its record changes
+in any other way it goes back to pending. After a re-extraction, every sentence starts again as
+pending.
 
 ## 9. Validate your work
 
-Validation is a read-only check of everything HEVA needs for a trustworthy Data Package. It never
-changes your data.
+Validation checks everything HEVA needs for a trustworthy Data Package. It never changes your
+annotations, colors or review decisions; it only reports what is missing or inconsistent.
 
 **One document:** on the review page, click **Validate document**. When everything is in order,
 HEVA reports that the document is valid; otherwise it lists each problem, grouped by area, with a
@@ -586,7 +596,7 @@ Each sentence record looks like this (the example has a curated correction):
 | `entities` | Each highlighted phrase: its character positions (in the curated sentence when there is one), text, value and original color. |
 | `tokens` | The words and punctuation of the sentence. |
 | `ner_tags` | One tag per token in the BIO scheme used for training language models: `B-` begins a phrase, `I-` continues it, `O` is outside any phrase. |
-| `mapping_provenance` | Which project palette version turned the color into the value. |
+| `mapping_provenance` | Which project palette version turned the color into the value. Present for records mapped with a project palette, which is how the app builds them. |
 
 ### 11.3 `heva-annotations.csv`
 
@@ -620,8 +630,9 @@ color:
 
 HEVA also cleans the text: it removes headers, footers, page numbers and margin codes, repairs
 typographic ligatures, puts multi-column pages in reading order and rejoins words hyphenated at a
-line break. If fewer than 15% of a page's characters are letters, the text layer is considered
-unreadable and HEVA stops instead of saving garbled text (see 12.5).
+line break. If a page has a substantial amount of text (at least 200 characters) but fewer than
+15% of them are letters, the text layer is considered unreadable and HEVA stops instead of saving
+garbled text (see 12.5).
 
 **DOCX files** are read with python-docx. Each piece of text takes its Word highlight color (for
 example YELLOW becomes `#FFFF00`) or, failing that, its colored font.
@@ -746,7 +757,8 @@ python -m heva.curation.package_validator /path/to/project validate --document-i
 # Build the Data Package (all documents, or repeat --document-id to select)
 python -m heva.curation.package_validator /path/to/project release
 
-# Read highlights from files without a project, for inspection
+# Read highlights from a file without a project, for inspection
+# (writes document_extracted.json next to the file; use -o or --output-dir to choose)
 python -m heva.extraction.extract_highlights path/to/document.pdf --pages 1-10
 ```
 
