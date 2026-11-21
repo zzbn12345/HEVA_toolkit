@@ -75,7 +75,7 @@ def test_bundled_guide_is_available_without_an_open_project() -> None:
     assert installation.status_code == 200
     assert "Install and run HEVA" in installation.text
     assert 'href="/guide/TUTORIAL"' in installation.text
-    assert 'href="/static/documentation.css?v=1"' in installation.text
+    assert 'href="/static/documentation.css?v=2"' in installation.text
 
 
 def test_guide_rejects_unknown_or_traversing_pages() -> None:
@@ -86,6 +86,108 @@ def test_guide_rejects_unknown_or_traversing_pages() -> None:
 
     assert missing.status_code == 404
     assert traversal.status_code in {303, 307, 404}
+
+
+def _guide_with_images(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    docs = tmp_path / "docs"
+    (docs / "images" / "user-guide").mkdir(parents=True)
+    (docs / "images" / "diagrams").mkdir(parents=True)
+    (docs / "guides").mkdir()
+    (docs / "index.md").write_text("# Home\n", encoding="utf-8")
+    (docs / "USER_GUIDE.md").write_text(
+        "# User guide\n\n"
+        "![Home screen](images/user-guide/01-home.png \"Home\")\n\n"
+        "![Badge](https://example.org/badge.png)\n\n"
+        "![Raw](data:image/png;base64,AAAA)\n",
+        encoding="utf-8",
+    )
+    (docs / "guides" / "nested.md").write_text(
+        "# Nested\n\n![Flow](../images/diagrams/flow.svg)\n", encoding="utf-8"
+    )
+    (docs / "images" / "user-guide" / "01-home.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+    (docs / "images" / "diagrams" / "flow.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+        encoding="utf-8",
+    )
+    (docs / "notes.txt").write_text("not an image", encoding="utf-8")
+    (tmp_path / "secret.png").write_bytes(b"outside the guide")
+    monkeypatch.setattr("heva.app.documentation.documentation_root", lambda: docs)
+    return docs
+
+
+def test_guide_renders_relative_images_through_the_asset_route(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _guide_with_images(tmp_path, monkeypatch)
+    client = TestClient(create_app())
+
+    page = client.get("/guide/USER_GUIDE")
+    nested = client.get("/guide/guides/nested")
+
+    assert page.status_code == 200
+    assert (
+        '<img alt="Home screen" src="/guide-assets/images/user-guide/01-home.png"'
+        ' title="Home">'
+    ) in page.text
+    assert 'src="https://example.org/badge.png"' in page.text
+    assert "data:image" not in page.text
+    assert 'src="/guide-assets/images/diagrams/flow.svg"' in nested.text
+
+
+def test_guide_assets_serve_images_without_an_open_project(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _guide_with_images(tmp_path, monkeypatch)
+    client = TestClient(create_app())
+
+    png = client.get("/guide-assets/images/user-guide/01-home.png")
+    svg = client.get("/guide-assets/images/diagrams/flow.svg")
+
+    assert png.status_code == 200
+    assert png.headers["content-type"] == "image/png"
+    assert png.content == b"\x89PNG\r\n\x1a\n"
+    assert "content-security-policy" not in png.headers
+    assert svg.status_code == 200
+    assert svg.headers["content-type"].startswith("image/svg+xml")
+    assert svg.headers["content-security-policy"] == (
+        "default-src 'none'; style-src 'unsafe-inline'"
+    )
+    assert svg.headers["x-content-type-options"] == "nosniff"
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/guide-assets/images/..%2F..%2Fsecret.png",
+        "/guide-assets/%2E%2E/secret.png",
+        "/guide-assets/%2Fetc%2Fpasswd.png",
+        "/guide-assets/notes.txt",
+        "/guide-assets/index.md",
+        "/guide-assets/images/user-guide/missing.png",
+        "/guide-assets/images",
+    ],
+)
+def test_guide_assets_reject_traversal_and_other_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, path: str
+) -> None:
+    _guide_with_images(tmp_path, monkeypatch)
+    client = TestClient(create_app())
+
+    response = client.get(path, follow_redirects=False)
+
+    assert response.status_code == 404
+
+
+def test_guide_assets_reject_symbolic_links_that_leave_the_guide(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    docs = _guide_with_images(tmp_path, monkeypatch)
+    (docs / "images" / "escape.png").symlink_to(tmp_path / "secret.png")
+    client = TestClient(create_app())
+
+    response = client.get("/guide-assets/images/escape.png")
+
+    assert response.status_code == 404
 
 
 def test_internal_curator_submission_surfaces_are_not_exposed(tmp_path: Path) -> None:
@@ -446,7 +548,7 @@ def test_create_page_reuses_guided_pdf_review_patterns(tmp_path: Path) -> None:
     assert "<span>Citation</span>" in response.text
     assert 'src="/static/notifications.js?v=1"' in response.text
     assert 'src="/static/create.js?v=34"' in response.text
-    assert 'href="/static/create.css?v=15"' in response.text
+    assert 'href="/static/create.css?v=16"' in response.text
     assert "Individual" in response.text
     assert "Batch" in response.text
     assert 'id="pdf-preview"' in response.text

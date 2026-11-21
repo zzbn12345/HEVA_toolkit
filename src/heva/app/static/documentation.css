@@ -91,6 +91,12 @@
   padding-left: 1rem;
   border-left: 4px solid var(--accent);
 }
+.documentation-content img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
 .guide-link { color: var(--accent); font-weight: 750; text-decoration: none; }
 @media (max-width: 760px) {
   .documentation-shell { grid-template-columns: 1fr; padding: 1rem; }

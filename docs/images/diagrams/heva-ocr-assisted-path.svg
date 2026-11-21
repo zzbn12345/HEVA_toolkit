@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 834" width="100%" role="img" aria-labelledby="ocr-title ocr-desc" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+  <title id="ocr-title">When the PDF text is unreadable (OCR-assisted extraction)</title>
+  <desc id="ocr-desc">1: normal extraction stops with text layer not readable (pdf_text_unreadable), usually because of broken embedded fonts. 2: run source diagnostics, a read-only check that looks for Type3 fonts without a Unicode map and reports the affected pages without changing anything. 3: start OCR-assisted extraction, which needs Tesseract installed and at least one confirmed document color: each page is rendered as an image at 288 DPI and read by Tesseract; the OCR words are matched to the PDF's colored text whose color is a confirmed color; the result is saved separately as an OCR candidate (ocr-candidate.json) and existing annotations are untouched. 4: you review the OCR candidate. 5: use candidate and create annotations: it becomes a normal draft, is converted with the color configuration, and every sentence stays pending for review. 6: continue with sentence review. Scanned PDFs without any text layer are not supported. OCR matching uses colored text, not highlight shapes.</desc>
+  <defs>
+    <marker id="ocr-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="834" rx="16" fill="#ffffff"/>
+
+  <!-- Header -->
+  <text x="40" y="50" font-size="22" font-weight="700" fill="#0f172a">When the PDF text is unreadable (OCR-assisted extraction)</text>
+  <text x="40" y="76" font-size="13" fill="#475569">Some PDFs show readable text on screen but store it with broken fonts. OCR-assisted extraction can recover the highlighted text.</text>
+
+  <!-- Row 1 -->
+  <!-- Step 1 -->
+  <rect x="40" y="110" width="340" height="180" rx="12" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+  <circle cx="66" cy="138" r="13" fill="#64748b"/>
+  <text x="66" y="143" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+  <text x="88" y="144" font-size="15" font-weight="600" fill="#0f172a">Normal extraction stops</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="56" y="174">with “text layer not readable”,</tspan>
+    <tspan x="56" dy="18">usually because of broken</tspan>
+    <tspan x="56" dy="18">embedded fonts.</tspan>
+  </text>
+  <text x="56" y="240" font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#334155">pdf_text_unreadable</text>
+
+  <path d="M380,200 H429" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ocr-arrow)"/>
+
+  <!-- Step 2 -->
+  <rect x="430" y="110" width="340" height="180" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <circle cx="456" cy="138" r="13" fill="#4f46e5"/>
+  <text x="456" y="143" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+  <text x="478" y="144" font-size="15" font-weight="600" fill="#0f172a">Run source diagnostics</text>
+  <rect x="672" y="127" width="82" height="22" rx="11" fill="#ffffff" stroke="#4f46e5"/>
+  <text x="713" y="142" font-size="12" fill="#3730a3" text-anchor="middle">read-only</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="446" y="174">Looks for Type3 fonts without a</tspan>
+    <tspan x="446" dy="18">Unicode map and reports the</tspan>
+    <tspan x="446" dy="18">affected pages.</tspan>
+    <tspan x="446" dy="26" font-weight="700" fill="#0f172a">Nothing is changed.</tspan>
+  </text>
+
+  <!-- Good to know -->
+  <rect x="820" y="110" width="340" height="180" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="5 4"/>
+  <circle cx="846" cy="138" r="11" fill="none" stroke="#475569" stroke-width="1.6"/>
+  <text x="846" y="143" font-size="13" font-weight="700" fill="#475569" text-anchor="middle">i</text>
+  <text x="868" y="144" font-size="15" font-weight="600" fill="#0f172a">Good to know</text>
+  <circle cx="842" cy="170" r="3" fill="#475569"/>
+  <text font-size="13" fill="#475569">
+    <tspan x="854" y="174">Scanned PDFs without any text layer</tspan>
+    <tspan x="854" dy="18">are not supported.</tspan>
+  </text>
+  <circle cx="842" cy="226" r="3" fill="#475569"/>
+  <text font-size="13" fill="#475569">
+    <tspan x="854" y="230">OCR matching uses colored text,</tspan>
+    <tspan x="854" dy="18">not highlight shapes.</tspan>
+  </text>
+
+  <path d="M600,290 V329" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ocr-arrow)"/>
+
+  <!-- Row 2: Step 3 -->
+  <rect x="40" y="330" width="1120" height="210" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <circle cx="66" cy="358" r="13" fill="#7c3aed"/>
+  <text x="66" y="363" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+  <text x="88" y="364" font-size="15" font-weight="600" fill="#0f172a">Start OCR-assisted extraction</text>
+  <text x="1144" y="364" font-size="13" fill="#475569" text-anchor="end"><tspan font-weight="700" fill="#5b21b6">Needs:</tspan> Tesseract installed · at least one confirmed document color</text>
+
+  <rect x="56" y="384" width="336" height="136" rx="10" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.5"/>
+  <text x="72" y="410" font-size="13" font-weight="700" fill="#0f172a">a. Read each page with OCR</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="72" y="434">Each page is rendered as an image</tspan>
+    <tspan x="72" dy="18">(288 DPI) and read by Tesseract.</tspan>
+  </text>
+
+  <path d="M392,452 H431" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ocr-arrow)"/>
+
+  <rect x="432" y="384" width="336" height="136" rx="10" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.5"/>
+  <text x="448" y="410" font-size="13" font-weight="700" fill="#0f172a">b. Match words to colored text</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="448" y="434">The OCR words are matched to the</tspan>
+    <tspan x="448" dy="18">PDF's colored text whose color</tspan>
+    <tspan x="448" dy="18">is a confirmed color.</tspan>
+  </text>
+  <rect x="448" y="488" width="18" height="18" rx="4" fill="#FF40FF" stroke="#94a3b8"/>
+  <text x="474" y="502" font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#0f172a">#FF40FF</text>
+  <text x="536" y="502" font-size="12" fill="#475569">confirmed → used</text>
+
+  <path d="M768,452 H807" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ocr-arrow)"/>
+
+  <rect x="808" y="384" width="336" height="136" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="824" y="410" font-size="13" font-weight="700" fill="#0f172a">c. Save an OCR candidate</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="824" y="434">Saved separately. Existing</tspan>
+    <tspan x="824" dy="18">annotations are untouched.</tspan>
+  </text>
+  <text x="824" y="486" font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#065f46">ocr-candidate.json</text>
+
+  <!-- Wrap to row 3 -->
+  <path d="M976,540 V572 H210 V603" fill="none" stroke="#475569" stroke-width="2" stroke-linejoin="round" marker-end="url(#ocr-arrow)"/>
+
+  <!-- Row 3 -->
+  <!-- Step 4 -->
+  <rect x="40" y="604" width="340" height="160" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="66" cy="632" r="13" fill="#d97706"/>
+  <text x="66" y="637" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+  <text x="88" y="638" font-size="15" font-weight="600" fill="#0f172a">Review the OCR candidate</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="56" y="668">You check what OCR found before</tspan>
+    <tspan x="56" dy="18">any annotations are created.</tspan>
+  </text>
+  <g>
+    <rect x="310" y="592" width="58" height="24" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="326" cy="600" r="3.5" fill="#d97706"/>
+    <path d="M320,611 a6,5.5 0 0 1 12,0 z" fill="#d97706"/>
+    <text x="337" y="609" font-size="12" font-weight="700" fill="#92400e">You</text>
+  </g>
+
+  <path d="M380,684 H429" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ocr-arrow)"/>
+
+  <!-- Step 5 -->
+  <rect x="430" y="604" width="340" height="160" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <circle cx="456" cy="632" r="13" fill="#4f46e5"/>
+  <text x="456" y="637" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+  <text x="478" y="638" font-size="15" font-weight="600" fill="#0f172a">Create annotations</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="446" y="668">After “Use candidate and create</tspan>
+    <tspan x="446" dy="18">annotations”, the candidate becomes a</tspan>
+    <tspan x="446" dy="18">normal draft and is converted with</tspan>
+    <tspan x="446" dy="18">the color configuration. Every</tspan>
+    <tspan x="446" dy="18">sentence stays pending for review.</tspan>
+  </text>
+
+  <path d="M770,684 H819" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ocr-arrow)"/>
+
+  <!-- Step 6 -->
+  <rect x="820" y="604" width="340" height="160" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="846" cy="632" r="13" fill="#d97706"/>
+  <text x="846" y="637" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+  <text x="868" y="638" font-size="15" font-weight="600" fill="#0f172a">Continue with sentence review</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="836" y="668">Approve, flag, correct or exclude</tspan>
+    <tspan x="836" dy="18">each sentence as usual.</tspan>
+  </text>
+  <g>
+    <rect x="1090" y="592" width="58" height="24" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="1106" cy="600" r="3.5" fill="#d97706"/>
+    <path d="M1100,611 a6,5.5 0 0 1 12,0 z" fill="#d97706"/>
+    <text x="1117" y="609" font-size="12" font-weight="700" fill="#92400e">You</text>
+  </g>
+
+  <!-- Legend -->
+  <text x="40" y="808" font-size="12" font-weight="700" fill="#0f172a">Legend</text>
+  <rect x="110" y="796" width="24" height="16" rx="4" fill="#e2e8f0" stroke="#64748b"/>
+  <text x="142" y="808" font-size="12" fill="#475569">Starting point</text>
+  <rect x="270" y="796" width="24" height="16" rx="4" fill="#e0e7ff" stroke="#4f46e5"/>
+  <text x="302" y="808" font-size="12" fill="#475569">HEVA works automatically</text>
+  <rect x="500" y="796" width="24" height="16" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-dasharray="4 3"/>
+  <text x="532" y="808" font-size="12" fill="#475569">OCR (optional)</text>
+  <rect x="660" y="796" width="24" height="16" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="692" y="808" font-size="12" fill="#475569">You decide</text>
+  <rect x="800" y="796" width="24" height="16" rx="4" fill="#d1fae5" stroke="#059669"/>
+  <text x="832" y="808" font-size="12" fill="#475569">Saved file</text>
+</svg>

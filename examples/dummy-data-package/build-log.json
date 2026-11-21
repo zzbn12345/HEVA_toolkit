@@ -1,13 +1,23 @@
 {
   "build_version": "1.0",
-  "toolkit_version": "0.1.0",
-  "membership": [
-    {"document_id": "HEVA-DEMO-001"},
-    {"document_id": "HEVA-DEMO-002"}
-  ],
+  "excluded_project_document_ids": [],
   "excluded_working_evidence": [
     "source documents",
-    ".heva workspace",
+    "review-state.json",
+    "curation-state.json",
     "credentials"
-  ]
+  ],
+  "membership": [
+    {
+      "annotations_checksum_sha256": "1987f527a598db3612b6701b7d919bb22e7e5ab85d4a9dae8fcba1f6435b5b49",
+      "document_id": "HEVA-6D2C87261328",
+      "source_checksum_sha256": "67457837bd2ef6e7aca9f96e655af4885b195c82ebac856d57255f40de76d2df"
+    },
+    {
+      "annotations_checksum_sha256": "094210b17a27d38b8fa6a010fbd4fafa7678a190aadfda53d5898512e4b1e28e",
+      "document_id": "HEVA-CE82B2DA308B",
+      "source_checksum_sha256": "a22bf793e45300b5c9c4e302e67c3cf36ecd8a4635916363b6d9d5c30f026241"
+    }
+  ],
+  "toolkit_version": "0.1.0"
 }

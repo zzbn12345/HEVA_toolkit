@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 790" width="100%" role="img" aria-labelledby="ov-title ov-desc" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+  <title id="ov-title">From annotated document to Data Package</title>
+  <desc id="ov-desc">The eight steps of the HEVA workflow. Your annotated PDF or DOCX files go into step 1, Create or open a project, where HEVA registers each file with a stable ID. Then you add people and roles (step 2), confirm the citation (step 3) and configure colors (step 4), where an optional local AI (Ollama) can suggest values. HEVA then builds annotations (step 5), you review each sentence (step 6), HEVA validates every document (step 7), and you export the Data Package with datapackage.json, heva-annotations.json, heva-annotations.csv and build-log.json (step 8). Everything runs locally on your computer.</desc>
+  <defs>
+    <marker id="ov-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="ov-arrow-violet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="790" rx="16" fill="#ffffff"/>
+
+  <!-- Header -->
+  <text x="40" y="50" font-size="22" font-weight="700" fill="#0f172a">From annotated document to Data Package</text>
+  <text x="40" y="76" font-size="13" fill="#475569">The eight steps of the guide, from your highlighted source files to the finished Data Package.</text>
+
+  <!-- Input: source documents -->
+  <rect x="40" y="100" width="250" height="110" rx="12" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+  <text x="56" y="128" font-size="15" font-weight="600" fill="#0f172a">Your annotated documents</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="56" y="152">PDF and DOCX files in a folder</tspan>
+    <tspan x="56" dy="18">on your computer, highlighted</tspan>
+    <tspan x="56" dy="18">by the original annotator.</tspan>
+  </text>
+  <path d="M165,210 V249" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ov-arrow)"/>
+
+  <!-- Optional AI side-box attached to step 4 -->
+  <rect x="910" y="100" width="250" height="110" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="926" y="128" font-size="15" font-weight="600" fill="#0f172a">Optional: local AI</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="926" y="152">Ollama can suggest a value for</tspan>
+    <tspan x="926" dy="18">each color. You still review</tspan>
+    <tspan x="926" dy="18">and confirm every choice.</tspan>
+  </text>
+  <path d="M1035,210 V249" fill="none" stroke="#7c3aed" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ov-arrow-violet)"/>
+
+  <!-- Row 1 -->
+  <!-- Step 1 (automatic) -->
+  <rect x="40" y="250" width="250" height="190" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <circle cx="66" cy="278" r="13" fill="#4f46e5"/>
+  <text x="66" y="283" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+  <text x="88" y="284" font-size="15" font-weight="600" fill="#0f172a">Create or open a project</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="56" y="314">You choose a folder with PDF</tspan>
+    <tspan x="56" dy="18">or DOCX files. HEVA registers</tspan>
+    <tspan x="56" dy="18">each file as a document with</tspan>
+    <tspan x="56" dy="18">a stable ID, for example</tspan>
+  </text>
+  <text x="56" y="386" font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#3730a3">HEVA-C600F2C14759</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="56" y="406">Sources are never uploaded</tspan>
+    <tspan x="56" dy="18">or changed.</tspan>
+  </text>
+
+  <path d="M290,345 H329" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ov-arrow)"/>
+
+  <!-- Step 2 (human) -->
+  <rect x="330" y="250" width="250" height="190" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="356" cy="278" r="13" fill="#d97706"/>
+  <text x="356" y="283" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+  <text x="378" y="284" font-size="15" font-weight="600" fill="#0f172a">People and roles</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="346" y="314">Add the curator (you, the</tspan>
+    <tspan x="346" dy="18">person processing in HEVA),</tspan>
+    <tspan x="346" dy="18">the original annotator (who</tspan>
+    <tspan x="346" dy="18">highlighted the source) and,</tspan>
+    <tspan x="346" dy="18">optionally, the data owner.</tspan>
+    <tspan x="346" dy="18">Choose the active curator.</tspan>
+  </text>
+  <g>
+    <rect x="510" y="238" width="58" height="24" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="526" cy="246" r="3.5" fill="#d97706"/>
+    <path d="M520,257 a6,5.5 0 0 1 12,0 z" fill="#d97706"/>
+    <text x="537" y="255" font-size="12" font-weight="700" fill="#92400e">You</text>
+  </g>
+
+  <path d="M580,345 H619" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ov-arrow)"/>
+
+  <!-- Step 3 (human) -->
+  <rect x="620" y="250" width="250" height="190" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="646" cy="278" r="13" fill="#d97706"/>
+  <text x="646" y="283" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+  <text x="668" y="284" font-size="15" font-weight="600" fill="#0f172a">Citation</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="636" y="314">Confirm the source's title,</tspan>
+    <tspan x="636" dy="18">authors, citation, and DOI</tspan>
+    <tspan x="636" dy="18">or URL, or say why it is</tspan>
+    <tspan x="636" dy="18">not findable.</tspan>
+  </text>
+  <g>
+    <rect x="800" y="238" width="58" height="24" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="816" cy="246" r="3.5" fill="#d97706"/>
+    <path d="M810,257 a6,5.5 0 0 1 12,0 z" fill="#d97706"/>
+    <text x="827" y="255" font-size="12" font-weight="700" fill="#92400e">You</text>
+  </g>
+
+  <path d="M870,345 H909" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ov-arrow)"/>
+
+  <!-- Step 4 (human confirms) -->
+  <rect x="910" y="250" width="250" height="190" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="936" cy="278" r="13" fill="#d97706"/>
+  <text x="936" y="283" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+  <text x="958" y="284" font-size="15" font-weight="600" fill="#0f172a">Color configuration</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="926" y="314">HEVA discovers the highlight</tspan>
+    <tspan x="926" dy="18">colors. You give each color</tspan>
+    <tspan x="926" dy="18">a value from the HEVA heritage</tspan>
+    <tspan x="926" dy="18">values or your own value set,</tspan>
+    <tspan x="926" dy="18">or ignore it.</tspan>
+  </text>
+  <rect x="926" y="404" width="30" height="16" rx="3" fill="#FFFF00" stroke="#94a3b8"/>
+  <rect x="962" y="404" width="30" height="16" rx="3" fill="#00FF00" stroke="#94a3b8"/>
+  <rect x="998" y="404" width="30" height="16" rx="3" fill="#FF40FF" stroke="#94a3b8"/>
+  <rect x="1034" y="404" width="30" height="16" rx="3" fill="#00D6FF" stroke="#94a3b8"/>
+  <g>
+    <rect x="1090" y="238" width="58" height="24" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="1106" cy="246" r="3.5" fill="#d97706"/>
+    <path d="M1100,257 a6,5.5 0 0 1 12,0 z" fill="#d97706"/>
+    <text x="1117" y="255" font-size="12" font-weight="700" fill="#92400e">You</text>
+  </g>
+
+  <!-- Wrap to row 2 -->
+  <path d="M1035,440 V470 H165 V499" fill="none" stroke="#475569" stroke-width="2" stroke-linejoin="round" marker-end="url(#ov-arrow)"/>
+
+  <!-- Row 2 -->
+  <!-- Step 5 (automatic) -->
+  <rect x="40" y="500" width="250" height="150" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <circle cx="66" cy="528" r="13" fill="#4f46e5"/>
+  <text x="66" y="533" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+  <text x="88" y="534" font-size="15" font-weight="600" fill="#0f172a">Annotations</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="56" y="564">HEVA turns the highlighted</tspan>
+    <tspan x="56" dy="18">spans into sentence records</tspan>
+    <tspan x="56" dy="18">that carry your values instead</tspan>
+    <tspan x="56" dy="18">of colors.</tspan>
+  </text>
+
+  <path d="M290,575 H329" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ov-arrow)"/>
+
+  <!-- Step 6 (human) -->
+  <rect x="330" y="500" width="250" height="150" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="356" cy="528" r="13" fill="#d97706"/>
+  <text x="356" y="533" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+  <text x="378" y="534" font-size="15" font-weight="600" fill="#0f172a">Sentence review</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="346" y="564">You approve, flag, correct or</tspan>
+    <tspan x="346" dy="18">exclude each sentence.</tspan>
+  </text>
+  <g>
+    <rect x="510" y="488" width="58" height="24" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="526" cy="496" r="3.5" fill="#d97706"/>
+    <path d="M520,507 a6,5.5 0 0 1 12,0 z" fill="#d97706"/>
+    <text x="537" y="505" font-size="12" font-weight="700" fill="#92400e">You</text>
+  </g>
+
+  <path d="M580,575 H619" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ov-arrow)"/>
+
+  <!-- Step 7 (automatic) -->
+  <rect x="620" y="500" width="250" height="150" rx="12" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+  <circle cx="646" cy="528" r="13" fill="#4f46e5"/>
+  <text x="646" y="533" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">7</text>
+  <text x="668" y="534" font-size="15" font-weight="600" fill="#0f172a">Validation</text>
+  <text font-size="13" fill="#475569">
+    <tspan x="636" y="564">Read-only checks of every</tspan>
+    <tspan x="636" dy="18">document. Nothing is changed.</tspan>
+  </text>
+
+  <path d="M870,575 H909" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ov-arrow)"/>
+
+  <!-- Step 8 (output) -->
+  <rect x="910" y="500" width="250" height="150" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <circle cx="936" cy="528" r="13" fill="#059669"/>
+  <text x="936" y="533" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">8</text>
+  <text x="958" y="534" font-size="15" font-weight="600" fill="#0f172a">Export the Data Package</text>
+  <text font-size="12" font-family="ui-monospace, Menlo, Consolas, monospace" fill="#065f46">
+    <tspan x="926" y="564">datapackage.json</tspan>
+    <tspan x="926" dy="18">heva-annotations.json</tspan>
+    <tspan x="926" dy="18">heva-annotations.csv</tspan>
+    <tspan x="926" dy="18">build-log.json</tspan>
+  </text>
+
+  <!-- Local note -->
+  <rect x="40" y="680" width="1120" height="44" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <g fill="none" stroke="#475569" stroke-width="1.6">
+    <rect x="58" y="692" width="22" height="14" rx="2"/>
+    <path d="M54,712 H84"/>
+  </g>
+  <text x="96" y="707" font-size="13" fill="#475569"><tspan font-weight="700" fill="#0f172a">Everything runs locally on your computer.</tspan> Your source files stay where they are and are never uploaded or changed.</text>
+
+  <!-- Legend -->
+  <text x="40" y="765" font-size="12" font-weight="700" fill="#0f172a">Legend</text>
+  <rect x="110" y="753" width="24" height="16" rx="4" fill="#e2e8f0" stroke="#64748b"/>
+  <text x="142" y="765" font-size="12" fill="#475569">Your files and sources</text>
+  <rect x="320" y="753" width="24" height="16" rx="4" fill="#e0e7ff" stroke="#4f46e5"/>
+  <text x="352" y="765" font-size="12" fill="#475569">HEVA works automatically</text>
+  <rect x="550" y="753" width="24" height="16" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="582" y="765" font-size="12" fill="#475569">You decide</text>
+  <rect x="700" y="753" width="24" height="16" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-dasharray="4 3"/>
+  <text x="732" y="765" font-size="12" fill="#475569">Optional local AI (dashed)</text>
+  <rect x="930" y="753" width="24" height="16" rx="4" fill="#d1fae5" stroke="#059669"/>
+  <text x="962" y="765" font-size="12" fill="#475569">Saved output</text>
+</svg>

@@ -105,6 +105,12 @@
 
 ### Added
 
+- Added a step-by-step [user guide](docs/USER_GUIDE.md) for researchers and students, with
+  screenshots of every step and diagrams of the extraction, color mapping, automatic proposal and
+  OCR pipelines. It covers installation, projects, people, citations, color configuration with
+  heritage or custom values, sentence review, validation and the contents of the Data Package.
+- The in-app guide, the GitHub Wiki and the installed package now show images embedded in the
+  documentation. The app serves them read-only from the bundled docs.
 - Added project **value sets**, so researchers can name the values their colors are assigned
   to, for example the values of a health dataset. A new **Value sets** page creates versioned
   value sets, and each project palette version names the value set its colors map to. The

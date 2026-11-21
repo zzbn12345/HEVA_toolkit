@@ -81,6 +81,13 @@ jobs:
         run: |
           find wiki-repository -maxdepth 1 -type f -name '*.md' -delete
           cp wiki-build/*.md wiki-repository/
+          # Images are generated content too: replace only the images folder.
+          if [ -d wiki-repository/images ]; then
+            rm -rf -- wiki-repository/images
+          fi
+          if [ -d wiki-build/images ]; then
+            cp -R wiki-build/images wiki-repository/images
+          fi
       - name: Publish changed pages
         working-directory: wiki-repository
         run: |

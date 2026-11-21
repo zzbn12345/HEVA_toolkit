@@ -10,6 +10,9 @@ from typing import Iterable
 
 
 MARKDOWN_LINK = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)")
+MARKDOWN_IMAGE = re.compile(r'(!\[[^\]]*\]\()([^)\s]+)((?:\s+"[^"]*")?\))')
+URL_SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"})
 PAGE_HEADING = re.compile(r"^#\s+(.+)$", re.MULTILINE)
 REPOSITORY_URL = "https://github.com/zzbn12345/HEVA_toolkit"
 
@@ -65,6 +68,48 @@ def rewrite_links(
     return MARKDOWN_LINK.sub(replace, markdown)
 
 
+def discover_images(docs_root: Path) -> list[PurePosixPath]:
+    """List allow-listed image files that lie inside the documentation root."""
+
+    root = docs_root.resolve()
+    images: list[PurePosixPath] = []
+    for source in sorted(root.rglob("*")):
+        if source.suffix.lower() not in IMAGE_SUFFIXES or not source.is_file():
+            continue
+        try:
+            source.resolve().relative_to(root)
+        except ValueError:
+            continue
+        images.append(PurePosixPath(source.relative_to(root).as_posix()))
+    return images
+
+
+def rewrite_image_links(
+    markdown: str,
+    source_path: PurePosixPath,
+    images: Iterable[PurePosixPath],
+) -> str:
+    """Point relative image links at the docs-root-relative copies in the flat Wiki.
+
+    Every Wiki page sits at the output root, so an image path written relative
+    to a page in a subfolder must be re-expressed relative to the docs root.
+    External URLs and paths that match no copied image are left unchanged.
+    """
+
+    known = set(images)
+
+    def replace(match: re.Match[str]) -> str:
+        prefix, destination, suffix = match.groups()
+        if destination.startswith(("/", "#")) or URL_SCHEME.match(destination):
+            return match.group(0)
+        resolved = _normalize_path(source_path.parent / destination)
+        if resolved not in known:
+            return match.group(0)
+        return f"{prefix}{resolved.as_posix()}{suffix}"
+
+    return MARKDOWN_IMAGE.sub(replace, markdown)
+
+
 def _normalize_path(path: PurePosixPath) -> PurePosixPath:
     """Normalize dot segments without resolving against the host filesystem."""
 
@@ -81,7 +126,11 @@ def _normalize_path(path: PurePosixPath) -> PurePosixPath:
 
 
 def build_wiki(docs_root: str | Path, output_directory: str | Path) -> list[Path]:
-    """Build all Wiki pages, navigation, and provenance into a clean directory."""
+    """Build all Wiki pages, navigation, provenance, and images into a clean directory.
+
+    Images keep their path relative to the docs root (for example
+    ``images/user-guide/01-home.png``) so flat pages can reference them.
+    """
 
     source_root = Path(docs_root).resolve()
     output = Path(output_directory).resolve()
@@ -89,14 +138,21 @@ def build_wiki(docs_root: str | Path, output_directory: str | Path) -> list[Path
         shutil.rmtree(output)
     output.mkdir(parents=True)
     pages = discover_pages(source_root)
+    images = discover_images(source_root)
     written: list[Path] = []
     titles: dict[PurePosixPath, str] = {}
     for relative, slug in pages.items():
         source = source_root / Path(relative.as_posix())
         content = rewrite_links(source.read_text(encoding="utf-8"), relative, pages)
+        content = rewrite_image_links(content, relative, images)
         titles[relative] = _page_title(relative, slug, content)
         destination = output / f"{slug}.md"
         destination.write_text(content.rstrip() + "\n", encoding="utf-8")
+        written.append(destination)
+    for image in images:
+        destination = output / Path(image.as_posix())
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source_root / Path(image.as_posix()), destination)
         written.append(destination)
     sidebar = output / "_Sidebar.md"
     sidebar.write_text(_sidebar(pages, titles), encoding="utf-8")
@@ -114,7 +170,7 @@ def _sidebar(pages: dict[PurePosixPath, str], titles: dict[PurePosixPath, str]) 
 
     groups = {"Start": [], "Guides": [], "Reference": [], "Concepts": [], "Decisions": []}
     for path, slug in pages.items():
-        if path.as_posix() in {"index.md", "INSTALLATION.md", "TUTORIAL.md"}:
+        if path.as_posix() in {"index.md", "INSTALLATION.md", "USER_GUIDE.md", "TUTORIAL.md"}:
             group = "Start"
         elif path.parts[0] == "guides":
             group = "Guides"
